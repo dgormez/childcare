@@ -1,0 +1,30 @@
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/.env
+mobile/ios/
+mobile/android/
+mobile/*.log
+
+# Backend
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+backend/**/appsettings.Development.json
+*.nupkg
+
+# General
+.DS_Store
+*.log
+.env
+
+# Claude Code — local settings contain personal permission rules and machine paths
+.claude/settings.json
+.claude/settings.local.json
+
+# Terraform
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+infra/**/terraform.tfvars

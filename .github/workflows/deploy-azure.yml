@@ -1,0 +1,98 @@
+# ── Prerequisites (one-time Azure setup) ──────────────────────────────────────
+# See SETUP_CHECKLIST.md → Azure Deployment for step-by-step instructions.
+#
+# GitHub secrets required:
+#   AZURE_CLIENT_ID          → App registration / service principal client ID
+#   AZURE_TENANT_ID          → Azure AD tenant ID
+#   AZURE_SUBSCRIPTION_ID    → Azure subscription ID
+#   AZURE_RESOURCE_GROUP     → Resource group containing your Container App
+#   AZURE_CONTAINER_APP_NAME → Name of your Container App
+#   ACR_LOGIN_SERVER         → e.g. childcareregistry.azurecr.io
+#   DB_CONNECTION_STRING     → Full Supabase connection string
+#   JWT_SECRET               → Your JWT signing secret
+#   GOOGLE_ANDROID_CLIENT_ID → Google OAuth Android client ID
+#   GOOGLE_IOS_CLIENT_ID     → Google OAuth iOS client ID
+#   GOOGLE_WEB_CLIENT_ID     → Google OAuth Web client ID
+#   APPLE_BUNDLE_ID          → Your iOS bundle identifier
+#   STRIPE_SECRET_KEY        → Stripe secret key (sk_live_...)
+#   STRIPE_WEBHOOK_SECRET    → Stripe webhook signing secret (whsec_...)
+#   STRIPE_PRICE_ID          → Stripe recurring Price ID (price_...)
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Deploy backend to Azure Container Apps
+
+on:
+  push:
+    branches: [master]
+    paths: [backend/**]
+  workflow_dispatch:
+
+env:
+  IMAGE: ${{ secrets.ACR_LOGIN_SERVER }}/childcare/api
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name $(echo "${{ secrets.ACR_LOGIN_SERVER }}" | cut -d. -f1)
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:${{ github.sha }} \
+            -t ${{ env.IMAGE }}:latest \
+            ./backend/ChildCare.Api
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+
+      - name: Store secrets in Container App
+        run: |
+          az containerapp secret set \
+            --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --secrets \
+              "db-connection=${{ secrets.DB_CONNECTION_STRING }}" \
+              "jwt-secret=${{ secrets.JWT_SECRET }}" \
+              "stripe-secret-key=${{ secrets.STRIPE_SECRET_KEY }}" \
+              "stripe-webhook-secret=${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+              "stripe-price-id=${{ secrets.STRIPE_PRICE_ID }}"
+
+      - name: Deploy new image
+        run: |
+          az containerapp update \
+            --name ${{ secrets.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --set-env-vars \
+              "ConnectionStrings__DefaultConnection=secretref:db-connection" \
+              "Jwt__Secret=secretref:jwt-secret" \
+              "Jwt__Issuer=ChildCare" \
+              "Jwt__Audience=ChildCareApp" \
+              "Jwt__AccessTokenExpiryMinutes=15" \
+              "Jwt__RefreshTokenExpiryDays=30" \
+              "Google__AllowedClientIds__0=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}" \
+              "Google__AllowedClientIds__1=${{ secrets.GOOGLE_IOS_CLIENT_ID }}" \
+              "Google__AllowedClientIds__2=${{ secrets.GOOGLE_WEB_CLIENT_ID }}" \
+              "Apple__BundleId=${{ secrets.APPLE_BUNDLE_ID }}" \
+              "Stripe__SecretKey=secretref:stripe-secret-key" \
+              "Stripe__WebhookSecret=secretref:stripe-webhook-secret" \
+              "Stripe__PriceId=secretref:stripe-price-id" \
+              "Stripe__SuccessUrl=childcare://payment-success" \
+              "Stripe__CancelUrl=childcare://payment-cancel" \
+              "ASPNETCORE_ENVIRONMENT=Production"

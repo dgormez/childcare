@@ -1,0 +1,90 @@
+# One-time setup: see infra/gcp/SETUP.md
+#
+# GitHub secrets required:
+#   GCP_PROJECT_ID                 → your GCP project ID
+#   GCP_REGION                     → deployment region (e.g. europe-west1)
+#   GCP_WORKLOAD_IDENTITY_PROVIDER → from: terraform output workload_identity_provider
+#   GCP_SERVICE_ACCOUNT            → from: terraform output service_account
+#   DB_CONNECTION_STRING           → full Supabase connection string
+#   JWT_SECRET                     → your JWT secret (min 32 chars)
+#   GOOGLE_ANDROID_CLIENT_ID       → Google OAuth Android client ID
+#   GOOGLE_IOS_CLIENT_ID           → Google OAuth iOS client ID
+#   GOOGLE_WEB_CLIENT_ID           → Google OAuth Web client ID
+#   APPLE_BUNDLE_ID                → your iOS bundle identifier
+#   STRIPE_SECRET_KEY              → Stripe secret key (sk_live_...)
+#   STRIPE_WEBHOOK_SECRET          → Stripe webhook signing secret (whsec_...)
+#   STRIPE_PRICE_ID                → Stripe recurring Price ID (price_...)
+
+name: Deploy backend to GCP Cloud Run
+
+on:
+  push:
+    branches: [master]
+    paths: [backend/**]
+  workflow_dispatch:
+
+env:
+  SERVICE_NAME: childcare-api
+  IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/childcare/api
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: echo "${{ steps.auth.outputs.access_token }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:${{ github.sha }} \
+            -t ${{ env.IMAGE }}:latest \
+            ./backend/ChildCare.Api
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region:  ${{ secrets.GCP_REGION }}
+          image:   ${{ env.IMAGE }}:${{ github.sha }}
+          env_vars: |
+            ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}
+            Jwt__Secret=${{ secrets.JWT_SECRET }}
+            Jwt__Issuer=ChildCare
+            Jwt__Audience=ChildCareApp
+            Jwt__AccessTokenExpiryMinutes=15
+            Jwt__RefreshTokenExpiryDays=30
+            Google__AllowedClientIds__0=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}
+            Google__AllowedClientIds__1=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+            Google__AllowedClientIds__2=${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+            Apple__BundleId=${{ secrets.APPLE_BUNDLE_ID }}
+            Stripe__SecretKey=${{ secrets.STRIPE_SECRET_KEY }}
+            Stripe__WebhookSecret=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+            Stripe__PriceId=${{ secrets.STRIPE_PRICE_ID }}
+            Stripe__SuccessUrl=childcare://payment-success
+            Stripe__CancelUrl=childcare://payment-cancel
+
+      - name: Print service URL
+        run: echo "Deployed to ${{ steps.deploy.outputs.url }}"

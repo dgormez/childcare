@@ -1,0 +1,35 @@
+name: Backend tests
+
+on:
+  push:
+    branches: [master]
+    paths: [backend/**]
+  pull_request:
+    paths: [backend/**]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore
+        run: dotnet restore backend/ChildCare.Api.Tests/ChildCare.Api.Tests.csproj
+
+      - name: Build
+        run: dotnet build backend/ChildCare.Api.Tests/ChildCare.Api.Tests.csproj --no-restore
+
+      - name: Test
+        run: dotnet test backend/ChildCare.Api.Tests/ChildCare.Api.Tests.csproj --no-build --verbosity normal
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.DB_CONNECTION_STRING }}
+          Jwt__Secret: ${{ secrets.JWT_SECRET }}

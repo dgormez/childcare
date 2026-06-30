@@ -1,0 +1,28 @@
+MiniStack Commercial License
+
+Copyright (c) 2025 David Gormez
+
+By purchasing MiniStack, you are granted a non-exclusive, non-transferable license to:
+
+1. Use this codebase as the foundation for any number of commercial or personal applications.
+2. Modify and adapt the code to fit your projects.
+3. Deploy the backend and publish mobile apps built with this codebase to any platform or app store.
+4. Share access within your immediate team or company, provided all individuals using the codebase
+   are employed by or contracted directly to the purchasing entity.
+
+You may NOT:
+
+1. Resell or redistribute this boilerplate, in whole or in part, as a template, starter kit,
+   or development tool to other developers or third parties.
+2. Grant access to any individual or organization outside the purchasing team or company who
+   has not purchased their own license.
+3. Sub-license, transfer, or sell this license to another party.
+4. Remove or alter this license notice.
+
+Agencies and consultancies: each end client receiving a copy of this codebase as a deliverable
+requires their own license purchase, unless the codebase remains solely in the possession of
+the purchasing agency.
+
+There is no warranty of any kind. This software is provided "as is."
+
+For questions, volume licensing, or agency arrangements, contact: dgormez@gmail.com
