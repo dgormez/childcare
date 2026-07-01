@@ -23,9 +23,8 @@ name: Deploy backend to Azure Container Apps
 
 on:
   push:
-    branches: [master]
+    branches: [never]
     paths: [backend/**]
-  workflow_dispatch:
 
 env:
   IMAGE: ${{ secrets.ACR_LOGIN_SERVER }}/childcare/api

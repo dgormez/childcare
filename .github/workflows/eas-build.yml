@@ -2,16 +2,8 @@ name: EAS Build (production)
 
 on:
   push:
-    branches: [master]
+    branches: [never]
     paths: [mobile/**]
-  workflow_dispatch:
-    inputs:
-      platform:
-        description: "Platform to build"
-        required: true
-        default: "all"
-        type: choice
-        options: [all, android, ios]
 
 jobs:
   build:
@@ -37,6 +29,4 @@ jobs:
 
       - name: Build (production)
         working-directory: mobile
-        run: |
-          PLATFORM="${{ github.event.inputs.platform || 'all' }}"
-          eas build --platform "$PLATFORM" --profile production --non-interactive
+        run: eas build --platform all --profile production --non-interactive
