@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const { setSession } = useAuth();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
 
@@ -18,6 +19,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirm) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
       const session = await register(email, password);
@@ -49,6 +51,15 @@ export default function RegisterPage() {
           value={password} onChange={(e) => setPassword(e.target.value)}
           className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Min 8 characters"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+        <input
+          type="password" required autoComplete="new-password"
+          value={confirm} onChange={(e) => setConfirm(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Repeat your password"
         />
       </div>
 

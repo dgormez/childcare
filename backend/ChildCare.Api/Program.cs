@@ -57,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-if (!builder.Environment.IsEnvironment("Testing"))
+if (!builder.Environment.IsEnvironment("Testing") && !builder.Environment.IsDevelopment())
 builder.Services.AddRateLimiter(options =>
 {
     // Strict: login + register — brute-force targets
@@ -236,7 +236,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors();
-if (!app.Environment.IsEnvironment("Testing")) app.UseRateLimiter();
+if (!app.Environment.IsEnvironment("Testing") && !app.Environment.IsDevelopment()) app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

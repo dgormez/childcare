@@ -22,8 +22,10 @@ export default function LoginPage() {
       const session = await login(email, password);
       setSession(session);
       router.replace("/habits");
-    } catch {
-      setError("Invalid email or password.");
+    } catch (e) {
+      const status = (e as { status?: number }).status;
+      if (status === 429) setError("Too many attempts. Please try again in a few minutes.");
+      else setError("Invalid email or password.");
     } finally {
       setLoading(false);
     }

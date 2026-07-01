@@ -12,6 +12,7 @@ backend/**/bin/
 backend/**/obj/
 backend/**/*.user
 backend/**/appsettings.Development.json
+backend/**/*.sql
 *.nupkg
 
 # General
