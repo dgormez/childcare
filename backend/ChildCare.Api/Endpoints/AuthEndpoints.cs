@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using ChildCare.Api.Middleware;
 using ChildCare.Api.Models;
 using ChildCare.Api.Services;
 
@@ -11,37 +12,42 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
+        // register/login/google/apple/refresh/forgot-password/reset-password/verify-email all
+        // run before a tenant-bearing session exists, so they're exempt from TenantMiddleware
+        // and resolve their schema via AuthService's default-tenant shim instead
+        // (research.md R3, R7).
+
         group.MapPost("/register", async (RegisterRequest req, AuthService auth) =>
         {
             var (response, emailExists) = await auth.RegisterAsync(req.Email, req.Password);
             if (emailExists) return Results.Conflict(new { error = "An account with this email already exists." });
             return Results.Ok(response);
-        }).RequireRateLimiting("auth-strict");
+        }).RequireRateLimiting("auth-strict").RequireTenantExempt();
 
         group.MapPost("/login", async (LoginRequest req, AuthService auth) =>
         {
             var response = await auth.LoginAsync(req.Email, req.Password);
             return response is null ? Results.Unauthorized() : Results.Ok(response);
-        }).RequireRateLimiting("auth-strict");
+        }).RequireRateLimiting("auth-strict").RequireTenantExempt();
 
         group.MapPost("/refresh", async (RefreshRequest req, AuthService auth) =>
         {
             var response = await auth.RefreshAsync(req.RefreshToken);
             return response is null ? Results.Unauthorized() : Results.Ok(response);
-        }).RequireRateLimiting("auth-refresh");
+        }).RequireRateLimiting("auth-refresh").RequireTenantExempt();
 
         group.MapPost("/google", async (GoogleAuthRequest req, AuthService auth) =>
         {
             var response = await auth.GoogleSignInAsync(req.IdToken);
             return response is null ? Results.Unauthorized() : Results.Ok(response);
-        }).RequireRateLimiting("auth-oauth");
+        }).RequireRateLimiting("auth-oauth").RequireTenantExempt();
 
         group.MapPost("/apple", async (AppleAuthRequest req, AuthService auth) =>
         {
             var (response, error) = await auth.AppleSignInAsync(req.IdentityToken, req.Email);
             if (error is not null) return Results.BadRequest(new { error });
             return response is null ? Results.Unauthorized() : Results.Ok(response);
-        }).RequireRateLimiting("auth-oauth");
+        }).RequireRateLimiting("auth-oauth").RequireTenantExempt();
 
         // Revokes only the calling device's session; other devices stay logged in
         group.MapPost("/logout", async (LogoutRequest req, AuthService auth) =>
@@ -64,8 +70,10 @@ public static class AuthEndpoints
             return success
                 ? Results.Ok(new { message = "Email verified." })
                 : Results.BadRequest(new { error = "This verification link is invalid or has expired." });
-        }).RequireRateLimiting("auth-strict");
+        }).RequireRateLimiting("auth-strict").RequireTenantExempt();
 
+        // Not exempt: R7's shim JWT already carries a real tenant_id claim, so this resolves
+        // through the ordinary TenantMiddleware path like any other authenticated endpoint.
         group.MapPost("/resend-verification", async (HttpContext ctx, AuthService auth) =>
         {
             var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -78,7 +86,7 @@ public static class AuthEndpoints
         {
             await auth.ForgotPasswordAsync(req.Email);
             return Results.Ok(new { message = "If that email is registered, a reset link has been sent." });
-        }).RequireRateLimiting("auth-strict");
+        }).RequireRateLimiting("auth-strict").RequireTenantExempt();
 
         group.MapPost("/reset-password", async (ResetPasswordRequest req, AuthService auth) =>
         {
@@ -86,7 +94,7 @@ public static class AuthEndpoints
             return success
                 ? Results.Ok(new { message = "Password has been reset. You can now sign in." })
                 : Results.BadRequest(new { error = "This reset link is invalid or has expired." });
-        }).RequireRateLimiting("auth-strict");
+        }).RequireRateLimiting("auth-strict").RequireTenantExempt();
     }
 }
 

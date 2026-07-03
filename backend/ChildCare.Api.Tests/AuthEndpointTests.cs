@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -7,8 +8,15 @@ using Xunit;
 
 namespace ChildCare.Api.Tests;
 
-public class AuthEndpointTests(ChildCareWebAppFactory factory)
-    : IClassFixture<ChildCareWebAppFactory>
+/// <summary>
+/// Migrated from ChildCareWebAppFactory (InMemory) to OrganisationOnboardingWebAppFactory (real
+/// TestContainers Postgres) — AuthEndpoints now runs against TenantUser/TenantDbContext instead
+/// of the deleted AppDbContext/Models.User (research.md R4, R7, tasks.md T022). The factory
+/// seeds one Ready tenant so AuthService's pre-auth default-tenant shim has somewhere to
+/// resolve against.
+/// </summary>
+public class AuthEndpointTests(OrganisationOnboardingWebAppFactory factory)
+    : IClassFixture<OrganisationOnboardingWebAppFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -22,6 +30,10 @@ public class AuthEndpointTests(ChildCareWebAppFactory factory)
         res.EnsureSuccessStatusCode();
         return (await res.Content.ReadFromJsonAsync<AuthResponse>())!;
     }
+
+    private static string? GetClaim(string accessToken, string claimType) =>
+        new JwtSecurityTokenHandler().ReadJwtToken(accessToken).Claims
+            .FirstOrDefault(c => c.Type == claimType)?.Value;
 
     // ── Register ──────────────────────────────────────────────────────────────
 
@@ -38,6 +50,19 @@ public class AuthEndpointTests(ChildCareWebAppFactory factory)
         Assert.NotEmpty(body.AccessToken);
         Assert.NotEmpty(body.RefreshToken);
         Assert.NotEqual(Guid.Empty, body.User.Id);
+    }
+
+    [Fact]
+    public async Task Register_ValidCredentials_IssuedTokenCarriesTenantIdClaim()
+    {
+        // research.md R7: every legacy-auth JWT must carry a real tenant_id claim, pointing at
+        // the shim's default tenant, so the non-exempt post-login routes resolve normally.
+        var auth = await RegisterAsync(UniqueEmail());
+
+        var tenantId = GetClaim(auth.AccessToken, "tenant_id");
+        Assert.False(string.IsNullOrEmpty(tenantId));
+        Assert.True(Guid.TryParse(tenantId, out var parsed));
+        Assert.NotEqual(Guid.Empty, parsed);
     }
 
     [Fact]

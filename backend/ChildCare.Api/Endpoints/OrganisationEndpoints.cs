@@ -1,3 +1,4 @@
+using ChildCare.Api.Middleware;
 using ChildCare.Application.Organisations;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -38,6 +39,7 @@ public static class OrganisationEndpoints
 
                 _ => throw new InvalidOperationException($"Unhandled {nameof(RegisterOrganisationFailure)}: {result.Failure}"),
             };
-        });
+        })
+        .RequireTenantExempt();
     }
 }

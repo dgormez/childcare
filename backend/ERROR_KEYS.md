@@ -23,6 +23,14 @@ a translation task: it lists the keys and their trigger conditions, not the NL/F
 | `errors.registration.password_too_short` | 422 | `POST /api/organisations/register` — `password` under 8 characters |
 | `errors.registration.email_mismatch` | 422 | `POST /api/organisations/register` — the submitted `email` doesn't match the invitation's target email (FR-018); distinct from `errors.invitation.not_found` because the caller holds a real, valid invitation in this case |
 
+## Multi-Tenancy Scaffold (feature `002-multi-tenancy-scaffold`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.tenant.missing` | 401 | A non-exempt request's JWT has no `tenant_id` claim (FR-006) |
+| `errors.tenant.not_found` | 403 | A non-exempt request's `tenant_id` claim matches no known tenant, or is present but malformed/not a valid GUID (FR-007, spec.md Edge Cases — deliberately treated the same as "unknown"), or the tenant lookup itself threw (FR-008a — deliberately indistinguishable from "unknown tenant"; the real exception is logged server-side only) |
+| `errors.tenant.not_ready` | 403 | A non-exempt request's `tenant_id` resolves to a tenant whose `ProvisioningStatus != Ready` (FR-008) |
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |
