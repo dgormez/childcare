@@ -34,6 +34,11 @@ resource "google_project_service" "compute" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "secretmanager" {
+  service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}
+
 # GitHub Actions service account
 
 resource "google_service_account" "github_actions" {
@@ -96,6 +101,33 @@ resource "google_service_account_iam_member" "github_actions_wif" {
   service_account_id = google_service_account.github_actions.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_username}/${var.github_repo}"
+}
+
+# Secret Manager
+# research.md R11 (feature 001-organisation-onboarding): SUPERADMIN_API_KEY gates the
+# temporary Phase 1 invitation-issuance endpoint. Sourced from Secret Manager, not a plain
+# Terraform variable interpolated as a literal env value — unlike the existing Jwt/Stripe
+# secrets below, which predate this feature and are out of scope to migrate here.
+
+resource "google_secret_manager_secret" "superadmin_api_key" {
+  secret_id = "superadmin-api-key"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.secretmanager]
+}
+
+resource "google_secret_manager_secret_version" "superadmin_api_key" {
+  secret      = google_secret_manager_secret.superadmin_api_key.id
+  secret_data = var.superadmin_api_key
+}
+
+resource "google_secret_manager_secret_iam_member" "superadmin_api_key_accessor" {
+  secret_id = google_secret_manager_secret.superadmin_api_key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }
 
 # Artifact Registry
@@ -175,6 +207,15 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.stripe_price_id
       }
       env {
+        name = "SuperAdmin__ApiKey"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.superadmin_api_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
         name  = "Stripe__SuccessUrl"
         value = "childcare://payment-success"
       }
@@ -185,7 +226,11 @@ resource "google_cloud_run_v2_service" "api" {
     }
   }
 
-  depends_on = [google_artifact_registry_repository.api]
+  depends_on = [
+    google_artifact_registry_repository.api,
+    google_secret_manager_secret_version.superadmin_api_key,
+    google_secret_manager_secret_iam_member.superadmin_api_key_accessor,
+  ]
 }
 
 resource "google_cloud_run_v2_service_iam_member" "public_invoker" {

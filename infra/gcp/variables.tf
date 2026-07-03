@@ -79,3 +79,9 @@ variable "stripe_webhook_secret" {
 variable "stripe_price_id" {
   type = string
 }
+
+variable "superadmin_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Gates POST /api/admin/invitations (research.md R11) — a temporary Phase 1 measure until proper super-admin auth exists (Phase 2)."
+}

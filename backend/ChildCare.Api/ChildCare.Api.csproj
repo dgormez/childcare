@@ -21,4 +21,10 @@
     <PackageReference Include="Stripe.net" Version="52.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ChildCare.Application\ChildCare.Application.csproj" />
+    <ProjectReference Include="..\ChildCare.Infrastructure\ChildCare.Infrastructure.csproj" />
+    <ProjectReference Include="..\ChildCare.Contracts\ChildCare.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>
