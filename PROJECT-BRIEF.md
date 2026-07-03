@@ -98,7 +98,7 @@ A child may hold **two simultaneous active contracts** at different locations ow
 
 ## Infrastructure
 
-- **Cloud:** GCP, project `kindergartenmanager`, region `europe-west1`
+- **Cloud:** GCP, project `childcare-501020`, region `europe-west1`
 - **Compute:** Cloud Run (containerised, scale-to-zero)
 - **Registry:** Artifact Registry
 - **IaC:** Terraform (`infra/gcp/`)

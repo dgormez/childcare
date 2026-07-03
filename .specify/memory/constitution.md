@@ -1,19 +1,32 @@
 <!--
 Sync Impact Report
 ==================
-Version change: [TEMPLATE] → 1.0.0 (initial ratification)
+Version change: 1.0.0 → 1.1.0 (MINOR — existing guidance materially expanded)
 
-Modified principles: N/A (first fill of the template)
+Modified principles:
+- I. Multi-Tenant Isolation (NON-NEGOTIABLE) — added a "Carve-out
+  (provisioning-only features)" clause, exempting features with zero
+  tenant-data-read endpoints from the TenantMiddleware/ICurrentTenantService
+  requirement, naming feature 001-organisation-onboarding as the qualifying
+  case. Core rule unchanged; this narrows scope, it does not weaken it — the
+  exemption explicitly ends once any endpoint reads tenant domain data.
+- VI. Secure Configuration & Storage — added a "Carve-out (new-tenant-schema
+  provisioning)" clause, exempting brand-new empty tenant schema provisioning
+  from the migrations-MUST-NOT-auto-apply rule. Migration content is still
+  authored/reviewed as normal code; only auto-application to a schema with
+  zero prior data is exempted. Rolling reviewed migrations out to *existing*
+  tenant schemas remains outside this exemption.
 
-Added sections:
-- Core Principles I–VII (Multi-Tenant Isolation, Regulatory Compliance by Design,
-  CQRS via MediatR & Thin Endpoints, Internationalization First, Test with Real
-  Infrastructure, Secure Configuration & Storage, Monolith-First Simplicity)
-- Technology Stack Constraints (Section 2)
-- Development Workflow & Phase Discipline (Section 3)
-- Governance
+Trigger: /speckit-analyze on feature 001-organisation-onboarding flagged both
+readings as CRITICAL findings (D1, D2) — bending NON-NEGOTIABLE-adjacent
+principle text via ad hoc plan-level justification, rather than a codified
+constitution exception, was assessed as insufficient. This amendment resolves
+both by codifying the exceptions explicitly, at the user's direction.
 
-Removed sections: none (template placeholders only)
+Added sections: none (both changes are additive clauses within existing
+principles, not new principles/sections)
+
+Removed sections: none
 
 Templates requiring updates:
 - .specify/templates/plan-template.md — ✅ compatible as-is (Constitution Check
@@ -23,9 +36,15 @@ Templates requiring updates:
 - .specify/templates/tasks-template.md — ✅ compatible as-is (no constitution-specific
   references)
 - No command files present under .specify/templates/commands/
+- specs/001-organisation-onboarding/plan.md — ⚠ pending manual update: its
+  Constitution Check table (lines ~37, 42) and Complexity Tracking section
+  should be updated to reflect that Principles I and VI are now clean passes
+  under the codified carve-outs, not "Partial, justified" bends of an
+  uncodified reading. Not updated by this command (constitution-only scope).
 
 Follow-up TODOs:
-- None. RATIFICATION_DATE set to the date this constitution was first adopted.
+- None. RATIFICATION_DATE unchanged (original adoption); LAST_AMENDED_DATE
+  updated to this amendment's date.
 -->
 
 # ChildCare Constitution
@@ -46,9 +65,26 @@ share one tenant schema. Any code path that queries domain data without
 going through the tenant-scoped context is a defect, regardless of
 whether it would leak data in practice today.
 
+**Carve-out (provisioning-only features)**: A feature that exposes zero
+endpoints reading existing tenant domain data is exempt from the
+`TenantMiddleware`/`ICurrentTenantService` requirement, provided every
+write it performs targets only the single tenant schema it just created
+within that same operation. Feature `001-organisation-onboarding`
+qualifies: it writes to the shared `tenants` table and provisions a new
+tenant schema, but has no endpoint of any kind that reads tenant domain
+data. `TenantMiddleware` is built in feature `002-multi-tenancy-scaffold`.
+This exemption ends the moment any feature adds an endpoint that reads
+tenant domain data — at that point `TenantMiddleware` MUST already exist
+and be wired in before that endpoint ships.
+
 **Rationale**: Belgian KDVs handle sensitive data on minors (medical
 notes, authorised pickups). A tenant-isolation bug is not a bug class we
-can afford to discover in production.
+can afford to discover in production. The carve-out exists because
+requiring `TenantMiddleware` before it has a reason to exist would force
+either building it prematurely (risking a rushed, throwaway version that
+outlives its intended lifespan) or blocking the one feature that must
+come first sequentially (organisation onboarding creates the tenants
+`TenantMiddleware` will later resolve).
 
 ### II. Regulatory Compliance by Design (NON-NEGOTIABLE)
 
@@ -122,9 +158,26 @@ stack traces MUST NOT be exposed to end users — return a clear,
 human-readable, localized message and log the full error server-side
 regardless of environment.
 
+**Carve-out (new-tenant-schema provisioning)**: The migrations-MUST-NOT-
+auto-apply rule does not apply when provisioning a brand-new tenant
+schema as part of organisation onboarding (feature
+`001-organisation-onboarding`). A newly created schema holds no prior
+data, so there is nothing an auto-applied migration could corrupt, and
+the whole point of self-service onboarding is that no operator manually
+runs a script per registration. The migration **content** is still
+authored via normal EF Core migration files and reviewed in the PR like
+any other code change — only its *application* to that one brand-new,
+empty schema happens automatically. Rolling an already-reviewed
+migration out to *existing* tenant schemas remains a deliberate,
+explicit operation, not something any feature auto-applies blindly.
+
 **Rationale**: Childcare data includes medical notes and minors' PII;
 config and storage practices default to the safer option even at some
-convenience cost during development.
+convenience cost during development. The provisioning carve-out targets
+a structurally different risk than the rule it modifies: a blind
+auto-migrate against a shared, populated production schema (what the
+rule prevents) versus applying already-reviewed SQL to a schema with
+zero rows and zero blast radius beyond the one tenant being created.
 
 ### VII. Monolith-First Simplicity
 
@@ -160,7 +213,7 @@ records a change:
 - **Web admin**: Next.js (App Router), TypeScript, Tailwind, shadcn/ui.
 - **Caregiver / parent apps**: Expo (React Native); caregiver app is
   tablet/landscape, parent app is phone/portrait.
-- **Infrastructure**: GCP project `kindergartenmanager`,
+- **Infrastructure**: GCP project `childcare-501020`,
   `europe-west1`; Cloud Run (scale-to-zero); Artifact Registry;
   Terraform (`infra/gcp/`); GitHub Actions CI/CD (push to `master` →
   build → push image → deploy).
@@ -217,4 +270,4 @@ checked against Principles I (tenant isolation) and II (regulatory
 compliance) explicitly, since these are the two categories most likely
 to cause customer-facing (licensing or data-leak) harm if violated.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
+**Version**: 1.1.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
