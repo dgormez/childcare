@@ -60,8 +60,12 @@ public class RegisterOrganisationCommandHandler(
             // Mark the failure explicitly rather than leaving `tenant` indistinguishable from
             // "still in progress" — a retry with the same invitation still resumes and succeeds
             // (ProvisionAsync is idempotent, FR-014); this only makes the stuck state observable.
-            tenant.ProvisioningStatus = ProvisioningStatus.Failed;
-            await db.SaveChangesAsync(cancellationToken);
+            // Conditioned on NOT already Ready: under FR-015's concurrent-attempt race, this
+            // exact tenant row may have just been completed by the other attempt — never
+            // downgrade a genuinely-completed tenant back to Failed.
+            await db.Tenants
+                .Where(t => t.Id == tenant.Id && t.ProvisioningStatus != ProvisioningStatus.Ready)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.ProvisioningStatus, ProvisioningStatus.Failed), cancellationToken);
             throw;
         }
 

@@ -90,7 +90,13 @@ public class TenantProvisioningService(IConfiguration configuration) : ITenantPr
         }
         catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.DuplicateTable or PostgresErrorCodes.DuplicateObject)
         {
-            // Already applied by an earlier, fully-successful attempt — safe to continue.
+            // Already applied by an earlier, fully-successful attempt — safe to continue. But
+            // the baseline script's own embedded transaction is now aborted at the Postgres
+            // session level; every subsequent command on this connection (the upsert below)
+            // would fail with 25P02 "current transaction is aborted" without an explicit
+            // ROLLBACK first — Postgres doesn't clear that state on its own.
+            await using var rollbackCmd = new NpgsqlCommand("ROLLBACK", connection);
+            await rollbackCmd.ExecuteNonQueryAsync(ct);
         }
 
         // Upsert-by-email, returning the row's ACTUAL Id — idempotent so a resumed attempt
