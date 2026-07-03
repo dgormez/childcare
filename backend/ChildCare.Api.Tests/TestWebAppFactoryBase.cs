@@ -17,7 +17,9 @@ namespace ChildCare.Api.Tests;
 /// </summary>
 public abstract class TestWebAppFactoryBase : WebApplicationFactory<Program>
 {
-    protected const string TestJwtSecret = "test-secret-key-that-is-32-chars-long!!";
+    public const string TestJwtSecret = "test-secret-key-that-is-32-chars-long!!";
+    public const string TestJwtIssuer = "ChildCare";
+    public const string TestJwtAudience = "ChildCareApp";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -28,8 +30,8 @@ public abstract class TestWebAppFactoryBase : WebApplicationFactory<Program>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Secret"]                   = TestJwtSecret,
-                ["Jwt:Issuer"]                   = "ChildCare",
-                ["Jwt:Audience"]                 = "ChildCareApp",
+                ["Jwt:Issuer"]                   = TestJwtIssuer,
+                ["Jwt:Audience"]                 = TestJwtAudience,
                 ["Jwt:AccessTokenExpiryMinutes"] = "15",
                 ["Jwt:RefreshTokenExpiryDays"]   = "30",
             });
@@ -41,8 +43,8 @@ public abstract class TestWebAppFactoryBase : WebApplicationFactory<Program>
             {
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtSecret));
                 options.TokenValidationParameters.IssuerSigningKey = key;
-                options.TokenValidationParameters.ValidIssuer      = "ChildCare";
-                options.TokenValidationParameters.ValidAudience     = "ChildCareApp";
+                options.TokenValidationParameters.ValidIssuer      = TestJwtIssuer;
+                options.TokenValidationParameters.ValidAudience     = TestJwtAudience;
             });
         });
     }

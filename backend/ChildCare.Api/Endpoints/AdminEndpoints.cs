@@ -1,3 +1,4 @@
+using ChildCare.Api.Middleware;
 using ChildCare.Application.Invitations;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -17,6 +18,7 @@ public static class AdminEndpoints
             var response = await mediator.Send(new CreateInvitationCommand(req.Email));
             return Results.Created($"/api/admin/invitations/{response.InvitationId}", response);
         })
-        .RequireAuthorization("SuperAdmin");
+        .RequireAuthorization("SuperAdmin")
+        .RequireTenantExempt();
     }
 }

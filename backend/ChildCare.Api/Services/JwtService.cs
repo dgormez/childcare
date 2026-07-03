@@ -3,20 +3,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using ChildCare.Api.Models;
 
 namespace ChildCare.Api.Services;
 
 public class JwtService(IConfiguration config)
 {
-    /// <summary>Generates a short-lived JWT access token for the given user.</summary>
-    public string GenerateAccessToken(User user)
-        => GenerateAccessToken(
-        [
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-        ]);
-
     /// <summary>
     /// Generates a short-lived JWT access token including a tenant_id claim (constitution
     /// Principle I), for the newly-registered director account (research.md R8). Additive

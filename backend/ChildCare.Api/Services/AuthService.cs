@@ -1,16 +1,36 @@
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using ChildCare.Api.Models;
+using ChildCare.Application.Common;
+using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using ChildCare.Api.Data;
-using ChildCare.Api.Models;
 
 namespace ChildCare.Api.Services;
 
+/// <summary>
+/// Transitional (research.md R7): until feature 003 delivers real email→organisation
+/// resolution, the pre-authentication methods below (register/login/google/apple/refresh/
+/// forgot-password/reset-password/verify-email) resolve a single "default tenant" — the
+/// earliest-created Ready tenant — via ResolveDefaultTenantAsync, and call
+/// ITenantDbContextResolver.ForSchema(...) directly. Post-login methods (logout,
+/// account-deletion, resend-verification) resolve the schema via ICurrentTenantService
+/// instead, since TenantMiddleware has already run for those (non-exempt) routes.
+///
+/// AuthService deliberately does NOT take the DI-registered, Scoped TenantDbContext as a
+/// constructor dependency — that registration reads ICurrentTenantService.SchemaName, which is
+/// unset for the pre-auth exempt routes (TenantMiddleware never runs for them), so it would
+/// silently resolve against an empty/wrong schema. Every method here calls
+/// ITenantDbContextResolver.ForSchema(...) explicitly instead, one consistent pattern
+/// throughout rather than mixing DI-injected and manually-resolved contexts.
+/// </summary>
 public class AuthService(
-    AppDbContext db,
+    IPublicDbContext publicDb,
+    ITenantDbContextResolver tenantResolver,
+    ICurrentTenantService currentTenant,
     JwtService jwt,
     EmailService emailService,
     IHttpClientFactory httpClientFactory,
@@ -21,11 +41,14 @@ public class AuthService(
     /// <summary>Returns null Response when the email is already taken.</summary>
     public async Task<(AuthResponse? Response, bool EmailExists)> RegisterAsync(string email, string password)
     {
+        var (schema, tenantId) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var normalized = email.ToLower().Trim();
         if (await db.Users.AnyAsync(u => u.Email == normalized))
             return (null, true);
 
-        var user = new User
+        var user = new TenantUser
         {
             Email        = normalized,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
@@ -34,14 +57,14 @@ public class AuthService(
         db.Users.Add(user);
 
         // Send verification email before saving so the token is persisted in one transaction
-        await SetVerificationTokenAsync(user);
+        SetVerificationToken(user);
 
-        var refreshToken = AddRefreshToken(user);
+        var refreshToken = AddRefreshToken(db, user);
         await db.SaveChangesAsync();
 
         await emailService.SendEmailVerificationAsync(user.Email, BuildVerifyUrl(user.EmailVerificationToken!));
 
-        return (BuildAuthResponse(user, refreshToken), false);
+        return (BuildAuthResponse(user, refreshToken, tenantId), false);
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
@@ -49,13 +72,16 @@ public class AuthService(
     /// <summary>Returns null when credentials are invalid.</summary>
     public async Task<AuthResponse?> LoginAsync(string email, string password)
     {
+        var (schema, tenantId) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower().Trim());
         if (user is null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return null;
 
-        var refreshToken = AddRefreshToken(user);
+        var refreshToken = AddRefreshToken(db, user);
         await db.SaveChangesAsync();
-        return BuildAuthResponse(user, refreshToken);
+        return BuildAuthResponse(user, refreshToken, tenantId);
     }
 
     // ── Refresh ───────────────────────────────────────────────────────────────
@@ -63,18 +89,22 @@ public class AuthService(
     /// <summary>Returns null when the refresh token is invalid or expired.</summary>
     public async Task<AuthResponse?> RefreshAsync(string refreshToken)
     {
-        var tokenEntity = await db.UserRefreshTokens
-            .Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.Token == refreshToken);
+        var (schema, tenantId) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
 
+        var tokenEntity = await db.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken);
         if (tokenEntity is null || tokenEntity.ExpiresAt < DateTime.UtcNow)
             return null;
 
+        var user = await db.Users.FindAsync(tokenEntity.TenantUserId);
+        if (user is null)
+            return null;
+
         // Rotate: remove the used token and issue a fresh one
-        db.UserRefreshTokens.Remove(tokenEntity);
-        var newToken = AddRefreshToken(tokenEntity.User);
+        db.RefreshTokens.Remove(tokenEntity);
+        var newToken = AddRefreshToken(db, user);
         await db.SaveChangesAsync();
-        return BuildAuthResponse(tokenEntity.User, newToken);
+        return BuildAuthResponse(user, newToken, tenantId);
     }
 
     // ── Google Sign In ────────────────────────────────────────────────────────
@@ -97,13 +127,16 @@ public class AuthService(
         var allowedIds = config.GetSection("Google:AllowedClientIds").Get<string[]>() ?? [];
         if (payload.Aud is null || !allowedIds.Contains(payload.Aud)) return null;
 
+        var (schema, tenantId) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.GoogleId == payload.Sub)
                 ?? await db.Users.FirstOrDefaultAsync(u => u.Email    == payload.Email.ToLower());
 
         if (user is null)
         {
             // Google has already verified the email
-            user = new User { Email = payload.Email.ToLower(), GoogleId = payload.Sub, PasswordHash = string.Empty, EmailVerified = true };
+            user = new TenantUser { Email = payload.Email.ToLower(), GoogleId = payload.Sub, PasswordHash = string.Empty, EmailVerified = true };
             db.Users.Add(user);
         }
         else
@@ -113,9 +146,9 @@ public class AuthService(
             if (!user.EmailVerified) user.EmailVerified = true;
         }
 
-        var refreshToken = AddRefreshToken(user);
+        var refreshToken = AddRefreshToken(db, user);
         await db.SaveChangesAsync();
-        return BuildAuthResponse(user, refreshToken);
+        return BuildAuthResponse(user, refreshToken, tenantId);
     }
 
     // ── Apple Sign In ─────────────────────────────────────────────────────────
@@ -131,6 +164,9 @@ public class AuthService(
         // Apple only sends email on the first sign-in; fall back to what the client provided
         var resolvedEmail = email?.ToLower().Trim() ?? tkEmail?.ToLower();
 
+        var (schema, tenantId) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.AppleId == sub)
                 ?? (resolvedEmail is not null ? await db.Users.FirstOrDefaultAsync(u => u.Email == resolvedEmail) : null);
 
@@ -140,7 +176,7 @@ public class AuthService(
                 return (null, "Email is required for first-time Apple Sign In.");
 
             // Apple has already verified the email
-            user = new User { Email = resolvedEmail, AppleId = sub, PasswordHash = string.Empty, EmailVerified = true };
+            user = new TenantUser { Email = resolvedEmail, AppleId = sub, PasswordHash = string.Empty, EmailVerified = true };
             db.Users.Add(user);
         }
         else
@@ -149,9 +185,9 @@ public class AuthService(
             if (!user.EmailVerified) user.EmailVerified = true;
         }
 
-        var refreshToken = AddRefreshToken(user);
+        var refreshToken = AddRefreshToken(db, user);
         await db.SaveChangesAsync();
-        return (BuildAuthResponse(user, refreshToken), null);
+        return (BuildAuthResponse(user, refreshToken, tenantId), null);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -159,11 +195,12 @@ public class AuthService(
     /// <summary>Revokes only the token for the calling device, leaving other sessions active.</summary>
     public async Task LogoutAsync(string refreshToken)
     {
-        var tokenEntity = await db.UserRefreshTokens
-            .FirstOrDefaultAsync(t => t.Token == refreshToken);
+        var db = tenantResolver.ForSchema(currentTenant.SchemaName);
+
+        var tokenEntity = await db.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken);
         if (tokenEntity is null) return;
 
-        db.UserRefreshTokens.Remove(tokenEntity);
+        db.RefreshTokens.Remove(tokenEntity);
         await db.SaveChangesAsync();
     }
 
@@ -172,10 +209,12 @@ public class AuthService(
     /// <summary>Returns false when the user does not exist.</summary>
     public async Task<bool> DeleteAccountAsync(Guid userId)
     {
+        var db = tenantResolver.ForSchema(currentTenant.SchemaName);
+
         var user = await db.Users.FindAsync(userId);
         if (user is null) return false;
 
-        db.Users.Remove(user);  // cascades to UserRefreshTokens
+        db.Users.Remove(user);  // cascades to refresh_tokens (DB-level ON DELETE CASCADE)
         await db.SaveChangesAsync();
         return true;
     }
@@ -185,6 +224,9 @@ public class AuthService(
     /// <summary>Returns false when the token is invalid or expired.</summary>
     public async Task<bool> VerifyEmailAsync(string token)
     {
+        var (schema, _) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
         if (user is null || user.EmailVerificationExpiry < DateTime.UtcNow)
             return false;
@@ -199,10 +241,12 @@ public class AuthService(
     /// <summary>Re-sends the verification email. No-op if already verified.</summary>
     public async Task ResendVerificationAsync(Guid userId)
     {
+        var db = tenantResolver.ForSchema(currentTenant.SchemaName);
+
         var user = await db.Users.FindAsync(userId);
         if (user is null || user.EmailVerified) return;
 
-        await SetVerificationTokenAsync(user);
+        SetVerificationToken(user);
         await db.SaveChangesAsync();
         await emailService.SendEmailVerificationAsync(user.Email, BuildVerifyUrl(user.EmailVerificationToken!));
     }
@@ -211,6 +255,9 @@ public class AuthService(
 
     public async Task ForgotPasswordAsync(string email)
     {
+        var (schema, _) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower().Trim());
 
         // Only allow reset for accounts that have a password (not pure OAuth accounts)
@@ -233,6 +280,9 @@ public class AuthService(
     /// <summary>Returns false when the token is invalid or expired.</summary>
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
+        var (schema, _) = await ResolveDefaultTenantAsync();
+        var db = tenantResolver.ForSchema(schema);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
         if (user is null || user.PasswordResetExpiry < DateTime.UtcNow) return false;
 
@@ -241,8 +291,8 @@ public class AuthService(
         user.PasswordResetExpiry = null;
 
         // Invalidate all active sessions across all devices
-        var tokens = db.UserRefreshTokens.Where(t => t.UserId == user.Id);
-        db.UserRefreshTokens.RemoveRange(tokens);
+        var tokens = db.RefreshTokens.Where(t => t.TenantUserId == user.Id);
+        db.RefreshTokens.RemoveRange(tokens);
 
         await db.SaveChangesAsync();
         return true;
@@ -250,26 +300,43 @@ public class AuthService(
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private string AddRefreshToken(User user)
+    /// <summary>
+    /// Transitional shim (research.md R7): the earliest-created Ready tenant stands in for
+    /// "the organisation this pre-auth request belongs to" until feature 003 delivers real
+    /// email→organisation resolution.
+    /// </summary>
+    private async Task<(string SchemaName, Guid TenantId)> ResolveDefaultTenantAsync()
     {
-        var entity = new UserRefreshToken
+        var tenant = await publicDb.Tenants
+            .Where(t => t.ProvisioningStatus == ProvisioningStatus.Ready)
+            .OrderBy(t => t.CreatedAt)
+            .FirstOrDefaultAsync()
+            ?? throw new InvalidOperationException(
+                "No Ready tenant exists yet — the pre-auth default-tenant shim (research.md R7) " +
+                "requires at least one organisation to have completed onboarding.");
+
+        return (tenant.SchemaName, tenant.Id);
+    }
+
+    private string AddRefreshToken(ITenantDbContext db, TenantUser user)
+    {
+        var entity = new TenantUserRefreshToken
         {
-            UserId    = user.Id,
-            Token     = jwt.GenerateRefreshToken(),
-            ExpiresAt = DateTime.UtcNow.AddDays(jwt.RefreshTokenExpiryDays),
+            TenantUserId = user.Id,
+            Token        = jwt.GenerateRefreshToken(),
+            ExpiresAt    = DateTime.UtcNow.AddDays(jwt.RefreshTokenExpiryDays),
         };
-        db.UserRefreshTokens.Add(entity);
+        db.RefreshTokens.Add(entity);
         return entity.Token;
     }
 
-    private AuthResponse BuildAuthResponse(User user, string refreshToken) =>
-        new(jwt.GenerateAccessToken(user), refreshToken, new UserDto(user.Id, user.Email, user.EmailVerified));
+    private AuthResponse BuildAuthResponse(TenantUser user, string refreshToken, Guid tenantId) =>
+        new(jwt.GenerateAccessToken(user.Id, user.Email, tenantId), refreshToken, new UserDto(user.Id, user.Email, user.EmailVerified));
 
-    private Task SetVerificationTokenAsync(User user)
+    private static void SetVerificationToken(TenantUser user)
     {
         user.EmailVerificationToken  = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         user.EmailVerificationExpiry = DateTime.UtcNow.AddHours(24);
-        return Task.CompletedTask;
     }
 
     private string BuildVerifyUrl(string token)

@@ -10,8 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using ChildCare.Api.Auth;
-using ChildCare.Api.Data;
+using ChildCare.Api.Cli;
 using ChildCare.Api.Endpoints;
+using ChildCare.Api.Middleware;
 using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
@@ -20,23 +21,55 @@ using ChildCare.Infrastructure.Persistence;
 using FluentValidation;
 using MediatR;
 
+// migrate-tenants CLI subcommand (contracts/migrate-tenants-cli.md, research.md R8) — checked
+// before the web host is built: it does not start the API, does not bind a port, and exits
+// when done, so it must never fall through into the normal WebApplication startup below.
+if (args.Length > 0 && args[0] == "migrate-tenants")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+    cliBuilder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await MigrateTenantsCommand.RunAsync(cliScope.ServiceProvider);
+    Environment.Exit(exitCode);
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Database ──────────────────────────────────────────────────────────────────
-// Skip Npgsql registration in Testing — integration tests inject InMemory via WebApplicationFactory.
+// Skip Npgsql registration in Testing — integration tests inject InMemory/TestContainers via
+// WebApplicationFactory.
 if (!builder.Environment.IsEnvironment("Testing"))
 {
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
     // Organisation onboarding (feature 001) — shared public schema (tenants, invitations).
-    // TenantDbContext is deliberately NOT registered here: it has no per-request use yet
-    // (that's feature 002's TenantMiddleware); TenantProvisioningService builds its own
-    // instances internally, scoped to whatever schema it's provisioning (research.md R6).
     builder.Services.AddDbContext<PublicDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Services.AddScoped<IPublicDbContext>(sp => sp.GetRequiredService<PublicDbContext>());
 }
+
+// ── Multi-tenancy scaffold (feature 002) ────────────────────────────────────────
+// CurrentTenantService/ICurrentTenantService MUST be Scoped, never Singleton — a singleton
+// would leak one request's tenant into a concurrent request's (research.md R2).
+builder.Services.AddScoped<CurrentTenantService>();
+builder.Services.AddScoped<ICurrentTenantService>(sp => sp.GetRequiredService<CurrentTenantService>());
+
+// Stateless besides IConfiguration — Singleton (mirrors TenantProvisioningService).
+builder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+
+// Request-scoped ITenantDbContext, built via the resolver reading the current request's
+// resolved schema. Only valid for non-exempt routes, once TenantMiddleware has run —
+// ForSchema itself now throws if SchemaName isn't set yet, rather than silently building a
+// context against the wrong schema (see TenantDbContextResolver.ForSchema).
+builder.Services.AddScoped<ITenantDbContext>(sp =>
+    sp.GetRequiredService<ITenantDbContextResolver>()
+        .ForSchema(sp.GetRequiredService<ICurrentTenantService>().SchemaName));
+
+// IMiddleware-typed, so it's resolvable both by the pipeline and by test code via
+// factory.Services.GetRequiredService<TenantMiddleware>() (research.md R3).
+builder.Services.AddSingleton<TenantMiddleware>();
 
 // ── MediatR + FluentValidation (constitution Principle III) ────────────────────
 builder.Services.AddMediatR(cfg =>
@@ -59,12 +92,6 @@ var jwtSecret = builder.Configuration["Jwt:Secret"]
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<PushNotificationService>();
-builder.Services.AddScoped<StripeService>();
-
-var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
-if (!string.IsNullOrEmpty(stripeSecretKey))
-    Stripe.StripeConfiguration.ApiKey = stripeSecretKey;
 builder.Services.AddHttpClient();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -249,17 +276,13 @@ var app = builder.Build();
 // shared public schema, which behaves like any other shared/existing-data schema).
 using (var scope = app.Services.CreateScope())
 {
-    var db       = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Optional: existing test factories (ChildCareWebAppFactory) don't register PublicDbContext
-    // and shouldn't need to — this feature's own factory (OrganisationOnboardingWebAppFactory)
-    // migrates it explicitly in its own setup instead of relying on this dev-only block.
+    // Optional: existing test factories don't necessarily register PublicDbContext via Npgsql
+    // — this feature's own factories migrate it explicitly in their own setup instead of
+    // relying on this dev-only block.
     var publicDb = scope.ServiceProvider.GetService<PublicDbContext>();
     var env      = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
     if (env.IsDevelopment())
-    {
-        db.Database.Migrate();
         publicDb?.Database.Migrate();
-    }
 }
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -315,21 +338,25 @@ if (!app.Environment.IsEnvironment("Testing") && !app.Environment.IsDevelopment(
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Deny-by-default tenant resolution (FR-015) — after auth, so the tenant_id claim is
+// available; every non-[TenantExempt] route below is scoped by this (research.md R3).
+app.UseMiddleware<TenantMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();  // UI at /scalar/v1
+    // Dev-only API docs — not tenant domain data, so exempt (research.md R3); without this,
+    // TenantMiddleware rejects anonymous access to /openapi/*.json and /scalar/v1 with a 401.
+    app.MapOpenApi().RequireTenantExempt();
+    app.MapScalarApiReference().RequireTenantExempt();  // UI at /scalar/v1
 }
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
-   .WithTags("Health");
+   .WithTags("Health")
+   .RequireTenantExempt();
 
 // ── Feature endpoints ─────────────────────────────────────────────────────────
 app.MapAuthEndpoints();
-app.MapHabitEndpoints();
-app.MapNotificationEndpoints();
-app.MapPaymentEndpoints();
 app.MapAdminEndpoints();
 app.MapOrganisationEndpoints();
 
