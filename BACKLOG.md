@@ -13,8 +13,8 @@
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
 | 001 | `001-organisation-onboarding` | Organisation registration + workspace provisioning | — | ✅ Done |
-| 002 | `002-multi-tenancy-scaffold` | TenantMiddleware, TenantDbContext, ICurrentTenantService, schema switching | 001 | 🔲 Not started |
-| 003 | `003-auth` | Login, per-device refresh tokens, Google/Apple OAuth (parent app) | 001, 002 | 🔲 Not started |
+| 002 | `002-multi-tenancy-scaffold` | TenantMiddleware, TenantDbContext, ICurrentTenantService, schema switching | 001 | ✅ Done |
+| 003 | `003-auth` | Login, per-device refresh tokens, Google/Apple OAuth (parent app) | 001, 002 | ✅ Done |
 | 004 | `004-locations` | Location management within an organisation | 001, 002 | 🔲 Not started |
 | 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | 🔲 Not started |
 | 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | 🔲 Not started |
@@ -230,6 +230,14 @@ Out of scope:
 - SSO / SAML (enterprise feature, much later).
 - Open registration — all accounts are created by director invitation.
 ```
+
+**Shipped 2026-07-06** — `specs/003-auth/` (spec → plan → tasks → implementation, 66/66 tasks, 30 new integration tests + all 24 pre-existing tests passing). Scope deltas from the plan above, worth knowing before starting feature 004+:
+
+- Two issues were found and fixed beyond the original prompt's scope, both during `/speckit-plan`'s codebase review: (1) `GoogleSignInAsync`/`AppleSignInAsync` were auto-creating a new account when no match existed — an open-registration path via OAuth, exactly the thing "Open registration" being out-of-scope was meant to prevent. Fixed to link-only, matching `/register`'s removal. (2) Two hardcoded English error strings in `AuthEndpoints.cs` (a pre-existing Constitution Principle IV violation) were replaced with `errors.auth.token_invalid_or_expired`.
+- **Client-facing change every downstream feature/app needs to know**: every pre-session auth request (login, Google, Apple, refresh, forgot-password) now requires a client-supplied `organisationSlug` field — the app must know or ask which organisation it's signing into before calling any of these endpoints. Password-reset/verification links carry the slug as a `&org=` query parameter instead, so the client reads it back out of the link rather than asking the user again.
+- `Role` (Director/Staff/Parent) now exists on every `TenantUser`, carried on the JWT as a standard `ClaimTypes.Role` claim, with `DirectorOnly`/`StaffOrDirector`/`ParentOnly` authorization policies registered and ready for every feature from 004 onward to declare via `.RequireAuthorization("...")` — no feature after this one should invent its own role-comparison logic.
+- The full `AuthService`/`AuthEndpoints.cs` direct-service-call pattern (feature 002's one deliberately-deferred Constitution Principle III gap) is gone — every auth flow is now a MediatR command under `ChildCare.Application/Auth/`, the same pattern features 004+ should follow for their own writes.
+- **Flag for 005 (Staff) and 006/012 (Children/Parent Communication)**: this feature deliberately does not build staff- or parent-account provisioning UI — it only builds the auth/authorization mechanics (Role field, policies, sign-in flows) those features will provision accounts into. Whoever builds 005/006/012 needs to decide the actual invitation UX for staff and parent accounts; this feature assumed (spec.md Assumptions) they'll reuse the same `TenantUser`-creation primitives.
 
 ---
 

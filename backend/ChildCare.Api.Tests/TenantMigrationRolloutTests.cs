@@ -53,7 +53,16 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         return tenant.SchemaName;
     }
 
-    /// <summary>Reverts a freshly-provisioned schema back to the pre-baseline-extension shape.</summary>
+    /// <summary>
+    /// Reverts a freshly-provisioned schema back to the pre-baseline-extension shape (i.e.
+    /// immediately after "InitialTenantSchema", before anything else). Must undo *every*
+    /// migration after that point, not just "ExtendUsersAddRefreshTokens" — feature 003's later
+    /// "AddUserRole" migration means a revert that only deletes the
+    /// ExtendUsersAddRefreshTokens history row (leaving AddUserRole's row and its Role column
+    /// in place) fools EF's "last applied migration" check into thinking nothing is pending,
+    /// since AddUserRole is chronologically the newest migration ID regardless of gaps before
+    /// it — discovered when this test started failing after AddUserRole was introduced.
+    /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
         using var scope = services.CreateScope();
@@ -68,8 +77,10 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "EmailVerified",
                 DROP COLUMN "GoogleId",
                 DROP COLUMN "PasswordResetExpiry",
-                DROP COLUMN "PasswordResetToken";
-            DELETE FROM "{schemaName}"."__EFMigrationsHistory" WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens';
+                DROP COLUMN "PasswordResetToken",
+                DROP COLUMN "Role";
+            DELETE FROM "{schemaName}"."__EFMigrationsHistory"
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole';
             """);
     }
 
@@ -83,6 +94,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         try
         {
             _ = await db.Users.Select(u => u.GoogleId).FirstOrDefaultAsync();
+            _ = await db.Users.Select(u => u.Role).FirstOrDefaultAsync();
             _ = await db.RefreshTokens.CountAsync();
             return true;
         }

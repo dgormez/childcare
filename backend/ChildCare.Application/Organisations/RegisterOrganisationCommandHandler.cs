@@ -72,7 +72,7 @@ public class RegisterOrganisationCommandHandler(
         tenant.ProvisioningStatus = ProvisioningStatus.Ready;
         await db.SaveChangesAsync(cancellationToken);
 
-        var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id);
+        var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id, "director");
 
         return RegisterOrganisationResult.Success(new RegisterOrganisationResponse(
             accessToken,
