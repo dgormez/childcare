@@ -17,6 +17,7 @@ using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
+using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Persistence;
 using FluentValidation;
 using MediatR;
@@ -36,6 +37,17 @@ if (args.Length > 0 && args[0] == "migrate-tenants")
     var exitCode = await MigrateTenantsCommand.RunAsync(cliScope.ServiceProvider);
     Environment.Exit(exitCode);
 }
+
+// Raises the ThreadPool's minimum worker threads above the .NET default (= ProcessorCount)
+// so a sudden burst of concurrent requests doesn't stall on the pool's slow "hill-climbing"
+// thread-injection rate. Auth endpoints in particular call BCrypt.Verify/HashPassword
+// synchronously (CPU-bound, deliberately expensive) inside otherwise-async handlers; under
+// SC-001's "up to 50 concurrent authentication requests" on an 8-core machine, only
+// ProcessorCount requests could run in parallel without this, pushing tail latency for the
+// rest well past the 2-second budget while they wait for new threads to spin up — found by
+// AuthMultiTenantLoginTests.Login_FiftyConcurrentRequests_EachCompletesWithinTwoSeconds
+// (feature 003, /speckit-converge T068).
+ThreadPool.SetMinThreads(Math.Max(Environment.ProcessorCount, 100), Math.Max(Environment.ProcessorCount, 100));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,8 +102,11 @@ var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
 
 builder.Services.AddSingleton<JwtService>();
-builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<EmailService>());
+builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+builder.Services.AddScoped<IAppleTokenValidator, AppleTokenValidator>();
+builder.Services.AddScoped<ChildCare.Application.Auth.OrganisationSlugResolver>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -120,6 +135,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("SuperAdmin", policy => policy
         .AddAuthenticationSchemes(SuperAdminAuthenticationHandler.SchemeName)
         .RequireAuthenticatedUser());
+
+    // Role-based access control (feature 003, research.md R5) — RequireRole reads the
+    // standard ClaimTypes.Role claim (JwtService.GenerateAccessToken) and already fails
+    // closed (missing/unrecognized role claim never grants access) and returns 403, not 401,
+    // for an authenticated-but-unauthorized request (FR-014).
+    options.AddPolicy("DirectorOnly",    policy => policy.RequireRole("director"));
+    options.AddPolicy("StaffOrDirector", policy => policy.RequireRole("staff", "director"));
+    options.AddPolicy("ParentOnly",      policy => policy.RequireRole("parent"));
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
@@ -359,6 +382,11 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
 app.MapAuthEndpoints();
 app.MapAdminEndpoints();
 app.MapOrganisationEndpoints();
+
+// Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
+// integration test host.
+if (app.Environment.IsEnvironment("Testing"))
+    app.MapTestSupportEndpoints();
 
 app.Run();
 

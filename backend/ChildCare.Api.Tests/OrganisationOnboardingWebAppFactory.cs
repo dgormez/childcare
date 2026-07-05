@@ -28,10 +28,11 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
     // FR-008a) without depending on console output.
     public CapturingLoggerProvider LogCapture { get; } = new();
 
-    // AuthService's pre-auth default-tenant shim (research.md R7) requires at least one Ready
-    // tenant to exist — seeded once per factory instance (i.e. once per test class, since
-    // IClassFixture shares this instance) so every consumer of this factory can exercise
-    // AuthEndpoints without repeating onboarding boilerplate first.
+    // Seeded once per factory instance (i.e. once per test class, since IClassFixture shares
+    // this instance) so every consumer of this factory has at least one Ready tenant to work
+    // with without repeating onboarding boilerplate first. Feature 002/003's default-tenant
+    // shim this used to backstop (research.md R7) is gone — real slug-based resolution
+    // (feature 003, research.md R1) is now unconditional.
     private const string DefaultTenantDirectorEmail = "default-tenant-director@test.com";
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
@@ -90,6 +91,17 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             services.AddDbContext<PublicDbContext>(options =>
                 options.UseNpgsql(_postgres.GetConnectionString()));
             services.AddScoped<IPublicDbContext>(sp => sp.GetRequiredService<PublicDbContext>());
+
+            // Overrides Program.cs's real (Scoped) Google/Apple validators with Singleton fakes
+            // (research.md R7) — the last registration wins for a non-collection service, and
+            // Singleton means factory.Services.GetRequiredService<FakeGoogleTokenValidator>()
+            // resolves the exact instance a request will use, mirroring TenantMiddleware's
+            // FailureInjectionHookForTests seam. Harmless for test classes that never call
+            // /api/auth/google or /api/auth/apple — the fakes are simply never invoked.
+            services.AddSingleton<FakeGoogleTokenValidator>();
+            services.AddSingleton<IGoogleTokenValidator>(sp => sp.GetRequiredService<FakeGoogleTokenValidator>());
+            services.AddSingleton<FakeAppleTokenValidator>();
+            services.AddSingleton<IAppleTokenValidator>(sp => sp.GetRequiredService<FakeAppleTokenValidator>());
         });
     }
 }

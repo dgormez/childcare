@@ -1,3 +1,5 @@
+using ChildCare.Domain.Enums;
+
 namespace ChildCare.Domain.Entities;
 
 public class TenantUser
@@ -8,6 +10,7 @@ public class TenantUser
     public string   Name         { get; set; } = string.Empty;
     public string?  GoogleId     { get; set; }
     public string?  AppleId      { get; set; }
+    public UserRole Role         { get; set; } = UserRole.Director;
 
     // Email verification (OAuth users are pre-verified by their provider)
     public bool      EmailVerified           { get; set; } = false;

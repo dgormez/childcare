@@ -10,16 +10,19 @@ public class JwtService(IConfiguration config)
 {
     /// <summary>
     /// Generates a short-lived JWT access token including a tenant_id claim (constitution
-    /// Principle I), for the newly-registered director account (research.md R8). Additive
-    /// overload — takes primitive claim values instead of the legacy ChildCare.Api.Models.User
-    /// type, so ChildCare.Application/Domain never need to reference it.
+    /// Principle I) and a role claim (research.md R4, FR-011) — takes primitive claim values
+    /// instead of the legacy ChildCare.Api.Models.User type, so ChildCare.Application/Domain
+    /// never need to reference it. The role is carried as ClaimTypes.Role specifically (not a
+    /// custom claim name) so ASP.NET Core's RequireRole()/User.IsInRole() work against it with
+    /// no custom claim-matching logic (research.md R5).
     /// </summary>
-    public string GenerateAccessToken(Guid userId, string email, Guid tenantId)
+    public string GenerateAccessToken(Guid userId, string email, Guid tenantId, string role)
         => GenerateAccessToken(
         [
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Email, email),
             new Claim("tenant_id", tenantId.ToString()),
+            new Claim(ClaimTypes.Role, role),
         ]);
 
     private string GenerateAccessToken(Claim[] claims)

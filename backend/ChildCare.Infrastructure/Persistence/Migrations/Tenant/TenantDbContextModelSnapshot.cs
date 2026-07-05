@@ -67,12 +67,20 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<string>("PasswordResetToken")
                         .HasColumnType("text");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users", "tenant_template");
+                    b.ToTable("users", "tenant_template", t =>
+                        {
+                            t.HasCheckConstraint("CK_users_role", "\"Role\" IN ('director','staff','parent')");
+                        });
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.TenantUserRefreshToken", b =>

@@ -103,11 +103,14 @@ public class TenantProvisioningService(IConfiguration configuration) : ITenantPr
         // never fails on a duplicate director row, and correct under a genuine concurrent
         // race: "DO UPDATE SET ... a no-op" (rather than DO NOTHING) is required for RETURNING
         // to still produce a row when a concurrent insert already won (research.md R15).
+        // "Role" is set explicitly here rather than relying on the AddUserRole migration's
+        // backfill-only column default (research.md R3) — every new tenant's director row
+        // states its role outright.
         var upsertDirectorSql =
             $"""
              SET search_path TO "{schemaName}";
-             INSERT INTO users ("Id", "Email", "PasswordHash", "Name", "CreatedAt")
-             VALUES (@id, @email, @passwordHash, @name, now())
+             INSERT INTO users ("Id", "Email", "PasswordHash", "Name", "Role", "CreatedAt")
+             VALUES (@id, @email, @passwordHash, @name, 'director', now())
              ON CONFLICT ("Email") DO UPDATE SET "Email" = EXCLUDED."Email"
              RETURNING "Id"
              """;

@@ -1,10 +1,13 @@
+using ChildCare.Application.Common;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 
 namespace ChildCare.Api.Services;
 
-public class EmailService(IConfiguration config, ILogger<EmailService> logger)
+/// <summary>Implements IEmailSender directly (research.md R6) — no adapter needed, its two
+/// public methods already match the port's shape.</summary>
+public class EmailService(IConfiguration config, ILogger<EmailService> logger) : IEmailSender
 {
     public async Task SendEmailVerificationAsync(string toEmail, string verifyLink)
     {

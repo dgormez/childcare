@@ -1,5 +1,6 @@
 using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -79,12 +80,21 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
         modelBuilder.Entity<TenantUser>(u =>
         {
-            u.ToTable("users");
+            u.ToTable("users", tb =>
+            {
+                tb.HasCheckConstraint("CK_users_role", "\"Role\" IN ('director','staff','parent')");
+            });
             u.HasKey(x => x.Id);
             u.HasIndex(x => x.Email).IsUnique();
             u.Property(x => x.Email).IsRequired().HasMaxLength(254);
             u.Property(x => x.PasswordHash).IsRequired();
             u.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            u.Property(x => x.Role)
+             .HasConversion(
+                 v => v.ToString().ToLowerInvariant(),
+                 v => (UserRole)Enum.Parse(typeof(UserRole), v, ignoreCase: true))
+             .HasMaxLength(20)
+             .IsRequired();
         });
 
         modelBuilder.Entity<TenantUserRefreshToken>(t =>
