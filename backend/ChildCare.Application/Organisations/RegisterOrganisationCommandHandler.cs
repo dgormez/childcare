@@ -33,51 +33,57 @@ public class RegisterOrganisationCommandHandler(
         if (!string.Equals(invitation.Email, submittedEmail, StringComparison.Ordinal))
             return RegisterOrganisationResult.Fail(RegisterOrganisationFailure.EmailMismatch);
 
-        var tenant = await ClaimOrResumeTenantAsync(invitation, request.OrganisationName, cancellationToken);
-        if (tenant is null)
-            // FR-004: another attempt already completed registration for this invitation.
-            return RegisterOrganisationResult.Fail(RegisterOrganisationFailure.InvitationNotFound);
-
-        var candidateDirectorUserId = Guid.NewGuid();
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-        // FR-008: synchronous — this await does not return until provisioning has fully
-        // succeeded or thrown. The returned Id is authoritative — under a genuine concurrent
-        // race it may not be the candidate Id this call generated (research.md R15).
-        Guid directorUserId;
-        try
+        // FR-015: serialized per invitation so a truly concurrent second attempt only ever
+        // proceeds after the first has fully finished — otherwise it can observe the winner's
+        // tenant row as "not Ready yet" and redo provisioning itself, also succeeding
+        // (research.md R15 follow-up).
+        return await provisioning.RunExclusiveAsync(invitation.Id, async () =>
         {
-            directorUserId = await provisioning.ProvisionAsync(
-                tenant.SchemaName,
-                candidateDirectorUserId,
-                invitation.Email,
-                passwordHash,
-                request.DirectorName,
-                cancellationToken);
-        }
-        catch
-        {
-            // Mark the failure explicitly rather than leaving `tenant` indistinguishable from
-            // "still in progress" — a retry with the same invitation still resumes and succeeds
-            // (ProvisionAsync is idempotent, FR-014); this only makes the stuck state observable.
-            // Conditioned on NOT already Ready: under FR-015's concurrent-attempt race, this
-            // exact tenant row may have just been completed by the other attempt — never
-            // downgrade a genuinely-completed tenant back to Failed.
-            await db.Tenants
-                .Where(t => t.Id == tenant.Id && t.ProvisioningStatus != ProvisioningStatus.Ready)
-                .ExecuteUpdateAsync(s => s.SetProperty(t => t.ProvisioningStatus, ProvisioningStatus.Failed), cancellationToken);
-            throw;
-        }
+            var tenant = await ClaimOrResumeTenantAsync(invitation, request.OrganisationName, cancellationToken);
+            if (tenant is null)
+                // FR-004: another attempt already completed registration for this invitation.
+                return RegisterOrganisationResult.Fail(RegisterOrganisationFailure.InvitationNotFound);
 
-        tenant.ProvisioningStatus = ProvisioningStatus.Ready;
-        await db.SaveChangesAsync(cancellationToken);
+            var candidateDirectorUserId = Guid.NewGuid();
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-        var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id, "director");
+            // FR-008: synchronous — this await does not return until provisioning has fully
+            // succeeded or thrown. The returned Id is authoritative — under a genuine concurrent
+            // race it may not be the candidate Id this call generated (research.md R15).
+            Guid directorUserId;
+            try
+            {
+                directorUserId = await provisioning.ProvisionAsync(
+                    tenant.SchemaName,
+                    candidateDirectorUserId,
+                    invitation.Email,
+                    passwordHash,
+                    request.DirectorName,
+                    cancellationToken);
+            }
+            catch
+            {
+                // Mark the failure explicitly rather than leaving `tenant` indistinguishable from
+                // "still in progress" — a retry with the same invitation still resumes and succeeds
+                // (ProvisionAsync is idempotent, FR-014); this only makes the stuck state observable.
+                // Conditioned on NOT already Ready: belt-and-braces alongside RunExclusiveAsync —
+                // never downgrade a genuinely-completed tenant back to Failed.
+                await db.Tenants
+                    .Where(t => t.Id == tenant.Id && t.ProvisioningStatus != ProvisioningStatus.Ready)
+                    .ExecuteUpdateAsync(s => s.SetProperty(t => t.ProvisioningStatus, ProvisioningStatus.Failed), cancellationToken);
+                throw;
+            }
 
-        return RegisterOrganisationResult.Success(new RegisterOrganisationResponse(
-            accessToken,
-            new OrganisationSummary(tenant.Id, tenant.Name, tenant.Slug, tenant.Plan.ToString().ToLowerInvariant()),
-            new DirectorSummary(directorUserId, invitation.Email, request.DirectorName)));
+            tenant.ProvisioningStatus = ProvisioningStatus.Ready;
+            await db.SaveChangesAsync(cancellationToken);
+
+            var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id, "director");
+
+            return RegisterOrganisationResult.Success(new RegisterOrganisationResponse(
+                accessToken,
+                new OrganisationSummary(tenant.Id, tenant.Name, tenant.Slug, tenant.Plan.ToString().ToLowerInvariant()),
+                new DirectorSummary(directorUserId, invitation.Email, request.DirectorName)));
+        }, cancellationToken);
     }
 
     /// <summary>

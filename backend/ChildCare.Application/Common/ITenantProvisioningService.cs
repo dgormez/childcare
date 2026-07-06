@@ -20,4 +20,14 @@ public interface ITenantProvisioningService
         string directorPasswordHash,
         string directorName,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs <paramref name="action"/> with exclusive access for <paramref name="key"/> — a
+    /// concurrent call for the same key blocks until this one completes (FR-015), so two
+    /// overlapping registration attempts for the same invitation are serialized rather than
+    /// both racing to provision. Without this, the loser of the Tenant-row race can observe
+    /// the winner's row as "not Ready yet" and redo provisioning itself, also succeeding
+    /// (research.md R15 follow-up).
+    /// </summary>
+    Task<T> RunExclusiveAsync<T>(Guid key, Func<Task<T>> action, CancellationToken cancellationToken = default);
 }

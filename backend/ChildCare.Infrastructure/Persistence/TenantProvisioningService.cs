@@ -124,6 +124,45 @@ public class TenantProvisioningService(IConfiguration configuration) : ITenantPr
         return actualDirectorId;
     }
 
+    /// <summary>
+    /// Serializes concurrent calls for the same <paramref name="key"/> via a Postgres session-
+    /// level advisory lock, held on a dedicated connection for the duration of <paramref
+    /// name="action"/> only. Advisory locks are server-side and keyed by an int64, not tied to
+    /// any particular connection pool — a lock taken here blocks any other caller (this
+    /// service's own registration handling, in practice) requesting the same key on any
+    /// connection, and is automatically released if this connection drops, so a crash mid-
+    /// registration can never leave the lock stuck.
+    /// </summary>
+    public async Task<T> RunExclusiveAsync<T>(Guid key, Func<Task<T>> action, CancellationToken cancellationToken = default)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
+        var lockKey = BitConverter.ToInt64(key.ToByteArray(), 0);
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using (var lockCmd = new NpgsqlCommand("SELECT pg_advisory_lock(@key)", connection))
+        {
+            lockCmd.Parameters.AddWithValue("key", lockKey);
+            await lockCmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            // Always attempt the unlock, even if `action` was cancelled — an un-cancellable
+            // token so a shutting-down request doesn't skip releasing the lock it holds.
+            await using var unlockCmd = new NpgsqlCommand("SELECT pg_advisory_unlock(@key)", connection);
+            unlockCmd.Parameters.AddWithValue("key", lockKey);
+            await unlockCmd.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
     private static string GenerateBaselineSql()
     {
         // SQL generation never opens a connection, so this connection string only needs to be
