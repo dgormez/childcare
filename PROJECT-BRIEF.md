@@ -158,7 +158,7 @@ The repo at `ChildCare/` contains a **walking skeleton** to avoid building on no
 | Phase | Scope |
 |---|---|
 | 1 | Core operations: child profiles, contracts, daily tracking (child_events), attendance, caregiver scheduling, parent communication, closure calendar, basic invoicing |
-| 2 | MeMoQ quality tracking, fiscal attestations (tax certificates), developmental milestones, management reporting |
+| 2 | MeMoQ quality tracking, fiscal attestations (tax certificates), developmental milestones, management reporting, email communications (bulk parent emails by location/section, emailed daily reports) |
 | 3 | IKT subsidy integration (Opgroeien API), advanced financial admin |
 
 ---

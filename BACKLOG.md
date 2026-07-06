@@ -39,6 +39,7 @@
 | 015 | `015-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
 | 016 | `016-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 017 | `017-management-reporting` | KPIs, occupancy, financial summaries | 009, 013 | 🔲 Not started |
+| 019 | `019-email-communications` | Bulk parent emails by location/section, emailed daily reports | 004, 006, 008, 010, 012 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -1153,6 +1154,72 @@ Out of scope:
 
 ---
 
+### 019 — Email Communications
+
+```
+Build templated email delivery on top of the existing notification
+infrastructure — bulk emails to parents and an emailed version of the
+child daily report.
+
+Context: IEmailSender / EmailService (MailKit-based) already exists for
+transactional auth emails (verify-email, reset-password), built as
+inline C# raw string literals. This feature fulfils the "Email
+notification fallback" items deferred by 010 (closure calendar) and 012
+(parent communication), and adds two new director-facing capabilities.
+
+What to build:
+- Bulk parent email: director selects a location (and, optionally, a
+  specific group/section within it — the group/section assignment already
+  modelled on the child in feature 006) and sends a one-off email to every
+  parent/contact of children currently enrolled there. One email per family
+  household, not per child — a parent with two children at the same location
+  must receive a single combined email, not two.
+- Daily report email: the same aggregated daily summary shown in the parent
+  app (feature 012, sourced from child_events in feature 008) can be sent
+  as an email to a child's contacts, either on-demand (director/caregiver
+  triggers it) or as an opt-in daily digest per contact.
+- Closure day emails: closure day notifications (feature 010) and
+  announcements (feature 012) gain an email channel alongside push/in-app,
+  reusing the same bulk-send mechanism built here.
+- A real email templating approach — the current pattern of raw C# string
+  literals per method does not scale to this many templates. Decide the
+  concrete templating mechanism (e.g. Scriban, a Razor Class Library, or
+  embedded HTML files with placeholder substitution) at plan time; whichever
+  is chosen must render NL/FR/EN per the recipient's locale preference
+  (already tracked on the primary contact per feature 006).
+
+Key constraints:
+- Every email respects the tenant boundary — a bulk send can never reach a
+  contact outside the director's organisation.
+- Bulk sends must tolerate partial failure (a subset of addresses bounce
+  or are invalid) — log and continue, never fail the whole batch for one
+  bad address.
+- All user-facing email copy uses i18n keys/templates per locale, consistent
+  with every other feature (constitution non-negotiable #3).
+- Respect the photos/media consent flags already on the contract (feature 007)
+  if a daily report email includes photos.
+
+Edge cases:
+- A location or group/section has zero enrolled children at send time —
+  no-op, not an error.
+- A parent contact has no email on file — skip that contact, log it, and
+  still send to the child's other contacts.
+- A daily report is requested for a child with no events recorded yet that
+  day — send an email that clearly says "no updates yet" rather than an
+  empty-looking template.
+- Rate limiting / provider throttling on large bulk sends (a big location
+  could have 100+ families) — batch or queue rather than sending
+  synchronously in the request.
+
+Out of scope:
+- SMS or WhatsApp channels.
+- Open/click tracking or delivery analytics.
+- Parent-side unsubscribe/preference centre (Phase 3, alongside the
+  broader notification preferences work).
+```
+
+---
+
 ## Notes
 
 - Each feature branch follows the Spec Kit cycle: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`
@@ -1161,3 +1228,4 @@ Out of scope:
 - Contracts (007) must include the split-location day-overlap validator
 - BKR ratio enforcement lives in attendance (009), not in contracts
 - IKT compliance (018) requires an X.509 certificate — initiate procurement at least 4 weeks before Phase 3 starts
+- Email communications (019) consolidates the "Email notification fallback (Phase 2)" items deferred by both 010 (closure calendar) and 012 (parent communication) — no need to build email delivery separately in either of those specs
