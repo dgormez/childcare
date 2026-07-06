@@ -20,6 +20,7 @@ public interface ITenantDbContext
 
     DbSet<TenantUser> Users { get; }
     DbSet<TenantUserRefreshToken> RefreshTokens { get; }
+    DbSet<Location> Locations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

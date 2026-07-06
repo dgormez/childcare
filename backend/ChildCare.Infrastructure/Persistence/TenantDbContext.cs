@@ -26,6 +26,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<TenantUserRefreshToken> RefreshTokens => Set<TenantUserRefreshToken>();
 
+    public DbSet<Location> Locations => Set<Location>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -108,6 +110,25 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
              .WithMany()
              .HasForeignKey(x => x.TenantUserId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Location>(l =>
+        {
+            l.ToTable("locations", tb =>
+            {
+                tb.HasCheckConstraint("CK_locations_max_capacity", "\"MaxCapacity\" > 0");
+            });
+            l.HasKey(x => x.Id);
+            l.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            l.Property(x => x.Address).IsRequired().HasMaxLength(500);
+            l.Property(x => x.Phone).IsRequired().HasMaxLength(30);
+            l.Property(x => x.Email).IsRequired().HasMaxLength(254);
+            l.Property(x => x.NaamLocatie).HasMaxLength(200);
+            l.Property(x => x.Dossiernummer).HasMaxLength(50);
+            l.Property(x => x.Verantwoordelijke).HasMaxLength(200);
+            l.Property(x => x.FlexPermission).IsRequired();
+            l.Property(x => x.BoPermission).IsRequired();
+            l.HasIndex(x => x.DeactivatedAt);
         });
     }
 }

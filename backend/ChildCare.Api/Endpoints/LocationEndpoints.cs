@@ -1,0 +1,86 @@
+using ChildCare.Application.Locations;
+using ChildCare.Contracts.Requests;
+using ChildCare.Contracts.Responses;
+using MediatR;
+
+namespace ChildCare.Api.Endpoints;
+
+/// <summary>
+/// The first tenant-domain-data endpoint group (constitution Principle I) — deliberately NOT
+/// tenant-exempt, so TenantMiddleware (feature 002) resolves ICurrentTenantService/ITenantDbContext
+/// before any handler below runs. Group-level RequireAuthorization("DirectorOnly") covers every
+/// route mapped inside it (list, get, create, update, deactivate, reactivate, duplicate — FR-011).
+/// </summary>
+public static class LocationEndpoints
+{
+    public static void MapLocationEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/locations")
+            .WithTags("Locations")
+            .RequireAuthorization("DirectorOnly");
+
+        group.MapGet("/", async (IMediator mediator, bool includeDeactivated = false) =>
+        {
+            var locations = await mediator.Send(new ListLocationsQuery(includeDeactivated));
+            return Results.Ok(locations);
+        });
+
+        group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetLocationByIdQuery(id));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        group.MapPost("/", async (CreateLocationRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new CreateLocationCommand(
+                req.Name, req.Address, req.Phone, req.Email, req.MaxCapacity));
+            return MapResult(result, onSuccess: r => Results.Created($"/api/locations/{r.Id}", r));
+        });
+
+        group.MapPut("/{id:guid}", async (Guid id, UpdateLocationRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationCommand(
+                id, req.Name, req.Address, req.Phone, req.Email, req.MaxCapacity,
+                req.NaamLocatie, req.Dossiernummer, req.Verantwoordelijke, req.FlexPermission, req.BoPermission));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new DeactivateLocationCommand(id));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        group.MapPost("/{id:guid}/reactivate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ReactivateLocationCommand(id));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        group.MapPost("/{id:guid}/duplicate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new DuplicateLocationCommand(id));
+            return MapResult(result, onSuccess: r => Results.Created($"/api/locations/{r.Id}", r));
+        });
+    }
+
+    private static IResult MapResult(LocationResult result, Func<LocationResponse, IResult> onSuccess)
+    {
+        if (result.Succeeded)
+            return onSuccess(result.Response!);
+
+        return result.Failure switch
+        {
+            LocationFailure.NotFound => Results.Json(
+                new { errorKey = "errors.location.not_found" },
+                statusCode: StatusCodes.Status404NotFound),
+
+            LocationFailure.HasActiveDependents => Results.Json(
+                new { errorKey = "errors.location.has_active_dependents" },
+                statusCode: StatusCodes.Status409Conflict),
+
+            _ => throw new InvalidOperationException($"Unhandled {nameof(LocationFailure)}: {result.Failure}"),
+        };
+    }
+}
