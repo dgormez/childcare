@@ -28,6 +28,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<Location> Locations => Set<Location>();
 
+    public DbSet<StaffProfile> StaffProfiles => Set<StaffProfile>();
+
+    public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
+
+    public DbSet<StaffLocationEligibility> StaffLocationEligibility => Set<StaffLocationEligibility>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -129,6 +135,41 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             l.Property(x => x.FlexPermission).IsRequired();
             l.Property(x => x.BoPermission).IsRequired();
             l.HasIndex(x => x.DeactivatedAt);
+        });
+
+        modelBuilder.Entity<StaffProfile>(s =>
+        {
+            s.ToTable("staff_profiles");
+            s.HasKey(x => x.Id);
+            s.HasIndex(x => x.TenantUserId).IsUnique();
+            s.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
+            s.Property(x => x.LastName).IsRequired().HasMaxLength(100);
+            s.Property(x => x.Phone).IsRequired().HasMaxLength(30);
+            s.Property(x => x.QualificationLevel)
+             .HasConversion(
+                 v => v == null ? null : v.ToString(),
+                 v => v == null ? null : (QualificationLevel?)Enum.Parse(typeof(QualificationLevel), v, ignoreCase: true))
+             .HasMaxLength(30);
+            s.Property(x => x.ProfilePhotoObjectPath).HasMaxLength(500);
+            s.HasIndex(x => x.DeactivatedAt);
+            s.HasOne<TenantUser>().WithOne().HasForeignKey<StaffProfile>(x => x.TenantUserId);
+        });
+
+        modelBuilder.Entity<StaffInvitation>(i =>
+        {
+            i.ToTable("staff_invitations");
+            i.HasKey(x => x.Id);
+            i.Property(x => x.Email).IsRequired().HasMaxLength(254);
+            i.HasIndex(x => x.Email);
+            i.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+        });
+
+        modelBuilder.Entity<StaffLocationEligibility>(e =>
+        {
+            e.ToTable("staff_location_eligibility");
+            e.HasKey(x => new { x.StaffProfileId, x.LocationId });
+            e.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            e.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
         });
     }
 }

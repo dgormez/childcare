@@ -17,3 +17,8 @@ output "service_account" {
   description = "GitHub Actions service account email — use as GCP_SERVICE_ACCOUNT GitHub secret"
   value       = google_service_account.github_actions.email
 }
+
+output "staff_photos_bucket_name" {
+  description = "GCS bucket name for staff profile photos (feature 005-staff)"
+  value       = google_storage_bucket.staff_profile_photos.name
+}

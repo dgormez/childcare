@@ -102,6 +102,22 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             services.AddSingleton<IGoogleTokenValidator>(sp => sp.GetRequiredService<FakeGoogleTokenValidator>());
             services.AddSingleton<FakeAppleTokenValidator>();
             services.AddSingleton<IAppleTokenValidator>(sp => sp.GetRequiredService<FakeAppleTokenValidator>());
+
+            services.AddSingleton<FakeProfilePhotoStorage>();
+            services.AddSingleton<IProfilePhotoStorage>(sp => sp.GetRequiredService<FakeProfilePhotoStorage>());
+
+            // Wraps a real EmailService (manually constructed with Singleton-safe dependencies
+            // — IConfiguration/ILogger, no per-request state) so tests get real dev-mode
+            // log-and-return behavior by default, but can flip ThrowOnStaffInvitation to prove a
+            // send failure doesn't fail the caller (feature 005-staff, /speckit-converge F1).
+            services.AddSingleton<FakeEmailSender>(sp =>
+            {
+                var innerEmailService = new ChildCare.Api.Services.EmailService(
+                    sp.GetRequiredService<IConfiguration>(),
+                    sp.GetRequiredService<ILogger<ChildCare.Api.Services.EmailService>>());
+                return new FakeEmailSender(innerEmailService);
+            });
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
         });
     }
 }

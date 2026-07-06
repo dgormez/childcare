@@ -19,6 +19,7 @@ using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Persistence;
+using ChildCare.Infrastructure.Storage;
 using FluentValidation;
 using MediatR;
 
@@ -108,6 +109,11 @@ builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 builder.Services.AddScoped<IAppleTokenValidator, AppleTokenValidator>();
 builder.Services.AddScoped<ChildCare.Application.Auth.OrganisationSlugResolver>();
 builder.Services.AddHttpClient();
+
+// ── Staff management (feature 005-staff) ────────────────────────────────────
+// No IStaffDeactivationGuard registration — IEnumerable<IStaffDeactivationGuard> resolves
+// empty until features 009/011 each register their own (research.md R4).
+builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -383,6 +389,7 @@ app.MapAuthEndpoints();
 app.MapAdminEndpoints();
 app.MapOrganisationEndpoints();
 app.MapLocationEndpoints();
+app.MapStaffEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

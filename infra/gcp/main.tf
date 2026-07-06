@@ -39,6 +39,11 @@ resource "google_project_service" "secretmanager" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "storage" {
+  service            = "storage.googleapis.com"
+  disable_on_destroy = false
+}
+
 # GitHub Actions service account
 
 resource "google_service_account" "github_actions" {
@@ -130,6 +135,37 @@ resource "google_secret_manager_secret_iam_member" "superadmin_api_key_accessor"
   member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }
 
+# Cloud Storage
+# feature 005-staff, research.md R3: a single bucket for staff profile photos. The API signs
+# V4 upload/download URLs directly (no proxying of image bytes), which requires the runtime
+# service account (the default compute SA, since Cloud Run doesn't set an explicit one below)
+# to be able to sign as itself — roles/iam.serviceAccountTokenCreator granted to its own
+# identity — without a downloaded key file (constitution Principle VI: no key file secrets).
+
+resource "google_storage_bucket" "staff_profile_photos" {
+  name                        = "${var.project_id}-staff-profile-photos"
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = false
+
+  public_access_prevention = "enforced"
+
+  depends_on = [google_project_service.storage]
+}
+
+resource "google_storage_bucket_iam_member" "staff_profile_photos_object_admin" {
+  bucket = google_storage_bucket.staff_profile_photos.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
+resource "google_service_account_iam_member" "default_sa_token_creator" {
+  service_account_id = data.google_compute_default_service_account.default.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
+
 # Artifact Registry
 
 resource "google_artifact_registry_repository" "api" {
@@ -177,6 +213,10 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "Jwt__RefreshTokenExpiryDays"
         value = "30"
+      }
+      env {
+        name  = "Storage__StaffPhotosBucketName"
+        value = google_storage_bucket.staff_profile_photos.name
       }
       env {
         name  = "Google__AllowedClientIds__0"

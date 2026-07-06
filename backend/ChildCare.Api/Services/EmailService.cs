@@ -75,6 +75,39 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger) :
         await SendAsync(message);
     }
 
+    public async Task SendStaffInvitationAsync(string toEmail, string inviteLink)
+    {
+        if (!TryBuildMessage(toEmail, "You've been invited to join ChildCare", out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Staff invitation link for {Email}: {Link}", toEmail, inviteLink);
+            return;
+        }
+
+        message!.Body = new TextPart("html")
+        {
+            Text = $"""
+                <!DOCTYPE html>
+                <html>
+                <body style="font-family:sans-serif;max-width:480px;margin:40px auto;color:#111">
+                  <h2>You've been invited to join ChildCare</h2>
+                  <p>Your director has created a staff account for you. Click below to set your password and log in.</p>
+                  <p style="margin:24px 0">
+                    <a href="{inviteLink}"
+                       style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">
+                      Set your password
+                    </a>
+                  </p>
+                  <p style="color:#666;font-size:14px">
+                    This link expires in 7 days. If you weren't expecting this, you can safely ignore this email.
+                  </p>
+                </body>
+                </html>
+                """,
+        };
+
+        await SendAsync(message);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns false (and null message) when SMTP is not configured — caller should log and return early.</summary>
