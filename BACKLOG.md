@@ -16,7 +16,7 @@
 | 002 | `002-multi-tenancy-scaffold` | TenantMiddleware, TenantDbContext, ICurrentTenantService, schema switching | 001 | ✅ Done |
 | 003 | `003-auth` | Login, per-device refresh tokens, Google/Apple OAuth (parent app) | 001, 002 | ✅ Done |
 | 004 | `004-locations` | Location management within an organisation | 001, 002 | ✅ Done |
-| 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | 🔲 Not started |
+| 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | ✅ Done |
 | 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | 🔲 Not started |
 | 007 | `007-contracts` | Enrolment contracts, contracted days, split-location validator | 005, 006 | 🔲 Not started |
 
@@ -337,6 +337,15 @@ Out of scope:
 - Time registration (clock in/out) — Phase 2.
 - Payroll / Humanwave integration — Phase 4.
 ```
+
+**Shipped 2026-07-06** — `specs/005-staff/` (spec → clarify → plan → tasks → checklist → analyze → implement → converge, 75/75 tasks incl. a 10-task requirements-quality follow-up phase and a 2-task convergence pass, 31 new integration tests + all 78 pre-existing tests passing, 109/109 total). Scope deltas worth knowing before starting feature 006+:
+
+- **Every finding from `/speckit-checklist` (26 items) and `/speckit-analyze` was fixed, not just logged as advisory** — a process change made mid-feature (see `checklists/requirements-quality.md` for the per-item resolution notes). Future features should do the same: don't leave checklist/analyze items open with a "proceeding anyway" note.
+- A director covering shifts gets an **optional Staff Profile attached to their existing Director account** — no second account, no role change capability exists anywhere in this feature (deliberately: User Story 3 originally implied role-changing, which was removed as a genuine spec-internal contradiction found during the checklist pass).
+- **Two real bugs found and fixed during implementation, beyond the original plan**: (1) `POST /api/staff/accept-invitation` needed an `organisationSlug` field — it's anonymous/tenant-exempt, so `TenantMiddleware` has no JWT to resolve a tenant from, exactly the same problem `ResetPasswordCommandHandler` (feature 003) already solves; the original contract draft omitted this and would have shipped unusable. (2) `LoginCommandHandler` crashed with a `500` instead of a clean `401` when `BCrypt.Verify` ran against an empty `PasswordHash` (a staff account whose invitation hasn't been accepted yet) — fixed with an explicit empty-hash check before calling `BCrypt.Verify`.
+- Deactivating a `Staff`-role account now **invalidates all of that account's refresh tokens** (mirrors `ResetPasswordCommandHandler`'s session-invalidation) — but this is deliberately conditioned on `Role == Staff`: a Director's own optional Staff Profile being deactivated must never block that Director's login. **Flag for any future feature touching `LoginCommandHandler`**: preserve this role-conditional check.
+- `IProfilePhotoStorage`/`GcsProfilePhotoStorage` (GCS V4 signed URLs) is this project's first real Cloud Storage integration — feature 006 (children) is expected to reuse this port rather than rebuild it, following the same "object path stored, URL re-signed fresh on every read" pattern.
+- `IStaffDeactivationGuard` extension point exists (mirrors feature 004's `ILocationDeactivationGuard`) for features 009/011 to register their own guards once shifts/group assignments exist — zero guards registered by this feature, by design.
 
 ---
 
