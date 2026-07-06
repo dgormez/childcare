@@ -1,7 +1,7 @@
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using ChildCare.Api.Middleware;
 using ChildCare.Application.Auth;
+using ChildCare.Contracts.Requests;
 using MediatR;
 
 namespace ChildCare.Api.Endpoints;
@@ -123,24 +123,3 @@ public static class AuthEndpoints
         _ => throw new InvalidOperationException($"Unhandled {nameof(AuthFailure)}: {failure}"),
     };
 }
-
-// ── Request / Response DTOs ───────────────────────────────────────────────────
-
-public record LoginRequest(
-    [Required] string OrganisationSlug,
-    [Required] string Email,
-    [Required] string Password);
-
-public record RefreshRequest([Required] string OrganisationSlug, [Required] string RefreshToken);
-
-public record LogoutRequest([Required] string RefreshToken);
-
-public record GoogleAuthRequest([Required] string OrganisationSlug, [Required] string IdToken);
-
-public record AppleAuthRequest([Required] string OrganisationSlug, [Required] string IdentityToken, string? Email);
-
-public record VerifyEmailRequest([Required] string OrganisationSlug, [Required] string Token);
-
-public record ForgotPasswordRequest([Required] string OrganisationSlug, [Required, EmailAddress] string Email);
-
-public record ResetPasswordRequest([Required] string OrganisationSlug, [Required] string Token, [Required, MinLength(8)] string NewPassword);
