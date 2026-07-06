@@ -1,6 +1,7 @@
 using ChildCare.Application.Common;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,8 +32,26 @@ public class LoginCommandHandler(
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
 
         // SC-005: an unknown email and a wrong password for a known email are indistinguishable.
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        // feature 005-staff: an empty PasswordHash (a Staff account whose invitation hasn't been
+        // accepted yet, research.md R5) is checked explicitly first — BCrypt.Verify throws a
+        // SaltParseException against an empty/malformed hash rather than returning false, which
+        // would otherwise surface as an unhandled 500 instead of the same clean, generic
+        // invalid-credentials response (found by Login_BeforeAcceptingInvitation_*, spec.md Edge
+        // Cases, /speckit-analyze finding G1).
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return AuthResult.Fail(AuthFailure.InvalidCredentials);
+
+        // feature 005-staff FR-010: a deactivated Staff-role account cannot log in — collapsed
+        // into the same generic invalid-credentials response (no enumeration of
+        // deactivated-vs-nonexistent accounts). Deliberately scoped to Role == Staff only: a
+        // Director's own optional Staff Profile being deactivated must never block that
+        // Director account's login (spec.md Edge Cases, /speckit-checklist CHK016).
+        if (user.Role == UserRole.Staff)
+        {
+            var staffProfile = await db.StaffProfiles.FirstOrDefaultAsync(p => p.TenantUserId == user.Id, cancellationToken);
+            if (staffProfile?.DeactivatedAt is not null)
+                return AuthResult.Fail(AuthFailure.InvalidCredentials);
+        }
 
         var refreshToken = RefreshTokenFactory.AddRefreshToken(db, user, tokenIssuer);
         await db.SaveChangesAsync(cancellationToken);

@@ -71,6 +71,26 @@ a translation task: it lists the keys and their trigger conditions, not the NL/F
 | `errors.location.dossiernummer_too_long` | 422 | `dossiernummer` exceeds 50 characters |
 | `errors.location.verantwoordelijke_too_long` | 422 | `verantwoordelijke` exceeds 200 characters |
 
+## Staff Management (feature `005-staff`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.staff.not_found` | 404 | `GET/PUT /api/staff/{id}`, deactivate/reactivate/resend-invitation/photo-upload-url/location eligibility — no staff profile with that id in the caller's own tenant schema (FR-015) |
+| `errors.staff.email_already_exists` | 409 | `POST /api/staff` — an account with this email already exists within the organisation (FR-008), including the concurrent-invite race (unique-constraint violation caught and mapped, not a 500) |
+| `errors.staff.tenant_user_not_found` | 404 | `POST /api/staff` — `existingTenantUserId` supplied but does not resolve to a `Director`-role account in this tenant |
+| `errors.staff.has_active_dependents` | 409 | `POST /api/staff/{id}/deactivate` — a registered `IStaffDeactivationGuard` (features 009/011, none registered by this feature) reports active dependents (FR-011). Currently unreachable — reserved for when 009/011 ship |
+| `errors.staff.account_already_active` | 409 | `POST /api/staff/{id}/resend-invitation` — the linked account's password is already set (already accepted, or created via the director opt-in path, which never provisions an invitation) (FR-006a) |
+| `errors.staff.invitation_invalid_or_expired` | 400 | `POST /api/staff/accept-invitation` — token not found, expired, or already used (single-use enforced even before `ExpiresAt` elapses, FR-006b) |
+| `errors.staff.firstname_required` / `errors.staff.lastname_required` / `errors.staff.email_required` / `errors.staff.phone_required` | 422 | Required field missing/empty on create or update |
+| `errors.staff.email_invalid` | 422 | `email` present but not a valid email address |
+| `errors.staff.phone_invalid` | 422 | `phone` present but not a syntactically valid phone number (reuses feature 004's permissive international pattern) |
+| `errors.staff.firstname_too_long` / `errors.staff.lastname_too_long` / `errors.staff.email_too_long` / `errors.staff.phone_too_long` | 422 | Field exceeds its `TenantDbContext` `HasMaxLength` (100/100/254/30 respectively, FR-001) |
+| `errors.staff.qualification_required` | 422 | `qualificationLevel` missing when the target account's role is `Staff` (FR-003) — target role is either the new account's own role, or (opt-in path) the existing account's role |
+| `errors.staff.organisation_slug_required` / `errors.staff.token_required` / `errors.staff.password_required` | 422 | Required field missing/empty on `POST /api/staff/accept-invitation` |
+| `errors.staff.password_too_short` | 422 | `password` under 8 characters on `POST /api/staff/accept-invitation` (mirrors feature 003's `errors.auth.password_too_short`) |
+
+This feature also reuses two pre-existing keys rather than inventing duplicates: `errors.location.not_found` (404, assigning/unassigning an eligible location that doesn't exist in this tenant) and `errors.auth.organisation_not_found` (404, `POST /api/staff/accept-invitation` with an unresolvable `organisationSlug` — this route is unauthenticated/tenant-exempt and resolves its own tenant the same way `POST /api/auth/login` does).
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

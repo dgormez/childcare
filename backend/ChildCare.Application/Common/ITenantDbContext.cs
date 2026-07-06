@@ -21,6 +21,9 @@ public interface ITenantDbContext
     DbSet<TenantUser> Users { get; }
     DbSet<TenantUserRefreshToken> RefreshTokens { get; }
     DbSet<Location> Locations { get; }
+    DbSet<StaffProfile> StaffProfiles { get; }
+    DbSet<StaffInvitation> StaffInvitations { get; }
+    DbSet<StaffLocationEligibility> StaffLocationEligibility { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

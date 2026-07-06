@@ -64,6 +64,10 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// it — discovered when this test started failing after AddUserRole was introduced. Feature
     /// 004's "AddLocations" migration is the same class of gap and is reverted here for the same
     /// reason (discovered when this test started failing again after AddLocations shipped).
+    /// Feature 005's "AddStaff" migration is the same class of gap again — its three new tables
+    /// are dropped in FK-dependency order (staff_location_eligibility/staff_invitations depend
+    /// on staff_profiles, which depends on users) before locations/users are touched, otherwise
+    /// the statements below fail on a foreign-key constraint violation.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -71,6 +75,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."staff_location_eligibility";
+            DROP TABLE "{schemaName}"."staff_invitations";
+            DROP TABLE "{schemaName}"."staff_profiles";
             DROP TABLE "{schemaName}"."locations";
             DROP TABLE "{schemaName}"."refresh_tokens";
             ALTER TABLE "{schemaName}"."users"
@@ -83,7 +90,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff';
             """);
     }
 
