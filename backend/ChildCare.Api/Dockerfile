@@ -1,9 +1,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ChildCare.Api.csproj .
-RUN dotnet restore
+COPY ChildCare.Domain/ChildCare.Domain.csproj ChildCare.Domain/
+COPY ChildCare.Contracts/ChildCare.Contracts.csproj ChildCare.Contracts/
+COPY ChildCare.Application/ChildCare.Application.csproj ChildCare.Application/
+COPY ChildCare.Infrastructure/ChildCare.Infrastructure.csproj ChildCare.Infrastructure/
+COPY ChildCare.Api/ChildCare.Api.csproj ChildCare.Api/
+RUN dotnet restore ChildCare.Api/ChildCare.Api.csproj
 COPY . .
-RUN dotnet publish ChildCare.Api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish ChildCare.Api/ChildCare.Api.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
