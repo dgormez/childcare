@@ -15,7 +15,7 @@
 | 001 | `001-organisation-onboarding` | Organisation registration + workspace provisioning | — | ✅ Done |
 | 002 | `002-multi-tenancy-scaffold` | TenantMiddleware, TenantDbContext, ICurrentTenantService, schema switching | 001 | ✅ Done |
 | 003 | `003-auth` | Login, per-device refresh tokens, Google/Apple OAuth (parent app) | 001, 002 | ✅ Done |
-| 004 | `004-locations` | Location management within an organisation | 001, 002 | 🔲 Not started |
+| 004 | `004-locations` | Location management within an organisation | 001, 002 | ✅ Done |
 | 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | 🔲 Not started |
 | 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | 🔲 Not started |
 | 007 | `007-contracts` | Enrolment contracts, contracted days, split-location validator | 005, 006 | 🔲 Not started |
@@ -283,6 +283,13 @@ Out of scope:
   as part of attendance or a dedicated groups feature).
 - Physical access control hardware (Paxton — Phase 4).
 ```
+
+**Shipped 2026-07-06** — `specs/004-locations/` (spec → plan → tasks → implementation, 44/44 tasks incl. 2-task convergence pass, 22 new integration tests + all 56 pre-existing tests passing, 78/78 total). Scope deltas worth knowing before starting feature 005+:
+
+- `Location` carries no `OrganisationId`/tenant column — tenant scoping is structural via schema, same pattern as `TenantUser`. No feature after this one should add an explicit tenant FK to a tenant-schema entity.
+- `ILocationDeactivationGuard` extension point exists for blocking deactivation when a location has active dependents, but **zero guards are registered by this feature, by design** — features 005 (staff) and 007 (contracts) are expected to register their own guard once staff/contracts exist, so a location with active staff or contracts can't yet be deactivated until they do.
+- Convergence passes (2nd pass) added phone-format and field-length FluentValidation rules beyond the original spec — closing gaps found on a re-read of spec.md's Edge Cases, not scope creep.
+- Found and fixed a FluentValidation cascade bug (chained `.NotEmpty().EmailAddress()` producing two errors on one property crashed the global exception handler's `ToDictionary`) — worth checking for in any validator written before this fix, via `.Cascade(CascadeMode.Stop)`.
 
 ---
 
