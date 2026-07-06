@@ -50,6 +50,27 @@ a translation task: it lists the keys and their trigger conditions, not the NL/F
 | `errors.auth.token_required` | 422 | `token` (verify-email/reset-password) field missing/empty |
 | `errors.auth.apple_email_required_first_signin` | 400 | Apple sign-in's first link attempt for a given account has no resolvable email (Apple only sends it once) |
 
+## Location Management (feature `004-locations`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.location.not_found` | 404 | `GET/PUT /api/locations/{id}`, deactivate/reactivate/duplicate — no location with that id exists in the caller's own tenant schema (a different organisation's location id can never match, FR-007) |
+| `errors.location.has_active_dependents` | 409 | `POST /api/locations/{id}/deactivate` — a registered `ILocationDeactivationGuard` (features 005/007, none registered by this feature) reports active dependents (FR-012). Currently unreachable — reserved for when 005/007 ship |
+| `errors.location.name_required` | 422 | `name` field missing/empty on create or update |
+| `errors.location.address_required` | 422 | `address` field missing/empty on create or update |
+| `errors.location.phone_required` | 422 | `phone` field missing/empty on create or update |
+| `errors.location.email_required` | 422 | `email` field missing/empty on create or update |
+| `errors.location.email_invalid` | 422 | `email` field present but not a valid email address |
+| `errors.location.max_capacity_invalid` | 422 | `maxCapacity` missing, zero, or negative (FR-001, FR-010) |
+| `errors.location.phone_invalid` | 422 | `phone` field present but not a syntactically valid phone number (permissive international format — spec.md Assumptions) (`/speckit-converge` finding F1) |
+| `errors.location.name_too_long` | 422 | `name` exceeds 200 characters (`TenantDbContext` `HasMaxLength`, `/speckit-converge` finding F2) |
+| `errors.location.address_too_long` | 422 | `address` exceeds 500 characters |
+| `errors.location.phone_too_long` | 422 | `phone` exceeds 30 characters |
+| `errors.location.email_too_long` | 422 | `email` exceeds 254 characters |
+| `errors.location.naam_locatie_too_long` | 422 | `naamLocatie` exceeds 200 characters |
+| `errors.location.dossiernummer_too_long` | 422 | `dossiernummer` exceeds 50 characters |
+| `errors.location.verantwoordelijke_too_long` | 422 | `verantwoordelijke` exceeds 200 characters |
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

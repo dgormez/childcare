@@ -1,0 +1,44 @@
+using FluentValidation;
+
+namespace ChildCare.Application.Locations;
+
+public class UpdateLocationCommandValidator : AbstractValidator<UpdateLocationCommand>
+{
+    public UpdateLocationCommandValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("errors.location.name_required")
+            .MaximumLength(200).WithMessage("errors.location.name_too_long");
+
+        RuleFor(x => x.Address)
+            .NotEmpty().WithMessage("errors.location.address_required")
+            .MaximumLength(500).WithMessage("errors.location.address_too_long");
+
+        RuleFor(x => x.Phone)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage("errors.location.phone_required")
+            .MaximumLength(30).WithMessage("errors.location.phone_too_long")
+            .Matches(CreateLocationCommandValidator.PhonePattern).WithMessage("errors.location.phone_invalid");
+
+        RuleFor(x => x.Email)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage("errors.location.email_required")
+            .MaximumLength(254).WithMessage("errors.location.email_too_long")
+            .EmailAddress().WithMessage("errors.location.email_invalid");
+
+        RuleFor(x => x.MaxCapacity)
+            .GreaterThan(0).WithMessage("errors.location.max_capacity_invalid");
+
+        // NaamLocatie/Dossiernummer/Verantwoordelijke are intentionally unconstrained on
+        // presence (nullable, optional at every stage — FR-004) but still length-capped to
+        // match TenantDbContext's HasMaxLength (data-model.md) when a value is supplied.
+        RuleFor(x => x.NaamLocatie)
+            .MaximumLength(200).WithMessage("errors.location.naam_locatie_too_long");
+
+        RuleFor(x => x.Dossiernummer)
+            .MaximumLength(50).WithMessage("errors.location.dossiernummer_too_long");
+
+        RuleFor(x => x.Verantwoordelijke)
+            .MaximumLength(200).WithMessage("errors.location.verantwoordelijke_too_long");
+    }
+}

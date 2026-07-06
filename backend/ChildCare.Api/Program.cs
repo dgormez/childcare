@@ -382,6 +382,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
 app.MapAuthEndpoints();
 app.MapAdminEndpoints();
 app.MapOrganisationEndpoints();
+app.MapLocationEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

@@ -61,7 +61,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// ExtendUsersAddRefreshTokens history row (leaving AddUserRole's row and its Role column
     /// in place) fools EF's "last applied migration" check into thinking nothing is pending,
     /// since AddUserRole is chronologically the newest migration ID regardless of gaps before
-    /// it — discovered when this test started failing after AddUserRole was introduced.
+    /// it — discovered when this test started failing after AddUserRole was introduced. Feature
+    /// 004's "AddLocations" migration is the same class of gap and is reverted here for the same
+    /// reason (discovered when this test started failing again after AddLocations shipped).
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -69,6 +71,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."locations";
             DROP TABLE "{schemaName}"."refresh_tokens";
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "AppleId",
@@ -80,7 +83,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations';
             """);
     }
 
