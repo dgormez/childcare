@@ -178,12 +178,17 @@ use the static code review instead.
 ## Progress log (update as features land)
 
 - 001–007: shipped prior to this file existing (see BACKLOG.md's own shipped-notes per feature).
-- 008 (`008-caregiver-app-scaffold`): implementation complete as of 2026-07-07 (all tasks +
-  convergence findings closed, 185/185 backend + 58/58 mobile tests passing), held uncommitted
-  pending rework — industry research surfaced that caregivers use a shared room tablet with a
-  PIN, not individual email/password login. Feature `008a-caregiver-kiosk-mode` now sits between
-  008 and 009/010 in BACKLOG.md to add that layer; 008's login screen was explicitly scoped as
-  underlying-mechanism scaffolding, not final UX, in BACKLOG.md's own post-shipping note.
+- 008 (`008-caregiver-app-scaffold`): ✅ Done, merged 2026-07-07 (PR #9, squash-merged after
+  green CI — 185/185 backend + 58/58 mobile tests). Also folded in before merge: the design
+  system foundation (`design-system.md`/`platform-rules.md`/`reference-products.md`/
+  `workflows.md`) and its retrofit into feature 008's UI (`mobile/theme/colors.js` as the
+  color-token source of truth), plus a critical fix found only by actually running the app on
+  a simulator — `app.config.js` still referenced the `expo-apple-authentication`/
+  `expo-web-browser` plugins after their packages were removed, so the app couldn't start at
+  all; `tsc`/`jest` never caught it since neither touches Expo's native config resolution.
+  Feature `008a-caregiver-kiosk-mode` now sits between 008 and 009/010 in BACKLOG.md; 008's
+  login screen remains the correct underlying mechanism, scoped as scaffolding pending 008a's
+  UX (still being decided separately, not yet started).
 - 2026-07-07: loop prompt reworked — fixed a duplicated/malformed step 4 block from an earlier
   edit, added the design-system/workflow-aware spec template, replaced the screenshot-based
   "visual review" step (no simulator/screenshot tooling exists in this repo) with a static

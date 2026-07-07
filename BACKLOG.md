@@ -25,7 +25,7 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | 🔲 Not started |
+| 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | 🔲 Not started |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
