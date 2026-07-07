@@ -1,18 +1,13 @@
 import { useColorScheme } from "nativewind";
+import { light, dark } from "../theme/colors";
 
+/**
+ * Raw hex tokens for the handful of call sites that can't use a Tailwind className
+ * (StatusBar tint, native Image tint, dynamically-built inline styles). Everything
+ * else should use the bg-x/text-x classNames from tailwind.config.js instead — both
+ * read from the same theme/colors.js, so there's one place to change a value.
+ */
 export function useColors() {
   const { colorScheme } = useColorScheme();
-  const dark = colorScheme === "dark";
-  return {
-    placeholder:   dark ? "#6b7280" : "#9ca3af",
-    tabBar:        dark ? "#1f2937" : "#ffffff",
-    tabBorder:     dark ? "#374151" : "#e5e7eb",
-    header:        dark ? "#1f2937" : "#ffffff",
-    headerText:    dark ? "#ffffff" : "#111827",
-    background:    dark ? "#111827" : "#f9fafb",
-    card:          dark ? "#1f2937" : "#ffffff",
-    text:          dark ? "#f9fafb" : "#111827",
-    secondaryText: dark ? "#9ca3af" : "#6b7280",
-    border:        dark ? "#374151" : "#e5e7eb",
-  };
+  return colorScheme === "dark" ? dark : light;
 }

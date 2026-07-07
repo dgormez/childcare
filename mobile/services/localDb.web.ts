@@ -1,9 +1,9 @@
-import type { Habit, HabitCompletion } from "../types";
-
 // Web shim — expo-sqlite's WASM worker doesn't resolve under Metro web bundler.
 // All operations are no-ops; the app relies on API data on web.
+import type { QueueRow } from "./localDb";
 
 const store = new Map<string, string>();
+let queueRows: QueueRow[] = [];
 
 export function initDb() {}
 
@@ -28,12 +28,36 @@ export function setLastSyncTime(d: Date) {
   store.set("lastSyncAt", d.toISOString());
 }
 
-export function getLocalHabits(_userId: string): Habit[] { return []; }
-export function saveHabitsLocally(_habits: Habit[]) {}
-export function deleteLocalHabit(_id: string) {}
+export function deleteLocalTenantData(tenantId: string) {
+  store.clear();
+  queueRows = queueRows.filter((r) => r.tenant_id !== tenantId);
+}
 
-export function getLocalCompletions(_userId: string, _from: string, _to: string): HabitCompletion[] { return []; }
-export function saveCompletionsLocally(_completions: HabitCompletion[]) {}
-export function deleteLocalCompletion(_habitId: string, _date: string) {}
+export function getCacheRow(cacheKey: string, tenantId: string): { data: string } | null {
+  const v = store.get(`cache:${tenantId}:${cacheKey}`);
+  return v ? { data: v } : null;
+}
 
-export function deleteLocalUserData(_userId: string) {}
+export function setCacheRow(cacheKey: string, tenantId: string, data: string) {
+  store.set(`cache:${tenantId}:${cacheKey}`, data);
+}
+
+export function insertQueueRow(row: Omit<QueueRow, "synced_at" | "sync_error">) {
+  queueRows.push({ ...row, synced_at: null, sync_error: null });
+}
+
+export function getPendingQueueRows(tenantId: string): QueueRow[] {
+  return queueRows
+    .filter((r) => r.tenant_id === tenantId && r.synced_at === null)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+export function markQueueRowSynced(id: string, note: string | null) {
+  const row = queueRows.find((r) => r.id === id);
+  if (row) { row.synced_at = new Date().toISOString(); row.sync_error = note; }
+}
+
+export function markQueueRowSyncError(id: string, error: string) {
+  const row = queueRows.find((r) => r.id === id);
+  if (row) row.sync_error = error;
+}

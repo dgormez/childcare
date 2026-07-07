@@ -1,137 +1,183 @@
 /**
- * auth.ts — Register, login, logout, and session restoration.
+ * auth.ts — login, silent refresh, logout, and session restoration against the real
+ * feature-003 auth contract (organisationSlug + email + password; AuthSessionResponse
+ * carries a `role` claim — research.md R3).
  *
- * All functions update both SecureStore (refresh token) and the Zustand store
- * (auth state) as a single operation so the two never diverge.
+ * All functions update SecureStore (refresh token only — FR-003), the plain config table
+ * (organisationSlug/email/role, for offline session-restore display only, never secrets),
+ * and the Zustand auth slice as a single operation so none of the three ever diverge.
  */
-import {
-  configureApi,
-  setAccessToken,
-  clearAccessToken,
-  getStoredRefreshToken,
-  storeRefreshToken,
-  deleteStoredRefreshToken,
-} from "./api";
+import * as SecureStore from "expo-secure-store";
+import { apiClient, configureApiBaseUrl, setUnauthorizedHandler } from "./apiClient";
+import { getConfigValue, setConfigValue, deleteLocalTenantData } from "./localDb";
 import { useStore } from "../store/useStore";
-import { getConfigValue, setConfigValue, deleteConfigValue } from "./localDb";
-import type { AuthResponse } from "../types";
+import type { AuthResponse, StaffMeResponse } from "../types";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const REFRESH_TOKEN_KEY = "childcare_refresh_token";
 
-export function applyAuthResponse(baseUrl: string, data: AuthResponse) {
-  configureApi(baseUrl);
-  setAccessToken(data.accessToken);
+const getStoredRefreshToken    = () => SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+const storeRefreshToken        = (t: string) => SecureStore.setItemAsync(REFRESH_TOKEN_KEY, t);
+const deleteStoredRefreshToken = () => SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
 
-  // Persist userId + email for offline session restoration
-  setConfigValue("userId",    data.user.id);
+function applyAuthResponse(data: AuthResponse, organisationSlug: string) {
+  setConfigValue("userId", data.user.id);
   setConfigValue("userEmail", data.user.email);
+  setConfigValue("userRole", data.user.role);
+  setConfigValue("organisationSlug", organisationSlug);
 
   useStore.getState().setAuth({
-    userId:      data.user.id,
-    email:       data.user.email,
-    accessToken: data.accessToken,
+    userId:           data.user.id,
+    email:            data.user.email,
+    role:             data.user.role,
+    organisationSlug,
+    accessToken:      data.accessToken,
   });
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+/** FR-030: populate staffProfileId/eligibleLocationIds for display — never blocks login on
+ * failure, since a caregiver whose StaffProfile lookup fails should still be able to use the
+ * app (this is a display nicety, not required for correct scoping, which the server enforces
+ * regardless — research.md R6). */
+async function fetchAndApplyStaffMe(): Promise<void> {
+  try {
+    const result = await apiClient.GET("/api/staff/me");
+    if (result.response.ok) {
+      const me = (await result.response.json()) as StaffMeResponse;
+      const { auth } = useStore.getState();
+      if (auth) {
+        useStore.getState().setAuth({
+          ...auth,
+          staffProfileId: me.staffProfileId,
+          eligibleLocationIds: me.eligibleLocationIds,
+        });
+      }
+    }
+  } catch {
+    /* display-only — ignore */
+  }
+}
 
-export async function register(baseUrl: string, email: string, password: string): Promise<void> {
-  const res = await fetch(`${baseUrl}/api/auth/register`, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ email, password }),
-  });
+export async function login(baseUrl: string, organisationSlug: string, email: string, password: string): Promise<void> {
+  configureApiBaseUrl(baseUrl);
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as any).error ?? `Registration failed (${res.status})`);
+  let result;
+  try {
+    result = await apiClient.POST("/api/auth/login", {
+      body: { organisationSlug, email, password },
+    });
+  } catch {
+    // Brand-new install / first launch offline: there is no cached session to fall back to,
+    // and authentication itself cannot happen without a network round-trip.
+    throw new Error("NETWORK_ERROR");
   }
 
-  const data: AuthResponse = await res.json();
+  if (!result.response.ok) {
+    const body = await result.response.json().catch(() => ({}));
+    throw new Error((body as { errorKey?: string }).errorKey ?? "errors.auth.invalid_credentials");
+  }
+
+  const data = (await result.response.json()) as AuthResponse;
   await storeRefreshToken(data.refreshToken);
-  applyAuthResponse(baseUrl, data);
+  applyAuthResponse(data, organisationSlug);
+  await fetchAndApplyStaffMe();
 }
 
-export async function login(baseUrl: string, email: string, password: string): Promise<void> {
-  const res = await fetch(`${baseUrl}/api/auth/login`, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ email, password }),
-  });
+/**
+ * Attempts a silent refresh. Returns true on success. On an explicit rejection (401 — session
+ * can no longer be renewed, FR-006, whether due to deactivation or natural expiry) this also
+ * performs a full clean sign-out and returns false. On a network error (server unreachable)
+ * it returns false WITHOUT clearing anything, since the session may still be valid once back
+ * online — the caller decides what to do (tryRestoreSession falls back to offline-cached
+ * identity; the apiClient 401-retry path simply gives up on that one request).
+ */
+export async function refresh(): Promise<boolean> {
+  const refreshToken = await getStoredRefreshToken();
+  const organisationSlug = getConfigValue("organisationSlug");
+  if (!refreshToken || !organisationSlug) return false;
 
-  if (!res.ok) throw new Error("Invalid email or password.");
-
-  const data: AuthResponse = await res.json();
-  await storeRefreshToken(data.refreshToken);
-  applyAuthResponse(baseUrl, data);
-}
-
-export async function logout(baseUrl: string): Promise<void> {
-  // Best-effort server-side revocation — sends the refresh token to invalidate this device's session
   try {
-    const accessToken  = useStore.getState().auth?.accessToken;
+    const result = await apiClient.POST("/api/auth/refresh", {
+      body: { organisationSlug, refreshToken },
+    });
+
+    if (!result.response.ok) {
+      // FR-006: explicit rejection (deactivated account or refresh token expired/invalid) —
+      // clean sign-out now rather than looping on retry.
+      await signOutCleanly();
+      return false;
+    }
+
+    const data = (await result.response.json()) as AuthResponse;
+    await storeRefreshToken(data.refreshToken);
+    applyAuthResponse(data, organisationSlug);
+    return true;
+  } catch {
+    return false; // network error — leave the stored session intact
+  }
+}
+
+setUnauthorizedHandler(refresh);
+
+export async function logout(): Promise<void> {
+  try {
+    const accessToken = useStore.getState().auth?.accessToken;
     const refreshToken = await getStoredRefreshToken();
     if (refreshToken) {
-      await fetch(`${baseUrl}/api/auth/logout`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-        body:    JSON.stringify({ refreshToken }),
+      await apiClient.POST("/api/auth/logout", {
+        body: { refreshToken },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* best-effort revocation */
+  }
 
+  await signOutCleanly();
+}
+
+/** FR-005/FR-006/FR-019: clears SecureStore, tenant-scoped local cache/queue, and auth state —
+ * shared by explicit logout and the "session can no longer be renewed" path. */
+async function signOutCleanly(): Promise<void> {
+  const tenantId = getConfigValue("organisationSlug");
   await deleteStoredRefreshToken();
-  clearAccessToken();
-  deleteConfigValue("userId");
-  deleteConfigValue("userEmail");
+  if (tenantId) deleteLocalTenantData(tenantId);
   useStore.getState().resetAuth();
 }
 
 /**
  * Called on app startup. Attempts to restore session in priority order:
  *
- * 1. Server refresh (online) — get a fresh access token.
- * 2. Cached local auth (offline) — use the last known userId/email, no access
- *    token. Sync will silently fail until the device comes back online.
+ * 1. Server refresh (online) — get a fresh access token and re-populate staff/me.
+ * 2. Cached local identity (offline) — use the last known userId/email/role/org, no access
+ *    token. API calls fail until back online; the caregiver still sees their own name.
  *
  * Returns true if a session was restored (either online or offline).
  */
 export async function tryRestoreSession(baseUrl: string): Promise<boolean> {
+  configureApiBaseUrl(baseUrl);
+
   const refreshToken = await getStoredRefreshToken();
   if (!refreshToken) return false;
 
-  configureApi(baseUrl);
-
-  try {
-    const res = await fetch(`${baseUrl}/api/auth/refresh`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ refreshToken }),
-    });
-
-    if (!res.ok) {
-      // Token is invalid/expired — user must log in again
-      await deleteStoredRefreshToken();
-      deleteConfigValue("userId");
-      deleteConfigValue("userEmail");
-      return false;
-    }
-
-    const data: AuthResponse = await res.json();
-    await storeRefreshToken(data.refreshToken);
-    applyAuthResponse(baseUrl, data);
+  const refreshed = await refresh();
+  if (refreshed) {
+    await fetchAndApplyStaffMe();
     return true;
-  } catch {
-    // Network error — try to restore from local cache so the app works offline
-    const userId    = getConfigValue("userId");
-    const userEmail = getConfigValue("userEmail");
-
-    if (userId && userEmail) {
-      setAccessToken(""); // no token — API calls will fail until back online
-      useStore.getState().setAuth({ userId, email: userEmail, accessToken: "" });
-      return true;
-    }
-
-    return false;
   }
+
+  // Either explicitly rejected (signOutCleanly already ran, nothing to restore) or a network
+  // error — fall back to offline-cached identity only in the network-error case.
+  const userId = getConfigValue("userId");
+  const userEmail = getConfigValue("userEmail");
+  const userRole = getConfigValue("userRole");
+  const organisationSlug = getConfigValue("organisationSlug");
+
+  if (userId && userEmail && userRole && organisationSlug) {
+    useStore.getState().setAuth({
+      userId, email: userEmail, role: userRole, organisationSlug, accessToken: "",
+    });
+    return true;
+  }
+
+  return false;
 }

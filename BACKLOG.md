@@ -3,6 +3,7 @@
 > Ordered list of features to implement. Each feature = one Git branch + one Spec Kit cycle.
 > Update this file as dependencies become clearer during implementation.
 > Reference gap-analysis.md for full feature details.
+> To process the next feature in a fresh session, see `.specify/memory/process-next-feature.md`.
 
 ---
 
@@ -25,8 +26,9 @@
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | 🔲 Not started |
-| 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008 | 🔲 Not started |
-| 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008 | 🔲 Not started |
+| 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | 🔲 Not started |
+| 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
+| 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
@@ -598,6 +600,182 @@ Out of scope:
   touches the caregiver app.
 - Push notification token registration for caregivers — feature 009 (temperature alert).
 - Biometric unlock (Face ID / fingerprint for app re-open) — Phase 2.
+- Kiosk/PIN mode — see feature 008a below. The email/password auth built here
+  is the underlying mechanism; the kiosk layer sits on top of it.
+```
+
+**Post-shipping note (added before implementation completed):** Industry research confirmed that caregivers share a single tablet per section and do not individually log in per shift. Brightwheel, Procare, and Famly all converge on the same pattern: a room-based kiosk tablet (set up once by the director) with a 4-digit PIN per caregiver for shift identification. The email/password + JWT infrastructure built in this feature remains valid as the underlying auth mechanism. A kiosk mode layer will be built on top of it in feature `008a-caregiver-kiosk-mode` before any caregiver UI features ship to real users. The personal login screen delivered here is scaffolding only — do not invest in its UX.
+
+---
+
+### 008a — Caregiver App Kiosk Mode
+
+```
+Replace the personal-login model from feature 008 with a room-based
+shift register. The tablet is permanently authenticated as a room device.
+Caregivers check in and out with a PIN to record their physical presence.
+Event logging requires no individual auth — the device token is sufficient.
+
+Auth layers (both always active):
+
+  Layer 1 — Device token (tablet ↔ backend security):
+    The tablet holds a long-lived JWT scoped to its location + group,
+    obtained during one-time director setup and stored in SecureStore.
+    Every API call carries this token. The backend rejects any request
+    without it. A phone on the same WiFi cannot post events. This layer
+    is never bypassed — it is the security boundary between the tablet
+    and the API regardless of who is or isn't checked in.
+
+  Layer 2 — Shift register (caregiver presence log):
+    Rides on top of the device token. Tracks who is physically in the
+    room and when. PIN check-in/out writes to a server-side shift log.
+    This is identity and accountability, not HTTP authentication.
+    Two caregivers can be simultaneously checked in — this is the norm,
+    not an edge case.
+
+Background:
+Belgian KDVs typically have 2 caregivers per room simultaneously (BKR).
+A single "active session" model — where one caregiver owns the tablet —
+does not reflect reality. The shift register model accurately captures
+presence: Marie arrives at 08:02, Thomas at 08:47; both are on duty;
+either can log any routine event without needing to "claim" the tablet.
+
+What to build:
+
+1. Room setup (director, one-time per tablet)
+   - Director opens the app and logs in with email + password (008 flow).
+   - Director selects: this tablet belongs to location X, group Y.
+   - Backend issues a device token: a long-lived JWT signed with a
+     dedicated device secret, carrying { tenant_id, location_id, group_id,
+     device_id }. Stored in SecureStore. Never expires passively —
+     only revoked explicitly (see lost-tablet below).
+   - App locks into room mode. The email/password screen is no longer
+     reachable by normal caregivers.
+   - Room assignment survives app restarts and OS backgrounding.
+   - Director can exit room mode via a 6-digit director override PIN
+     (set during room setup, stored as bcrypt hash in SecureStore).
+
+2. Room home screen (permanent state of the tablet)
+   - Shows: location name, group name, current date + time.
+   - Shows who is currently checked in (names + check-in time). Empty
+     at the start of the day.
+   - Large PIN keypad (minimum 64pt targets). Used for both check-in
+     and check-out.
+   - "Who's here" list below the keypad — visible at a glance.
+
+3. Caregiver check-in / check-out
+   - Caregiver enters their 4-digit PIN.
+   - If not checked in: POST /room-shifts/check-in with device token +
+     PIN. Server validates PIN (bcrypt), checks caregiver is assigned
+     to this location, records check-in timestamp. Caregiver name
+     appears in the "who's here" list.
+   - If already checked in: POST /room-shifts/check-out. Records
+     check-out timestamp. Name leaves the list.
+   - The app returns to the room home screen immediately after either
+     action. No "session" is opened — the tablet state is unchanged.
+   - Incorrect PIN: shake animation + "Ongeldige code" message.
+     Rate limit: 5 failed attempts in 2 minutes → 10-minute lockout
+     for that specific PIN (device token remains valid for other PINs).
+
+4. Event logging (no auth gate)
+   - Any caregiver can tap a child and log any routine event at any time.
+   - No PIN prompt. The device token on the request is sufficient auth.
+   - recorded_by on the event is populated server-side from the shift log:
+     who was checked in at occurred_at. If one caregiver: that person.
+     If two: store both IDs as a JSONB array (recorded_by UUID[]).
+     If no one checked in yet (opening minutes of the day): recorded_by
+     = null. Do not block logging.
+
+5. Medical events — PIN confirmation
+   - medication and temperature events prompt an extra step before submit:
+     "Bevestig wie dit registreert" + PIN keypad.
+   - Entering a valid PIN attaches that caregiver's ID to a dedicated
+     administered_by field (separate from recorded_by).
+   - This is a UX confirmation step, not a re-auth. The device token
+     already authorised the request; the PIN just names the individual.
+   - If the caregiver taps "Skip" (allowed): administered_by = null.
+     Director can fill it in retroactively from the web admin.
+
+6. PIN management (web admin, feature 005 extended)
+   - Director sets or resets a caregiver's PIN from the staff screen.
+   - PIN stored as bcrypt hash on the staff record.
+   - PINs must be unique within a location.
+   - PIN reset does not affect the caregiver's account password.
+
+7. Device token lifetime and rotation
+   - TTL: 30 days from issuance.
+   - Silent rotation: on any API call where the token has fewer than
+     7 days remaining, the server issues a new token in a response
+     header (X-Device-Token-Refresh). The app swaps it into SecureStore
+     and the old token is immediately invalidated server-side.
+   - Rotation is time-based, NOT on every request. Rotation-on-every-
+     request would break offline sync: if 30 queued events arrive on
+     reconnect, the first would rotate the token and the remaining 29
+     would be rejected with a stale-token error. Time-based avoids this.
+   - On reconnect after an offline period: if the token needs rotation,
+     the app rotates first (one call), then replays the offline queue.
+     All queued events carry the still-valid old token and are accepted.
+   - If offline for the full 30-day TTL and the token expires: next
+     API call returns 401 device.token_expired. App shows a
+     "Heractivatie vereist" screen — director must log in to re-pair.
+     In a functioning KDV this is an extreme edge case.
+   - Rotation requires no user action and is invisible to caregivers.
+
+8. Device revocation (lost or stolen tablet)
+   - Director marks a tablet as revoked in the web admin (Devices
+     section, scoped to the location).
+   - Server adds device_id to a revocation list checked on every
+     API call — not only at token-issuance time.
+   - Next API call from the tablet returns 401 device.revoked. App
+     wipes SecureStore entirely and returns to the email/password
+     setup screen, ready to be re-paired on a replacement tablet.
+   - Any queued offline events from the revoked tablet are rejected
+     on sync and logged server-side for audit.
+   - Two lines of defence for a lost tablet:
+       Primary:  explicit revocation by director (immediate).
+       Backstop: 30-day TTL — an unrevoked stolen tablet becomes
+                 useless within one rotation window at most.
+
+Key constraints:
+- The device token is the security boundary. All API calls carry it.
+  No call is unauthenticated regardless of shift state.
+- Token storage: SecureStore only. Never AsyncStorage. Must survive
+  app restarts and OS-level backgrounding.
+- PIN never sent in plaintext. All PIN checks happen server-side
+  (POST /room-shifts/check-in, POST /room-shifts/check-out,
+  POST /events/:id/confirm-administrator). Client sends raw PIN over
+  HTTPS; server bcrypt-compares and discards immediately.
+- Offline: check-in/out events queued in offline_queue (entity_type
+  = 'room_shift'). Routine event logging works offline unchanged.
+  Medical PIN confirmation skipped offline (administered_by = null;
+  director fills in retroactively from web admin).
+- All user-facing strings use i18n keys (NL/FR/EN).
+- room_shifts table (tenant schema):
+    id, device_id, staff_id, location_id, group_id,
+    checked_in_at TIMESTAMPTZ, checked_out_at TIMESTAMPTZ (nullable),
+    created_at
+
+Edge cases:
+- Two caregivers check in simultaneously (race). Both succeed — the
+  server accepts concurrent check-ins for the same room.
+- A caregiver forgets to check out at end of day. Auto-checkout at
+  midnight for any shift without a check-out. Director can correct.
+- Tablet reassigned to a different group mid-day. Director override →
+  exit room mode → re-run room setup. Existing open shift entries
+  for the old group are auto-closed at the moment of re-setup.
+- A caregiver's account is deactivated (feature 005). Their PIN
+  immediately returns a 403 on check-in attempt. If they were already
+  checked in, their open shift is closed server-side on deactivation.
+- Dual-location caregiver (feature 005): one PIN, works at any
+  location they're assigned to. Server validates assignment at
+  check-in time.
+
+Out of scope:
+- QR code or NFC tap for check-in (Phase 2).
+- Biometric unlock (Face ID / fingerprint) — Phase 2.
+- Live multi-tablet presence sync (two tablets showing each other's
+  checked-in caregivers in real time) — Phase 2. Phase 1: each
+  tablet shows who it knows about from the last successful sync.
 ```
 
 ---

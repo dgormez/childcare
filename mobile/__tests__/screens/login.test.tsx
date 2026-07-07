@@ -3,8 +3,8 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import LoginScreen from "../../app/(auth)/login";
 
 jest.mock("../../services/auth", () => ({ login: jest.fn() }));
-jest.mock("../../services/googleAuth", () => ({
-  useGoogleSignIn: () => ({ signIn: jest.fn(), loading: false, error: "", ready: true, clearError: jest.fn() }),
+jest.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
 }));
 
 const { login } = require("../../services/auth");
@@ -18,38 +18,59 @@ beforeEach(() => {
 
 it("sign-in button is disabled when fields are empty", async () => {
   const { getByText } = await render(<LoginScreen />);
-  const btn = getByText("Sign in").parent!;
+  const btn = getByText("login.submit").parent!;
   expect(btn.props.accessibilityState?.disabled ?? btn.props.disabled).toBeTruthy();
 });
 
-it("sign-in button enables when email and password are filled", async () => {
+it("sign-in button enables when organisation, email, and password are filled", async () => {
   const { getByText, getByPlaceholderText } = await render(<LoginScreen />);
+  await fireEvent.changeText(getByPlaceholderText("acme-kdv"), "org-a");
   await fireEvent.changeText(getByPlaceholderText("you@example.com"), "user@test.com");
   await fireEvent.changeText(getByPlaceholderText("••••••••"), "password123");
-  const btn = getByText("Sign in").parent!;
+  const btn = getByText("login.submit").parent!;
   expect(btn.props.accessibilityState?.disabled ?? btn.props.disabled).toBeFalsy();
 });
 
-it("calls login with trimmed email and password", async () => {
+it("no social/OAuth sign-in options are presented (FR-001)", async () => {
+  const { queryByText } = await render(<LoginScreen />);
+  expect(queryByText(/google/i)).toBeNull();
+  expect(queryByText(/apple/i)).toBeNull();
+});
+
+it("calls login with trimmed organisation slug, email, and password", async () => {
   const replace = jest.fn();
   useRouter.mockReturnValue({ replace, push: jest.fn(), back: jest.fn() });
 
   const { getByText, getByPlaceholderText } = await render(<LoginScreen />);
+  await fireEvent.changeText(getByPlaceholderText("acme-kdv"), "  org-a  ");
   await fireEvent.changeText(getByPlaceholderText("you@example.com"), "  user@test.com  ");
   await fireEvent.changeText(getByPlaceholderText("••••••••"), "password123");
-  await fireEvent.press(getByText("Sign in"));
+  await fireEvent.press(getByText("login.submit"));
 
-  await waitFor(() => expect(login).toHaveBeenCalledWith(expect.any(String), "user@test.com", "password123"));
-  await waitFor(() => expect(replace).toHaveBeenCalledWith("/(tabs)"));
+  await waitFor(() => expect(login).toHaveBeenCalledWith(expect.any(String), "org-a", "user@test.com", "password123"));
+  await waitFor(() => expect(replace).toHaveBeenCalledWith("/(app)"));
 });
 
 it("shows error modal when login fails", async () => {
-  login.mockRejectedValue(new Error("Invalid email or password."));
+  login.mockRejectedValue(new Error("errors.auth.invalid_credentials"));
 
   const { getByText, getByPlaceholderText } = await render(<LoginScreen />);
+  await fireEvent.changeText(getByPlaceholderText("acme-kdv"), "org-a");
   await fireEvent.changeText(getByPlaceholderText("you@example.com"), "user@test.com");
   await fireEvent.changeText(getByPlaceholderText("••••••••"), "wrongpass");
-  await fireEvent.press(getByText("Sign in"));
+  await fireEvent.press(getByText("login.submit"));
 
-  await waitFor(() => expect(getByText("Invalid email or password.")).toBeTruthy());
+  await waitFor(() => expect(getByText("errors.auth.invalid_credentials")).toBeTruthy());
+});
+
+it("shows the offline-first-login message when there is no network on first launch (Edge Cases)", async () => {
+  login.mockRejectedValue(new Error("NETWORK_ERROR"));
+
+  const { getByText, getByPlaceholderText } = await render(<LoginScreen />);
+  await fireEvent.changeText(getByPlaceholderText("acme-kdv"), "org-a");
+  await fireEvent.changeText(getByPlaceholderText("you@example.com"), "user@test.com");
+  await fireEvent.changeText(getByPlaceholderText("••••••••"), "password123");
+  await fireEvent.press(getByText("login.submit"));
+
+  await waitFor(() => expect(getByText("login.offlineFirstLogin")).toBeTruthy());
 });

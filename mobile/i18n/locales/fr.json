@@ -1,0 +1,48 @@
+{
+  "login": {
+    "title": "Connexion",
+    "organisationSlug": "Organisation",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "offlineFirstLogin": "Impossible de se connecter sans connexion internet la première fois."
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "E-mail, mot de passe ou organisation incorrect.",
+      "organisation_not_found": "Cette organisation n'existe pas.",
+      "organisation_slug_required": "L'organisation est requise.",
+      "email_required": "L'adresse e-mail est requise.",
+      "password_required": "Le mot de passe est requis."
+    }
+  },
+  "session": {
+    "expired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  "offline": {
+    "banner": "Mode hors ligne — les modifications seront synchronisées dès le retour de la connexion."
+  },
+  "sync": {
+    "pending": "{{count}} modification en attente de synchronisation",
+    "pending_plural": "{{count}} modifications en attente de synchronisation",
+    "syncing": "Synchronisation…"
+  },
+  "logout": {
+    "confirmTitle": "Déconnexion",
+    "confirmPendingMessage": "Des modifications non synchronisées existent. Elles seront perdues à la déconnexion. Continuer ?",
+    "confirm": "Se déconnecter",
+    "cancel": "Annuler"
+  },
+  "groupView": {
+    "title": "Aujourd'hui",
+    "empty": "Aucun enfant ne vous est actuellement assigné.",
+    "pullToRefresh": "Tirez vers le bas pour actualiser"
+  },
+  "child": {
+    "allergyAlert": "Allergie",
+    "feverAlert": "Fièvre",
+    "medicalQuickAccess": "Informations médicales",
+    "medicalConditions": "Conditions médicales",
+    "dietaryRestrictions": "Restrictions alimentaires"
+  }
+}

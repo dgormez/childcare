@@ -19,9 +19,11 @@ interface Props {
 }
 
 const BUTTON_STYLES: Record<ModalButton["style"], string> = {
-  default:     "text-blue-500 font-semibold",
-  cancel:      "text-gray-500 dark:text-gray-300",
-  destructive: "text-red-500 font-semibold",
+  // primary-hover, not primary — verified ~5.9:1 contrast as a text color, primary itself is
+  // fill-only (~4.36:1, fine for a filled button, not for text on a light background).
+  default:     "text-primary-hover dark:text-primary-hover-dark font-semibold",
+  cancel:      "text-text-soft dark:text-text-soft-dark",
+  destructive: "text-danger dark:text-danger-dark font-semibold",
 };
 
 export function ThemedModal({ config, onDismiss }: Props) {
@@ -35,19 +37,19 @@ export function ThemedModal({ config, onDismiss }: Props) {
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full bg-white dark:bg-gray-800 rounded-2xl overflow-hidden"
+          className="w-full bg-surface dark:bg-surface-dark rounded-xl overflow-hidden"
           style={{ maxWidth: 400 }}
         >
           {/* Content */}
           <View className="px-5 pt-5 pb-4">
-            <Text className="text-gray-900 dark:text-white text-lg font-bold mb-2">{config.title}</Text>
+            <Text className="text-text dark:text-text-dark text-lg font-bold mb-2">{config.title}</Text>
             {!!config.message && (
-              <Text className="text-gray-500 dark:text-gray-400 text-sm leading-5">{config.message}</Text>
+              <Text className="text-text-soft dark:text-text-soft-dark text-sm leading-5">{config.message}</Text>
             )}
           </View>
 
           {/* Divider */}
-          <View className="h-px bg-gray-200 dark:bg-gray-700" />
+          <View className="h-px bg-border dark:bg-border-dark" />
 
           {/* Buttons */}
           {config.buttons.map((btn, i) => (
@@ -58,7 +60,7 @@ export function ThemedModal({ config, onDismiss }: Props) {
               >
                 <Text className={`text-base ${BUTTON_STYLES[btn.style]}`}>{btn.label}</Text>
               </TouchableOpacity>
-              {i < config.buttons.length - 1 && <View className="h-px bg-gray-200 dark:bg-gray-700" />}
+              {i < config.buttons.length - 1 && <View className="h-px bg-border dark:bg-border-dark" />}
             </React.Fragment>
           ))}
         </Pressable>

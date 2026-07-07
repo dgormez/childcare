@@ -83,8 +83,14 @@ A child may hold **two simultaneous active contracts** at different locations ow
 | App | Auth methods |
 |---|---|
 | Parent app | Google OAuth + Apple Sign-In (App Store requirement) + email/password |
-| Caregiver app | Email/password only (employer-provisioned accounts) |
+| Caregiver app | Room kiosk: director sets up tablet once (email/password); caregivers identify per shift via 4-digit PIN. No daily email/password on the floor. |
 | Web admin | Email/password + Google OAuth |
+
+**Caregiver tablet model:** One shared tablet per group/section, locked in kiosk mode after one-time director setup. Each caregiver has a 4-digit PIN managed in the web admin. The underlying mechanism is JWT + SecureStore — the PIN layer sits on top of a long-lived **device token** (30-day TTL) scoped to the room, present on every API call. This is the security boundary; it never goes away regardless of shift state.
+
+On top of that sits a **shift register**: caregivers check in/out via PIN at the start and end of their presence in the room. Two caregivers are simultaneously checked in for most of the day; either can log any event at any time. `recorded_by` is derived server-side from the shift log at `occurred_at` — caregivers do not need to identify themselves before every tap. For medical events (medication, temperature) a PIN prompt names `administered_by` specifically; skipping is allowed and the director fills in retroactively.
+
+This is the standard pattern used by Brightwheel, Procare, and Famly. Implemented in feature `008a-caregiver-kiosk-mode`, not feature 008.
 
 ### Database (by environment)
 | Env | Database |
