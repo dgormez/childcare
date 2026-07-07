@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Api.Middleware;
 using ChildCare.Application.Staff;
 using ChildCare.Contracts.Requests;
@@ -12,7 +13,11 @@ namespace ChildCare.Api.Endpoints;
 /// POST /api/staff/accept-invitation, which is anonymous and tenant-exempt — it has no JWT for
 /// TenantMiddleware to resolve a tenant from, so it resolves its own schema from a
 /// client-supplied organisation slug instead (found during implementation, mirrors
-/// ResetPasswordCommandHandler/AuthEndpoints.cs, feature 003).
+/// ResetPasswordCommandHandler/AuthEndpoints.cs, feature 003); and GET /api/staff/me, which is
+/// StaffOrDirector rather than DirectorOnly (feature 008) — registered as its own standalone
+/// route rather than inside the DirectorOnly group, since ASP.NET Core composes group + route
+/// RequireAuthorization calls additively (AND), so a more permissive per-route policy cannot
+/// live inside a stricter group-level one (research.md R6, specs/008-caregiver-app-scaffold).
 /// </summary>
 public static class StaffEndpoints
 {
@@ -99,6 +104,15 @@ public static class StaffEndpoints
             var result = await mediator.Send(new AcceptStaffInvitationCommand(req.OrganisationSlug, req.Token, req.Password));
             return MapResult(result, onSuccess: Results.Ok);
         }).WithTags("Staff").RequireTenantExempt();
+
+        app.MapGet("/api/staff/me", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new GetStaffMeQuery(tenantUserId));
+            return result.Found
+                ? Results.Ok(result.Response)
+                : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
+        }).WithTags("Staff").RequireAuthorization("StaffOrDirector");
     }
 
     private static IResult MapResult(StaffResult result, Func<StaffResponse, IResult> onSuccess)

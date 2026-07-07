@@ -1,4 +1,5 @@
 import "../global.css";
+import "../i18n";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState } from "react";
 import { Stack, Redirect, usePathname } from "expo-router";
@@ -7,13 +8,10 @@ import { View, ActivityIndicator } from "react-native";
 import { useColorScheme } from "nativewind";
 import Toast from "react-native-toast-message";
 
-import { initDb, getLocalHabits, getLocalCompletions, getLastSyncTime, getConfigValue, setConfigValue } from "../services/localDb";
-import dayjs from "dayjs";
-import { configureApi } from "../services/api";
+import { initDb } from "../services/localDb";
+import { configureApiBaseUrl } from "../services/apiClient";
 import { tryRestoreSession } from "../services/auth";
-import { registerForPushNotifications } from "../services/notifications";
 import { useStore } from "../store/useStore";
-import { useSync } from "../hooks/useSync";
 import { useColors } from "../hooks/useColors";
 
 // ── Sentry crash reporting ────────────────────────────────────────────────────
@@ -33,47 +31,23 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
 function RootLayout() {
   const { colorScheme } = useColorScheme();
-  const [isReady,     setIsReady]     = useState(false);
-  const [isOnboarded, setIsOnboarded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  const { auth, setHabits, setCompletions, setLastSyncAt } = useStore();
+  const { auth } = useStore();
   const pathname = usePathname();
-  const { sync } = useSync();
   const colors = useColors();
 
-  // One-time bootstrap: restore session, then mark ready.
+  // One-time bootstrap: init local db, configure the API client, restore session.
   useEffect(() => {
     async function bootstrap() {
       initDb();
-      configureApi(API_BASE_URL);
-
-      const sessionRestored = await tryRestoreSession(API_BASE_URL);
-      const onboarded = getConfigValue("onboardingComplete") === "true";
-
-      // Existing users who had no onboarding should skip it
-      if (sessionRestored && !onboarded) setConfigValue("onboardingComplete", "true");
-
-      setIsOnboarded(sessionRestored || onboarded);
+      configureApiBaseUrl(API_BASE_URL);
+      await tryRestoreSession(API_BASE_URL);
       setIsReady(true);
     }
     bootstrap().catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Load habits from SQLite + background sync whenever the logged-in user changes.
-  // Runs on initial login, session restore, and after logout → login.
-  useEffect(() => {
-    if (!isReady || !auth) return;
-    const today   = dayjs().format("YYYY-MM-DD");
-    const weekAgo = dayjs().subtract(6, "day").format("YYYY-MM-DD");
-    setHabits(getLocalHabits(auth.userId));
-    setCompletions(getLocalCompletions(auth.userId, weekAgo, today));
-    const lastSync = getLastSyncTime();
-    if (lastSync) setLastSyncAt(lastSync);
-    sync();
-    registerForPushNotifications().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, auth?.userId]);
 
   if (!isReady) {
     return (
@@ -87,32 +61,16 @@ function RootLayout() {
     <>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="onboarding"   options={{ headerShown: false }} />
-        <Stack.Screen name="oauthredirect" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)"     options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)"     options={{ headerShown: false }} />
-        <Stack.Screen
-          name="habit/add"
-          options={{
-            headerShown:  false,
-            presentation: "modal",
-          }}
-        />
-        <Stack.Screen
-          name="habit/[id]"
-          options={{
-            headerShown:  false,
-            presentation: "modal",
-          }}
-        />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack>
 
-      {/* Routing: onboarding → auth → app */}
+      {/* Routing: no session → login; a caregiver account is always director-provisioned,
+          so there is no self-serve onboarding flow to redirect to. */}
       {(() => {
-        const inAuthFlow = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/onboarding"].some(p => pathname.startsWith(p));
+        const inAuthFlow = pathname.startsWith("/login");
         if (inAuthFlow) return null;
-        if (!auth && !isOnboarded) return <Redirect href="/onboarding" />;
-        if (!auth &&  isOnboarded) return <Redirect href="/(auth)/login" />;
+        if (!auth) return <Redirect href="/(auth)/login" />;
         return null;
       })()}
 

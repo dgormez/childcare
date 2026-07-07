@@ -2,17 +2,16 @@
  * localDb.ts — SQLite persistence layer (expo-sqlite).
  *
  * Schema:
- *   config            — key/value store for auth state, last-sync timestamp
- *   habits            — local copy of the user's habits (synced from API)
- *   habit_completions — daily completions (synced from API)
+ *   config         — key/value store for auth state, last-sync timestamp
+ *   offline_queue  — caregiver actions taken offline, pending sync (data-model.md)
+ *   read_cache     — cached API reads, available offline (data-model.md)
  */
 import { Platform } from "react-native";
 import * as SQLite from "expo-sqlite";
 import type { SQLiteDatabase } from "expo-sqlite";
-import type { Habit, HabitCompletion } from "../types";
 
-const db: SQLiteDatabase = Platform.OS !== "web"
-  ? SQLite.openDatabaseSync("twinstack.db")
+export const db: SQLiteDatabase = Platform.OS !== "web"
+  ? SQLite.openDatabaseSync("childcare.db")
   : (null as unknown as SQLiteDatabase);
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -27,27 +26,30 @@ export function initDb() {
       value TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS habits (
-      id        TEXT PRIMARY KEY,
-      userId    TEXT NOT NULL,
-      name      TEXT NOT NULL,
-      color     TEXT NOT NULL DEFAULT '#3b82f6',
-      icon      TEXT NOT NULL DEFAULT '✅',
-      createdAt TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS offline_queue (
+      id          TEXT PRIMARY KEY,
+      tenant_id   TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      operation   TEXT NOT NULL,
+      payload     TEXT NOT NULL,
+      endpoint    TEXT NOT NULL,
+      http_method TEXT NOT NULL,
+      created_at  TEXT NOT NULL,
+      synced_at   TEXT,
+      sync_error  TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_habits_user ON habits(userId, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_offline_queue_tenant_created ON offline_queue(tenant_id, created_at ASC);
 
-    CREATE TABLE IF NOT EXISTS habit_completions (
-      id        TEXT PRIMARY KEY,
-      habitId   TEXT NOT NULL,
-      userId    TEXT NOT NULL,
-      date      TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      UNIQUE(habitId, date)
+    CREATE TABLE IF NOT EXISTS read_cache (
+      cache_key  TEXT PRIMARY KEY,
+      tenant_id  TEXT NOT NULL,
+      data       TEXT NOT NULL,
+      cached_at  TEXT NOT NULL,
+      expires_at TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_completions_user_date ON habit_completions(userId, date);
+    CREATE INDEX IF NOT EXISTS idx_read_cache_tenant ON read_cache(tenant_id);
   `);
 }
 
@@ -81,66 +83,32 @@ export function setLastSyncTime(d: Date) {
   setConfigValue("lastSyncAt", d.toISOString());
 }
 
-// ── Habits ────────────────────────────────────────────────────────────────────
+// ── Read cache (FR-009/FR-011/FR-015a) ───────────────────────────────────────
 
-export function getLocalHabits(userId: string): Habit[] {
-  if (Platform.OS === "web") return [];
-  return db.getAllSync<Habit>(
-    "SELECT * FROM habits WHERE userId = ? ORDER BY createdAt ASC",
-    [userId]
+export function getCacheRow(cacheKey: string, tenantId: string): { data: string } | null {
+  if (Platform.OS === "web") return null;
+  return db.getFirstSync<{ data: string }>(
+    "SELECT data FROM read_cache WHERE cache_key = ? AND tenant_id = ?", [cacheKey, tenantId]
+  ) ?? null;
+}
+
+export function setCacheRow(cacheKey: string, tenantId: string, data: string) {
+  if (Platform.OS === "web") return;
+  db.runSync(
+    "INSERT OR REPLACE INTO read_cache (cache_key, tenant_id, data, cached_at, expires_at) VALUES (?, ?, ?, ?, NULL)",
+    [cacheKey, tenantId, data, new Date().toISOString()]
   );
 }
 
-export function saveHabitsLocally(habits: Habit[]) {
+/** Wipes all offline-queue/read-cache rows for a tenant, plus session config — called on
+ * logout (FR-019) so a different caregiver signing in on the same device starts clean. */
+export function deleteLocalTenantData(tenantId: string) {
   if (Platform.OS === "web") return;
-  const stmt = db.prepareSync(
-    "INSERT OR REPLACE INTO habits (id, userId, name, color, icon, createdAt) VALUES (?,?,?,?,?,?)"
-  );
-  try {
-    for (const h of habits)
-      stmt.executeSync([h.id, h.userId, h.name, h.color, h.icon, h.createdAt]);
-  } finally {
-    stmt.finalizeSync();
-  }
-}
-
-export function deleteLocalHabit(id: string) {
-  if (Platform.OS === "web") return;
-  db.runSync("DELETE FROM habits WHERE id = ?", [id]);
-  db.runSync("DELETE FROM habit_completions WHERE habitId = ?", [id]);
-}
-
-// ── Completions ───────────────────────────────────────────────────────────────
-
-export function getLocalCompletions(userId: string, from: string, to: string): HabitCompletion[] {
-  if (Platform.OS === "web") return [];
-  return db.getAllSync<HabitCompletion>(
-    "SELECT * FROM habit_completions WHERE userId = ? AND date >= ? AND date <= ?",
-    [userId, from, to]
-  );
-}
-
-export function saveCompletionsLocally(completions: HabitCompletion[]) {
-  if (Platform.OS === "web") return;
-  const stmt = db.prepareSync(
-    "INSERT OR REPLACE INTO habit_completions (id, habitId, userId, date, createdAt) VALUES (?,?,?,?,?)"
-  );
-  try {
-    for (const c of completions)
-      stmt.executeSync([c.id, c.habitId, c.userId, c.date, c.createdAt]);
-  } finally {
-    stmt.finalizeSync();
-  }
-}
-
-export function deleteLocalCompletion(habitId: string, date: string) {
-  if (Platform.OS === "web") return;
-  db.runSync("DELETE FROM habit_completions WHERE habitId = ? AND date = ?", [habitId, date]);
-}
-
-/** Wipes all user data — called on logout. */
-export function deleteLocalUserData(userId: string) {
-  if (Platform.OS === "web") return;
-  db.runSync("DELETE FROM habits WHERE userId = ?", [userId]);
-  db.runSync("DELETE FROM habit_completions WHERE userId = ?", [userId]);
+  db.runSync("DELETE FROM offline_queue WHERE tenant_id = ?", [tenantId]);
+  db.runSync("DELETE FROM read_cache WHERE tenant_id = ?", [tenantId]);
+  deleteConfigValue("userId");
+  deleteConfigValue("userEmail");
+  deleteConfigValue("userRole");
+  deleteConfigValue("organisationSlug");
+  deleteConfigValue("lastSyncAt");
 }

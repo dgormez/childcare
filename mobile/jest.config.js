@@ -7,8 +7,8 @@ module.exports = {
   },
   transformIgnorePatterns: [
     "node_modules/(?!(" +
-      "expo|expo-router|expo-modules-core|expo-auth-session|expo-web-browser|" +
-      "expo-apple-authentication|expo-notifications|expo-updates|" +
+      "expo|expo-router|expo-modules-core|expo-localization|" +
+      "expo-notifications|expo-updates|" +
       "expo-secure-store|expo-sqlite|expo-constants|expo-linking|expo-status-bar|" +
       "@expo|react-native|@react-native|nativewind|react-native-reanimated|" +
       "react-native-screens|react-native-safe-area-context|react-native-toast-message|" +

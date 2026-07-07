@@ -185,10 +185,12 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
         Assert.DoesNotContain(listAsOrgB, c => c.Id == orgAChild.Id);
     }
 
-    // ── T034: Staff/Parent roles get 403 ─────────────────────────────────────────
+    // ── T034: Parent role gets 403 everywhere; Staff can read but not write ──────
+    // (feature 008 opened GET /api/children/GET /api/children/{id} to StaffOrDirector so the
+    // caregiver app can read them — write routes remain DirectorOnly, unchanged)
 
     [Fact]
-    public async Task NonDirectorRoles_Get403OnAllChildEndpoints()
+    public async Task NonDirectorRoles_WriteEndpointsForbidden_ParentAlsoForbiddenOnReads()
     {
         var client = factory.CreateClient();
         var org = await RegisterOrgAsync(client, $"Child Role Enforcement Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
@@ -203,10 +205,10 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
         var parentToken = await LoginAsync(client, org.Organisation.Slug, parentEmail, "password123");
 
         foreach (var token in new[] { staffToken, parentToken })
-        {
-            Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/children", token))).StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", token, MinimalCreateRequest()))).StatusCode);
-        }
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/children", parentToken))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/children", staffToken))).StatusCode);
     }
 
     // ── T084/T085: child photo upload (Phase 8, research.md R1) ─────────────────

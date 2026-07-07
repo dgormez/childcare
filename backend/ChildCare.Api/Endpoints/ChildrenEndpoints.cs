@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Application.Children;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
@@ -7,28 +8,39 @@ using MediatR;
 namespace ChildCare.Api.Endpoints;
 
 /// <summary>
-/// Every route is DirectorOnly and non-tenant-exempt (TenantMiddleware must run) — mirrors
-/// features 004/005's endpoint-group pattern.
+/// Write routes are DirectorOnly; the two GET routes are StaffOrDirector (feature 008) — kept
+/// as a separate MapGroup registration under the same "/api/children" prefix rather than
+/// inside the DirectorOnly group, since ASP.NET Core composes group + route
+/// RequireAuthorization calls additively (AND), so a more permissive per-route policy cannot
+/// live inside a stricter group-level one (research.md R6, specs/008-caregiver-app-scaffold).
+/// Non-tenant-exempt throughout (TenantMiddleware must run) — mirrors features 004/005's
+/// endpoint-group pattern.
 /// </summary>
 public static class ChildrenEndpoints
 {
     public static void MapChildrenEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/children")
+        var reads = app.MapGroup("/api/children")
             .WithTags("Children")
-            .RequireAuthorization("DirectorOnly");
+            .RequireAuthorization("StaffOrDirector");
 
-        group.MapGet("/", async (IMediator mediator, bool includeDeactivated = false) =>
+        reads.MapGet("/", async (HttpContext ctx, IMediator mediator, bool includeDeactivated = false, Guid? groupId = null) =>
         {
-            var children = await mediator.Send(new ListChildrenQuery(includeDeactivated));
+            var (role, tenantUserId) = CallerIdentity(ctx);
+            var children = await mediator.Send(new ListChildrenQuery(includeDeactivated, groupId, role, tenantUserId));
             return Results.Ok(children);
         });
 
-        group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
+        reads.MapGet("/{id:guid}", async (Guid id, HttpContext ctx, IMediator mediator) =>
         {
-            var result = await mediator.Send(new GetChildByIdQuery(id));
+            var (role, tenantUserId) = CallerIdentity(ctx);
+            var result = await mediator.Send(new GetChildByIdQuery(id, role, tenantUserId));
             return MapResult(result, onSuccess: Results.Ok);
         });
+
+        var group = app.MapGroup("/api/children")
+            .WithTags("Children")
+            .RequireAuthorization("DirectorOnly");
 
         group.MapPost("/", async (CreateChildRequest req, IMediator mediator) =>
         {
@@ -75,6 +87,16 @@ public static class ChildrenEndpoints
 
     private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct, Enum =>
         value is null ? null : Enum.Parse<TEnum>(value, ignoreCase: true);
+
+    // Feature 008: extracts the caller's role/id from the JWT so read queries can apply
+    // Staff-role location-scoping (research.md R6) — Director callers pass these through
+    // unused by the query's scoping branch.
+    internal static (string? Role, Guid? TenantUserId) CallerIdentity(HttpContext ctx)
+    {
+        var role = ctx.User.FindFirst(ClaimTypes.Role)?.Value;
+        var idClaim = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return (role, idClaim is null ? null : Guid.Parse(idClaim));
+    }
 
     private static IResult MapResult(ChildResult result, Func<ChildResponse, IResult> onSuccess)
     {

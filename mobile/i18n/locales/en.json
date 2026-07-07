@@ -1,0 +1,45 @@
+{
+  "login": {
+    "title": "Sign In",
+    "organisationSlug": "Organisation",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "offlineFirstLogin": "Can't sign in without a network connection the first time."
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Incorrect email, password, or organisation.",
+      "organisation_not_found": "This organisation doesn't exist.",
+      "organisation_slug_required": "Organisation is required.",
+      "email_required": "Email address is required.",
+      "password_required": "Password is required."
+    }
+  },
+  "session": {
+    "expired": "Your session has expired. Please sign in again."
+  },
+  "offline": {
+    "banner": "Working offline — changes will sync once you're back online."
+  },
+  "sync": {
+    "pending": "{{count}} change pending sync",
+    "pending_plural": "{{count}} changes pending sync",
+    "syncing": "Syncing…"
+  },
+  "logout": {
+    "confirmTitle": "Log out",
+    "confirmPendingMessage": "There are unsynced changes. They will be lost if you log out. Continue?",
+    "confirm": "Log out",
+    "cancel": "Cancel"
+  },
+  "groupView": {
+    "empty": "No children are currently assigned to you.",
+    "pullToRefresh": "Pull down to refresh"
+  },
+  "child": {
+    "allergyAlert": "Allergy",
+    "feverAlert": "Fever",
+    "medicalQuickAccess": "Medical information"
+  }
+}

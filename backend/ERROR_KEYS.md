@@ -136,6 +136,14 @@ This feature also reuses `errors.location.not_found` (404) rather than inventing
 
 This feature also reuses `errors.child.not_found` (404, `POST /api/children/{childId}/contracts` and `GET /api/children/{childId}/contracts` with an unresolvable `childId`) and `errors.location.not_found` (404, a `locationId` that doesn't exist in this tenant **or** exists but is deactivated — FR-004a, matching feature 006's CHK003 precedent) rather than inventing duplicates.
 
+## Caregiver App Scaffold (feature `008-caregiver-app-scaffold`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.staff.profile_not_found` | 404 | `GET /api/staff/me` — the authenticated `TenantUser` has no associated `StaffProfile` |
+
+This feature also extends the authorization on two existing feature-006 routes rather than inventing new error keys: `GET /api/children` (now `StaffOrDirector`, gains an optional `groupId` filter and Staff-role location-scoping) and `GET /api/groups` (now `StaffOrDirector`, gains Staff-role location-scoping) both reuse their existing success/empty-array behavior — a Staff caller querying outside their eligible locations receives `200` with an empty array, never a new error key (FR-007a). `GET /api/children/{id}` reuses the existing `errors.child.not_found` (404) for a Staff caller requesting a child outside their eligible locations, indistinguishable from the child not existing at all (found during implementation — the list endpoint's scoping alone did not prevent a direct id lookup from bypassing it).
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

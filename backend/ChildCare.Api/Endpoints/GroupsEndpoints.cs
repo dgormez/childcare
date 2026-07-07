@@ -5,20 +5,29 @@ using MediatR;
 
 namespace ChildCare.Api.Endpoints;
 
-/// <summary>Every route is DirectorOnly and non-tenant-exempt — mirrors ChildrenEndpoints.cs.</summary>
+/// <summary>
+/// `GET /api/groups` is StaffOrDirector (feature 008, kept as a separate MapGroup from the
+/// DirectorOnly write route — research.md R6); every other route remains DirectorOnly and
+/// non-tenant-exempt — mirrors ChildrenEndpoints.cs.
+/// </summary>
 public static class GroupsEndpoints
 {
     public static void MapGroupsEndpoints(this WebApplication app)
     {
+        var groupReads = app.MapGroup("/api/groups")
+            .WithTags("Groups")
+            .RequireAuthorization("StaffOrDirector");
+
+        groupReads.MapGet("/", async (HttpContext ctx, IMediator mediator, Guid? locationId) =>
+        {
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
+            var list = await mediator.Send(new ListGroupsQuery(locationId, role, tenantUserId));
+            return Results.Ok(list);
+        });
+
         var groups = app.MapGroup("/api/groups")
             .WithTags("Groups")
             .RequireAuthorization("DirectorOnly");
-
-        groups.MapGet("/", async (IMediator mediator, Guid? locationId) =>
-        {
-            var list = await mediator.Send(new ListGroupsQuery(locationId));
-            return Results.Ok(list);
-        });
 
         groups.MapPost("/", async (CreateGroupRequest req, IMediator mediator) =>
         {
