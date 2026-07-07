@@ -46,6 +46,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<VaccinationRecord> VaccinationRecords => Set<VaccinationRecord>();
 
+    public DbSet<Contract> Contracts => Set<Contract>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -255,6 +257,32 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             v.HasKey(x => x.Id);
             v.Property(x => x.VaccineName).IsRequired().HasMaxLength(200);
             v.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+        });
+
+        modelBuilder.Entity<Contract>(c =>
+        {
+            c.ToTable("contracts", tb =>
+            {
+                tb.HasCheckConstraint("CK_contracts_daily_rate_cents", "\"DailyRateCents\" > 0");
+            });
+            c.HasKey(x => x.Id);
+            c.Property(x => x.DailyRateCents).IsRequired();
+            c.Property(x => x.Status)
+             .HasConversion(
+                 v => v.ToString().ToLowerInvariant(),
+                 v => (ContractStatus)Enum.Parse(typeof(ContractStatus), v, ignoreCase: true))
+             .HasMaxLength(20)
+             .IsRequired();
+            c.Property(x => x.TariefCode).HasMaxLength(50);
+            c.OwnsMany(x => x.ContractedDays, cd => cd.ToJson());
+            c.OwnsOne(x => x.Consent, cs => cs.ToJson());
+            c.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            c.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            c.HasOne<Contract>().WithMany()
+             .HasForeignKey(x => x.PreviousContractId)
+             .OnDelete(DeleteBehavior.Restrict);
+            c.HasIndex(x => new { x.ChildId, x.Status });
+            c.HasIndex(x => new { x.LocationId, x.Status });
         });
     }
 }
