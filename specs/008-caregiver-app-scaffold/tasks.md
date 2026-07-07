@@ -249,3 +249,11 @@ Task: "Deactivated-account clean-sign-out test in mobile/__tests__/services/auth
 - Verify tests fail before implementing
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
+
+## Phase 7: Convergence
+
+- [ ] T063 Show a confirmation dialog (ThemedModal) before logout when `useSyncStatus().pendingCount > 0`, using the already-staged `logout.confirmTitle`/`confirmPendingMessage`/`confirm`/`cancel` i18n keys, in `mobile/app/(app)/_layout.tsx` per Edge Cases (missing)
+- [ ] T064 Add the missing `groupView.title`, `child.medicalConditions`, and `child.dietaryRestrictions` i18n keys to `mobile/i18n/locales/{en,nl,fr}.json` per FR-016, SC-005 (partial)
+- [ ] T065 Add `mobile/__tests__/services/apiClient.test.ts` covering the 401→refresh→transparent-retry flow, the `/api/auth/*` anti-recursion guard, and the placeholder-origin base-URL rewrite per FR-004 (partial)
+- [ ] T066 Set `orientation: "landscape"` in `mobile/app.config.js` per FR-017 / plan.md's landscape-first layout decision (partial)
+- [ ] T067 Add a test rendering `mobile/app/(app)/child/[id].tsx` directly, asserting the tapped child's allergy/medical-conditions/dietary-restrictions content renders from the cache, per FR-008 (partial)
