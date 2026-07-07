@@ -1,4 +1,9 @@
-function Stack({ children }) { return children ?? null; }
+const React = require("react");
+
+function Stack({ children, screenOptions }) {
+  const headerRight = screenOptions && screenOptions.headerRight;
+  return React.createElement(React.Fragment, null, headerRight ? headerRight() : null, children ?? null);
+}
 Stack.Screen = () => null;
 
 function Tabs({ children }) { return children ?? null; }

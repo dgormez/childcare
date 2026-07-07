@@ -46,14 +46,14 @@ export default function LoginScreen() {
     organisationSlug.trim().length > 0 && email.trim().length > 0 && password.length > 0 && !loading;
 
   return (
-    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-white dark:bg-gray-900">
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-background dark:bg-background-dark">
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 px-6 justify-center pb-10" style={isWide ? { alignSelf: "center", width: "100%", maxWidth: 480 } : undefined}>
 
-          <Text className="text-gray-900 dark:text-white text-3xl font-bold text-center mb-10">
+          <Text className="text-text dark:text-text-dark text-3xl font-bold text-center mb-10">
             {t("login.title")}
           </Text>
 
@@ -66,7 +66,7 @@ export default function LoginScreen() {
             onDismiss={() => setError("")}
           />
 
-          <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">{t("login.organisationSlug")}</Text>
+          <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("login.organisationSlug")}</Text>
           <TextInput
             value={organisationSlug}
             onChangeText={setOrganisationSlug}
@@ -74,10 +74,10 @@ export default function LoginScreen() {
             placeholderTextColor={colors.placeholder}
             autoCapitalize="none"
             returnKeyType="next"
-            className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-4 mb-4"
+            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 py-4 mb-4"
           />
 
-          <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">{t("login.email")}</Text>
+          <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("login.email")}</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -86,10 +86,10 @@ export default function LoginScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             returnKeyType="next"
-            className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-4 mb-4"
+            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 py-4 mb-4"
           />
 
-          <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium mb-1">{t("login.password")}</Text>
+          <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("login.password")}</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -98,13 +98,13 @@ export default function LoginScreen() {
             secureTextEntry
             returnKeyType="done"
             onSubmitEditing={handleLogin}
-            className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-4 mb-6"
+            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 py-4 mb-6"
           />
 
           <TouchableOpacity
             onPress={handleLogin}
             disabled={!canSubmit}
-            className={`rounded-2xl py-5 items-center ${canSubmit ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"}`}
+            className={`rounded-lg py-5 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
           >
             {loading
               ? <ActivityIndicator color="#fff" />

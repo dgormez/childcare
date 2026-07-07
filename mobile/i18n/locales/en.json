@@ -34,12 +34,15 @@
     "cancel": "Cancel"
   },
   "groupView": {
+    "title": "Today",
     "empty": "No children are currently assigned to you.",
     "pullToRefresh": "Pull down to refresh"
   },
   "child": {
     "allergyAlert": "Allergy",
     "feverAlert": "Fever",
-    "medicalQuickAccess": "Medical information"
+    "medicalQuickAccess": "Medical information",
+    "medicalConditions": "Medical conditions",
+    "dietaryRestrictions": "Dietary restrictions"
   }
 }

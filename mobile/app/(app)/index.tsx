@@ -97,14 +97,14 @@ export default function GroupViewScreen() {
       contentContainerStyle={{ padding: 16, flexGrow: 1 }}
       ListEmptyComponent={
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 64 }}>
-          <Text style={{ color: colors.secondaryText }}>{t("groupView.empty")}</Text>
+          <Text style={{ color: colors.textSoft }}>{t("groupView.empty")}</Text>
         </View>
       }
       renderItem={({ item }) => (
         <TouchableOpacity
           onPress={() => router.push(`/(app)/child/${item.id}`)}
           style={{ minHeight: 48 }}
-          className="flex-row items-center bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3"
+          className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-xl p-4 mb-3"
         >
           {item.photoDownloadUrl ? (
             <Image
@@ -115,10 +115,10 @@ export default function GroupViewScreen() {
             <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: colors.border }} />
           )}
           <View style={{ flex: 1 }}>
-            <Text className="text-gray-900 dark:text-white font-semibold text-base">
+            <Text className="text-text dark:text-text-dark font-semibold text-base">
               {item.firstName} {item.lastName}
             </Text>
-            <Text style={{ color: colors.secondaryText }}>{calculateAge(item.dateOfBirth)}</Text>
+            <Text style={{ color: colors.textSoft }}>{calculateAge(item.dateOfBirth)}</Text>
           </View>
           {!!item.allergiesDescription && (
             <Text accessibilityLabel={t("child.allergyAlert")} style={{ fontSize: 20, marginLeft: 8 }}>

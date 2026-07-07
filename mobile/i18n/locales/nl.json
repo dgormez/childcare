@@ -34,12 +34,15 @@
     "cancel": "Annuleren"
   },
   "groupView": {
+    "title": "Vandaag",
     "empty": "Er zijn momenteel geen kinderen aan jou toegewezen.",
     "pullToRefresh": "Trek omlaag om te vernieuwen"
   },
   "child": {
     "allergyAlert": "Allergie",
     "feverAlert": "Verhoging",
-    "medicalQuickAccess": "Medische gegevens"
+    "medicalQuickAccess": "Medische gegevens",
+    "medicalConditions": "Medische aandoeningen",
+    "dietaryRestrictions": "Dieetbeperkingen"
   }
 }

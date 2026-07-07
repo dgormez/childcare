@@ -34,12 +34,15 @@
     "cancel": "Annuler"
   },
   "groupView": {
+    "title": "Aujourd'hui",
     "empty": "Aucun enfant ne vous est actuellement assigné.",
     "pullToRefresh": "Tirez vers le bas pour actualiser"
   },
   "child": {
     "allergyAlert": "Allergie",
     "feverAlert": "Fièvre",
-    "medicalQuickAccess": "Informations médicales"
+    "medicalQuickAccess": "Informations médicales",
+    "medicalConditions": "Conditions médicales",
+    "dietaryRestrictions": "Restrictions alimentaires"
   }
 }
