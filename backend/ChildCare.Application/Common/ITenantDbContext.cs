@@ -24,6 +24,12 @@ public interface ITenantDbContext
     DbSet<StaffProfile> StaffProfiles { get; }
     DbSet<StaffInvitation> StaffInvitations { get; }
     DbSet<StaffLocationEligibility> StaffLocationEligibility { get; }
+    DbSet<Child> Children { get; }
+    DbSet<Contact> Contacts { get; }
+    DbSet<ChildContact> ChildContacts { get; }
+    DbSet<Group> Groups { get; }
+    DbSet<ChildGroupAssignment> ChildGroupAssignments { get; }
+    DbSet<VaccinationRecord> VaccinationRecords { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

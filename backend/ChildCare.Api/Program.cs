@@ -390,6 +390,9 @@ app.MapAdminEndpoints();
 app.MapOrganisationEndpoints();
 app.MapLocationEndpoints();
 app.MapStaffEndpoints();
+app.MapChildrenEndpoints();
+app.MapContactsEndpoints();
+app.MapGroupsEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

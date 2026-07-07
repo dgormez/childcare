@@ -23,8 +23,11 @@ public class GcsProfilePhotoStorage : IProfilePhotoStorage
 
     public GcsProfilePhotoStorage(IConfiguration config)
     {
-        _bucketName = config["Storage:StaffPhotosBucketName"]
-            ?? throw new InvalidOperationException("Storage:StaffPhotosBucketName is not configured.");
+        // Renamed from Storage:StaffPhotosBucketName in feature 006-children — this single
+        // bucket now serves both staff and child photos, distinguished by the category path
+        // segment (research.md R1), so a staff-specific config key name would be misleading.
+        _bucketName = config["Storage:ProfilePhotosBucketName"]
+            ?? throw new InvalidOperationException("Storage:ProfilePhotosBucketName is not configured.");
 
         _urlSigner = new Lazy<Task<UrlSigner>>(async () =>
         {
@@ -33,11 +36,11 @@ public class GcsProfilePhotoStorage : IProfilePhotoStorage
         });
     }
 
-    public async Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid staffProfileId, CancellationToken cancellationToken = default)
+    public async Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(string category, Guid subjectId, CancellationToken cancellationToken = default)
     {
-        // Deterministic per profile — a re-upload overwrites the same object rather than
-        // accumulating orphaned prior photos (FR-013, spec.md Assumptions).
-        var objectPath = $"staff/{staffProfileId}/photo.jpg";
+        // Deterministic per subject — a re-upload overwrites the same object rather than
+        // accumulating orphaned prior photos (feature 005 FR-013, spec.md Assumptions).
+        var objectPath = $"{category}/{subjectId}/photo.jpg";
 
         var signer = await _urlSigner.Value;
         var uploadUrl = await signer.SignAsync(
