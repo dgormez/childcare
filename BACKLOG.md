@@ -18,7 +18,7 @@
 | 004 | `004-locations` | Location management within an organisation | 001, 002 | ✅ Done |
 | 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | ✅ Done |
 | 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | ✅ Done |
-| 007 | `007-contracts` | Enrolment contracts, contracted days, split-location validator | 005, 006 | 🔲 Not started |
+| 007 | `007-contracts` | Enrolment contracts, contracted days, split-location validator | 005, 006 | ✅ Done |
 
 ### Phase 1 — Core Operations (can be parallelised once foundation is in place)
 
@@ -466,6 +466,14 @@ Out of scope:
 - SEPA mandate in contract signing (Phase 2).
 - Wisseldagen (exchange days) — handled in feature 009 attendance.
 ```
+
+**Shipped 2026-07-07** — `specs/007-contracts/` (spec → clarify → plan → tasks → checklist → analyze → implement → converge, 72/72 tasks, 38 new tests + 139 pre-existing = 177/177 passing). Worth knowing before starting a dependent feature:
+
+- **`Contract` stores contracted weekdays and photo/media consent as JSONB owned types** (`ContractedDays`, `Consent`), not separate tables — each weekday has its own independent start/end time. `TariefCode`/`RateValidUntil` columns exist (Phase 3 IKT placeholders) but are never set or exposed by this feature.
+- **The split-location day-overlap validator (constitution Principle II) is made atomic under concurrency via a new `IAdvisoryLockService`**, a Postgres advisory lock keyed on the child — a deliberately *separate* port from feature 001's `ITenantProvisioningService.RunExclusiveAsync`, reusing the pattern rather than generalizing that existing interface (out of this feature's scope). Any future feature needing "serialize concurrent requests touching the same aggregate" should reuse `IAdvisoryLockService`, not reinvent a third copy.
+- **A real bug was caught by `/speckit-implement`'s own tests, not by review**: an early design assumed EF Core's identity-map would let a query "see" an in-memory (unsaved) `Status = Ended` change on a tracked entity — it doesn't; the query's SQL WHERE clause matches the *persisted* column value regardless. `AmendContractCommand` now excludes the predecessor by explicit id instead. Worth remembering generally: don't rely on EF's tracked-instance identity map to reflect an unsaved property change inside a query filter.
+- **`IContractPdfGenerator` (QuestPDF) is the first PDF generation in this codebase** — future features needing PDFs (fiscal attestations, feature 014) should follow its port/adapter split and locale-keyed label-lookup pattern rather than adding a second PDF mechanism.
+- Contract PDF generation accepts an optional `?locale=nl|fr|en` query parameter (defaults to `nl`) — the only endpoint in this codebase where language is server-selected at request time rather than client-resolved from an error key, since a PDF is a fixed set of bytes rendered once.
 
 ---
 
