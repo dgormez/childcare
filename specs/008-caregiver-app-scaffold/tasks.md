@@ -29,7 +29,7 @@ This feature touches both `mobile/` (Expo/React Native/TypeScript) and `backend/
 
 **Purpose**: Confirm baseline on both stacks before rewriting a large fraction of the mobile app and extending backend authorization.
 
-- [ ] T001 Confirm `dotnet build backend/ChildCare.sln` succeeds and `cd mobile && npm test` passes on this branch before starting
+- [X] T001 Confirm `dotnet build backend/ChildCare.sln` succeeds and `cd mobile && npm test` passes on this branch before starting
 
 **Checkpoint**: Baseline confirmed on both stacks.
 
@@ -146,21 +146,21 @@ This feature touches both `mobile/` (Expo/React Native/TypeScript) and `backend/
 
 ### Tests for User Story 3
 
-- [ ] T047 [P] [US3] Test: `offlineQueue.enqueue()` while offline records a row with `synced_at = NULL`; `getPending()` returns rows ordered by `created_at` ascending — in `mobile/__tests__/services/offlineQueue.test.ts` — depends on T018
-- [ ] T048 [P] [US3] Test: `syncEngine.registerSyncHandler('_test_entity', ...)` + `syncPendingQueue()` sends queued rows to a faked API client sequentially, in order, and marks each `synced_at` on success (FR-012, FR-013) — in `mobile/__tests__/services/syncEngine.test.ts`
-- [ ] T049 [P] [US3] Test: a row that fails with a simulated transient (500/network) error remains pending and is retried on the next `syncPendingQueue()` call, never discarded (FR-014) — same file
-- [ ] T050 [P] [US3] Test: a row that fails with a simulated `409` and no registered `onConflict` handler is discarded and marked synced with a conflict note by default (FR-014a) — same file
-- [ ] T051 [P] [US3] Test: a row blocked by a simulated `401` triggers exactly one `refresh()` call and one retry of that row; if the retried call also fails, the whole sync run stops with a clear surfaced error rather than continuing to the next row (FR-015) — same file
-- [ ] T052 [P] [US3] Test: 50+ synthetic queued rows all eventually sync, strictly in `created_at` order, with none silently dropped (FR-013, SC-003) — same file
-- [ ] T053 [P] [US3] Test: `syncPendingQueue()` is invoked by the app shell exactly on network-reconnect, app-foreground, and pull-to-refresh events — never on a timer (FR-012a) — in `mobile/__tests__/screens/group-view.test.tsx` or a dedicated shell test, wiring a spy on `syncPendingQueue`
+- [X] T047 [P] [US3] Test: `offlineQueue.enqueue()` while offline records a row with `synced_at = NULL`; `getPending()` returns rows ordered by `created_at` ascending — in `mobile/__tests__/services/offlineQueue.test.ts` — depends on T018
+- [X] T048 [P] [US3] Test: `syncEngine.registerSyncHandler('_test_entity', ...)` + `syncPendingQueue()` sends queued rows to a faked API client sequentially, in order, and marks each `synced_at` on success (FR-012, FR-013) — in `mobile/__tests__/services/syncEngine.test.ts`
+- [X] T049 [P] [US3] Test: a row that fails with a simulated transient (500/network) error remains pending and is retried on the next `syncPendingQueue()` call, never discarded (FR-014) — same file
+- [X] T050 [P] [US3] Test: a row that fails with a simulated `409` and no registered `onConflict` handler is discarded and marked synced with a conflict note by default (FR-014a) — same file
+- [X] T051 [P] [US3] Test: a row blocked by a simulated `401` triggers exactly one `refresh()` call and one retry of that row; if the retried call also fails, the whole sync run stops with a clear surfaced error rather than continuing to the next row (FR-015) — same file
+- [X] T052 [P] [US3] Test: 50+ synthetic queued rows all eventually sync, strictly in `created_at` order, with none silently dropped (FR-013, SC-003) — same file
+- [X] T053 [P] [US3] Test: `syncPendingQueue()` is invoked by the app shell exactly on network-reconnect, app-foreground, and pull-to-refresh events — never on a timer (FR-012a) — implemented as a dedicated shell test in `mobile/__tests__/screens/app-layout.test.tsx` (network/foreground triggers) plus an assertion in the existing pull-to-refresh test in `group-view.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T054 [US3] Create `mobile/services/offlineQueue.ts`: `enqueue()`, `getPending()`, `markSynced()`, `markSyncError()` per the internal contract (contracts/mobile-offline-sync.md) — depends on T018
-- [ ] T055 [US3] Create `mobile/services/syncEngine.ts`: `registerSyncHandler()`, `syncPendingQueue()` implementing sequential replay, the FR-014a default conflict handling, the FR-015 single-refresh-retry-then-stop rule, and per-row transient-error retry-on-next-run (FR-014) — depends on T028 (for `refresh()`), T054
-- [ ] T056 [US3] Create `mobile/hooks/useSyncStatus.ts`: `{ pendingCount, lastSyncedAt, isSyncing }` derived from `offlineQueue`/`syncEngine` state — depends on T055
-- [ ] T057 [US3] Wire `syncPendingQueue()` to fire on network reconnect (`useNetworkStatus` transitioning to connected), app foreground, and pull-to-refresh, in `mobile/app/(app)/_layout.tsx`/`mobile/app/(app)/index.tsx` — no other trigger (FR-012a) — depends on T042, T043, T044, T055
-- [ ] T058 [US3] Render the sync status (pending count / syncing indicator) alongside the offline banner in `mobile/app/(app)/_layout.tsx`, using `useSyncStatus()` (FR-010) — depends on T056, T057
+- [X] T054 [US3] Create `mobile/services/offlineQueue.ts`: `enqueue()`, `getPending()`, `markSynced()`, `markSyncError()` per the internal contract (contracts/mobile-offline-sync.md) — depends on T018
+- [X] T055 [US3] Create `mobile/services/syncEngine.ts`: `registerSyncHandler()`, `syncPendingQueue()` implementing sequential replay, the FR-014a default conflict handling, the FR-015 single-refresh-retry-then-stop rule, and per-row transient-error retry-on-next-run (FR-014) — depends on T028 (for `refresh()`), T054
+- [X] T056 [US3] Create `mobile/hooks/useSyncStatus.ts`: `{ pendingCount, lastSyncedAt, isSyncing }` derived from `offlineQueue`/`syncEngine` state — depends on T055
+- [X] T057 [US3] Wire `syncPendingQueue()` to fire on network reconnect (`useNetworkStatus` transitioning to connected), app foreground, and pull-to-refresh, in `mobile/app/(app)/_layout.tsx`/`mobile/app/(app)/index.tsx` — no other trigger (FR-012a) — depends on T042, T043, T044, T055
+- [X] T058 [US3] Render the sync status (pending count / syncing indicator) alongside the offline banner in `mobile/app/(app)/_layout.tsx`, using `useSyncStatus()` (FR-010) — depends on T056, T057
 
 **Checkpoint**: All three user stories are independently functional — the app authenticates, shows children online/offline, and has a proven-correct (if not yet used by any real feature) offline write path ready for feature 009.
 
@@ -170,10 +170,10 @@ This feature touches both `mobile/` (Expo/React Native/TypeScript) and `backend/
 
 **Purpose**: Final validation across all stories and both stacks.
 
-- [ ] T059 [P] Run `dotnet test backend/ChildCare.sln` and confirm no regressions in pre-existing tests (features 001–007) — the `StaffOrDirector` split on `GET /api/children`/`GET /api/groups` must not change any existing Director-role test's expected behavior
-- [ ] T060 [P] Run `cd mobile && npm test` and confirm the full mobile suite passes, including the rewritten login tests and the new group-view/sync-engine/offline-queue tests
-- [ ] T061 Manually walk through every scenario in `quickstart.md` (or confirm via the automated tests already covering them) and confirm all five pass end-to-end
-- [ ] T062 Confirm `mobile/services/generated/api-types.ts` has no stale/unused types left over from the removed Habits-era hand-rolled request shapes, and that `tsc`/type-check passes cleanly across the rewritten files
+- [X] T059 [P] Run `dotnet test backend/ChildCare.sln` and confirm no regressions in pre-existing tests (features 001–007) — the `StaffOrDirector` split on `GET /api/children`/`GET /api/groups` must not change any existing Director-role test's expected behavior — 185/185 passing
+- [X] T060 [P] Run `cd mobile && npm test` and confirm the full mobile suite passes, including the rewritten login tests and the new group-view/sync-engine/offline-queue tests — 46/46 passing across 9 suites
+- [X] T061 Manually walk through every scenario in `quickstart.md` (or confirm via the automated tests already covering them) and confirm all five pass end-to-end — all five confirmed via the automated coverage listed in quickstart.md's own "Automated coverage" section
+- [X] T062 Confirm `mobile/services/generated/api-types.ts` has no stale/unused types left over from the removed Habits-era hand-rolled request shapes, and that `tsc`/type-check passes cleanly across the rewritten files — `npx tsc --noEmit` clean; no Habits references remain outside the deleted files. Found and fixed a real bug during this pass: `apiClient.ts` created the openapi-fetch client with `baseUrl: () => baseUrl`, which both failed to type-check (openapi-fetch's `baseUrl` is a fixed string, not a getter) and was silently wrong at runtime (read once at creation, before `configureApiBaseUrl()` ever runs). Fixed by creating the client against a placeholder origin and rewriting every request's URL to the real, dynamically-configured base URL in the auth middleware's `onRequest`
 
 ---
 

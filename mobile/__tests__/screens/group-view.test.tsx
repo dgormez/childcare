@@ -9,7 +9,13 @@ jest.mock("react-i18next", () => ({
 
 jest.mock("../../services/apiClient", () => {
   const mockGet = jest.fn();
-  return { apiClient: { GET: (...args: unknown[]) => mockGet(...args) }, __mockGet: mockGet };
+  return {
+    apiClient: { GET: (...args: unknown[]) => mockGet(...args), POST: jest.fn() },
+    configureApiBaseUrl: jest.fn(),
+    getApiBaseUrl: () => "http://api.test",
+    setUnauthorizedHandler: jest.fn(),
+    __mockGet: mockGet,
+  };
 });
 
 jest.mock("../../services/readCache", () => {
@@ -21,9 +27,15 @@ jest.mock("../../services/readCache", () => {
   };
 });
 
+jest.mock("../../services/syncEngine", () => {
+  const mockSyncPendingQueue = jest.fn().mockResolvedValue({ succeeded: 0, failed: 0, conflicted: 0 });
+  return { syncPendingQueue: (...args: unknown[]) => mockSyncPendingQueue(...args), __mockSyncPendingQueue: mockSyncPendingQueue };
+});
+
 const { useRouter } = require("expo-router");
 const readCacheMock = jest.requireMock("../../services/readCache") as { __mockCacheStore: Map<string, unknown> };
 const getMock = (jest.requireMock("../../services/apiClient") as { __mockGet: jest.Mock }).__mockGet;
+const syncEngineMock = jest.requireMock("../../services/syncEngine") as { __mockSyncPendingQueue: jest.Mock };
 
 function jsonResponse(status: number, body: unknown) {
   return { response: { ok: status >= 200 && status < 300, status, json: async () => body } };
@@ -104,6 +116,7 @@ it("pull-to-refresh re-fetches from the server and updates the cache (FR-011)", 
 
   expect(await findByText("Updated Tester")).toBeTruthy();
   expect(readCacheMock.__mockCacheStore.get("children:today")).toEqual([{ ...child, firstName: "Updated" }]);
+  expect(syncEngineMock.__mockSyncPendingQueue).toHaveBeenCalledTimes(1); // FR-012a: pull-to-refresh is a sync trigger
 });
 
 it("shows a clear empty state when the caregiver has zero assigned children (FR-007, CHK002)", async () => {

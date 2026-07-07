@@ -100,6 +100,48 @@ export function setCacheRow(cacheKey: string, tenantId: string, data: string) {
   );
 }
 
+// ── Offline queue (FR-012/FR-013/FR-014) ─────────────────────────────────────
+
+export interface QueueRow {
+  id:          string;
+  tenant_id:   string;
+  entity_type: string;
+  operation:   string;
+  payload:     string;
+  endpoint:    string;
+  http_method: string;
+  created_at:  string;
+  synced_at:   string | null;
+  sync_error:  string | null;
+}
+
+export function insertQueueRow(row: Omit<QueueRow, "synced_at" | "sync_error">) {
+  if (Platform.OS === "web") return;
+  db.runSync(
+    `INSERT INTO offline_queue (id, tenant_id, entity_type, operation, payload, endpoint, http_method, created_at, synced_at, sync_error)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)`,
+    [row.id, row.tenant_id, row.entity_type, row.operation, row.payload, row.endpoint, row.http_method, row.created_at]
+  );
+}
+
+export function getPendingQueueRows(tenantId: string): QueueRow[] {
+  if (Platform.OS === "web") return [];
+  return db.getAllSync<QueueRow>(
+    "SELECT * FROM offline_queue WHERE tenant_id = ? AND synced_at IS NULL ORDER BY created_at ASC",
+    [tenantId]
+  );
+}
+
+export function markQueueRowSynced(id: string, note: string | null) {
+  if (Platform.OS === "web") return;
+  db.runSync("UPDATE offline_queue SET synced_at = ?, sync_error = ? WHERE id = ?", [new Date().toISOString(), note, id]);
+}
+
+export function markQueueRowSyncError(id: string, error: string) {
+  if (Platform.OS === "web") return;
+  db.runSync("UPDATE offline_queue SET sync_error = ? WHERE id = ?", [error, id]);
+}
+
 /** Wipes all offline-queue/read-cache rows for a tenant, plus session config — called on
  * logout (FR-019) so a different caregiver signing in on the same device starts clean. */
 export function deleteLocalTenantData(tenantId: string) {

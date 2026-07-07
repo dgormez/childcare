@@ -1,7 +1,9 @@
 // Web shim — expo-sqlite's WASM worker doesn't resolve under Metro web bundler.
 // All operations are no-ops; the app relies on API data on web.
+import type { QueueRow } from "./localDb";
 
 const store = new Map<string, string>();
+let queueRows: QueueRow[] = [];
 
 export function initDb() {}
 
@@ -26,8 +28,9 @@ export function setLastSyncTime(d: Date) {
   store.set("lastSyncAt", d.toISOString());
 }
 
-export function deleteLocalTenantData(_tenantId: string) {
+export function deleteLocalTenantData(tenantId: string) {
   store.clear();
+  queueRows = queueRows.filter((r) => r.tenant_id !== tenantId);
 }
 
 export function getCacheRow(cacheKey: string, tenantId: string): { data: string } | null {
@@ -37,4 +40,24 @@ export function getCacheRow(cacheKey: string, tenantId: string): { data: string 
 
 export function setCacheRow(cacheKey: string, tenantId: string, data: string) {
   store.set(`cache:${tenantId}:${cacheKey}`, data);
+}
+
+export function insertQueueRow(row: Omit<QueueRow, "synced_at" | "sync_error">) {
+  queueRows.push({ ...row, synced_at: null, sync_error: null });
+}
+
+export function getPendingQueueRows(tenantId: string): QueueRow[] {
+  return queueRows
+    .filter((r) => r.tenant_id === tenantId && r.synced_at === null)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+export function markQueueRowSynced(id: string, note: string | null) {
+  const row = queueRows.find((r) => r.id === id);
+  if (row) { row.synced_at = new Date().toISOString(); row.sync_error = note; }
+}
+
+export function markQueueRowSyncError(id: string, error: string) {
+  const row = queueRows.find((r) => r.id === id);
+  if (row) row.sync_error = error;
 }

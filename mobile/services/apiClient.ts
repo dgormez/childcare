@@ -39,10 +39,21 @@ function isAuthEndpoint(url: string): boolean {
   return url.includes("/api/auth/");
 }
 
+// openapi-fetch's own `baseUrl` is fixed at client-creation time (a plain string, not a
+// getter — createClient({ baseUrl: () => baseUrl }) type-checks as an error and was silently
+// wrong at runtime too, since it's read once, before configureApiBaseUrl() has ever run).
+// The client is created against this placeholder origin instead, and onRequest below rewrites
+// every request to the real, dynamically-configurable base URL.
+const PLACEHOLDER_ORIGIN = "http://api.invalid";
+
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
     const token = useStore.getState().auth?.accessToken;
     if (token) request.headers.set("Authorization", `Bearer ${token}`);
+
+    if (baseUrl && request.url.startsWith(PLACEHOLDER_ORIGIN)) {
+      return new Request(request.url.replace(PLACEHOLDER_ORIGIN, baseUrl), request);
+    }
     return request;
   },
 
@@ -65,7 +76,7 @@ const authMiddleware: Middleware = {
 };
 
 export const apiClient = createClient<paths>({
-  baseUrl: () => baseUrl,
+  baseUrl: PLACEHOLDER_ORIGIN,
 });
 
 apiClient.use(authMiddleware);

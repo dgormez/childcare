@@ -3,6 +3,7 @@
 > Ordered list of features to implement. Each feature = one Git branch + one Spec Kit cycle.
 > Update this file as dependencies become clearer during implementation.
 > Reference gap-analysis.md for full feature details.
+> To resume autonomous backlog processing in a fresh session, see `.specify/memory/backlog-loop.md`.
 
 ---
 

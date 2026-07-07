@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { apiClient } from "../../services/apiClient";
 import { getCached, setCached } from "../../services/readCache";
+import { syncPendingQueue } from "../../services/syncEngine";
 import { useColors } from "../../hooks/useColors";
 import type { ChildResponse, GroupResponse } from "../../types";
 
@@ -58,6 +59,7 @@ export default function GroupViewScreen() {
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
+    if (isRefresh) await syncPendingQueue(); // FR-012a: pull-to-refresh is one of the three sync triggers
     try {
       const fresh = await fetchChildren();
       setChildren(fresh);
