@@ -17,11 +17,15 @@ using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
+using ChildCare.Application.Contracts;
 using ChildCare.Infrastructure.Auth;
+using ChildCare.Infrastructure.Concurrency;
+using ChildCare.Infrastructure.Pdf;
 using ChildCare.Infrastructure.Persistence;
 using ChildCare.Infrastructure.Storage;
 using FluentValidation;
 using MediatR;
+using QuestPDF.Infrastructure;
 
 // migrate-tenants CLI subcommand (contracts/migrate-tenants-cli.md, research.md R8) — checked
 // before the web host is built: it does not start the API, does not bind a port, and exits
@@ -114,6 +118,15 @@ builder.Services.AddHttpClient();
 // No IStaffDeactivationGuard registration — IEnumerable<IStaffDeactivationGuard> resolves
 // empty until features 009/011 each register their own (research.md R4).
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
+
+// ── Enrolment contracts (feature 007-contracts) ─────────────────────────────
+// Additive registrations — join whatever else is already registered against
+// IEnumerable<ILocationDeactivationGuard>/IEnumerable<IChildDeactivationGuard> (research.md R3).
+builder.Services.AddScoped<IAdvisoryLockService, PostgresAdvisoryLockService>();
+builder.Services.AddScoped<ILocationDeactivationGuard, ContractLocationDeactivationGuard>();
+builder.Services.AddScoped<IChildDeactivationGuard, ContractChildDeactivationGuard>();
+builder.Services.AddScoped<IContractPdfGenerator, QuestPdfContractGenerator>();
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -393,6 +406,7 @@ app.MapStaffEndpoints();
 app.MapChildrenEndpoints();
 app.MapContactsEndpoints();
 app.MapGroupsEndpoints();
+app.MapContractsEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

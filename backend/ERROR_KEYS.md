@@ -116,6 +116,26 @@ This feature also reuses two pre-existing keys rather than inventing duplicates:
 
 This feature also reuses `errors.location.not_found` (404) rather than inventing a duplicate — `POST /api/groups` with a `locationId` that either doesn't exist in this tenant, or exists but is deactivated (feature 004's existing key, extended in usage — a group cannot be newly created against an inactive location, `/speckit-checklist` CHK003).
 
+## Enrolment Contracts (feature `007-contracts`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.contract.not_found` | 404 | `GET/PUT /api/contracts/{id}`, activate/amend/terminate/pdf, and `GET /api/children/{childId}/contracts` — no contract with that id in the caller's own tenant schema (FR-015) |
+| `errors.contract.not_draft` | 409 | `PUT /api/contracts/{id}` or `POST /api/contracts/{id}/activate` on a contract whose status is not `draft` (FR-001a/FR-003) |
+| `errors.contract.not_active` | 409 | `POST /api/contracts/{id}/amend` or `/terminate` on a contract whose status is not `active` (FR-007/FR-009a) |
+| `errors.contract.already_active_at_location` | 409 | `POST /api/contracts/{id}/activate` or `/amend` — the child already has another `active` contract at this location (FR-004) |
+| `errors.contract.day_overlap` | 409 | `POST /api/contracts/{id}/activate` or `/amend` — a contracted weekday overlaps another currently `active` contract for the same child at a different location (FR-005/FR-006, constitution Principle II) |
+| `errors.contract.amendment_start_date_invalid` | 422 | `POST /api/contracts/{id}/amend` — `effectiveStartDate` is on or before the current contract's own `startDate` |
+| `errors.contract.termination_date_invalid` | 422 | `POST /api/contracts/{id}/terminate` — `endDate` is before the contract's own `startDate` |
+| `errors.contract.weekday_required` | 422 | `contractedDays` is empty on create/update/amend (FR-001) |
+| `errors.contract.weekday_invalid` | 422 | A weekday outside Monday–Friday, or the same weekday listed twice in one contract (FR-001, `/speckit-checklist` CHK001) |
+| `errors.contract.time_range_invalid` | 422 | A contracted day's `startTime` is not before its `endTime` |
+| `errors.contract.daily_rate_invalid` | 422 | `dailyRateCents` is zero or negative (FR-001, `/speckit-checklist` CHK002) |
+| `errors.contract.start_date_required` | 422 | `startDate` missing on create/update |
+| `errors.contract.end_date_before_start_date` | 422 | `endDate` is present and earlier than `startDate` |
+
+This feature also reuses `errors.child.not_found` (404, `POST /api/children/{childId}/contracts` and `GET /api/children/{childId}/contracts` with an unresolvable `childId`) and `errors.location.not_found` (404, a `locationId` that doesn't exist in this tenant **or** exists but is deactivated — FR-004a, matching feature 006's CHK003 precedent) rather than inventing duplicates.
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

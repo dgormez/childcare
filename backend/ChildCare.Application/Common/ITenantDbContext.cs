@@ -30,6 +30,7 @@ public interface ITenantDbContext
     DbSet<Group> Groups { get; }
     DbSet<ChildGroupAssignment> ChildGroupAssignments { get; }
     DbSet<VaccinationRecord> VaccinationRecords { get; }
+    DbSet<Contract> Contracts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
