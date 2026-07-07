@@ -17,7 +17,7 @@
 | 003 | `003-auth` | Login, per-device refresh tokens, Google/Apple OAuth (parent app) | 001, 002 | ✅ Done |
 | 004 | `004-locations` | Location management within an organisation | 001, 002 | ✅ Done |
 | 005 | `005-staff` | Caregiver + director profiles, role assignment, multi-location assignment | 004 | ✅ Done |
-| 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | 🔲 Not started |
+| 006 | `006-children` | Child profiles, medical notes, authorised pickups | 002 | ✅ Done |
 | 007 | `007-contracts` | Enrolment contracts, contracted days, split-location validator | 005, 006 | 🔲 Not started |
 
 ### Phase 1 — Core Operations (can be parallelised once foundation is in place)
@@ -399,6 +399,14 @@ Out of scope:
 - Child document storage / file uploads beyond photos (Phase 2).
 - GDPR data export per child (Phase 2).
 ```
+
+**Shipped 2026-07-07** — `specs/006-children/` (spec → clarify → plan → tasks → checklist → analyze → implement → converge, 96/96 tasks, 30 new integration tests + all 109 pre-existing tests passing, 139/139 total). Scope deltas worth knowing before starting feature 007+:
+
+- **`Group` is a new, minimal entity** (name, scoped to a `Location`) — the first feature to introduce it, since 004 explicitly deferred group/section management. No full group administration (capacity, BKR config) exists yet; only enough to name a group and assign children to it. A group can only be created against an *active* location.
+- **`IProfilePhotoStorage` (feature 005) was generalized** from a staff-only path convention (`staff/{id}/photo.jpg`) to `(category, subjectId)` — every feature-005 call site was updated to pass `"staff"` explicitly, with no behavior change. Future features needing signed-URL photo storage should reuse this port with their own category string rather than building a parallel mechanism.
+- **A genuine data-model bug was found and fixed during `/speckit-analyze`, before it shipped**: an earlier draft let a `(ChildId, ContactId)` pair have multiple `ChildContact` rows (one per relationship), but the `PUT`/`DELETE /api/children/{childId}/contacts/{contactId}` routes had no way to disambiguate between them. Fixed by collapsing to one relationship per pair (mutable via update) instead of adding route complexity — worth remembering as a general caution: a join entity's route design and its uniqueness constraint must agree before either ships.
+- Contacts are data records only — no parent-facing login account is provisioned here. **Flag for 012 (Parent Communication)**: whoever builds parent account provisioning will need to decide how a `Contact` record relates to a future parent `TenantUser` (e.g., linking by email, or a separate provisioning step) — this feature deliberately left that undecided.
+- `IChildDeactivationGuard` extension point exists (mirrors `ILocationDeactivationGuard`/`IStaffDeactivationGuard`) for feature 007 to register once a child can have an active contract — zero guards registered by this feature, by design.
 
 ---
 
