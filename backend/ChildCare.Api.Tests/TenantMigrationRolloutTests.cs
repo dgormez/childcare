@@ -67,7 +67,10 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// Feature 005's "AddStaff" migration is the same class of gap again — its three new tables
     /// are dropped in FK-dependency order (staff_location_eligibility/staff_invitations depend
     /// on staff_profiles, which depends on users) before locations/users are touched, otherwise
-    /// the statements below fail on a foreign-key constraint violation.
+    /// the statements below fail on a foreign-key constraint violation. Feature 006's
+    /// "AddChildren" migration repeats the pattern again — child_contacts/
+    /// child_group_assignments/vaccination_records depend on children/contacts/groups, and
+    /// groups depends on locations, so all six new tables are dropped before locations/staff.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -75,6 +78,12 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."child_contacts";
+            DROP TABLE "{schemaName}"."child_group_assignments";
+            DROP TABLE "{schemaName}"."vaccination_records";
+            DROP TABLE "{schemaName}"."groups";
+            DROP TABLE "{schemaName}"."children";
+            DROP TABLE "{schemaName}"."contacts";
             DROP TABLE "{schemaName}"."staff_location_eligibility";
             DROP TABLE "{schemaName}"."staff_invitations";
             DROP TABLE "{schemaName}"."staff_profiles";
@@ -90,7 +99,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren';
             """);
     }
 

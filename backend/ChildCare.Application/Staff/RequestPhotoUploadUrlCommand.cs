@@ -26,7 +26,7 @@ public class RequestPhotoUploadUrlCommandHandler(ITenantDbContext db, IProfilePh
         if (profile is null)
             return RequestPhotoUploadUrlResult.NotFound();
 
-        var (objectPath, uploadUrl) = await photoStorage.CreateUploadUrlAsync(request.StaffProfileId, cancellationToken);
+        var (objectPath, uploadUrl) = await photoStorage.CreateUploadUrlAsync("staff", request.StaffProfileId, cancellationToken);
 
         // No separate "confirm upload" step — the object path is deterministic per profile
         // (research.md R3), so the next GET simply reflects whatever exists once the client's

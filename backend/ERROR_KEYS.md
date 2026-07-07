@@ -91,6 +91,31 @@ a translation task: it lists the keys and their trigger conditions, not the NL/F
 
 This feature also reuses two pre-existing keys rather than inventing duplicates: `errors.location.not_found` (404, assigning/unassigning an eligible location that doesn't exist in this tenant) and `errors.auth.organisation_not_found` (404, `POST /api/staff/accept-invitation` with an unresolvable `organisationSlug` — this route is unauthenticated/tenant-exempt and resolves its own tenant the same way `POST /api/auth/login` does).
 
+## Child File Management (feature `006-children`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.child.not_found` | 404 | `GET/PUT /api/children/{id}`, deactivate/reactivate/photo-upload-url, and every `/api/children/{childId}/...` sub-resource route — no child with that id in the caller's own tenant schema (FR-017) |
+| `errors.child.has_active_dependents` | 409 | `POST /api/children/{id}/deactivate` — a registered `IChildDeactivationGuard` (feature 007, none registered by this feature) reports an active dependent (FR-013). Currently unreachable — reserved for when 007 ships |
+| `errors.child.firstname_required` / `errors.child.lastname_required` | 422 | Required field missing/empty on create or update |
+| `errors.child.date_of_birth_in_future` | 422 | `dateOfBirth` is a future date (FR-001, `/speckit-checklist` CHK001) |
+| `errors.child.firstname_too_long` / `errors.child.lastname_too_long` / `errors.child.nationality_too_long` / `errors.child.gp_name_too_long` / `errors.child.gp_phone_too_long` / `errors.child.health_insurance_number_too_long` / `errors.child.kindcode_too_long` | 422 | Field exceeds its `TenantDbContext` `HasMaxLength` |
+| `errors.child.allergies_description_too_long` / `errors.child.medical_conditions_too_long` / `errors.child.dietary_restrictions_too_long` | 422 | Free-text medical field exceeds 2000 characters (FR-003, `/speckit-checklist` CHK007) |
+| `errors.contact.not_found` | 404 | `PUT /api/contacts/{id}`, and any `/api/children/{childId}/contacts/{contactId}` route — no contact with that id, or no link between this child and contact |
+| `errors.contact.link_already_exists` | 409 | `POST /api/children/{childId}/contacts` — this `(childId, contactId)` pair is already linked (research.md R3) — use `PUT` to change the existing link's relationship instead |
+| `errors.contact.firstname_required` / `errors.contact.lastname_required` / `errors.contact.phone_required` / `errors.contact.locale_required` | 422 | Required field missing/empty on create or update |
+| `errors.contact.email_invalid` | 422 | `email` present but not a valid email address |
+| `errors.contact.firstname_too_long` / `errors.contact.lastname_too_long` / `errors.contact.phone_too_long` / `errors.contact.email_too_long` / `errors.contact.locale_too_long` | 422 | Field exceeds its `TenantDbContext` `HasMaxLength` |
+| `errors.contact.contact_id_required` | 422 | `POST /api/children/{childId}/contacts` — `contactId` missing |
+| `errors.group.not_found` | 404 | Any `/api/children/{childId}/groups` route referencing a `groupId` that doesn't exist in this tenant |
+| `errors.group.name_required` / `errors.group.name_too_long` | 422 | `POST /api/groups` — `name` missing or exceeds 100 characters |
+| `errors.group.group_id_required` | 422 | `POST /api/children/{childId}/groups` — `groupId` missing |
+| `errors.group.out_of_chronological_order` | 422 | `POST /api/children/{childId}/groups` — the child has a currently-open assignment whose `startDate` is on or after this request's `startDate` (FR-008a, `/speckit-checklist` CHK004) — assignments must be entered in chronological order |
+| `errors.vaccination.vaccine_name_required` / `errors.vaccination.vaccine_name_too_long` | 422 | `POST /api/children/{childId}/vaccinations` — `vaccineName` missing or exceeds 200 characters |
+| `errors.vaccination.date_administered_in_future` | 422 | `dateAdministered` is a future date (FR-010, `/speckit-checklist` CHK002) |
+
+This feature also reuses `errors.location.not_found` (404) rather than inventing a duplicate — `POST /api/groups` with a `locationId` that either doesn't exist in this tenant, or exists but is deactivated (feature 004's existing key, extended in usage — a group cannot be newly created against an inactive location, `/speckit-checklist` CHK003).
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

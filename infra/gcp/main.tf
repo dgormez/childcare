@@ -141,6 +141,10 @@ resource "google_secret_manager_secret_iam_member" "superadmin_api_key_accessor"
 # service account (the default compute SA, since Cloud Run doesn't set an explicit one below)
 # to be able to sign as itself — roles/iam.serviceAccountTokenCreator granted to its own
 # identity — without a downloaded key file (constitution Principle VI: no key file secrets).
+# Feature 006-children reuses this same bucket for child photos too (a "children/" path
+# prefix distinguishes them from "staff/") — the resource/bucket name keeps its original
+# "staff_profile_photos" identifier to avoid a destructive Terraform recreate; only the
+# application-facing env var name was generalized (Storage__ProfilePhotosBucketName below).
 
 resource "google_storage_bucket" "staff_profile_photos" {
   name                        = "${var.project_id}-staff-profile-photos"
@@ -215,7 +219,7 @@ resource "google_cloud_run_v2_service" "api" {
         value = "30"
       }
       env {
-        name  = "Storage__StaffPhotosBucketName"
+        name  = "Storage__ProfilePhotosBucketName"
         value = google_storage_bucket.staff_profile_photos.name
       }
       env {

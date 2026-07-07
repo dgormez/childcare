@@ -34,6 +34,18 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<StaffLocationEligibility> StaffLocationEligibility => Set<StaffLocationEligibility>();
 
+    public DbSet<Child> Children => Set<Child>();
+
+    public DbSet<Contact> Contacts => Set<Contact>();
+
+    public DbSet<ChildContact> ChildContacts => Set<ChildContact>();
+
+    public DbSet<Group> Groups => Set<Group>();
+
+    public DbSet<ChildGroupAssignment> ChildGroupAssignments => Set<ChildGroupAssignment>();
+
+    public DbSet<VaccinationRecord> VaccinationRecords => Set<VaccinationRecord>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -170,6 +182,79 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             e.HasKey(x => new { x.StaffProfileId, x.LocationId });
             e.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
             e.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        modelBuilder.Entity<Child>(c =>
+        {
+            c.ToTable("children");
+            c.HasKey(x => x.Id);
+            c.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
+            c.Property(x => x.LastName).IsRequired().HasMaxLength(100);
+            c.Property(x => x.DateOfBirth).IsRequired();
+            c.Property(x => x.ProfilePhotoObjectPath).HasMaxLength(500);
+            c.Property(x => x.Gender)
+             .HasConversion(
+                 v => v == null ? null : v.ToString(),
+                 v => v == null ? null : (Gender?)Enum.Parse(typeof(Gender), v, ignoreCase: true))
+             .HasMaxLength(20);
+            c.Property(x => x.Nationality).HasMaxLength(100);
+            c.Property(x => x.AllergiesDescription).HasMaxLength(2000);
+            c.Property(x => x.AllergySeverity)
+             .HasConversion(
+                 v => v == null ? null : v.ToString(),
+                 v => v == null ? null : (AllergySeverity?)Enum.Parse(typeof(AllergySeverity), v, ignoreCase: true))
+             .HasMaxLength(20);
+            c.Property(x => x.MedicalConditions).HasMaxLength(2000);
+            c.Property(x => x.DietaryRestrictions).HasMaxLength(2000);
+            c.Property(x => x.GpName).HasMaxLength(200);
+            c.Property(x => x.GpPhone).HasMaxLength(30);
+            c.Property(x => x.HealthInsuranceNumber).HasMaxLength(50);
+            c.Property(x => x.Kindcode).HasMaxLength(20);
+            c.HasIndex(x => x.DeactivatedAt);
+        });
+
+        modelBuilder.Entity<Contact>(c =>
+        {
+            c.ToTable("contacts");
+            c.HasKey(x => x.Id);
+            c.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
+            c.Property(x => x.LastName).IsRequired().HasMaxLength(100);
+            c.Property(x => x.Phone).IsRequired().HasMaxLength(30);
+            c.Property(x => x.Email).HasMaxLength(254);
+            c.Property(x => x.Locale).IsRequired().HasMaxLength(5);
+        });
+
+        modelBuilder.Entity<ChildContact>(cc =>
+        {
+            cc.ToTable("child_contacts");
+            cc.HasKey(x => new { x.ChildId, x.ContactId });
+            cc.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            cc.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+        });
+
+        modelBuilder.Entity<Group>(g =>
+        {
+            g.ToTable("groups");
+            g.HasKey(x => x.Id);
+            g.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            g.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        modelBuilder.Entity<ChildGroupAssignment>(a =>
+        {
+            a.ToTable("child_group_assignments");
+            a.HasKey(x => x.Id);
+            a.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            a.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            a.HasIndex(x => new { x.ChildId, x.EndDate });
+        });
+
+        modelBuilder.Entity<VaccinationRecord>(v =>
+        {
+            v.ToTable("vaccination_records");
+            v.HasKey(x => x.Id);
+            v.Property(x => x.VaccineName).IsRequired().HasMaxLength(200);
+            v.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
         });
     }
 }
