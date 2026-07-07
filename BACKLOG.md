@@ -24,28 +24,29 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 008 | `008-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006 | 🔲 Not started |
-| 009 | `009-attendance` | Daily attendance register, BKR ratio enforcement | 007 | 🔲 Not started |
-| 010 | `010-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
-| 011 | `011-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 009 | 🔲 Not started |
-| 012 | `012-parent-communication` | Messaging, daily reports to parents | 006, 008 | 🔲 Not started |
-| 013 | `013-invoicing` | Monthly invoice generation (QuestPDF), payment tracking | 007, 010 | 🔲 Not started |
+| 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | 🔲 Not started |
+| 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008 | 🔲 Not started |
+| 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008 | 🔲 Not started |
+| 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
+| 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
+| 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
+| 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking | 007, 011 | 🔲 Not started |
 
 ### Phase 2 (after Phase 1 is stable)
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 014 | `014-fiscal-attestations` | Annual tax certificates (QuestPDF) | 013 | 🔲 Not started |
-| 015 | `015-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
-| 016 | `016-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
-| 017 | `017-management-reporting` | KPIs, occupancy, financial summaries | 009, 013 | 🔲 Not started |
-| 019 | `019-email-communications` | Bulk parent emails by location/section, emailed daily reports | 004, 006, 008, 010, 012 | 🔲 Not started |
+| 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | 🔲 Not started |
+| 016 | `016-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
+| 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
+| 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
+| 020 | `020-email-communications` | Bulk parent emails by location/section, emailed daily reports | 004, 006, 009, 011, 013 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 018 | `018-ikt-compliance` | IKT subsidy integration, Opgroeien API | All Phase 1 | 🔲 Not started |
+| 019 | `019-ikt-compliance` | IKT subsidy integration, Opgroeien API | All Phase 1 | 🔲 Not started |
 
 ---
 
@@ -238,7 +239,7 @@ Out of scope:
 - **Client-facing change every downstream feature/app needs to know**: every pre-session auth request (login, Google, Apple, refresh, forgot-password) now requires a client-supplied `organisationSlug` field — the app must know or ask which organisation it's signing into before calling any of these endpoints. Password-reset/verification links carry the slug as a `&org=` query parameter instead, so the client reads it back out of the link rather than asking the user again.
 - `Role` (Director/Staff/Parent) now exists on every `TenantUser`, carried on the JWT as a standard `ClaimTypes.Role` claim, with `DirectorOnly`/`StaffOrDirector`/`ParentOnly` authorization policies registered and ready for every feature from 004 onward to declare via `.RequireAuthorization("...")` — no feature after this one should invent its own role-comparison logic.
 - The full `AuthService`/`AuthEndpoints.cs` direct-service-call pattern (feature 002's one deliberately-deferred Constitution Principle III gap) is gone — every auth flow is now a MediatR command under `ChildCare.Application/Auth/`, the same pattern features 004+ should follow for their own writes.
-- **Flag for 005 (Staff) and 006/012 (Children/Parent Communication)**: this feature deliberately does not build staff- or parent-account provisioning UI — it only builds the auth/authorization mechanics (Role field, policies, sign-in flows) those features will provision accounts into. Whoever builds 005/006/012 needs to decide the actual invitation UX for staff and parent accounts; this feature assumed (spec.md Assumptions) they'll reuse the same `TenantUser`-creation primitives.
+- **Flag for 005 (Staff) and 006/013 (Children/Parent Communication)**: this feature deliberately does not build staff- or parent-account provisioning UI — it only builds the auth/authorization mechanics (Role field, policies, sign-in flows) those features will provision accounts into. Whoever builds 005/006/013 needs to decide the actual invitation UX for staff and parent accounts; this feature assumed (spec.md Assumptions) they'll reuse the same `TenantUser`-creation primitives.
 
 ---
 
@@ -279,7 +280,7 @@ Edge cases:
 
 Out of scope:
 - Multi-location staff assignment (feature 005).
-- Group/section management within a location (feature 009 dependencies — handled
+- Group/section management within a location (feature 010 dependencies — handled
   as part of attendance or a dedicated groups feature).
 - Physical access control hardware (Paxton — Phase 4).
 ```
@@ -305,7 +306,7 @@ What to build:
 - Role assignment: Director | Staff (Caregiver). A person can be director
   of one location and staff at another within the same organisation.
 - Multi-location assignment: a staff member can be assigned to work at
-  different locations on different days (resolved in feature 011 scheduling).
+  different locations on different days (resolved in feature 012 scheduling).
   At this stage, store which locations a staff member is eligible to work at.
 - Each staff member has a user account (email + password, director-provisioned).
   Caregiver app uses email/password only — no social login for staff.
@@ -315,7 +316,7 @@ Qualification matters for BKR:
 - Only qualified caregivers and auxiliaries count toward the BKR ratio.
 - Students and volunteers do NOT count, even if physically present.
 - The qualification field must be stored and used when computing BKR in
-  feature 009 (attendance).
+  feature 010 (attendance).
 
 Key constraints:
 - Directors create staff accounts (invite-only). Staff cannot self-register.
@@ -325,7 +326,7 @@ Key constraints:
 
 Edge cases:
 - A staff member works at location A on Monday and location B on Tuesday.
-  Their profile is one record; their daily assignment is per-schedule (011).
+  Their profile is one record; their daily assignment is per-schedule (012).
 - A director is also a staff member (covers a group when short-staffed).
   The role field allows both roles on the same account.
 - A staff member leaves the organisation. Soft-delete preserves their history
@@ -345,7 +346,7 @@ Out of scope:
 - **Two real bugs found and fixed during implementation, beyond the original plan**: (1) `POST /api/staff/accept-invitation` needed an `organisationSlug` field — it's anonymous/tenant-exempt, so `TenantMiddleware` has no JWT to resolve a tenant from, exactly the same problem `ResetPasswordCommandHandler` (feature 003) already solves; the original contract draft omitted this and would have shipped unusable. (2) `LoginCommandHandler` crashed with a `500` instead of a clean `401` when `BCrypt.Verify` ran against an empty `PasswordHash` (a staff account whose invitation hasn't been accepted yet) — fixed with an explicit empty-hash check before calling `BCrypt.Verify`.
 - Deactivating a `Staff`-role account now **invalidates all of that account's refresh tokens** (mirrors `ResetPasswordCommandHandler`'s session-invalidation) — but this is deliberately conditioned on `Role == Staff`: a Director's own optional Staff Profile being deactivated must never block that Director's login. **Flag for any future feature touching `LoginCommandHandler`**: preserve this role-conditional check.
 - `IProfilePhotoStorage`/`GcsProfilePhotoStorage` (GCS V4 signed URLs) is this project's first real Cloud Storage integration — feature 006 (children) is expected to reuse this port rather than rebuild it, following the same "object path stored, URL re-signed fresh on every read" pattern.
-- `IStaffDeactivationGuard` extension point exists (mirrors feature 004's `ILocationDeactivationGuard`) for features 009/011 to register their own guards once shifts/group assignments exist — zero guards registered by this feature, by design.
+- `IStaffDeactivationGuard` extension point exists (mirrors feature 004's `ILocationDeactivationGuard`) for features 010/012 to register their own guards once shifts/group assignments exist — zero guards registered by this feature, by design.
 
 ---
 
@@ -405,7 +406,7 @@ Out of scope:
 - **`Group` is a new, minimal entity** (name, scoped to a `Location`) — the first feature to introduce it, since 004 explicitly deferred group/section management. No full group administration (capacity, BKR config) exists yet; only enough to name a group and assign children to it. A group can only be created against an *active* location.
 - **`IProfilePhotoStorage` (feature 005) was generalized** from a staff-only path convention (`staff/{id}/photo.jpg`) to `(category, subjectId)` — every feature-005 call site was updated to pass `"staff"` explicitly, with no behavior change. Future features needing signed-URL photo storage should reuse this port with their own category string rather than building a parallel mechanism.
 - **A genuine data-model bug was found and fixed during `/speckit-analyze`, before it shipped**: an earlier draft let a `(ChildId, ContactId)` pair have multiple `ChildContact` rows (one per relationship), but the `PUT`/`DELETE /api/children/{childId}/contacts/{contactId}` routes had no way to disambiguate between them. Fixed by collapsing to one relationship per pair (mutable via update) instead of adding route complexity — worth remembering as a general caution: a join entity's route design and its uniqueness constraint must agree before either ships.
-- Contacts are data records only — no parent-facing login account is provisioned here. **Flag for 012 (Parent Communication)**: whoever builds parent account provisioning will need to decide how a `Contact` record relates to a future parent `TenantUser` (e.g., linking by email, or a separate provisioning step) — this feature deliberately left that undecided.
+- Contacts are data records only — no parent-facing login account is provisioned here. **Flag for 013 (Parent Communication)**: whoever builds parent account provisioning will need to decide how a `Contact` record relates to a future parent `TenantUser` (e.g., linking by email, or a separate provisioning step) — this feature deliberately left that undecided.
 - `IChildDeactivationGuard` extension point exists (mirrors `ILocationDeactivationGuard`/`IStaffDeactivationGuard`) for feature 007 to register once a child can have an active contract — zero guards registered by this feature, by design.
 
 ---
@@ -464,7 +465,7 @@ Out of scope:
 - IKT attest entry and rate fields (Phase 3).
 - Digital e-signature (Phase 2).
 - SEPA mandate in contract signing (Phase 2).
-- Wisseldagen (exchange days) — handled in feature 009 attendance.
+- Wisseldagen (exchange days) — handled in feature 010 attendance.
 ```
 
 **Shipped 2026-07-07** — `specs/007-contracts/` (spec → clarify → plan → tasks → checklist → analyze → implement → converge, 72/72 tasks, 38 new tests + 139 pre-existing = 177/177 passing). Worth knowing before starting a dependent feature:
@@ -472,12 +473,136 @@ Out of scope:
 - **`Contract` stores contracted weekdays and photo/media consent as JSONB owned types** (`ContractedDays`, `Consent`), not separate tables — each weekday has its own independent start/end time. `TariefCode`/`RateValidUntil` columns exist (Phase 3 IKT placeholders) but are never set or exposed by this feature.
 - **The split-location day-overlap validator (constitution Principle II) is made atomic under concurrency via a new `IAdvisoryLockService`**, a Postgres advisory lock keyed on the child — a deliberately *separate* port from feature 001's `ITenantProvisioningService.RunExclusiveAsync`, reusing the pattern rather than generalizing that existing interface (out of this feature's scope). Any future feature needing "serialize concurrent requests touching the same aggregate" should reuse `IAdvisoryLockService`, not reinvent a third copy.
 - **A real bug was caught by `/speckit-implement`'s own tests, not by review**: an early design assumed EF Core's identity-map would let a query "see" an in-memory (unsaved) `Status = Ended` change on a tracked entity — it doesn't; the query's SQL WHERE clause matches the *persisted* column value regardless. `AmendContractCommand` now excludes the predecessor by explicit id instead. Worth remembering generally: don't rely on EF's tracked-instance identity map to reflect an unsaved property change inside a query filter.
-- **`IContractPdfGenerator` (QuestPDF) is the first PDF generation in this codebase** — future features needing PDFs (fiscal attestations, feature 014) should follow its port/adapter split and locale-keyed label-lookup pattern rather than adding a second PDF mechanism.
+- **`IContractPdfGenerator` (QuestPDF) is the first PDF generation in this codebase** — future features needing PDFs (fiscal attestations, feature 015) should follow its port/adapter split and locale-keyed label-lookup pattern rather than adding a second PDF mechanism.
 - Contract PDF generation accepts an optional `?locale=nl|fr|en` query parameter (defaults to `nl`) — the only endpoint in this codebase where language is server-selected at request time rather than client-resolved from an error key, since a PDF is a fixed set of bytes rendered once.
 
 ---
 
-### 008 — Child Events
+### 008 — Caregiver App Scaffold
+
+```
+Bootstrap the caregiver Expo app — remove the Habits walking skeleton,
+wire authentication, set up the API client, establish the navigation
+structure, and build the shared offline infrastructure layer that all
+caregiver features (child events, attendance, scheduling) will depend on.
+
+This feature ships NO domain features. Its sole output is a working,
+authenticated caregiver app shell with offline capability ready for
+feature 009 (child events) to build on top of.
+
+What to build:
+
+1. App cleanup and structure
+   - Remove all Habits screens, navigation, and references from the Expo app.
+   - Establish the Expo Router directory structure:
+       app/(auth)/login.tsx        — login screen
+       app/(app)/_layout.tsx       — authenticated shell (tab bar)
+       app/(app)/index.tsx         — group view (home screen)
+       app/(app)/child/[id].tsx    — child detail (event entry point)
+   - Tailwind / NativeWind configured for landscape-first layout.
+   - i18n wired: expo-localization + react-i18next, NL/FR/EN from day one.
+
+2. Caregiver authentication
+   - Login screen: email + password. No social login for caregivers.
+   - On successful login: store JWT + refresh token (SecureStore, not AsyncStorage).
+   - Per-device refresh token rotation: re-use the backend mechanism from feature 003.
+   - Auto-refresh: intercept 401, refresh silently, retry the original request.
+   - Logout: call revoke endpoint, clear SecureStore, redirect to login.
+   - Session persists across app restarts (SecureStore survives backgrounding).
+
+3. API client
+   - Generate typed client from the backend OpenAPI spec using openapi-typescript.
+   - HTTP client: openapi-fetch (already decided in PROJECT-BRIEF.md — no Axios, no NSwag).
+   - Auth interceptor: attach Bearer token to every request; handle refresh on 401.
+   - Base URL configurable via Expo env vars (dev = localhost, prod = Cloud Run URL).
+   - Typed error handling: API errors surface the i18n key from the error body.
+
+4. Group view (home screen)
+   - After login, the caregiver sees the children in their assigned group for today.
+   - Loads: GET /children?groupId=... + GET /groups (scoped to caregiver's location).
+   - Each child card shows: name, profile photo (signed URL), age, any active alerts
+     (allergy icon if allergies exist, temperature icon if fever recorded today).
+   - Medical quick-access: one tap from child card → allergies + medical notes sheet
+     (data already exists from feature 006 — just wire the read endpoint).
+   - Pull-to-refresh. Empty state when no children are assigned.
+   - Offline: child list and medical notes for today's group are cached in SQLite
+     on successful load. Available with no network.
+
+5. Offline infrastructure layer (shared, used by 009 and 010)
+   This is the critical piece. Build it generically — 009 (child events) and
+   010 (attendance) will register their own sync handlers against it.
+
+   Local SQLite store (expo-sqlite):
+   - offline_queue table:
+       id TEXT PRIMARY KEY (client-generated UUID),
+       entity_type TEXT NOT NULL,    — 'child_event' | 'attendance_record' | ...
+       operation TEXT NOT NULL,      — 'create' | 'update' | 'delete'
+       payload TEXT NOT NULL,        — JSON-serialised request body
+       endpoint TEXT NOT NULL,       — relative API path
+       http_method TEXT NOT NULL,    — 'POST' | 'PATCH' | 'DELETE'
+       created_at TEXT NOT NULL,     — ISO8601, used for ordering on sync
+       synced_at TEXT,               — NULL = pending sync
+       sync_error TEXT               — last sync attempt error, NULL = none
+   - read_cache table:
+       cache_key TEXT PRIMARY KEY,
+       data TEXT NOT NULL,           — JSON
+       cached_at TEXT NOT NULL,
+       expires_at TEXT               — NULL = never expires (e.g. child list for today)
+
+   Network state detection:
+   - @react-native-community/netinfo: subscribe to connection changes.
+   - Expose a useNetworkStatus() hook that the app-wide banner reads.
+   - When offline: show a banner ("Werken offline — wijzigingen worden gesynchroniseerd").
+   - When network returns: trigger sync automatically (no manual tap needed).
+
+   Sync engine:
+   - syncPendingQueue(): reads unsynced rows from offline_queue ordered by created_at ASC.
+   - For each row: replay the HTTP request against the live API.
+   - On success: set synced_at = now(). Leave the row (for audit); do NOT delete.
+   - On conflict (409): entity_type handler decides — default is server wins
+     (discard the queued write and mark as synced with a 'conflict' note in sync_error).
+   - On transient error (5xx, network timeout): leave row unsynced, retry on next sync.
+   - On auth error (401): refresh token first, retry once, then stop sync and surface error.
+   - Sync runs: on network reconnect, on app foreground, on explicit pull-to-refresh.
+   - Sync status: expose useSyncStatus() hook → { pendingCount, lastSyncedAt, isSyncing }.
+
+   This feature ships the infrastructure only. No entity_type handlers are registered
+   yet — 009 registers 'child_event' and 010 registers 'attendance_record'.
+
+Key constraints:
+- SecureStore for all tokens (JWT, refresh). Never AsyncStorage for auth data.
+- All user-facing strings use i18n keys (NL/FR/EN) — including offline banner and
+  sync error messages.
+- Landscape-first layout, minimum 48pt touch targets everywhere (preparing for 009).
+- The offline_queue and read_cache tables are tenant-scoped: include tenant_id on
+  every row so the cache is invalidated correctly on logout or account switch.
+- On logout: clear SecureStore, clear offline_queue (unsynced writes are lost —
+  document this as a known limitation), clear read_cache.
+
+Edge cases:
+- A caregiver logs in on a new tablet. There is no cached data yet. The group view
+  must load from the network on first use and cache on success.
+- The app is offline on first launch (a caregiver left the tablet in airplane mode
+  overnight). Login must fail gracefully with a clear message — cannot auth offline.
+- The caregiver's account is deactivated by the director while the caregiver is
+  mid-shift. The next API call returns 401, the refresh attempt returns 401 again
+  (token was revoked by deactivation in feature 005). App must log the caregiver
+  out cleanly, not loop on the refresh.
+- Sync queue has 50+ events queued from a long offline period. Sync must process
+  them sequentially (not in parallel) to preserve created_at order within the same
+  child/entity.
+
+Out of scope:
+- Caregiver scheduling view (their own rota) — feature 012.
+- Parent app setup — parent app is a separate Expo project; this feature only
+  touches the caregiver app.
+- Push notification token registration for caregivers — feature 009 (temperature alert).
+- Biometric unlock (Face ID / fingerprint for app re-open) — Phase 2.
+```
+
+---
+
+### 009 — Child Events
 
 ```
 Build the child event timeline — the daily log that caregivers record
@@ -522,6 +647,34 @@ Caregiver tablet UI requirements:
   rather than full-screen modal.
 - Optimised for wet hands and divided attention — minimal typing required.
 - Landscape-first layout.
+- The Expo app scaffold, auth, navigation, and API client already exist
+  (feature 008). Build event entry UI on top of that — do not re-implement
+  auth, offline infrastructure, or API client setup.
+
+Offline event recording (CRITICAL — caregivers must work through network outages):
+- Uses the offline_queue + sync engine built in feature 008.
+- Register 'child_event' as an entity_type in the sync engine.
+- When online: POST directly to /child-events. On success, update read_cache.
+- When offline: write to offline_queue (entity_type='child_event',
+  operation='create'). Show event immediately in the local UI (optimistic).
+- Sleep end (PATCH with ended_at): if the original create is still in the queue
+  (not yet synced), merge ended_at into the queued payload — do not queue a
+  separate PATCH. If already synced, queue a PATCH normally.
+- Conflict policy: ALL WRITES PRESERVED. Events are append-only logs — two
+  tablets recording different events offline are both valid. The only
+  genuine conflict is two tablets ending the same sleep event: server timestamp
+  wins for ended_at. All other events never conflict.
+- "Pending sync" indicator on events not yet confirmed by the server.
+- On sync: swap the client-generated id for the server id. No visible change
+  to the caregiver.
+
+Temperature push notification:
+- If celsius > 38.0: trigger Expo Push Notification to all can_pickup contacts
+  of this child with a registered push token.
+- Register caregiver app push token at login (first push token in caregiver app).
+- If no push tokens exist: log the attempt, do not crash.
+- While offline: queue the event normally. On sync, the server fires the push
+  notification — never fire it from the client directly.
 
 Parent daily summary:
 - Computed at query time by aggregating child_events for a given date.
@@ -535,22 +688,22 @@ Key constraints:
 - This table grows fast. Design queries with pagination from the start.
 
 Edge cases:
-- A sleep event is recorded with occurred_at but no ended_at (nap in progress).
-  The UI must show an "in progress" state and allow ending the nap later.
-- Temperature push notification: what if the child has no authorised contacts
-  with a push token registered? Log the attempt, do not crash.
-- A caregiver records an event for the wrong child by mistake. Edit/delete
-  must be possible within a grace period.
+- A sleep event is recorded offline with no ended_at (nap in progress). The UI
+  shows "in progress". Caregiver ends it later, still offline. Both operations
+  land in the queue; the create is merged with the ended_at before sync.
+- Caregiver offline 4 hours, 30 events queued. On reconnect, all 30 sync in
+  created_at ASC order and all land correctly.
+- A caregiver records an event for the wrong child. Edit/delete must be possible
+  within a grace period (same-day, same caregiver or director).
 
 Out of scope:
-- Meal list for kitchen (included here as a read-only view from planning data,
-  but the meal list feature is tracked as part of this feature).
+- Meal list for kitchen (read-only view from planning data — tracked here).
 - Learning journal narrative (Phase 2).
 ```
 
 ---
 
-### 009 — Attendance
+### 010 — Attendance
 
 ```
 Build daily attendance registration — the core operational record of
@@ -569,14 +722,20 @@ What to build:
 
 - Caregiver app: one-tap check-in per child from the group view.
   Children are pre-populated for the day based on their contracted schedule.
-- Offline queue: SQLite local store on the tablet; sync when reconnected.
-  Conflicts resolved by server timestamp (server wins on conflict).
+  The Expo app scaffold, auth, and API client already exist (feature 008).
+  Build the attendance UI on top of that scaffold — do not re-implement them.
+- Offline check-in: uses the offline_queue + sync engine from feature 008.
+  Register 'attendance_record' as an entity_type in the sync engine.
+  Conflict policy: server wins. If a check-in arrives out of order
+  (reconnecting tablet with stale data), the server timestamp is authoritative.
+  A duplicate check-in for the same child+date returns 409 — mark as synced
+  with a conflict note, do not retry.
 - Absence registration: caregiver or director marks a child absent and
   classifies as justified or unjustified. Justified = director authorised
   the absence (sick with note, agreed holiday). Unjustified = not pre-approved.
-- Exchange day and extra day requests (from parents, via feature 012) appear
+- Exchange day and extra day requests (from parents, via feature 013) appear
   in the attendance view once approved.
-- Closure days (from feature 010) auto-mark all children absent with
+- Closure days (from feature 011) auto-mark all children absent with
   status = 'closure'. No manual check-in is possible on closure days.
 
 BKR ratio (begeleider-kind-ratio) — display only in Phase 1:
@@ -597,7 +756,7 @@ planned_duration_minutes calculation:
 
 Key constraints:
 - Attendance is per location per child per day. One record only.
-- All money decisions (billing for absences) are made in feature 013 invoicing.
+- All money decisions (billing for absences) are made in feature 014 invoicing.
   Attendance records only store the justification flag, not billing amounts.
 - All user-facing strings use i18n keys (NL/FR/EN).
 
@@ -616,7 +775,7 @@ Out of scope:
 
 ---
 
-### 010 — Closure Calendar
+### 011 — Closure Calendar
 
 ```
 Build the KDV closure calendar — each location's own holiday and
@@ -636,9 +795,9 @@ What to build:
 - When a closure day is published with notify_parents = true, a push
   notification and in-app message is sent to all parents of children
   enrolled at that location.
-- Closure days feed into attendance (009): no check-in is possible on a
+- Closure days feed into attendance (010): no check-in is possible on a
   closure day; the attendance view marks all children as status = 'closure'.
-- Closure days feed into invoicing (013): a contracted day that falls on a
+- Closure days feed into invoicing (014): a contracted day that falls on a
   closure day is NOT billed. This exclusion is automatic — the invoice
   generator must query closure days when computing billable days.
 
@@ -672,7 +831,7 @@ Out of scope:
 
 ---
 
-### 011 — Caregiver Scheduling
+### 012 — Caregiver Scheduling
 
 ```
 Build the weekly staff rota — who works where, on which days and hours.
@@ -691,14 +850,14 @@ What to build:
 - Rota copy: copy this week's schedule to next week. Major time saver —
   most KDVs run the same rota week after week.
 - Director can mark a staff member absent for a day (sick, leave, holiday).
-- When a staff member is absent, BKR ratio (feature 009) must reflect
+- When a staff member is absent, BKR ratio (feature 010) must reflect
   that they are not on duty.
 - The rota is visible to caregivers in the caregiver app (their own shifts only).
 - Multi-location: a staff member can appear at different locations on different
   days within the same week.
 
 BKR integration:
-- The live BKR count in feature 009 uses staff_schedules to know who is
+- The live BKR count in feature 010 uses staff_schedules to know who is
   on duty right now at a given location. Only staff with is_absent = false
   and a shift covering the current time count toward BKR.
 - Only qualified staff count (qualification field from feature 005).
@@ -713,7 +872,7 @@ Key constraints:
 Edge cases:
 - A staff member's shift is entered incorrectly (wrong location). The director
   corrects it — update must be allowed until the shift date arrives.
-- Rota copy: the following week has a closure day (from feature 010).
+- Rota copy: the following week has a closure day (from feature 011).
   The copied schedule for that day should be flagged or excluded.
 - A staff member is added to the system mid-week. Their schedule for the
   current week must be enterable immediately.
@@ -727,7 +886,7 @@ Out of scope:
 
 ---
 
-### 012 — Parent Communication
+### 013 — Parent Communication
 
 ```
 Build two-way communication between parents and the KDV, plus the
@@ -748,7 +907,7 @@ What to build:
 - Push notifications (Expo Push): triggered on new message received,
   announcement posted, day request approved/rejected.
 - Parent daily summary: the parent app home screen shows an aggregated
-  summary of their child's day — pulled from child_events (feature 008).
+  summary of their child's day — pulled from child_events (feature 009).
   Only events with visible_to_parent = true are shown.
   Includes: naps, bottles, meals, diaper changes, mood, temperature,
   photos, activities.
@@ -778,13 +937,13 @@ Out of scope:
 - Email notification fallback (Phase 2).
 - Staff group chat (Phase 2).
 - Message translation via DeepL (Phase 2).
-- Day reservation requests (feature 009 handles approval; the request
-  submission UI for parents can be included here or in 009 — decide at plan time).
+- Day reservation requests (feature 010 handles approval; the request
+  submission UI for parents can be included here or in 010 — decide at plan time).
 ```
 
 ---
 
-### 013 — Invoicing
+### 014 — Invoicing
 
 ```
 Build monthly invoice generation and payment tracking for private KDVs.
@@ -795,7 +954,7 @@ What to build:
 - Billable day rule (already decided — Model A):
     Present days only. Justified absences (respijtdagen) = not billed.
     Unjustified absences = billed at the daily_rate_cents from the contract.
-    Closure days (from feature 010) = not billed, regardless of absence type.
+    Closure days (from feature 011) = not billed, regardless of absence type.
   So: billable = (present days) + (unjustified absent days) - (closure days).
 - invoices table:
     id, child_id, contract_id, location_id, period_month DATE (first of month),
@@ -851,7 +1010,7 @@ Out of scope:
 
 ---
 
-### 014 — Fiscal Attestations
+### 015 — Fiscal Attestations
 
 ```
 Build annual fiscal attestations for parents to claim childcare costs
@@ -915,7 +1074,7 @@ Out of scope:
 
 ---
 
-### 015 — Developmental Milestones
+### 016 — Developmental Milestones
 
 ```
 Build developmental milestone tracking — monitoring each child's
@@ -962,12 +1121,12 @@ Edge cases:
 Out of scope:
 - Custom curriculum frameworks (Montessori, Pikler) — Phase 4.
 - Learning journal narrative (photos + observations in journal format) — Phase 2.
-- MeMoQ quality self-evaluation (feature 016, separate).
+- MeMoQ quality self-evaluation (feature 017, separate).
 ```
 
 ---
 
-### 016 — MeMoQ
+### 017 — MeMoQ
 
 ```
 Build the MeMoQ pedagogical quality self-evaluation instrument —
@@ -1034,7 +1193,7 @@ Out of scope:
 
 ---
 
-### 017 — Management Reporting
+### 018 — Management Reporting
 
 ```
 Build the director dashboard and management reports for operational
@@ -1085,7 +1244,7 @@ Out of scope:
 
 ---
 
-### 018 — IKT Compliance
+### 019 — IKT Compliance
 
 ```
 Build the IKT (inkomenstarief) subsidy integration for Opgroeien —
@@ -1186,7 +1345,7 @@ Out of scope:
 
 ---
 
-### 019 — Email Communications
+### 020 — Email Communications
 
 ```
 Build templated email delivery on top of the existing notification
@@ -1196,7 +1355,7 @@ child daily report.
 Context: IEmailSender / EmailService (MailKit-based) already exists for
 transactional auth emails (verify-email, reset-password), built as
 inline C# raw string literals. This feature fulfils the "Email
-notification fallback" items deferred by 010 (closure calendar) and 012
+notification fallback" items deferred by 011 (closure calendar) and 013
 (parent communication), and adds two new director-facing capabilities.
 
 What to build:
@@ -1207,11 +1366,11 @@ What to build:
   household, not per child — a parent with two children at the same location
   must receive a single combined email, not two.
 - Daily report email: the same aggregated daily summary shown in the parent
-  app (feature 012, sourced from child_events in feature 008) can be sent
+  app (feature 013, sourced from child_events in feature 009) can be sent
   as an email to a child's contacts, either on-demand (director/caregiver
   triggers it) or as an opt-in daily digest per contact.
-- Closure day emails: closure day notifications (feature 010) and
-  announcements (feature 012) gain an email channel alongside push/in-app,
+- Closure day emails: closure day notifications (feature 011) and
+  announcements (feature 013) gain an email channel alongside push/in-app,
   reusing the same bulk-send mechanism built here.
 - A real email templating approach — the current pattern of raw C# string
   literals per method does not scale to this many templates. Decide the
@@ -1258,7 +1417,7 @@ Out of scope:
 - Before specifying any feature, run: `/speckit-specify @PROJECT-BRIEF.md @BACKLOG.md` then paste the prompt for that feature
 - The auth layer (003) already exists as a walking skeleton — the spec should describe what to keep, what to replace, and what to add
 - Contracts (007) must include the split-location day-overlap validator
-- BKR ratio enforcement lives in attendance (009), not in contracts
-- IKT compliance (018) requires an X.509 certificate — initiate procurement at least 4 weeks before Phase 3 starts
-- Email communications (019) consolidates the "Email notification fallback (Phase 2)" items deferred by both 010 (closure calendar) and 012 (parent communication) — no need to build email delivery separately in either of those specs
-- **Flag for 005 (Staff), 007 (Contracts), 011 (Caregiver Scheduling)**: feature 004 (Locations) deliberately does not build any "move/relocate a location" continuity — when a KDV physically relocates (old building closes, new one opens), 004 only offers a "duplicate location" convenience (clones location-level settings, no data carryover). Whoever builds 005/007/011 needs to design the actual staff/child reassignment UX for a location closing down, keeping in mind staff are NOT bound to a single location (a caregiver can already work different locations on different days per 011's scheduling model) — so "moving" a location is really a bulk reassignment of active contracts (007) and future schedule entries (011), not a 1:1 staff/child transfer.
+- BKR ratio enforcement lives in attendance (010), not in contracts
+- IKT compliance (019) requires an X.509 certificate — initiate procurement at least 4 weeks before Phase 3 starts
+- Email communications (020) consolidates the "Email notification fallback (Phase 2)" items deferred by both 011 (closure calendar) and 013 (parent communication) — no need to build email delivery separately in either of those specs
+- **Flag for 005 (Staff), 007 (Contracts), 012 (Caregiver Scheduling)**: feature 004 (Locations) deliberately does not build any "move/relocate a location" continuity — when a KDV physically relocates (old building closes, new one opens), 004 only offers a "duplicate location" convenience (clones location-level settings, no data carryover). Whoever builds 005/007/012 needs to design the actual staff/child reassignment UX for a location closing down, keeping in mind staff are NOT bound to a single location (a caregiver can already work different locations on different days per 012's scheduling model) — so "moving" a location is really a bulk reassignment of active contracts (007) and future schedule entries (012), not a 1:1 staff/child transfer.
