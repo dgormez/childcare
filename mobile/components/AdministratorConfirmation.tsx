@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useTranslation } from "react-i18next";
 import { getRoster, confirmAdministrator } from "../services/roomShift";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useColors } from "../hooks/useColors";
 import { PinKeypad } from "./PinKeypad";
+import { CaregiverCard } from "./CaregiverCard";
 import type { RoomRosterCard } from "../types";
 
 interface Props {
@@ -69,18 +70,7 @@ export function AdministratorConfirmation({ onComplete }: Props) {
         numColumns={3}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setSelected(item)}
-            style={{ minHeight: 64, flex: 1, margin: 8 }}
-            className="items-center rounded-xl p-3 bg-surface-soft dark:bg-surface-soft-dark"
-          >
-            {item.photoUrl ? (
-              <Image source={{ uri: item.photoUrl }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8 }} />
-            ) : (
-              <View style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, backgroundColor: colors.border }} />
-            )}
-            <Text className="text-text dark:text-text-dark font-semibold text-base text-center">{item.firstName}</Text>
-          </TouchableOpacity>
+          <CaregiverCard card={item} onPress={() => setSelected(item)} />
         )}
       />
 

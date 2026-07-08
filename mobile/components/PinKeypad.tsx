@@ -91,7 +91,7 @@ export function PinKeypad({ name, pinLength, onSubmit, onCancel, onSuccess }: Pr
           width: "100%",
           maxWidth: 420,
         }}
-        className="bg-surface dark:bg-surface-dark rounded-2xl p-8"
+        className="bg-surface dark:bg-surface-dark rounded-xl p-8"
       >
         <Text className="text-text dark:text-text-dark text-xl font-bold text-center mb-2">
           {name ? t("pin.enterPin", { name }) : t("roomSetup.overridePinLabel")}

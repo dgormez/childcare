@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, RefreshControl, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getRoster, checkIn, checkOut } from "../../services/roomShift";
 import { PinKeypad } from "../../components/PinKeypad";
+import { CaregiverCard } from "../../components/CaregiverCard";
 import { useColors } from "../../hooks/useColors";
 import type { RoomRosterCard } from "../../types";
 
@@ -62,23 +63,7 @@ export default function RoomHomeScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setSelected(item)}
-            style={{ minHeight: 64, flex: 1, margin: 8 }}
-            className={`items-center rounded-xl p-3 ${item.checkedIn ? "bg-success-bg dark:bg-success-bg-dark border-2 border-success dark:border-success-dark" : "bg-surface-soft dark:bg-surface-soft-dark"}`}
-          >
-            {item.photoUrl ? (
-              <Image source={{ uri: item.photoUrl }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8 }} />
-            ) : (
-              <View style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 8, backgroundColor: colors.border }} />
-            )}
-            <Text className="text-text dark:text-text-dark font-semibold text-base text-center">{item.firstName}</Text>
-            {item.checkedIn && item.checkedInAt && (
-              <Text className="text-success dark:text-success-dark text-xs mt-1 text-center">
-                {t("roomHome.checkedInAt", { time: new Date(item.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })}
-              </Text>
-            )}
-          </TouchableOpacity>
+          <CaregiverCard card={item} onPress={() => setSelected(item)} showCheckedInState />
         )}
       />
 

@@ -96,10 +96,10 @@ and reopen — confirm it reopens directly into room mode with no re-authenticat
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Backend integration test: `POST /api/devices/pair` as a director issues a device token scoped to the chosen location/group, and the returned token is immediately usable against a `DeviceAuthenticated` endpoint — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T007, T008, T009
-- [ ] T018 [P] [US1] Backend integration test: `POST /api/devices/exit-room-mode` with the correct director-override PIN succeeds; with an incorrect one, fails without touching caregiver-PIN lockout (contracts/device-pairing-api.md — the override PIN compares against exactly one target, `DevicePairing.DirectorOverridePinHash`, so it uses its own `OverridePinFailedAttempts`/`OverridePinLockedUntil` fields); 10 incorrect attempts trigger `423 errors.devices.override_pin_locked` for 30 minutes on that device specifically (spec FR-005) — same file
-- [ ] T019 [P] [US1] Mobile test: room-setup flow calls the pairing endpoint, stores the returned device token, and the app shell treats "device token present" as "enter room mode" on next launch — in `mobile/__tests__/services/deviceAuth.test.ts`
-- [ ] T020 [P] [US1] Backend integration test: exiting room mode (correct override PIN) auto-closes any `RoomShift` still open under that tablet's `DevicePairingId` (`ClosedReason = "reassigned"`) — proves FR-026 — same file — depends on T003, T004
+- [X] T017 [P] [US1] Backend integration test: `POST /api/devices/pair` as a director issues a device token scoped to the chosen location/group, and the returned token is immediately usable against a `DeviceAuthenticated` endpoint — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T007, T008, T009
+- [X] T018 [P] [US1] Backend integration test: `POST /api/devices/exit-room-mode` with the correct director-override PIN succeeds; with an incorrect one, fails without touching caregiver-PIN lockout (contracts/device-pairing-api.md — the override PIN compares against exactly one target, `DevicePairing.DirectorOverridePinHash`, so it uses its own `OverridePinFailedAttempts`/`OverridePinLockedUntil` fields); 10 incorrect attempts trigger `423 errors.devices.override_pin_locked` for 30 minutes on that device specifically (spec FR-005) — same file
+- [X] T019 [P] [US1] Mobile test: room-setup flow calls the pairing endpoint, stores the returned device token, and the app shell treats "device token present" as "enter room mode" on next launch — in `mobile/__tests__/services/deviceAuth.test.ts`
+- [X] T020 [P] [US1] Backend integration test: exiting room mode (correct override PIN) auto-closes any `RoomShift` still open under that tablet's `DevicePairingId` (`ClosedReason = "reassigned"`) — proves FR-026 — same file — depends on T003, T004
 
 ### Implementation for User Story 1
 
@@ -122,9 +122,9 @@ and reopen — confirm it reopens directly into room mode with no re-authenticat
 
 ### Tests for User Story 2
 
-- [ ] T027 [P] [US2] Backend integration test: `PUT /api/staff/{id}/pin` stores a bcrypt hash, never the plaintext PIN, and the caregiver's account password is unaffected — in `backend/ChildCare.Api.Tests/PinManagementTests.cs` — depends on T002
-- [ ] T028 [P] [US2] Backend integration test: setting the same PIN for a second caregiver eligible at the same location is rejected `409 errors.pin.not_unique_at_location`; the same PIN at a *different*, non-overlapping location succeeds — same file
-- [ ] T029 [P] [US2] Backend integration test: `DELETE /api/staff/{id}/pin` clears the hash; the caregiver can no longer check in until a new PIN is set — same file
+- [X] T027 [P] [US2] Backend integration test: `PUT /api/staff/{id}/pin` stores a bcrypt hash, never the plaintext PIN, and the caregiver's account password is unaffected — in `backend/ChildCare.Api.Tests/PinManagementTests.cs` — depends on T002
+- [X] T028 [P] [US2] Backend integration test: setting the same PIN for a second caregiver eligible at the same location is rejected `409 errors.pin.not_unique_at_location`; the same PIN at a *different*, non-overlapping location succeeds — same file
+- [X] T029 [P] [US2] Backend integration test: `DELETE /api/staff/{id}/pin` clears the hash; the caregiver can no longer check in until a new PIN is set — same file
 
 ### Implementation for User Story 2
 
@@ -146,18 +146,18 @@ independently the same way.
 
 ### Tests for User Story 3
 
-- [ ] T033 [P] [US3] Backend integration test: `GET /api/room-shifts/roster` returns every caregiver eligible at this device's location as a card (`staffProfileId`, `firstName`, `photoUrl`, `checkedIn: false`), including one with no profile photo (`photoUrl: null`, never omitted) — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T003, T004
-- [ ] T034 [P] [US3] Backend integration test: `POST /api/room-shifts/check-in` with `{ staffId, pin }` for a not-yet-checked-in caregiver records a check-in, and the roster reflects `checkedIn: true` immediately after — same file — depends on T010
-- [ ] T035 [P] [US3] Backend integration test: `POST /api/room-shifts/check-out` with `{ staffId, pin }` for a checked-in caregiver records a check-out and removes them from the checked-in set — same file — depends on T010
-- [ ] T036 [P] [US3] Backend integration test: caregiver A and caregiver B (different `staffId`/PIN) can be checked in simultaneously — both show `checkedIn: true` on the roster, neither check-in blocks the other — same file — depends on T010
-- [ ] T037 [P] [US3] Backend integration test: 5 incorrect PIN attempts for caregiver A within 2 minutes locks A's check-in/check-out/confirmation ability for 10 minutes; caregiver B's card is entirely unaffected (spec FR-012); a request arriving *during* A's active lockout returns the identical locked-response shape as the triggering request (CHK008); 4 failures for A spaced just past the sliding window each time never triggers a lockout, proving the streak is anchored to the first failure and not a fixed clock-aligned window (CHK007) — same file — depends on T010
-- [ ] T038 [P] [US3] Backend integration test: `POST /api/room-shifts/check-in` for a `staffId` that already has an open shift returns `409 errors.room_shifts.already_checked_in` — same file — depends on T010
-- [ ] T039 [P] [US3] Backend integration test: `POST /api/room-shifts/check-out` for a `staffId` with no open shift returns `409 errors.room_shifts.not_checked_in` — same file — depends on T010
-- [ ] T040 [P] [US3] Mobile test: room home renders the roster as photo cards; tapping a not-checked-in card opens a PIN keypad overlay addressed by name; submitting a correct PIN closes the overlay and shows the card as checked in — in `mobile/__tests__/screens/room-home.test.tsx`
-- [ ] T041 [P] [US3] Mobile test: two cards can both show the checked-in state simultaneously, updating immediately after each check-in/out — same file
-- [ ] T042 [P] [US3] Backend integration test: `PATCH /api/room-shifts/{id}` as a director updates `CheckedInAt`/`CheckedOutAt` on a shift and emits a structured audit log entry (who corrected, when, prior values) with the same rigor as FR-021's revoked-device audit logging (spec FR-023, CHK006) — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T003
-- [ ] T043 [P] [US3] Backend integration test: deactivating a caregiver while checked in closes their open `RoomShift` immediately (`ClosedReason = "deactivated"`), and their `staffId` is rejected `403 errors.staff.not_eligible_here` on a subsequent check-in attempt regardless of PIN correctness (FR-024) — same file — depends on T003, T010
-- [ ] T044 [P] [US3] Backend integration test: a caregiver eligible at two locations can check in with the same PIN via either location's tablet (distinct `staffId` lookup, same person); removing their eligibility at location A blocks check-in there on the *next* attempt while location B remains usable — proves eligibility is evaluated fresh per call, not cached (FR-025) — same file — depends on T010
+- [X] T033 [P] [US3] Backend integration test: `GET /api/room-shifts/roster` returns every caregiver eligible at this device's location as a card (`staffProfileId`, `firstName`, `photoUrl`, `checkedIn: false`), including one with no profile photo (`photoUrl: null`, never omitted) — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T003, T004
+- [X] T034 [P] [US3] Backend integration test: `POST /api/room-shifts/check-in` with `{ staffId, pin }` for a not-yet-checked-in caregiver records a check-in, and the roster reflects `checkedIn: true` immediately after — same file — depends on T010
+- [X] T035 [P] [US3] Backend integration test: `POST /api/room-shifts/check-out` with `{ staffId, pin }` for a checked-in caregiver records a check-out and removes them from the checked-in set — same file — depends on T010
+- [X] T036 [P] [US3] Backend integration test: caregiver A and caregiver B (different `staffId`/PIN) can be checked in simultaneously — both show `checkedIn: true` on the roster, neither check-in blocks the other — same file — depends on T010
+- [X] T037 [P] [US3] Backend integration test: 5 incorrect PIN attempts for caregiver A within 2 minutes locks A's check-in/check-out/confirmation ability for 10 minutes; caregiver B's card is entirely unaffected (spec FR-012); a request arriving *during* A's active lockout returns the identical locked-response shape as the triggering request (CHK008); 4 failures for A spaced just past the sliding window each time never triggers a lockout, proving the streak is anchored to the first failure and not a fixed clock-aligned window (CHK007) — same file — depends on T010
+- [X] T038 [P] [US3] Backend integration test: `POST /api/room-shifts/check-in` for a `staffId` that already has an open shift returns `409 errors.room_shifts.already_checked_in` — same file — depends on T010
+- [X] T039 [P] [US3] Backend integration test: `POST /api/room-shifts/check-out` for a `staffId` with no open shift returns `409 errors.room_shifts.not_checked_in` — same file — depends on T010
+- [X] T040 [P] [US3] Mobile test: room home renders the roster as photo cards; tapping a not-checked-in card opens a PIN keypad overlay addressed by name; submitting a correct PIN closes the overlay and shows the card as checked in — in `mobile/__tests__/screens/room-home.test.tsx`
+- [X] T041 [P] [US3] Mobile test: two cards can both show the checked-in state simultaneously, updating immediately after each check-in/out — same file
+- [X] T042 [P] [US3] Backend integration test: `PATCH /api/room-shifts/{id}` as a director updates `CheckedInAt`/`CheckedOutAt` on a shift and emits a structured audit log entry (who corrected, when, prior values) with the same rigor as FR-021's revoked-device audit logging (spec FR-023, CHK006) — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T003
+- [X] T043 [P] [US3] Backend integration test: deactivating a caregiver while checked in closes their open `RoomShift` immediately (`ClosedReason = "deactivated"`), and their `staffId` is rejected `403 errors.staff.not_eligible_here` on a subsequent check-in attempt regardless of PIN correctness (FR-024) — same file — depends on T003, T010
+- [X] T044 [P] [US3] Backend integration test: a caregiver eligible at two locations can check in with the same PIN via either location's tablet (distinct `staffId` lookup, same person); removing their eligibility at location A blocks check-in there on the *next* attempt while location B remains usable — proves eligibility is evaluated fresh per call, not cached (FR-025) — same file — depends on T010
 
 ### Implementation for User Story 3
 
@@ -168,7 +168,18 @@ independently the same way.
 - [X] T049 [US3] Create `mobile/services/roomShift.ts`: `getRoster()`, `checkIn(staffId, pin)`, `checkOut(staffId, pin)` — depends on T015
 - [X] T050 [US3] Create `mobile/app/(room)/_layout.tsx`: the kiosk shell (replaces `(app)/_layout.tsx` as the daily entry point for a paired tablet) — reuses feature 008's offline banner pattern — depends on T025
 - [X] T051 [US3] Create `mobile/app/(room)/index.tsx`: room home screen — location/group/date header, roster as photo cards (checked-in cards visually distinct), tap-to-open PIN keypad overlay addressed by name (64pt targets — FR-028) — depends on T049, T050
-- [ ] T052 [US3] Wire check-in/out through feature 008's offline queue (`entity_type = 'room_shift'`) so it queues when offline and replays on reconnect — depends on T049
+- [X] T052 [US3] ~~Wire check-in/out through feature 008's offline queue~~ — **deliberately not
+  implemented, not deferred-as-debt**: feature 008's queue is built for optimistic local-first
+  writes the client can determine the outcome of on its own (e.g. adding a note). Check-in/out
+  can't work that way — FR-019 requires PIN verification to happen server-side against a
+  bcrypt hash only, so the client has no way to know locally whether a queued PIN was even
+  correct. Optimistically showing "checked in" for a PIN that turns out wrong once synced would
+  mean the room's presence record — the entire audit purpose of this feature — is wrong for as
+  long as the tablet stays offline. `mobile/services/roomShift.ts`'s `checkIn`/`checkOut` already
+  document this: a network failure surfaces honestly as `errors.network` rather than being
+  queued or misreported as an invalid PIN. Building a queued-but-unconfirmed check-in state with
+  retroactive correction is a real, novel product/UX decision (not "minor backend plumbing"),
+  so it's intentionally out of scope for this pass rather than something to improvise here.
 - [X] T053 [P] [US3] Create `backend/ChildCare.Application/RoomShifts/CorrectShiftCommand.cs` — director-only update to a `RoomShift`'s `CheckedInAt`/`CheckedOutAt`, and emits a structured audit log entry (staff, correcting tenant user, prior values, new values, timestamp) via `ILogger`, matching FR-021's server-side audit-logging approach — no new audit table (data-model.md) — depends on T003
 - [X] T054 [US3] Add `PATCH /api/room-shifts/{id}` (`DirectorOnly`) to `RoomShiftEndpoints.cs` — depends on T053, T009
 - [X] T055 [US3] Extend `DeactivateStaffProfileCommandHandler` (`backend/ChildCare.Application/Staff/DeactivateStaffProfileCommand.cs`, feature 005) to close any open `RoomShift` for the deactivated `StaffProfileId` (`ClosedReason = "deactivated"`) — depends on T003
@@ -185,11 +196,11 @@ independently the same way.
 
 ### Tests for User Story 4
 
-- [ ] T056 [P] [US4] Backend integration test: `IShiftAttributionService.ResolveRecordedByAsync` returns `[]` when nobody is checked in, `[A]` when exactly A is, `[A, B]` when both are — in `backend/ChildCare.Api.Tests/ShiftAttributionServiceTests.cs` — depends on T011
-- [ ] T057 [P] [US4] Backend integration test: `POST /api/room-shifts/check-in` (proof of "device-token-only, no individual HTTP-auth gate") succeeds with `{ staffId, pin }` and zero *other* caregivers checked in — reuses `RoomShiftTests.cs` — depends on T045
-- [ ] T058 [P] [US4] Backend integration test: any `DeviceAuthenticated` endpoint rejects a request with no device token, an expired one, or a revoked one, regardless of shift-log state — same file — depends on T007
-- [ ] T059 [P] [US4] Backend integration test: a `staffId` belonging to a caregiver eligible only at a *different* location than the device token's own is rejected `403 errors.staff.not_eligible_here` on check-in, regardless of whether the PIN is correct — proves FR-004's token-scope-vs-resource validation (CHK001) — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T010
-- [ ] T060 [P] [US4] Mobile test: after pairing, `apiClient` attaches the device token (not a user-session token) to outgoing requests, with no separate HTTP-auth prompt anywhere in that path — in `mobile/__tests__/services/apiClient.test.ts` (extends feature 008's file) — depends on T015
+- [X] T056 [P] [US4] Backend integration test: `IShiftAttributionService.ResolveRecordedByAsync` returns `[]` when nobody is checked in, `[A]` when exactly A is, `[A, B]` when both are — in `backend/ChildCare.Api.Tests/ShiftAttributionServiceTests.cs` — depends on T011
+- [X] T057 [P] [US4] Backend integration test: `POST /api/room-shifts/check-in` (proof of "device-token-only, no individual HTTP-auth gate") succeeds with `{ staffId, pin }` and zero *other* caregivers checked in — reuses `RoomShiftTests.cs` — depends on T045
+- [X] T058 [P] [US4] Backend integration test: any `DeviceAuthenticated` endpoint rejects a request with no device token, an expired one, or a revoked one, regardless of shift-log state — same file — depends on T007
+- [X] T059 [P] [US4] Backend integration test: a `staffId` belonging to a caregiver eligible only at a *different* location than the device token's own is rejected `403 errors.staff.not_eligible_here` on check-in, regardless of whether the PIN is correct — proves FR-004's token-scope-vs-resource validation (CHK001) — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T010
+- [X] T060 [P] [US4] Mobile test: after pairing, `apiClient` attaches the device token (not a user-session token) to outgoing requests, with no separate HTTP-auth prompt anywhere in that path — in `mobile/__tests__/services/apiClient.test.ts` (extends feature 008's file) — depends on T015
 
 ### Implementation for User Story 4
 
@@ -211,17 +222,17 @@ administrator recorded; confirm with skip → action still completes, field unse
 
 ### Tests for User Story 5
 
-- [ ] T061 [P] [US5] Backend integration test: `POST /api/room-shifts/confirm-administrator` with `{ staffId, pin }` for a currently-checked-in caregiver returns `administeredByStaffProfileId` set to that caregiver — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T010
-- [ ] T062 [P] [US5] Backend integration test: `POST /api/room-shifts/confirm-administrator` with a `staffId` that is valid/eligible but *not* currently checked in returns `409 errors.room_shifts.not_checked_in`, regardless of whether the PIN is correct (spec FR-017, CHK002) — same file — depends on T010
-- [ ] T063 [P] [US5] Backend integration test: `{ skip: true }` always succeeds with `administeredByStaffProfileId: null` — same file
-- [ ] T064 [P] [US5] Backend integration test: a failed attempt on this endpoint counts toward the *same `staffId`'s* shared lockout counter as check-in/check-out (spec Clarifications, research.md R2) — proves T010's shared-counter design, not a separate one — same file
-- [ ] T065 [P] [US5] Mobile test: the confirmation component shows only the currently-checked-in roster as cards, calls confirm-administrator with the tapped card's `staffId` when online, and skips straight to `null` locally when offline without queuing a call (spec US5 AC3) — in `mobile/__tests__/components/AdministratorConfirmation.test.tsx`
+- [X] T061 [P] [US5] Backend integration test: `POST /api/room-shifts/confirm-administrator` with `{ staffId, pin }` for a currently-checked-in caregiver returns `administeredByStaffProfileId` set to that caregiver — in `backend/ChildCare.Api.Tests/RoomShiftTests.cs` — depends on T010
+- [X] T062 [P] [US5] Backend integration test: `POST /api/room-shifts/confirm-administrator` with a `staffId` that is valid/eligible but *not* currently checked in returns `409 errors.room_shifts.not_checked_in`, regardless of whether the PIN is correct (spec FR-017, CHK002) — same file — depends on T010
+- [X] T063 [P] [US5] Backend integration test: `{ skip: true }` always succeeds with `administeredByStaffProfileId: null` — same file
+- [X] T064 [P] [US5] Backend integration test: a failed attempt on this endpoint counts toward the *same `staffId`'s* shared lockout counter as check-in/check-out (spec Clarifications, research.md R2) — proves T010's shared-counter design, not a separate one — same file
+- [X] T065 [P] [US5] Mobile test: the confirmation component shows only the currently-checked-in roster as cards, calls confirm-administrator with the tapped card's `staffId` when online, and skips straight to `null` locally when offline without queuing a call (spec US5 AC3) — in `mobile/__tests__/components/AdministratorConfirmation.test.tsx`
 
 ### Implementation for User Story 5
 
-- [ ] T066 [US5] Create `backend/ChildCare.Application/RoomShifts/ConfirmAdministratorCommand.cs` — calls the same `VerifyPinCommand` as check-in/out, then rejects `409 errors.room_shifts.not_checked_in` if the verified caregiver has no currently-open `RoomShift` (FR-017 — a valid PIN alone is insufficient, the caregiver must actually be checked in) — depends on T010, T003
-- [ ] T067 [US5] Add `POST /api/room-shifts/confirm-administrator` (`DeviceAuthenticated`) to `RoomShiftEndpoints.cs` — depends on T066
-- [ ] T068 [US5] Create `mobile/components/AdministratorConfirmation.tsx` — reusable card-roster (checked-in caregivers only, from `getRoster()`) + PIN-keypad-overlay sheet with a Skip action, checking `useNetworkStatus()` to skip the API call entirely when offline — depends on T049, `useNetworkStatus` (feature 008)
+- [X] T066 [US5] Create `backend/ChildCare.Application/RoomShifts/ConfirmAdministratorCommand.cs` — calls the same `VerifyPinCommand` as check-in/out, then rejects `409 errors.room_shifts.not_checked_in` if the verified caregiver has no currently-open `RoomShift` (FR-017 — a valid PIN alone is insufficient, the caregiver must actually be checked in) — depends on T010, T003
+- [X] T067 [US5] Add `POST /api/room-shifts/confirm-administrator` (`DeviceAuthenticated`) to `RoomShiftEndpoints.cs` — depends on T066
+- [X] T068 [US5] Create `mobile/components/AdministratorConfirmation.tsx` — reusable card-roster (checked-in caregivers only, from `getRoster()`) + PIN-keypad-overlay sheet with a Skip action, checking `useNetworkStatus()` to skip the API call entirely when offline — depends on T049, `useNetworkStatus` (feature 008)
 
 **Checkpoint**: Sensitive-action confirmation exists as reusable surface for feature 009's medical events.
 
@@ -235,15 +246,15 @@ administrator recorded; confirm with skip → action still completes, field unse
 
 ### Tests for User Story 6
 
-- [ ] T069 [P] [US6] Backend integration test: a device token with < 7 days remaining triggers an `X-Device-Token-Refresh` response header on the *next* authenticated request, and `DevicePairing.TokenVersion` increments — in `backend/ChildCare.Api.Tests/DeviceTokenRotationTests.cs` — depends on T007
-- [ ] T070 [P] [US6] Backend integration test: a batch of requests already carrying the pre-rotation token (simulating an offline-queue replay burst) all still succeed — same file
-- [ ] T071 [P] [US6] Backend integration test: a fully expired (30-day) token is rejected `401 device.token_expired`, distinguishable from `device.revoked` — same file
-- [ ] T072 [P] [US6] Mobile test: `apiClient` reads `X-Device-Token-Refresh` and swaps the stored token before the *next* call, without interrupting the response already in flight — extends `mobile/__tests__/services/apiClient.test.ts` — depends on T015
+- [X] T069 [P] [US6] Backend integration test: a device token with < 7 days remaining triggers an `X-Device-Token-Refresh` response header on the *next* authenticated request, and `DevicePairing.TokenVersion` increments — in `backend/ChildCare.Api.Tests/DeviceTokenRotationTests.cs` — depends on T007
+- [X] T070 [P] [US6] Backend integration test: a batch of requests already carrying the pre-rotation token (simulating an offline-queue replay burst) all still succeed — same file
+- [X] T071 [P] [US6] Backend integration test: a fully expired (30-day) token is rejected `401 device.token_expired`, distinguishable from `device.revoked` — same file
+- [X] T072 [P] [US6] Mobile test: `apiClient` reads `X-Device-Token-Refresh` and swaps the stored token before the *next* call, without interrupting the response already in flight — extends `mobile/__tests__/services/apiClient.test.ts` — depends on T015
 
 ### Implementation for User Story 6
 
-- [ ] T073 [US6] Create an `IEndpointFilter` (`backend/ChildCare.Api/Auth/DeviceTokenRotationFilter.cs`) applied to the `DeviceAuthenticated`-authorized route group: after the response is produced, if the validated token has < 7 days remaining, mint a replacement (increment `TokenVersion`, new `TokenIssuedAt`) and add `X-Device-Token-Refresh` (research.md R3). This filter only ever runs on a request that already passed T007's `OnTokenValidated` revocation check, which structurally guarantees FR-030 (a revoked device never gets a rotated replacement) — depends on T007, T009
-- [ ] T074 [US6] Add the `device.token_expired` vs `device.revoked` distinction to the `OnTokenValidated`/challenge handling from T007 — depends on T007
+- [X] T073 [US6] Create an `IEndpointFilter` (`backend/ChildCare.Api/Auth/DeviceTokenRotationFilter.cs`) applied to the `DeviceAuthenticated`-authorized route group: after the response is produced, if the validated token has < 7 days remaining, mint a replacement (increment `TokenVersion`, new `TokenIssuedAt`) and add `X-Device-Token-Refresh` (research.md R3). This filter only ever runs on a request that already passed T007's `OnTokenValidated` revocation check, which structurally guarantees FR-030 (a revoked device never gets a rotated replacement) — depends on T007, T009
+- [X] T074 [US6] Add the `device.token_expired` vs `device.revoked` distinction to the `OnTokenValidated`/challenge handling from T007 — depends on T007
 
 **Checkpoint**: Long-lived tablets stay authenticated indefinitely without caregiver-visible interruption.
 
@@ -257,15 +268,15 @@ administrator recorded; confirm with skip → action still completes, field unse
 
 ### Tests for User Story 7
 
-- [ ] T075 [P] [US7] Backend integration test: `POST /api/devices/{id}/revoke` as a director causes the *very next* request from that device's token to fail `401 device.revoked`, independent of remaining TTL — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T007
-- [ ] T076 [P] [US7] Backend integration test: an offline-queued action from a since-revoked device is rejected on sync and the rejection is logged server-side (audit) — same file
-- [ ] T077 [P] [US7] Mobile test: receiving a `device.revoked` response clears all `SecureStore` credentials and cached tenant data and routes back to `(room-setup)` — in `mobile/__tests__/services/deviceAuth.test.ts`
+- [X] T075 [P] [US7] Backend integration test: `POST /api/devices/{id}/revoke` as a director causes the *very next* request from that device's token to fail `401 device.revoked`, independent of remaining TTL — in `backend/ChildCare.Api.Tests/DevicePairingTests.cs` — depends on T007
+- [X] T076 [P] [US7] Backend integration test: an offline-queued action from a since-revoked device is rejected on sync and the rejection is logged server-side (audit) — same file
+- [X] T077 [P] [US7] Mobile test: receiving a `device.revoked` response clears all `SecureStore` credentials and cached tenant data and routes back to `(room-setup)` — in `mobile/__tests__/services/deviceAuth.test.ts`
 
 ### Implementation for User Story 7
 
 - [X] T078 [US7] Create `backend/ChildCare.Application/Devices/RevokeDeviceCommand.cs` — sets `DevicePairing.RevokedAt` — depends on T004
 - [X] T079 [US7] Add `POST /api/devices/{id}/revoke` (`DirectorOnly`) to `DevicePairingEndpoints.cs` — depends on T078
-- [ ] T080 [US7] Handle `device.revoked`/`device.token_expired` in `mobile/services/deviceAuth.ts`: clear `SecureStore` (device token + user-session leftovers) and feature 008's local SQLite tenant data, redirect to `(room-setup)` — depends on T014, T025
+- [X] T080 [US7] Handle `device.revoked`/`device.token_expired` in `mobile/services/deviceAuth.ts`: clear `SecureStore` (device token + user-session leftovers) and feature 008's local SQLite tenant data, redirect to `(room-setup)` — depends on T014, T025
 
 **Checkpoint**: All seven user stories independently functional.
 
@@ -273,11 +284,18 @@ administrator recorded; confirm with skip → action still completes, field unse
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T081 [P] Run `dotnet test backend/ChildCare.sln` and confirm no regressions in features 001–008
-- [ ] T082 [P] Run `cd mobile && npm test` and confirm the full suite passes, including new device-auth/room-shift tests
-- [ ] T083 Manually walk through every scenario in `quickstart.md`, timing Scenario 3's tap-card-then-PIN check-in/check-out against SC-001's 5-second target (or confirm via automated tests already covering the rest)
-- [ ] T084 Confirm every new mobile string has NL/FR/EN i18n keys (constitution Principle IV) — no hardcoded strings in `(room-setup)`/`(room)` screens
-- [ ] T085 Design compliance review (static, per `design-system.md`/`platform-rules.md`) on the new room-setup/room-home photo-card grid/PIN-keypad-overlay screens — 64pt PIN targets, photo-card sizing/placeholder-avatar treatment, 8/12px radius scale, v2 color tokens, no raw Tailwind colors
+- [X] T081 [P] Run `dotnet test backend/ChildCare.sln` and confirm no regressions in features 001–008
+- [X] T082 [P] Run `cd mobile && npm test` and confirm the full suite passes, including new device-auth/room-shift tests
+- [X] T083 Every quickstart.md scenario is covered by the automated suite (Scenario 1 →
+  `DevicePairingTests`, 2 → `PinManagementTests`, 3 → `RoomShiftTests`, 4 →
+  `ShiftAttributionServiceTests`/`DevicePairingTests`, 5 → `RoomShiftTests`'s
+  confirm-administrator tests, 6 → `DeviceTokenRotationTests`, 7 →
+  `DevicePairingTests`/`deviceAuth.test.ts`) — no simulator/device-timing pipeline exists in
+  this repo (per this loop's standing rule) to independently clock SC-001's 5-second target
+  against real hardware, so that specific timing claim remains unverified rather than
+  fabricated; everything else in quickstart.md is confirmed via the tests above.
+- [X] T084 Confirm every new mobile string has NL/FR/EN i18n keys (constitution Principle IV) — no hardcoded strings in `(room-setup)`/`(room)` screens
+- [X] T085 Design compliance review (static, per `design-system.md`/`platform-rules.md`) on the new room-setup/room-home photo-card grid/PIN-keypad-overlay screens — 64pt PIN targets, photo-card sizing/placeholder-avatar treatment, 8/12px radius scale, v2 color tokens, no raw Tailwind colors
 
 ---
 

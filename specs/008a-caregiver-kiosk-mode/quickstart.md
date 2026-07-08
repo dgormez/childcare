@@ -84,6 +84,11 @@
 ## Automated coverage
 
 Backend: `DevicePairingTests.cs`, `RoomShiftTests.cs` (check-in/out, lockout, concurrent
-caregivers), `ShiftAttributionServiceTests.cs`, `PinManagementTests.cs` — all TestContainers-backed.
-Mobile: `__tests__/services/deviceAuth.test.ts`, `__tests__/screens/room-setup.test.tsx`,
-`__tests__/screens/room-home.test.tsx` — see `tasks.md` for the concrete breakdown.
+caregivers, administrator confirmation), `ShiftAttributionServiceTests.cs`,
+`PinManagementTests.cs`, `DeviceTokenRotationTests.cs` — all TestContainers-backed.
+Mobile: `__tests__/services/deviceAuth.test.ts` (pairing/restore/exit/revocation),
+`__tests__/services/apiClient.test.ts` (device-token attach + rotation-header handling),
+`__tests__/screens/room-home.test.tsx`, `__tests__/components/AdministratorConfirmation.test.tsx`
+— see `tasks.md` for the concrete breakdown. Room-setup's own screen behavior (pairing form,
+location/group selection) is covered indirectly through `deviceAuth.test.ts`'s `pairDevice`
+tests rather than a separate screen-level test file.
