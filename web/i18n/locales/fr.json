@@ -1,0 +1,31 @@
+{
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Portail administrateur",
+    "organisationLabel": "Organisation",
+    "organisationPlaceholder": "votre-organisation",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "submit": "Se connecter",
+    "submitLoading": "Connexion en cours…",
+    "errorTooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "errorInvalidCredentials": "Organisation, e-mail ou mot de passe incorrect.",
+    "orDivider": "ou",
+    "googleSignInError": "La connexion avec Google a échoué. Veuillez réessayer."
+  },
+  "sidebar": {
+    "staff": "Personnel",
+    "devices": "Appareils",
+    "locations": "Sites",
+    "contracts": "Contrats",
+    "children": "Enfants",
+    "comingSoon": "Bientôt",
+    "signOut": "Déconnexion",
+    "collapse": "Réduire",
+    "expand": "Développer",
+    "notYetAvailable": "Cette section n'est pas encore disponible."
+  },
+  "session": {
+    "expired": "Votre session a expiré. Veuillez vous reconnecter."
+  }
+}

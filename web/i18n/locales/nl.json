@@ -1,0 +1,31 @@
+{
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Beheerdersportaal",
+    "organisationLabel": "Organisatie",
+    "organisationPlaceholder": "jouw-organisatie",
+    "emailLabel": "E-mailadres",
+    "passwordLabel": "Wachtwoord",
+    "submit": "Inloggen",
+    "submitLoading": "Bezig met inloggen…",
+    "errorTooManyAttempts": "Te veel pogingen. Probeer het over enkele minuten opnieuw.",
+    "errorInvalidCredentials": "Onjuiste organisatie, e-mailadres of wachtwoord.",
+    "orDivider": "of",
+    "googleSignInError": "Aanmelden met Google is mislukt. Probeer het opnieuw."
+  },
+  "sidebar": {
+    "staff": "Personeel",
+    "devices": "Toestellen",
+    "locations": "Locaties",
+    "contracts": "Contracten",
+    "children": "Kinderen",
+    "comingSoon": "Binnenkort",
+    "signOut": "Afmelden",
+    "collapse": "Inklappen",
+    "expand": "Uitklappen",
+    "notYetAvailable": "Dit onderdeel is nog niet beschikbaar."
+  },
+  "session": {
+    "expired": "Je sessie is verlopen. Meld je opnieuw aan."
+  }
+}

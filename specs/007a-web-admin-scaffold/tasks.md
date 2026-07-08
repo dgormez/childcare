@@ -42,7 +42,7 @@ shadcn) in place before rebuilding on top.
 
 - [X] T001 Confirm `dotnet build backend/ChildCare.sln` succeeds and `cd web && npm test` passes
   on this branch before starting
-- [ ] T002 Delete `web/app/(app)/habits/`, `web/app/(app)/subscription/page.tsx`,
+- [X] T002 Delete `web/app/(app)/habits/`, `web/app/(app)/subscription/page.tsx`,
   `web/app/(app)/settings/page.tsx`, `web/app/(auth)/register/page.tsx`,
   `web/app/(auth)/forgot-password/page.tsx`, `web/app/(auth)/reset-password/page.tsx`,
   `web/app/verify-email/page.tsx`, `web/app/payment-success/page.tsx`, `web/lib/api.ts`
@@ -51,19 +51,19 @@ shadcn) in place before rebuilding on top.
   `web/__tests__/` — director-invite/password-reset flows are feature 003 backend capability
   with no web UI yet; out of this feature's scope to rebuild, only to stop referencing removed
   Habits pages from them
-- [ ] T003 [P] Install `next-intl` in `web/package.json`; create `web/i18n/locales/{nl,fr,en}.json`
+- [X] T003 [P] Install `next-intl` in `web/package.json`; create `web/i18n/locales/{nl,fr,en}.json`
   (empty top-level objects) and the `next-intl` request-config/provider wiring in
   `web/app/layout.tsx`, mirroring `mobile/i18n`'s locale-file structure (flat namespaced keys)
-- [ ] T004 [P] Install `openapi-typescript` and `openapi-fetch` in `web/package.json`; add a
+- [X] T004 [P] Install `openapi-typescript` and `openapi-fetch` in `web/package.json`; add a
   `generate-api-client` script to `web/package.json` matching `mobile/package.json`'s pattern
   (`openapi-typescript ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000}/openapi/v1.json -o
   lib/generated/api-types.ts`); commit the generated file (matches
   `mobile/services/generated/api-types.ts`'s precedent — CI never runs a live backend to
   regenerate it, so it must not be gitignored)
-- [ ] T005 [P] Create `web/theme/colors.ts` porting `mobile/theme/colors.js`'s `light`/`dark`
+- [X] T005 [P] Create `web/theme/colors.ts` porting `mobile/theme/colors.js`'s `light`/`dark`
   token objects to TypeScript (research.md R6); update `web/tailwind.config.ts` to consume it
   with the same kebab-case/`-dark`-suffix flattening `mobile/tailwind.config.js` uses
-- [ ] T006 [P] Initialize shadcn/ui in `web/` (`components.json`, `web/components/ui/`) and add
+- [X] T006 [P] Initialize shadcn/ui in `web/` (`components.json`, `web/components/ui/`) and add
   the `table`, `button`, `input`, `dialog`, `badge`, `dropdown-menu` primitives, restyled to
   consume `theme/colors.ts` tokens rather than shadcn's default palette (research.md R7)
 
@@ -101,27 +101,27 @@ needed to render the shell (FR-005a), and shared UI primitives every story reuse
 
 ### Frontend: typed API client & auth session (research.md R1, R2)
 
-- [ ] T014 Create `web/lib/apiClient.ts`: `openapi-fetch` client typed against
+- [X] T014 Create `web/lib/apiClient.ts`: `openapi-fetch` client typed against
   `lib/generated/api-types.ts`, `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`, with a middleware
   porting `mobile/services/apiClient.ts`'s 401-refresh-and-retry logic (no placeholder-origin
   rewrite needed — see research.md R1) — depends on T004
-- [ ] T015 Rewrite `web/lib/auth.ts` on top of `apiClient.ts`: `login`/`loginWithGoogle`/
+- [X] T015 Rewrite `web/lib/auth.ts` on top of `apiClient.ts`: `login`/`loginWithGoogle`/
   `logout`/`tryRestoreSession` now also carry the organisation name (an added
   `fetchOrganisation()` call to `GET /api/organisations/me` after session establishment) and
   `user.name` from the extended `AuthenticatedUser` — depends on T011, T014
-- [ ] T016 Update `web/components/AuthProvider.tsx`: `Session` gains `organisationName: string`,
+- [X] T016 Update `web/components/AuthProvider.tsx`: `Session` gains `organisationName: string`,
   populated during `tryRestoreSession`/`login` — depends on T015
-- [ ] T017 [P] Update `web/lib/types.ts`: remove Habits-only types (if any remain after T002),
+- [X] T017 [P] Update `web/lib/types.ts`: remove Habits-only types (if any remain after T002),
   keep only types not superseded by generated OpenAPI types
 
 ### Shared UI primitives (used by US2 and US3)
 
-- [ ] T018 [P] Create `web/components/ConfirmDialog.tsx` (shadcn `Dialog`-based, i18n'd title/
+- [X] T018 [P] Create `web/components/ConfirmDialog.tsx` (shadcn `Dialog`-based, i18n'd title/
   body/confirm/cancel props) for the PIN-reset, deactivate/reactivate, and device-revoke
   confirmation steps (spec FR-010, FR-014)
-- [ ] T019 [P] Create `web/components/EmptyState.tsx` (icon + one-sentence message, per
+- [X] T019 [P] Create `web/components/EmptyState.tsx` (icon + one-sentence message, per
   design-system.md's empty-state pattern) for the Staff/Devices empty states (FR-011, FR-015)
-- [ ] T020 [P] Create `web/components/ErrorState.tsx` (inline error message + retry button, per
+- [X] T020 [P] Create `web/components/ErrorState.tsx` (inline error message + retry button, per
   design-system.md — never a raw error/stack trace) for the Staff/Devices/shell error states
   (FR-012, FR-016)
 
@@ -140,29 +140,29 @@ renders with organisation and director name — independent of any content scree
 
 ### Tests for User Story 1
 
-- [ ] T021 [P] [US1] `web/__tests__/auth.test.ts` (extend): login success renders the shell with
+- [X] T021 [P] [US1] `web/__tests__/auth.test.ts` (extend): login success renders the shell with
   organisation/director name; login failure shows a localized inline error and stays on
   `/login`; session persists across a simulated remount (restore via `tryRestoreSession`);
   explicit logout clears the session and redirects to `/login`
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] Rebuild `web/app/(auth)/login/page.tsx` on `theme/colors.ts` tokens and i18n
+- [X] T022 [US1] Rebuild `web/app/(auth)/login/page.tsx` on `theme/colors.ts` tokens and i18n
   keys (`web/i18n/locales/*.json` under a `login` namespace) — depends on T014, T003
-- [ ] T023 [US1] Update `web/components/GoogleSignInButton.tsx`: restyle on design tokens, i18n
+- [X] T023 [US1] Update `web/components/GoogleSignInButton.tsx`: restyle on design tokens, i18n
   its error string, keep the existing Google Identity Services flow — depends on T003, T005
-- [ ] T024 [US1] [P] Create `web/components/Sidebar.tsx`: collapsible nav, organisation name +
+- [X] T024 [US1] [P] Create `web/components/Sidebar.tsx`: collapsible nav, organisation name +
   director name (from `AuthProvider`'s `Session`) rendered as a skeleton/neutral loading state
   until that data resolves (FR-005b — never blank space or a flash of placeholder text), real
   links to Staff/Devices, inert/disabled placeholder entries for Locations/Contracts/Children
   (research.md R5) — depends on T016
-- [ ] T025 [US1] Rewrite `web/app/(app)/layout.tsx` to render `Sidebar.tsx`, keep the existing
+- [X] T025 [US1] Rewrite `web/app/(app)/layout.tsx` to render `Sidebar.tsx`, keep the existing
   auth-guard redirect-to-login-when-unauthenticated behavior, add a session-expired redirect
   path (edge case: expired refresh token mid-session → redirect to `/login` with a clear
   message), and a catch-all route within `(app)/` for not-yet-built placeholder sections
   (Locations/Contracts/Children) that renders a "not yet available" message instead of a broken
   route or raw 404 if a director navigates directly to one of those URLs — depends on T024
-- [ ] T026 [US1] Add `login`, `sidebar`, `session` i18n key namespaces to
+- [X] T026 [US1] Add `login`, `sidebar`, `session` i18n key namespaces to
   `web/i18n/locales/{nl,fr,en}.json` covering every string introduced in T022–T025 — depends on
   T022, T023, T024, T025
 

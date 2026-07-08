@@ -6,16 +6,20 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 export async function POST() {
   const jar = await cookies();
   const refreshToken = jar.get("refresh_token")?.value;
-  if (!refreshToken) return NextResponse.json({ error: "No refresh token" }, { status: 401 });
+  const organisationSlug = jar.get("org_slug")?.value;
+  if (!refreshToken || !organisationSlug) {
+    return NextResponse.json({ error: "No refresh token" }, { status: 401 });
+  }
 
   const upstream = await fetch(`${API_BASE}/api/auth/refresh`, {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ refreshToken }),
+    body:    JSON.stringify({ organisationSlug, refreshToken }),
   });
 
   if (!upstream.ok) {
     jar.delete("refresh_token");
+    jar.delete("org_slug");
     return NextResponse.json({ error: "Session expired" }, { status: 401 });
   }
 

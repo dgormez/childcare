@@ -1,0 +1,31 @@
+{
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Director Admin",
+    "organisationLabel": "Organisation",
+    "organisationPlaceholder": "your-organisation",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "submitLoading": "Signing in…",
+    "errorTooManyAttempts": "Too many attempts. Please try again in a few minutes.",
+    "errorInvalidCredentials": "Incorrect organisation, email, or password.",
+    "orDivider": "or",
+    "googleSignInError": "Google sign-in failed. Please try again."
+  },
+  "sidebar": {
+    "staff": "Staff",
+    "devices": "Devices",
+    "locations": "Locations",
+    "contracts": "Contracts",
+    "children": "Children",
+    "comingSoon": "Soon",
+    "signOut": "Sign out",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "notYetAvailable": "This section isn't available yet."
+  },
+  "session": {
+    "expired": "Your session has expired. Please sign in again."
+  }
+}
