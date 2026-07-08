@@ -78,5 +78,11 @@
     "revokeDialogTitle": "Révoquer l'appareil",
     "revokeDialogDescription": "Cette tablette ({group} à {location}) devra être ré-associée avant de pouvoir être réutilisée. Continuer ?",
     "revokeDialogCancel": "Annuler"
+  },
+  "errorBoundary": {
+    "title": "Une erreur s'est produite",
+    "body": "Une erreur inattendue s'est produite. Actualisez la page ou réessayez ci-dessous.",
+    "appBody": "Cette page a rencontré une erreur. Vos données sont en sécurité.",
+    "retry": "Réessayer"
   }
 }

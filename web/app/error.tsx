@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 export default function Error({
   reset,
@@ -6,18 +7,17 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorBoundary");
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-      <div className="text-center space-y-4 max-w-sm">
-        <h2 className="text-xl font-bold text-gray-900">Something went wrong</h2>
-        <p className="text-gray-500 text-sm">
-          An unexpected error occurred. Try refreshing the page or click below to retry.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 dark:bg-background-dark">
+      <div className="max-w-sm space-y-4 text-center">
+        <h2 className="text-xl font-bold text-text dark:text-text-dark">{t("title")}</h2>
+        <p className="text-sm text-text-soft dark:text-text-soft-dark">{t("body")}</p>
         <button
           onClick={reset}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition"
+          className="rounded-lg bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-hover"
         >
-          Try again
+          {t("retry")}
         </button>
       </div>
     </div>

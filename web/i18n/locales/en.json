@@ -78,5 +78,11 @@
     "revokeDialogTitle": "Revoke device",
     "revokeDialogDescription": "This tablet ({group} at {location}) will need to be re-paired before it can be used again. Continue?",
     "revokeDialogCancel": "Cancel"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "An unexpected error occurred. Try refreshing the page or click below to retry.",
+    "appBody": "This page hit an error. Your data is safe.",
+    "retry": "Try again"
   }
 }

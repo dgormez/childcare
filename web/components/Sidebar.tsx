@@ -58,7 +58,7 @@ export function Sidebar({ session, onLogout }: SidebarProps) {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium transition",
+                "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition",
                 active
                   ? "bg-primary-soft text-primary-hover dark:bg-primary-soft-dark dark:text-primary-hover-dark"
                   : "text-text-soft hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark",
@@ -73,14 +73,14 @@ export function Sidebar({ session, onLogout }: SidebarProps) {
         {PLACEHOLDER_NAV.map(({ labelKey, icon: Icon }) => (
           <div
             key={labelKey}
-            className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-text-soft opacity-50 dark:text-text-soft-dark"
+            className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-text-soft opacity-50 dark:text-text-soft-dark"
             aria-disabled="true"
           >
             <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
             {!collapsed && (
               <span className="flex flex-1 items-center justify-between truncate">
                 {t(labelKey)}
-                <span className="ml-2 rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-medium dark:bg-surface-soft-dark">
+                <span className="ml-2 rounded-full bg-surface-soft px-2 py-1 text-xs font-medium dark:bg-surface-soft-dark">
                   {t("comingSoon")}
                 </span>
               </span>
@@ -92,14 +92,14 @@ export function Sidebar({ session, onLogout }: SidebarProps) {
       <div className="space-y-1 border-t border-border pt-3 dark:border-border-dark">
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-text-soft transition hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark"
+          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-text-soft transition hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark"
         >
           <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} />
           {!collapsed && <span>{t("signOut")}</span>}
         </button>
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-text-soft transition hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark"
+          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-text-soft transition hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark"
           aria-label={collapsed ? t("expand") : t("collapse")}
         >
           {collapsed ? <ChevronRight className="h-5 w-5 shrink-0" strokeWidth={2} /> : <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} />}

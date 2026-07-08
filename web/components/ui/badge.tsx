@@ -4,7 +4,7 @@ import { cn } from "../../lib/cn";
 
 /** design-system.md: a badge is a pill (full round) for a single-word/short state attached to
  * an item — semantic colors only, never a per-surface accent. */
-const badgeVariants = cva("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", {
+const badgeVariants = cva("inline-flex items-center rounded-full px-2 py-1 text-xs font-medium", {
   variants: {
     variant: {
       neutral: "bg-surface-soft text-text-soft dark:bg-surface-soft-dark dark:text-text-soft-dark",
