@@ -19,5 +19,6 @@ export async function POST() {
   }
 
   jar.delete("refresh_token");
+  jar.delete("org_slug");
   return NextResponse.json({ ok: true });
 }

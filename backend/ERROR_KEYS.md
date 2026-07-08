@@ -165,6 +165,14 @@ This feature also extends the authorization on two existing feature-006 routes r
 | `errors.room_shifts.not_found` | 404 | `PATCH /api/room-shifts/{id}` — no `RoomShift` with that id in this tenant. |
 | `errors.pin.not_unique_at_location` | 409 | `PUT /api/staff/{id}/pin` — another caregiver eligible at any of the same locations already holds this PIN (FR-007). |
 
+## Web Admin Scaffold (feature `007a-web-admin-scaffold`)
+
+This feature introduces no new error keys. Its two backend additions — `GET /api/devices`
+(spec FR-013a) and `GET /api/organisations/me` (spec FR-005a) — are pure, tenant-scoped reads
+with no feature-specific failure modes: both return only the standard `401`
+(`TenantMiddleware`, missing/invalid auth) and `403` (`DirectorOnly`, wrong role) responses
+already shared by every other `DirectorOnly` endpoint in this file.
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

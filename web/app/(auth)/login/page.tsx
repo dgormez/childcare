@@ -1,31 +1,33 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { login } from "../../../lib/auth";
 import { useAuth } from "../../../components/AuthProvider";
 import GoogleSignInButton from "../../../components/GoogleSignInButton";
 
 export default function LoginPage() {
-  const router       = useRouter();
+  const t = useTranslations("login");
+  const router = useRouter();
   const { setSession } = useAuth();
-  const [email,    setEmail]    = useState("");
+  const [organisationSlug, setOrganisationSlug] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const session = await login(email, password);
+      const session = await login(organisationSlug, email, password);
       setSession(session);
-      router.replace("/habits");
+      router.replace("/staff");
     } catch (e) {
       const status = (e as { status?: number }).status;
-      if (status === 429) setError("Too many attempts. Please try again in a few minutes.");
-      else setError("Invalid email or password.");
+      if (status === 429) setError(t("errorTooManyAttempts"));
+      else setError(t("errorInvalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -34,53 +36,75 @@ export default function LoginPage() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label htmlFor="organisationSlug" className="block text-sm font-medium text-text dark:text-text-dark mb-1">
+          {t("organisationLabel")}
+        </label>
         <input
-          type="email" required autoComplete="email"
-          value={email} onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          id="organisationSlug"
+          type="text"
+          required
+          autoComplete="organization"
+          value={organisationSlug}
+          onChange={(e) => setOrganisationSlug(e.target.value)}
+          className="w-full bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4 py-3 text-sm text-text dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary"
+          placeholder={t("organisationPlaceholder")}
+        />
+      </div>
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-text dark:text-text-dark mb-1">
+          {t("emailLabel")}
+        </label>
+        <input
+          id="email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4 py-3 text-sm text-text dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="you@example.com"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <label htmlFor="password" className="block text-sm font-medium text-text dark:text-text-dark mb-1">
+          {t("passwordLabel")}
+        </label>
         <input
-          type="password" required autoComplete="current-password"
-          value={password} onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          id="password"
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4 py-3 text-sm text-text dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="••••••••"
         />
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-sm text-danger" role="alert">{error}</p>}
 
       <button
-        type="submit" disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
+        type="submit"
+        disabled={loading}
+        className="w-full bg-primary text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Signing in…" : "Sign in"}
+        {loading ? t("submitLoading") : t("submit")}
       </button>
 
-      <div className="text-center space-y-2">
-        <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline block">
-          Forgot password?
-        </Link>
-        <p className="text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline font-medium">Sign up</Link>
-        </p>
-      </div>
+      {organisationSlug && (
+        <>
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border dark:border-border-dark" />
+            </div>
+            <div className="relative flex justify-center text-xs text-text-soft dark:text-text-soft-dark">
+              <span className="bg-background dark:bg-background-dark px-2">{t("orDivider")}</span>
+            </div>
+          </div>
 
-      <div className="relative my-2">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">
-          <span className="bg-white px-2">or</span>
-        </div>
-      </div>
-
-      <GoogleSignInButton />
+          <GoogleSignInButton organisationSlug={organisationSlug} />
+        </>
+      )}
     </form>
   );
 }

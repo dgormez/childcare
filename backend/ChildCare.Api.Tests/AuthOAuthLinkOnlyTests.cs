@@ -134,6 +134,9 @@ public class AuthOAuthLinkOnlyTests(OrganisationOnboardingWebAppFactory factory)
             var body = await response.Content.ReadFromJsonAsync<AuthSessionResponse>();
             Assert.NotNull(body);
             Assert.NotEmpty(body.AccessToken);
+            // Feature 007a (spec.md FR-005a): the director web sidebar needs this name — every
+            // auth flow must return it, not just login.
+            Assert.Equal($"{org.Organisation.Name} Director", body.User.Name);
 
             var resolver = factory.Services.GetRequiredService<ITenantDbContextResolver>();
             var db = resolver.ForSchema(schema);
@@ -206,6 +209,9 @@ public class AuthOAuthLinkOnlyTests(OrganisationOnboardingWebAppFactory factory)
                 new { organisationSlug = org.Organisation.Slug, identityToken = token, email = parentEmail });
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            // Feature 007a (spec.md FR-005a): every auth flow must return the user's name.
+            var body = await response.Content.ReadFromJsonAsync<AuthSessionResponse>();
+            Assert.Equal("Test Parent", body!.User.Name);
 
             var resolver = factory.Services.GetRequiredService<ITenantDbContextResolver>();
             var db = resolver.ForSchema(schema);

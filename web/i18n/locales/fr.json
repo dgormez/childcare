@@ -1,0 +1,91 @@
+{
+  "common": {
+    "close": "Fermer"
+  },
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Portail administrateur",
+    "organisationLabel": "Organisation",
+    "organisationPlaceholder": "votre-organisation",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "submit": "Se connecter",
+    "submitLoading": "Connexion en cours…",
+    "errorTooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "errorInvalidCredentials": "Organisation, e-mail ou mot de passe incorrect.",
+    "orDivider": "ou",
+    "googleSignInError": "La connexion avec Google a échoué. Veuillez réessayer."
+  },
+  "sidebar": {
+    "staff": "Personnel",
+    "devices": "Appareils",
+    "locations": "Sites",
+    "contracts": "Contrats",
+    "children": "Enfants",
+    "comingSoon": "Bientôt",
+    "signOut": "Déconnexion",
+    "collapse": "Réduire",
+    "expand": "Développer",
+    "notYetAvailable": "Cette section n'est pas encore disponible."
+  },
+  "session": {
+    "expired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  "staff": {
+    "title": "Personnel",
+    "searchPlaceholder": "Rechercher par nom…",
+    "columnName": "Nom",
+    "columnRole": "Rôle",
+    "columnLocations": "Site(s)",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "role": {
+      "director": "Directeur/trice",
+      "staff": "Puéricultrice/eur",
+      "parent": "Parent"
+    },
+    "statusActive": "Actif",
+    "statusDeactivated": "Désactivé",
+    "actionResetPin": "Réinitialiser le code",
+    "actionDeactivate": "Désactiver",
+    "actionReactivate": "Réactiver",
+    "emptyState": "Aucun membre du personnel pour le moment.",
+    "loadError": "Impossible de charger le personnel. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "pinDialogTitle": "Réinitialiser le code pour {name}",
+    "pinDialogDescription": "Saisissez un nouveau code à 4 chiffres pour cette personne.",
+    "pinDialogInputLabel": "Code à 4 chiffres",
+    "pinDialogInvalidFormat": "Le code doit contenir exactement 4 chiffres.",
+    "pinDialogNotUnique": "Ce code est déjà utilisé par une autre personne sur le même site.",
+    "pinDialogGenericError": "Impossible d'enregistrer le code. Veuillez réessayer.",
+    "pinDialogCancel": "Annuler",
+    "pinDialogConfirm": "Enregistrer le code",
+    "deactivateDialogTitle": "Désactiver le membre du personnel",
+    "reactivateDialogTitle": "Réactiver le membre du personnel",
+    "toggleDialogDescription": "Confirmez-vous pour {name} ?"
+  },
+  "devices": {
+    "title": "Appareils",
+    "columnLocation": "Site",
+    "columnGroup": "Groupe",
+    "columnPairedBy": "Associé par",
+    "columnPairedAt": "Associé le",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "statusActive": "Actif",
+    "statusRevoked": "Révoqué",
+    "actionRevoke": "Révoquer",
+    "emptyState": "Aucun appareil n'a encore été associé.",
+    "loadError": "Impossible de charger les appareils. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "revokeDialogTitle": "Révoquer l'appareil",
+    "revokeDialogDescription": "Cette tablette ({group} à {location}) devra être ré-associée avant de pouvoir être réutilisée. Continuer ?",
+    "revokeDialogCancel": "Annuler"
+  },
+  "errorBoundary": {
+    "title": "Une erreur s'est produite",
+    "body": "Une erreur inattendue s'est produite. Actualisez la page ou réessayez ci-dessous.",
+    "appBody": "Cette page a rencontré une erreur. Vos données sont en sécurité.",
+    "retry": "Réessayer"
+  }
+}

@@ -1,4 +1,6 @@
 "use client";
+import { AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Catches errors thrown by any page inside the (app) group.
 // Renders within the existing app layout so the sidebar stays visible.
@@ -8,17 +10,18 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorBoundary");
   return (
-    <div className="flex items-center justify-center h-96">
-      <div className="text-center space-y-3 max-w-sm">
-        <p className="text-3xl">⚠️</p>
-        <h2 className="text-lg font-bold text-gray-900">Something went wrong</h2>
-        <p className="text-gray-500 text-sm">This page hit an error. Your data is safe.</p>
+    <div className="flex h-96 items-center justify-center">
+      <div className="max-w-sm space-y-3 text-center">
+        <AlertTriangle className="mx-auto h-6 w-6 text-danger dark:text-danger-dark" strokeWidth={2} />
+        <h2 className="text-lg font-bold text-text dark:text-text-dark">{t("title")}</h2>
+        <p className="text-sm text-text-soft dark:text-text-soft-dark">{t("appBody")}</p>
         <button
           onClick={reset}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition text-sm"
+          className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover"
         >
-          Try again
+          {t("retry")}
         </button>
       </div>
     </div>

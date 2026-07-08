@@ -11,6 +11,14 @@ public static class OrganisationEndpoints
     {
         var group = app.MapGroup("/api/organisations").WithTags("Organisations");
 
+        // Feature 007a (spec.md FR-005a): the only DirectorOnly, tenant-scoped read on this
+        // group — registration below is anonymous/tenant-exempt.
+        group.MapGet("/me", async (IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetCurrentOrganisationQuery());
+            return Results.Ok(result);
+        }).RequireAuthorization("DirectorOnly");
+
         group.MapPost("/register", async (RegisterOrganisationRequest req, IMediator mediator) =>
         {
             // FluentValidation.ValidationException (RegisterOrganisationCommandValidator) is

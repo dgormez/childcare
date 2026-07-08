@@ -1,0 +1,91 @@
+{
+  "common": {
+    "close": "Sluiten"
+  },
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Beheerdersportaal",
+    "organisationLabel": "Organisatie",
+    "organisationPlaceholder": "jouw-organisatie",
+    "emailLabel": "E-mailadres",
+    "passwordLabel": "Wachtwoord",
+    "submit": "Inloggen",
+    "submitLoading": "Bezig met inloggen…",
+    "errorTooManyAttempts": "Te veel pogingen. Probeer het over enkele minuten opnieuw.",
+    "errorInvalidCredentials": "Onjuiste organisatie, e-mailadres of wachtwoord.",
+    "orDivider": "of",
+    "googleSignInError": "Aanmelden met Google is mislukt. Probeer het opnieuw."
+  },
+  "sidebar": {
+    "staff": "Personeel",
+    "devices": "Toestellen",
+    "locations": "Locaties",
+    "contracts": "Contracten",
+    "children": "Kinderen",
+    "comingSoon": "Binnenkort",
+    "signOut": "Afmelden",
+    "collapse": "Inklappen",
+    "expand": "Uitklappen",
+    "notYetAvailable": "Dit onderdeel is nog niet beschikbaar."
+  },
+  "session": {
+    "expired": "Je sessie is verlopen. Meld je opnieuw aan."
+  },
+  "staff": {
+    "title": "Personeel",
+    "searchPlaceholder": "Zoek op naam…",
+    "columnName": "Naam",
+    "columnRole": "Rol",
+    "columnLocations": "Locatie(s)",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "role": {
+      "director": "Directeur",
+      "staff": "Begeleider",
+      "parent": "Ouder"
+    },
+    "statusActive": "Actief",
+    "statusDeactivated": "Gedeactiveerd",
+    "actionResetPin": "Code resetten",
+    "actionDeactivate": "Deactiveren",
+    "actionReactivate": "Heractiveren",
+    "emptyState": "Nog geen personeelsleden.",
+    "loadError": "Personeel kon niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "pinDialogTitle": "Code resetten voor {name}",
+    "pinDialogDescription": "Voer een nieuwe 4-cijferige code in voor deze begeleider.",
+    "pinDialogInputLabel": "4-cijferige code",
+    "pinDialogInvalidFormat": "De code moet exact 4 cijfers bevatten.",
+    "pinDialogNotUnique": "Deze code is al in gebruik door een andere begeleider op dezelfde locatie.",
+    "pinDialogGenericError": "De code kon niet worden opgeslagen. Probeer het opnieuw.",
+    "pinDialogCancel": "Annuleren",
+    "pinDialogConfirm": "Code opslaan",
+    "deactivateDialogTitle": "Personeelslid deactiveren",
+    "reactivateDialogTitle": "Personeelslid heractiveren",
+    "toggleDialogDescription": "Weet je het zeker voor {name}?"
+  },
+  "devices": {
+    "title": "Toestellen",
+    "columnLocation": "Locatie",
+    "columnGroup": "Groep",
+    "columnPairedBy": "Gekoppeld door",
+    "columnPairedAt": "Gekoppeld op",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "statusActive": "Actief",
+    "statusRevoked": "Ingetrokken",
+    "actionRevoke": "Intrekken",
+    "emptyState": "Er zijn nog geen toestellen gekoppeld.",
+    "loadError": "Toestellen konden niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "revokeDialogTitle": "Toestel intrekken",
+    "revokeDialogDescription": "Deze tablet ({group} bij {location}) moet opnieuw gekoppeld worden voor hij weer gebruikt kan worden. Doorgaan?",
+    "revokeDialogCancel": "Annuleren"
+  },
+  "errorBoundary": {
+    "title": "Er is iets misgegaan",
+    "body": "Er is een onverwachte fout opgetreden. Vernieuw de pagina of probeer het hieronder opnieuw.",
+    "appBody": "Deze pagina liep tegen een fout aan. Je gegevens zijn veilig.",
+    "retry": "Opnieuw proberen"
+  }
+}

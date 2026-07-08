@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata: Metadata = {
-  title:       "ChildCare",
-  description: "Track your habits, hit your goals.",
+  title:       "ChildCare Admin",
+  description: "ChildCare director web admin.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900 antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-        <Toaster position="bottom-center" toastOptions={{ duration: 4000 }} />
+    <html lang={locale}>
+      <body className="bg-background text-text antialiased dark:bg-background-dark dark:text-text-dark">
+        <NextIntlClientProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster position="bottom-center" toastOptions={{ duration: 4000 }} />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

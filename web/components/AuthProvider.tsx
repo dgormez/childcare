@@ -1,6 +1,9 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { tryRestoreSession, type Session } from "../lib/auth";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import toast from "react-hot-toast";
+import { tryRestoreSession, setSessionExpiredHandler, type Session } from "../lib/auth";
 
 interface AuthContextValue {
   session:    Session | null;
@@ -17,12 +20,22 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const t = useTranslations("session");
 
   useEffect(() => {
     tryRestoreSession()
       .then((s) => setSession(s))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      setSession(null);
+      toast.error(t("expired"));
+      router.replace("/login");
+    });
+  }, [router, t]);
 
   return (
     <AuthContext.Provider value={{ session, setSession, loading }}>

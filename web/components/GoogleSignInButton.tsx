@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "./AuthProvider";
-import { setAccessToken } from "../lib/api";
+import { apiClient } from "../lib/apiClient";
+import { completeGoogleSignIn } from "../lib/auth";
 import type { AuthResponse } from "../lib/types";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-const API_BASE  = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 declare global {
   interface Window {
@@ -21,27 +22,28 @@ declare global {
   }
 }
 
-export default function GoogleSignInButton() {
-  const router        = useRouter();
+export default function GoogleSignInButton({ organisationSlug }: { organisationSlug: string }) {
+  const t = useTranslations("login");
+  const router = useRouter();
   const { setSession } = useAuth();
-  const buttonRef     = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!CLIENT_ID) return;
+    if (!CLIENT_ID || !organisationSlug) return;
 
     const initButton = () => {
       window.google!.accounts.id.initialize({
         client_id: CLIENT_ID,
-        callback:  handleCredential,
+        callback: handleCredential,
       });
       if (buttonRef.current) {
         window.google!.accounts.id.renderButton(buttonRef.current, {
-          type:  "standard",
+          type: "standard",
           theme: "outline",
-          size:  "large",
+          size: "large",
           width: 352,
-          text:  "continue_with",
+          text: "continue_with",
         });
       }
     };
@@ -52,42 +54,36 @@ export default function GoogleSignInButton() {
     }
 
     const script = document.createElement("script");
-    script.src   = "https://accounts.google.com/gsi/client";
+    script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     script.onload = initButton;
     document.body.appendChild(script);
 
-    return () => { document.body.removeChild(script); };
-  }, []);
+    return () => {
+      document.body.removeChild(script);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organisationSlug]);
 
   const handleCredential = async (response: { credential: string }) => {
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/google`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ idToken: response.credential }),
+      const result = await apiClient.POST("/api/auth/google", {
+        body: { organisationSlug, idToken: response.credential },
       });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error ?? "Google sign-in failed.");
+      if (!result.response.ok) {
+        const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey;
+        throw new Error(errorKey ?? "errors.auth.invalid_credentials");
       }
 
-      const data: AuthResponse = await res.json();
-
-      await fetch("/api/set-refresh-token", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ refreshToken: data.refreshToken }),
-      });
-
-      setAccessToken(data.accessToken);
-      setSession(data);
-      router.replace("/habits");
-    } catch (e) {
-      setError((e as Error).message ?? "Google sign-in failed.");
+      const data = result.data as unknown as AuthResponse;
+      const session = await completeGoogleSignIn(data, organisationSlug);
+      setSession(session);
+      router.replace("/staff");
+    } catch {
+      setError(t("googleSignInError"));
     }
   };
 
@@ -96,7 +92,7 @@ export default function GoogleSignInButton() {
   return (
     <div className="space-y-2">
       <div ref={buttonRef} className="flex justify-center" />
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+      {error && <p className="text-sm text-danger text-center">{error}</p>}
     </div>
   );
 }

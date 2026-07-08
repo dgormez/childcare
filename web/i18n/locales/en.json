@@ -1,0 +1,91 @@
+{
+  "common": {
+    "close": "Close"
+  },
+  "login": {
+    "productName": "ChildCare",
+    "productTagline": "Director Admin",
+    "organisationLabel": "Organisation",
+    "organisationPlaceholder": "your-organisation",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "submitLoading": "Signing in…",
+    "errorTooManyAttempts": "Too many attempts. Please try again in a few minutes.",
+    "errorInvalidCredentials": "Incorrect organisation, email, or password.",
+    "orDivider": "or",
+    "googleSignInError": "Google sign-in failed. Please try again."
+  },
+  "sidebar": {
+    "staff": "Staff",
+    "devices": "Devices",
+    "locations": "Locations",
+    "contracts": "Contracts",
+    "children": "Children",
+    "comingSoon": "Soon",
+    "signOut": "Sign out",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "notYetAvailable": "This section isn't available yet."
+  },
+  "session": {
+    "expired": "Your session has expired. Please sign in again."
+  },
+  "staff": {
+    "title": "Staff",
+    "searchPlaceholder": "Search by name…",
+    "columnName": "Name",
+    "columnRole": "Role",
+    "columnLocations": "Location(s)",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "role": {
+      "director": "Director",
+      "staff": "Caregiver",
+      "parent": "Parent"
+    },
+    "statusActive": "Active",
+    "statusDeactivated": "Deactivated",
+    "actionResetPin": "Reset PIN",
+    "actionDeactivate": "Deactivate",
+    "actionReactivate": "Reactivate",
+    "emptyState": "No staff members yet.",
+    "loadError": "Couldn't load staff. Please try again.",
+    "retry": "Retry",
+    "pinDialogTitle": "Reset PIN for {name}",
+    "pinDialogDescription": "Enter a new 4-digit PIN for this caregiver.",
+    "pinDialogInputLabel": "4-digit PIN",
+    "pinDialogInvalidFormat": "PIN must be exactly 4 digits.",
+    "pinDialogNotUnique": "This PIN is already used by another caregiver at the same location.",
+    "pinDialogGenericError": "Couldn't save the PIN. Please try again.",
+    "pinDialogCancel": "Cancel",
+    "pinDialogConfirm": "Save PIN",
+    "deactivateDialogTitle": "Deactivate staff member",
+    "reactivateDialogTitle": "Reactivate staff member",
+    "toggleDialogDescription": "Are you sure about {name}?"
+  },
+  "devices": {
+    "title": "Devices",
+    "columnLocation": "Location",
+    "columnGroup": "Group",
+    "columnPairedBy": "Paired by",
+    "columnPairedAt": "Paired at",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "statusActive": "Active",
+    "statusRevoked": "Revoked",
+    "actionRevoke": "Revoke",
+    "emptyState": "No devices have been paired yet.",
+    "loadError": "Couldn't load devices. Please try again.",
+    "retry": "Retry",
+    "revokeDialogTitle": "Revoke device",
+    "revokeDialogDescription": "This tablet ({group} at {location}) will need to be re-paired before it can be used again. Continue?",
+    "revokeDialogCancel": "Cancel"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "An unexpected error occurred. Try refreshing the page or click below to retry.",
+    "appBody": "This page hit an error. Your data is safe.",
+    "retry": "Try again"
+  }
+}
