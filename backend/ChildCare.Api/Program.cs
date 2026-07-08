@@ -247,11 +247,31 @@ builder.Services.AddAuthentication(options =>
                 if (pairing is null || pairing.RevokedAt is not null)
                 {
                     context.HttpContext.Items["DeviceTokenRejectReason"] = "errors.devices.revoked";
+                    // FR-021: every rejected request from a revoked device is audit-logged with
+                    // the same rigor as CorrectShiftCommand's shift-correction logging — this
+                    // is also what proves a since-revoked offline-queue replay is logged on sync,
+                    // since sync requests hit this same auth pipeline before any endpoint code.
+                    context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("ChildCare.Api.DeviceTokenAuth")
+                        .LogWarning(
+                            "Rejected request from revoked or unknown device {DeviceId} (tenant {TenantId}) at {Path}",
+                            deviceId, tenantId, context.HttpContext.Request.Path);
                     context.Fail("Device has been revoked.");
                     return;
                 }
 
-                if (pairing.TokenVersion != tokenVersion)
+                // US6/FR-020: accepts the current version *or* the one immediately before it —
+                // a one-generation grace window. DeviceTokenRotationFilter increments
+                // TokenVersion the moment a token nears expiry, but an offline-queue replay
+                // burst can still be mid-flight on the pre-rotation token when that happens
+                // (research.md R3's whole rationale for gating rotation at all — "the first
+                // replayed request would invalidate the token the remaining queued requests
+                // still carry"). Strict equality here would reject requests 2..N of that same
+                // burst the instant request 1 rotates. A token two or more rotations behind
+                // (tokenVersion < TokenVersion - 1) is still naturally rejected, so this remains
+                // "no separate revocation-list entry per rotation" (data-model.md) for anything
+                // beyond one grace generation.
+                if (tokenVersion < pairing.TokenVersion - 1)
                 {
                     context.HttpContext.Items["DeviceTokenRejectReason"] = "errors.devices.token_expired";
                     context.Fail("Device token has been superseded by a rotation.");

@@ -12,7 +12,8 @@ public static class RoomShiftEndpoints
     {
         var deviceGroup = app.MapGroup("/api/room-shifts")
             .WithTags("RoomShifts")
-            .RequireAuthorization("DeviceAuthenticated");
+            .RequireAuthorization("DeviceAuthenticated")
+            .AddEndpointFilter<DeviceTokenRotationFilter>();
 
         deviceGroup.MapGet("/roster", async (HttpContext ctx, IMediator mediator) =>
         {
