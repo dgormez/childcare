@@ -52,7 +52,14 @@ export function StaffTable({ staff, locationsById, onResetPin, onToggleActive }:
                   <Button variant="ghost" size="sm" onClick={() => onResetPin(member)}>
                     {t("actionResetPin")}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onToggleActive(member)}>
+                  {/* Deactivate blocks login — reads as destructive (red), distinct from the
+                      neutral actions, per design-system.md's destructive-as-text-button pattern.
+                      Reactivate is the recovery path, so it stays neutral. */}
+                  <Button
+                    variant={active ? "destructive" : "ghost"}
+                    size="sm"
+                    onClick={() => onToggleActive(member)}
+                  >
                     {active ? t("actionDeactivate") : t("actionReactivate")}
                   </Button>
                 </div>

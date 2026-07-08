@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Chrome/Safari force their own background on autofilled or browser-remembered inputs,
+ * overriding our dark surface-soft fill with a pale yellow/blue — the long-transition trick
+ * below is the standard workaround (there's no other way to override -webkit-autofill's
+ * internal styling). Values mirror theme/colors.ts's surfaceSoft/text tokens; kept as literal
+ * hex here since plain CSS has no access to the Tailwind/TS token file.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1f2937;
+  -webkit-box-shadow: 0 0 0px 1000px #f5f3ee inset;
+  box-shadow: 0 0 0px 1000px #f5f3ee inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f5f1ea;
+    -webkit-box-shadow: 0 0 0px 1000px #302b27 inset;
+    box-shadow: 0 0 0px 1000px #302b27 inset;
+  }
+}

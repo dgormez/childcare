@@ -16,7 +16,10 @@ const buttonVariants = cva(
         primary: "bg-primary text-white hover:bg-primary-hover",
         secondary: "border border-border text-text hover:bg-surface-soft dark:border-border-dark dark:text-text-dark dark:hover:bg-surface-soft-dark",
         destructive: "text-danger hover:opacity-80 dark:text-danger-dark",
-        ghost: "text-text hover:bg-surface-soft dark:text-text-dark dark:hover:bg-surface-soft-dark",
+        // Colored (not text-text) on purpose: a table-row action next to plain data text reads
+        // as a static label unless it's visually distinct — matches primary-hover so it reads
+        // as an actionable link, per Linear/Notion's row-action convention.
+        ghost: "text-primary-hover hover:bg-surface-soft dark:text-primary-hover-dark dark:hover:bg-surface-soft-dark",
       },
       size: {
         default: "h-10 px-4",

@@ -28,7 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-background dark:bg-background-dark">
+    <div className="flex h-screen bg-background dark:bg-background-dark">
       <Sidebar session={session} onLogout={handleLogout} />
       <main className="flex-1 overflow-y-auto p-8">{children}</main>
     </div>

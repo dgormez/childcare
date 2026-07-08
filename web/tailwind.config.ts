@@ -25,6 +25,9 @@ export default {
         ...toKebab(light),
         ...toKebab(dark, "-dark"),
       },
+      fontFamily: {
+        sans: ["var(--font-public-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],

@@ -38,9 +38,13 @@ export default function GoogleSignInButton({ organisationSlug }: { organisationS
         callback: handleCredential,
       });
       if (buttonRef.current) {
+        // Google's own button chrome can't be restyled with our tokens — matching its
+        // "outline"/"filled_black" theme to the OS color scheme at least keeps it from
+        // looking like a stray light-mode element dropped onto a dark page.
+        const isDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
         window.google!.accounts.id.renderButton(buttonRef.current, {
           type: "standard",
-          theme: "outline",
+          theme: isDark ? "filled_black" : "outline",
           size: "large",
           width: 352,
           text: "continue_with",
