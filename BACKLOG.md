@@ -25,7 +25,7 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | 🔲 Not started |
+| 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | ✅ Done |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
@@ -556,6 +556,49 @@ Out of scope:
 future feature's spec needs a "web admin" screen and this feature isn't done yet, treat that as
 a hard dependency, not something to defer with another backend-only workaround — the pattern
 of "web admin" being referenced-but-never-built has already happened twice (005, 007).
+
+**Shipped 2026-07-08** — `specs/007a-web-admin-scaffold/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 48/48 tasks, 7 new backend tests + 5 new web
+component/logic tests, 225/225 backend + 18/18 web passing). Scope deltas worth knowing before
+starting a dependent feature:
+
+- **Two small, additive backend endpoints were needed and added**, since this feature's UI
+  surfaced gaps 008a and earlier auth work never had a reason to close: `GET /api/devices`
+  (008a built pairing/revocation but no list) and `GET /api/organisations/me` plus a new
+  `Name` field on `AuthenticatedUser` (no endpoint anywhere returned the tenant's display name
+  or a user's name, both needed for the sidebar shell). Both are pure reads, no new tables, no
+  new authorization rules — see spec.md FR-013a/FR-005a for the full reasoning.
+- **Two genuine pre-existing bugs were found and fixed while wiring login**, not caused by this
+  feature but silently broken since feature 003 shipped: the `web/app/api/refresh` BFF route
+  and the Google sign-in flow never sent `organisationSlug`, which 003's `RefreshTokenCommand`/
+  `GoogleSignInCommand` have required since that feature landed. Fixed by threading the
+  organisation slug through a new `org_slug` cookie alongside the refresh-token cookie.
+  **Flag for any future web feature touching auth**: this cookie pair is now the source of
+  truth for "which organisation is this browser session for."
+- **`web/lib/generated/api-types.ts` (openapi-typescript output) is committed, not
+  gitignored** — mirrors `mobile/services/generated/api-types.ts`'s existing precedent, since
+  CI never runs a live backend to regenerate it. Any future web feature adding/changing
+  backend endpoints must regenerate this file locally (`npm run generate-api-client` against a
+  running backend) and commit the diff — it will not happen automatically.
+- **`web/theme/colors.ts` is a hand-synced TypeScript duplicate of `mobile/theme/colors.js`**,
+  not a shared import (research.md R6) — no monorepo/workspace tooling exists yet to share it
+  properly. A future feature introducing a third color-token consumer should treat that as the
+  trigger to finally set up a shared package, rather than adding a fourth hardcoded copy.
+- **First component-level frontend tests in this repo's `web/` app** — added `jsdom` +
+  `@testing-library/react` + `@testing-library/user-event` + `@vitejs/plugin-react` as new
+  devDependencies (`vitest.config.ts` environment changed from `node` to `jsdom`). Every
+  prior `web/` test was pure `lib/` logic; testing table rendering, search filtering, and
+  dialog confirmation flows needed real DOM rendering. Future web features should follow this
+  same pattern rather than reverting to logic-only tests.
+- **No dropdown-menu component was actually built**, despite plan.md naming it as one of the
+  shadcn primitives to add — row actions (PIN reset, deactivate/reactivate, revoke) are inline
+  buttons instead, per reference-products.md's explicit "avoid hidden actions" guidance found
+  applicable during implementation. Not a gap; a corrected implementation-level decision.
+- Placeholder sidebar nav entries (Locations, Contracts, Children) are inert (non-navigating)
+  list items, but each does have a real, working route (`/locations`, `/contracts`,
+  `/children`) rendering a shared `NotYetAvailable` component — so a director typing the URL
+  directly never hits a broken route or raw 404. Whichever feature builds one of these next
+  should replace that placeholder page's contents directly rather than routing around it.
 
 ---
 
