@@ -10,6 +10,13 @@ public static class DevicePairingEndpoints
 {
     public static void MapDevicePairingEndpoints(this WebApplication app)
     {
+        // Feature 007a (spec.md FR-013a): 008a never built a list endpoint, only pair/revoke.
+        app.MapGet("/api/devices", async (IMediator mediator) =>
+        {
+            var devices = await mediator.Send(new ListDevicesQuery());
+            return Results.Ok(devices);
+        }).WithTags("Devices").RequireAuthorization("DirectorOnly");
+
         app.MapPost("/api/devices/pair", async (PairDeviceRequest req, HttpContext ctx, IMediator mediator) =>
         {
             var pairedBy = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

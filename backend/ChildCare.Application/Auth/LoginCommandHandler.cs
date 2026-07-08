@@ -60,6 +60,6 @@ public class LoginCommandHandler(
         return AuthResult.Success(new AuthSessionResponse(
             accessToken,
             refreshToken,
-            new AuthenticatedUser(user.Id, user.Email, user.EmailVerified, user.Role.ToString().ToLowerInvariant())));
+            new AuthenticatedUser(user.Id, user.Email, user.EmailVerified, user.Role.ToString().ToLowerInvariant(), user.Name)));
     }
 }

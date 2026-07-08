@@ -37,6 +37,6 @@ public class RefreshTokenCommandHandler(
         return AuthResult.Success(new AuthSessionResponse(
             accessToken,
             newRefreshToken,
-            new AuthenticatedUser(user.Id, user.Email, user.EmailVerified, user.Role.ToString().ToLowerInvariant())));
+            new AuthenticatedUser(user.Id, user.Email, user.EmailVerified, user.Role.ToString().ToLowerInvariant(), user.Name)));
     }
 }

@@ -5,6 +5,20 @@ public record DevicePairingResponse(
     string DeviceToken,
     int TokenVersion);
 
+/// <summary>Feature 007a (spec.md FR-013a) — read-only summary for the director web Devices
+/// screen. Names are resolved server-side (mirrors ListStaffQuery's photo-URL resolution
+/// pattern) rather than pushing id-to-name joins onto the client.</summary>
+public record DeviceSummaryResponse(
+    Guid Id,
+    Guid LocationId,
+    string LocationName,
+    Guid GroupId,
+    string GroupName,
+    Guid PairedByTenantUserId,
+    string PairedByName,
+    DateTime PairedAt,
+    DateTime? RevokedAt);
+
 public record RoomRosterCardResponse(
     Guid StaffProfileId,
     string FirstName,

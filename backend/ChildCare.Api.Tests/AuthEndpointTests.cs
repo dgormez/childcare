@@ -59,6 +59,28 @@ public class AuthEndpointTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 
+    // ── Feature 007a (spec.md FR-005a): director web sidebar needs the user's name ──────
+
+    [Fact]
+    public async Task LoginAndRefresh_ReturnDirectorName()
+    {
+        var client = factory.CreateClient();
+        var orgName = $"Name Exposure Org {Guid.NewGuid():N}";
+        var email = $"director_{Guid.NewGuid():N}@test.com";
+        var org = await RegisterOrgAsync(client, orgName, email);
+        var expectedName = $"{orgName} Director";
+
+        var loginRes = await client.PostAsJsonAsync("/api/auth/login",
+            new { organisationSlug = org.Organisation.Slug, email, password = "password123" });
+        var loginBody = (await loginRes.Content.ReadFromJsonAsync<AuthSessionResponse>())!;
+        Assert.Equal(expectedName, loginBody.User.Name);
+
+        var refreshRes = await client.PostAsJsonAsync("/api/auth/refresh",
+            new { organisationSlug = org.Organisation.Slug, refreshToken = loginBody.RefreshToken });
+        var refreshBody = (await refreshRes.Content.ReadFromJsonAsync<AuthSessionResponse>())!;
+        Assert.Equal(expectedName, refreshBody.User.Name);
+    }
+
     // ── Refresh ───────────────────────────────────────────────────────────────
 
     [Fact]
