@@ -15,9 +15,12 @@ public class CloseStaleShiftsHelper(ITenantDbContext db)
 {
     /// <summary>
     /// Closes every open shift at this location whose CheckedInAt falls before today's local
-    /// midnight. <paramref name="localNow"/> is the caller-supplied current instant in the
-    /// tenant's configured timezone (spec Assumptions) — passed in rather than computed here so
-    /// tests can control it deterministically.
+    /// midnight. <paramref name="localNow"/> is the caller-supplied current instant, intended to
+    /// be in the tenant's configured timezone (spec Assumptions) — passed in rather than computed
+    /// here so tests can control it deterministically. In practice, every current caller passes
+    /// `DateTime.UtcNow` directly: no tenant/location timezone field exists anywhere in this
+    /// codebase yet, so UTC stands in for "local" for now (a known simplification, not an
+    /// oversight — revisit once a real timezone field is added to Tenant/Location).
     /// </summary>
     public async Task CloseStaleShiftsAsync(Guid locationId, DateTime localNow, CancellationToken cancellationToken = default)
     {
