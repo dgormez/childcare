@@ -214,3 +214,21 @@ use the static code review instead.
   implemented — PIN correctness can't be verified client-side, so an optimistic queue risks a
   false "checked in" record, which undermines this feature's whole audit purpose; see
   tasks.md's T052 entry for the full reasoning.
+- 007a (`007a-web-admin-scaffold`): ✅ Done, merged 2026-07-08 (PR #11, squash-merged after
+  green CI — 225/225 backend + 18/18 web tests). First real screens in `web/`: Habits template
+  removed, director login (email/password + Google OAuth) rebuilt on a generated openapi-fetch
+  client, a collapsible sidebar shell, and Staff/Devices management screens. Two small backend
+  additions were needed and added (`GET /api/devices`, `GET /api/organisations/me` +
+  `AuthenticatedUser.Name`) since 008a/003 never had a reason to expose them until this UI
+  needed them — see BACKLOG.md's shipped-notes for the full reasoning. Also fixed two real
+  pre-existing bugs found while wiring login: the `/api/refresh` BFF route and Google sign-in
+  never sent `organisationSlug`, silently broken against feature 003's contract since it
+  shipped. `/speckit-checklist` and `/speckit-analyze` each surfaced a few findings (a missing
+  loading-state requirement, a task-coverage gap, a duplicated task) — all fixed, not deferred.
+  `/speckit-converge` surfaced three more post-implementation (a hardcoded "Close" label
+  violating Principle IV, a missing fallback for a failed organisation-name fetch, and missing
+  `login()` test coverage) — all fixed. First component-level (`jsdom` + React Testing Library)
+  tests in `web/`; every prior test there was pure `lib/` logic. One CI-only issue (not caught
+  locally): the committed `package-lock.json` was missing a nested `next-intl`/`@swc/helpers`
+  resolution that only `npm ci` (not `npm install`) validates strictly — fixed by a clean
+  reinstall, pushed as a follow-up commit before merge.
