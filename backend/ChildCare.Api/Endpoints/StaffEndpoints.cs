@@ -99,6 +99,29 @@ public static class StaffEndpoints
                 : Results.Json(new { errorKey = "errors.staff.not_found" }, statusCode: StatusCodes.Status404NotFound);
         });
 
+        // Feature 008a (kiosk mode) — contracts/pin-management-api.md.
+        group.MapPut("/{id:guid}/pin", async (Guid id, SetCaregiverPinRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new SetCaregiverPinCommand(id, req.Pin));
+            if (result.Succeeded) return Results.NoContent();
+            return result.Failure switch
+            {
+                PinManagementFailure.NotFound => Results.Json(
+                    new { errorKey = "errors.staff.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                PinManagementFailure.NotUniqueAtLocation => Results.Json(
+                    new { errorKey = "errors.pin.not_unique_at_location" }, statusCode: StatusCodes.Status409Conflict),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(PinManagementFailure)}: {result.Failure}"),
+            };
+        });
+
+        group.MapDelete("/{id:guid}/pin", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new DeleteCaregiverPinCommand(id));
+            return result.Succeeded
+                ? Results.NoContent()
+                : Results.Json(new { errorKey = "errors.staff.not_found" }, statusCode: StatusCodes.Status404NotFound);
+        });
+
         app.MapPost("/api/staff/accept-invitation", async (AcceptStaffInvitationRequest req, IMediator mediator) =>
         {
             var result = await mediator.Send(new AcceptStaffInvitationCommand(req.OrganisationSlug, req.Token, req.Password));

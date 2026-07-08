@@ -256,6 +256,62 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         });
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.DevicePairing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DirectorOverridePinHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("OverridePinFailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("OverridePinFirstFailedAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OverridePinLockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PairedByTenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("TokenIssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TokenVersion")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("PairedByTenantUserId");
+
+                    b.HasIndex("RevokedAt");
+
+                    b.ToTable("device_pairings", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Group", b =>
                 {
                     b.Property<Guid>("Id")
@@ -346,6 +402,54 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         });
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.RoomShift", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ClosedReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DevicePairingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StaffProfileId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DevicePairingId");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("StaffProfileId");
+
+                    b.HasIndex("CheckedOutAt", "StaffProfileId");
+
+                    b.HasIndex("CheckedOutAt", "LocationId", "GroupId");
+
+                    b.ToTable("room_shifts", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.StaffInvitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -423,6 +527,19 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<int>("PinFailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PinFirstFailedAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PinHash")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("PinLockedUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ProfilePhotoObjectPath")
                         .HasMaxLength(500)
@@ -671,11 +788,59 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Navigation("ContractedDays");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.DevicePairing", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("PairedByTenantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Group", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.Location", null)
                         .WithMany()
                         .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.RoomShift", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.DevicePairing", null)
+                        .WithMany()
+                        .HasForeignKey("DevicePairingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.StaffProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StaffProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

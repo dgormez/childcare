@@ -16,3 +16,5 @@ public record UpdateStaffProfileRequest(
     string? QualificationLevel);
 
 public record AcceptStaffInvitationRequest(string OrganisationSlug, string Token, string Password);
+
+public record SetCaregiverPinRequest(string Pin);

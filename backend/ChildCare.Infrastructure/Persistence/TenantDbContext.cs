@@ -48,6 +48,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<Contract> Contracts => Set<Contract>();
 
+    public DbSet<RoomShift> RoomShifts => Set<RoomShift>();
+
+    public DbSet<DevicePairing> DevicePairings => Set<DevicePairing>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -165,6 +169,7 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
                  v => v == null ? null : (QualificationLevel?)Enum.Parse(typeof(QualificationLevel), v, ignoreCase: true))
              .HasMaxLength(30);
             s.Property(x => x.ProfilePhotoObjectPath).HasMaxLength(500);
+            s.Property(x => x.PinHash).HasMaxLength(100);
             s.HasIndex(x => x.DeactivatedAt);
             s.HasOne<TenantUser>().WithOne().HasForeignKey<StaffProfile>(x => x.TenantUserId);
         });
@@ -283,6 +288,33 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
              .OnDelete(DeleteBehavior.Restrict);
             c.HasIndex(x => new { x.ChildId, x.Status });
             c.HasIndex(x => new { x.LocationId, x.Status });
+        });
+
+        modelBuilder.Entity<RoomShift>(rs =>
+        {
+            rs.ToTable("room_shifts");
+            rs.HasKey(x => x.Id);
+            rs.Property(x => x.ClosedReason).HasMaxLength(20);
+            rs.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            rs.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            rs.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            rs.HasOne<DevicePairing>().WithMany().HasForeignKey(x => x.DevicePairingId);
+            // Powers "find this caregiver's open shift" (check-in/out) and "find every open
+            // shift at this location/group" (roster, IShiftAttributionService) — both filter
+            // on CheckedOutAt == null, so it leads the composite index (data-model.md).
+            rs.HasIndex(x => new { x.CheckedOutAt, x.StaffProfileId });
+            rs.HasIndex(x => new { x.CheckedOutAt, x.LocationId, x.GroupId });
+        });
+
+        modelBuilder.Entity<DevicePairing>(dp =>
+        {
+            dp.ToTable("device_pairings");
+            dp.HasKey(x => x.Id);
+            dp.Property(x => x.DirectorOverridePinHash).IsRequired();
+            dp.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            dp.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            dp.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.PairedByTenantUserId);
+            dp.HasIndex(x => x.RevokedAt);
         });
     }
 }

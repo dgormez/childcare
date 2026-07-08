@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -18,6 +19,7 @@ using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
 using ChildCare.Application.Contracts;
+using ChildCare.Application.RoomShifts;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Concurrency;
 using ChildCare.Infrastructure.Pdf;
@@ -119,6 +121,19 @@ builder.Services.AddHttpClient();
 // empty until features 009/011 each register their own (research.md R4).
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
 
+// ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
+// Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a
+// distinct signing key from the user-session JWT (research.md R1).
+builder.Services.AddSingleton<DeviceTokenService>();
+builder.Services.AddScoped<IDeviceTokenIssuer, DeviceTokenIssuer>();
+// Plain injectable services (not MediatR commands) shared across check-in/check-out/
+// confirm-administrator command handlers — mirrors how CloseStaleShiftsHelper/
+// IShiftAttributionService are also called from within other commands' handlers, not from
+// endpoints directly (plan.md Constitution Check).
+builder.Services.AddScoped<ChildCare.Application.Staff.VerifyPinCommand>();
+builder.Services.AddScoped<IShiftAttributionService, ShiftAttributionService>();
+builder.Services.AddScoped<CloseStaleShiftsHelper>();
+
 // ── Enrolment contracts (feature 007-contracts) ─────────────────────────────
 // Additive registrations — join whatever else is already registered against
 // IEnumerable<ILocationDeactivationGuard>/IEnumerable<IChildDeactivationGuard> (research.md R3).
@@ -128,7 +143,42 @@ builder.Services.AddScoped<IChildDeactivationGuard, ContractChildDeactivationGua
 builder.Services.AddScoped<IContractPdfGenerator, QuestPdfContractGenerator>();
 QuestPDF.Settings.License = LicenseType.Community;
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
+    ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
+
+builder.Services.AddAuthentication(options =>
+{
+    // Feature 008a (research.md R1): the actual default scheme is a policy scheme that
+    // cheaply inspects the incoming token's issuer (decode-without-validate) and forwards to
+    // either the ordinary user-JWT scheme or the DeviceToken scheme below — so
+    // TenantMiddleware's existing context.User.FindFirst("tenant_id") code needs zero changes
+    // regardless of which credential type authenticated the request.
+    options.DefaultScheme          = "TokenSchemeForwarder";
+    options.DefaultChallengeScheme = "TokenSchemeForwarder";
+})
+    .AddPolicyScheme("TokenSchemeForwarder", "TokenSchemeForwarder", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.ToString();
+            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var rawToken = authHeader["Bearer ".Length..].Trim();
+                try
+                {
+                    var issuer = new JwtSecurityTokenHandler().ReadJwtToken(rawToken).Issuer;
+                    if (issuer == builder.Configuration["DeviceJwt:Issuer"])
+                        return "DeviceToken";
+                }
+                catch (Exception)
+                {
+                    // Malformed token — fall through to the ordinary user-JWT scheme, which
+                    // rejects it with the standard 401 rather than this forwarder guessing.
+                }
+            }
+            return JwtBearerDefaults.AuthenticationScheme;
+        };
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -141,6 +191,82 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience            = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew                = TimeSpan.Zero,  // no grace period after expiry
+        };
+    })
+    // Feature 008a (kiosk mode, research.md R1): a second, distinctly-keyed JWT bearer scheme
+    // for paired-tablet device tokens. OnTokenValidated checks the revocation list and
+    // token_version on every request, not only at issuance (FR-021) — this runs before any
+    // endpoint/command code, which is what structurally guarantees FR-029's device-token-
+    // before-PIN precedence and FR-030's revocation-beats-rotation precedence (research.md R3's
+    // rotation filter never even runs for a request this event has already failed). No
+    // ICurrentTenantService/ITenantDbContext is available yet at this point in the pipeline
+    // (TenantMiddleware runs after UseAuthentication), so the schema is resolved directly from
+    // the token's own tenant_id claim, mirroring LoginCommandHandler's exempt-route pattern.
+    .AddJwtBearer("DeviceToken", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = builder.Configuration["DeviceJwt:Issuer"],
+            ValidAudience            = builder.Configuration["DeviceJwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(deviceJwtSecret)),
+            ClockSkew                = TimeSpan.Zero,
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var tenantIdClaim      = context.Principal?.FindFirst(DeviceTokenClaims.TenantId)?.Value;
+                var deviceIdClaim      = context.Principal?.FindFirst(DeviceTokenClaims.DeviceId)?.Value;
+                var tokenVersionClaim  = context.Principal?.FindFirst(DeviceTokenClaims.TokenVersion)?.Value;
+
+                if (!Guid.TryParse(tenantIdClaim, out var tenantId) ||
+                    !Guid.TryParse(deviceIdClaim, out var deviceId) ||
+                    !int.TryParse(tokenVersionClaim, out var tokenVersion))
+                {
+                    context.Fail("Malformed device token claims.");
+                    return;
+                }
+
+                var publicDb = context.HttpContext.RequestServices.GetRequiredService<PublicDbContext>();
+                var tenant = await publicDb.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+                if (tenant is null)
+                {
+                    context.Fail("Unknown tenant for device token.");
+                    return;
+                }
+
+                var tenantResolver = context.HttpContext.RequestServices.GetRequiredService<ITenantDbContextResolver>();
+                var db = tenantResolver.ForSchema(tenant.SchemaName);
+                var pairing = await db.DevicePairings.FirstOrDefaultAsync(d => d.Id == deviceId);
+
+                if (pairing is null || pairing.RevokedAt is not null)
+                {
+                    context.HttpContext.Items["DeviceTokenRejectReason"] = "errors.devices.revoked";
+                    context.Fail("Device has been revoked.");
+                    return;
+                }
+
+                if (pairing.TokenVersion != tokenVersion)
+                {
+                    context.HttpContext.Items["DeviceTokenRejectReason"] = "errors.devices.token_expired";
+                    context.Fail("Device token has been superseded by a rotation.");
+                    return;
+                }
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                var errorKey = context.HttpContext.Items["DeviceTokenRejectReason"] as string
+                    ?? "errors.devices.token_expired";
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsJsonAsync(new { errorKey });
+            },
         };
     })
     // Phase 1 super-admin gate (research.md R11) — a distinct, non-default scheme so it never
@@ -162,6 +288,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("DirectorOnly",    policy => policy.RequireRole("director"));
     options.AddPolicy("StaffOrDirector", policy => policy.RequireRole("staff", "director"));
     options.AddPolicy("ParentOnly",      policy => policy.RequireRole("parent"));
+
+    // Feature 008a (kiosk mode) — a paired tablet's device token, not a user role. Named its
+    // own scheme explicitly (mirrors "SuperAdmin" above) rather than relying on the default
+    // forwarder, since these routes must reject a valid *user* JWT too (a caregiver's/
+    // director's own session token is not a device token).
+    options.AddPolicy("DeviceAuthenticated", policy => policy
+        .AddAuthenticationSchemes("DeviceToken")
+        .RequireAuthenticatedUser());
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
@@ -407,6 +541,8 @@ app.MapChildrenEndpoints();
 app.MapContactsEndpoints();
 app.MapGroupsEndpoints();
 app.MapContractsEndpoints();
+app.MapDevicePairingEndpoints();
+app.MapRoomShiftEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

@@ -29,7 +29,9 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(API_BASE_URL, organisationSlug.trim(), email.trim(), password);
-      router.replace("/(app)");
+      // Feature 008a: this app is kiosk-first now — a successful login always continues into
+      // room setup (director pairs this tablet), not the old personal daily view.
+      router.replace("/(room-setup)");
     } catch (e: unknown) {
       const errorKey = (e as Error).message;
       if (errorKey === "NETWORK_ERROR") {

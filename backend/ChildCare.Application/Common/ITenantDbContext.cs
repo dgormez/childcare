@@ -31,6 +31,8 @@ public interface ITenantDbContext
     DbSet<ChildGroupAssignment> ChildGroupAssignments { get; }
     DbSet<VaccinationRecord> VaccinationRecords { get; }
     DbSet<Contract> Contracts { get; }
+    DbSet<RoomShift> RoomShifts { get; }
+    DbSet<DevicePairing> DevicePairings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

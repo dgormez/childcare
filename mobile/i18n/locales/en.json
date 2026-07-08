@@ -44,5 +44,34 @@
     "medicalQuickAccess": "Medical information",
     "medicalConditions": "Medical conditions",
     "dietaryRestrictions": "Dietary restrictions"
+  },
+  "roomSetup": {
+    "title": "Set up this tablet",
+    "locationLabel": "Location",
+    "groupLabel": "Group",
+    "overridePinLabel": "Director override PIN (6 digits)",
+    "overridePinConfirmLabel": "Confirm override PIN",
+    "overridePinMismatch": "The two PINs don't match.",
+    "submit": "Pair this tablet",
+    "reactivateTitle": "Reactivation required",
+    "reactivateBody": "This tablet's connection has expired or been deactivated. Sign in to set it up again.",
+    "reactivateButton": "Sign in"
+  },
+  "roomHome": {
+    "noCaregivers": "No caregivers are assigned to this location yet.",
+    "checkedInAt": "Checked in at {{time}}",
+    "exitRoomMode": "Director exit"
+  },
+  "pin": {
+    "enterPin": "Enter PIN for {{name}}",
+    "confirmAdministrator": "Confirm who is recording this",
+    "invalid": "Incorrect code",
+    "locked": "Too many attempts. Try again after {{time}}.",
+    "skip": "Skip",
+    "submit": "Confirm"
+  },
+  "devices": {
+    "revoked": "This tablet has been deactivated.",
+    "revokedBody": "Please ask a director to set it up again."
   }
 }

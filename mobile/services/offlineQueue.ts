@@ -4,7 +4,7 @@
  * own against syncEngine.ts. Only a synthetic `_test_entity` value is used, by this feature's
  * own tests (research.md R4).
  */
-import { insertQueueRow, getPendingQueueRows, markQueueRowSynced, markQueueRowSyncError } from "./localDb";
+import { insertQueueRow, getPendingQueueRows, markQueueRowSynced, markQueueRowSyncError, getConfigValue } from "./localDb";
 import type { QueueRow } from "./localDb";
 import { useStore } from "../store/useStore";
 
@@ -26,8 +26,16 @@ function generateId(): string {
   });
 }
 
+/**
+ * Feature 008a: a paired tablet skips tryRestoreSession() entirely on cold start (device
+ * pairing takes priority — app/_layout.tsx), so useStore's in-memory `auth` slice stays null
+ * for the whole room-mode session after a restart. organisationSlug is also mirrored into the
+ * persisted config table by both login() and pairDevice()'s prerequisite login step, so that's
+ * the reliable source here — the in-memory store is checked first only because it's already
+ * live (no config-table read) whenever a session *is* active.
+ */
 function currentTenantId(): string | null {
-  return useStore.getState().auth?.organisationSlug ?? null;
+  return useStore.getState().auth?.organisationSlug ?? getConfigValue("organisationSlug");
 }
 
 export async function enqueue(entry: QueueEntryDraft): Promise<string> {

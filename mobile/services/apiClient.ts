@@ -11,6 +11,7 @@
 import createClient, { type Middleware } from "openapi-fetch";
 import type { paths } from "./generated/api-types";
 import { useStore } from "../store/useStore";
+import { getDeviceToken, storeDeviceToken } from "./deviceTokenStorage";
 
 let baseUrl = "";
 
@@ -46,9 +47,17 @@ function isAuthEndpoint(url: string): boolean {
 // every request to the real, dynamically-configurable base URL.
 const PLACEHOLDER_ORIGIN = "http://api.invalid";
 
+// research.md R3: on any DeviceAuthenticated response where the presented token has fewer
+// than 7 days remaining, the server includes a replacement token in this header.
+const DEVICE_TOKEN_REFRESH_HEADER = "X-Device-Token-Refresh";
+
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
-    const token = useStore.getState().auth?.accessToken;
+    // Feature 008a: once a tablet is paired, the device token is the credential for
+    // everything — it takes priority over any lingering user-session access token (the
+    // director's own session was only ever needed for the one-time pairing step itself).
+    const deviceToken = await getDeviceToken();
+    const token = deviceToken ?? useStore.getState().auth?.accessToken;
     if (token) request.headers.set("Authorization", `Bearer ${token}`);
 
     if (baseUrl && request.url.startsWith(PLACEHOLDER_ORIGIN)) {
@@ -57,11 +66,22 @@ const authMiddleware: Middleware = {
     return request;
   },
 
-  // FR-004/FR-006: on 401, refresh once and transparently retry the original request once —
-  // the caller never sees the interruption. If refresh fails, the original 401 is returned
-  // as-is (auth.ts's refresh() itself already performed the clean sign-out in that case).
   async onResponse({ request, response }) {
-    if (response.status !== 401 || isAuthEndpoint(request.url) || !unauthorizedHandler) {
+    // research.md R3: stored immediately, replacing the old token — the request already in
+    // flight keeps using the token it was sent with (still valid), so an offline-queue replay
+    // burst carrying the pre-rotation token everywhere stays safe. The new token only takes
+    // effect starting with the *next* call.
+    const refreshedDeviceToken = response.headers.get(DEVICE_TOKEN_REFRESH_HEADER);
+    if (refreshedDeviceToken) {
+      await storeDeviceToken(refreshedDeviceToken);
+    }
+
+    // A device-authenticated call never goes through the user-session refresh/retry path
+    // below — a 401 here means device.revoked/device.token_expired (FR-021/FR-022), which the
+    // caller (roomShift.ts/deviceAuth.ts) handles by clearing credentials and returning to
+    // room-setup, not by silently retrying a user-session refresh that doesn't apply here.
+    const deviceToken = await getDeviceToken();
+    if (response.status !== 401 || isAuthEndpoint(request.url) || !unauthorizedHandler || deviceToken) {
       return response;
     }
 

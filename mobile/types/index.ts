@@ -9,6 +9,15 @@ export interface AuthState {
   eligibleLocationIds?: string[];
 }
 
+// ── Kiosk mode device (feature 008a) ────────────────────────────────────────────
+export interface DeviceState {
+  deviceId:     string;
+  locationId:   string;
+  groupId:      string;
+  locationName: string;
+  groupName:    string;
+}
+
 // ── API responses ─────────────────────────────────────────────────────────────
 export interface AuthResponse {
   accessToken:  string;
@@ -35,6 +44,11 @@ export interface GroupResponse {
   locationId: string;
 }
 
+export interface LocationResponse {
+  id:   string;
+  name: string;
+}
+
 export interface ChildResponse {
   id:                   string;
   firstName:            string;
@@ -46,4 +60,19 @@ export interface ChildResponse {
   medicalConditions:    string | null;
   dietaryRestrictions:  string | null;
   deactivatedAt:        string | null;
+}
+
+// ── Kiosk mode room shift register (feature 008a) ───────────────────────────────
+export interface RoomRosterCard {
+  staffProfileId: string;
+  firstName:      string;
+  photoUrl:       string | null;
+  checkedIn:      boolean;
+  checkedInAt:    string | null;
+}
+
+export interface PairDeviceResponse {
+  deviceId:     string;
+  deviceToken:  string;
+  tokenVersion: number;
 }

@@ -9,6 +9,8 @@ import { getPending, markSynced, markSyncError } from "./offlineQueue";
 import type { QueueRow } from "./offlineQueue";
 import { refresh } from "./auth";
 import { getApiBaseUrl } from "./apiClient";
+import { getDeviceToken } from "./deviceTokenStorage";
+import { handleDeviceRejection } from "./deviceAuth";
 import { setLastSyncTime } from "./localDb";
 import { useStore } from "../store/useStore";
 
@@ -46,8 +48,16 @@ export function isSyncingNow(): boolean {
   return syncing;
 }
 
+/**
+ * Feature 008a: a paired tablet's queued rows (entity_type = 'room_shift') must replay with
+ * the device token, not any user-session token — mirrors apiClient.ts's own priority (device
+ * token first once paired). research.md R3: replay never rotates the token mid-burst — every
+ * queued row in one run carries whichever token was current when replay() first reads it, all
+ * still valid, since rotation only swaps the *stored* token for the *next* fresh call.
+ */
 async function replay(row: QueueRow): Promise<Response> {
-  const token = useStore.getState().auth?.accessToken;
+  const deviceToken = await getDeviceToken();
+  const token = deviceToken ?? useStore.getState().auth?.accessToken;
   return fetch(`${getApiBaseUrl()}${row.endpoint}`, {
     method: row.http_method,
     headers: {
@@ -100,6 +110,19 @@ export async function syncPendingQueue(): Promise<SyncResult> {
       }
 
       if (response.status === 401) {
+        // Feature 008a FR-021/022: a device-authenticated row's 401 means device.revoked or
+        // device.token_expired, never a user-session refresh scenario (there is no user
+        // session for a paired tablet to refresh). Clear local credentials — _layout.tsx's
+        // redirect logic reacts to the store's device state going null — and stop the run;
+        // this row and any remaining ones are rejected server-side either way once revoked.
+        const deviceToken = await getDeviceToken();
+        if (deviceToken) {
+          await markSyncError(row.id, "device revoked or token expired during sync");
+          await handleDeviceRejection();
+          failed += 1;
+          break;
+        }
+
         const refreshed = await refresh();
         if (!refreshed) {
           await markSyncError(row.id, "session expired during sync");
