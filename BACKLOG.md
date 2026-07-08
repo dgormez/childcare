@@ -27,7 +27,7 @@
 |---|---|---|---|---|
 | 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | 🔲 Not started |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
-| 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | 🔲 Not started |
+| 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |

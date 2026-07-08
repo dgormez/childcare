@@ -194,3 +194,23 @@ use the static code review instead.
   "visual review" step (no simulator/screenshot tooling exists in this repo) with a static
   code-level design-compliance review, and switched from self-rescheduling dynamic-loop mode to
   single-pass (no `ScheduleWakeup`, manual re-invocation between features).
+- 008a (`008a-caregiver-kiosk-mode`): ✅ Done, merged 2026-07-08 (PR #10, squash-merged after
+  green CI — 218/218 backend + 76/76 mobile tests). Implementation (device pairing, PIN
+  management, check-in/out) had already landed in an earlier session with zero test coverage
+  for ~40 of tasks.md's own tasks (T017-T044, T056-T076) and a missing US6 (device-token
+  rotation) production implementation; this pass wrote the backend/mobile tests, implemented
+  `DeviceTokenRotationFilter`, fixed a real design bug the tests surfaced (naive strict-version-
+  match token rotation would have invalidated an offline-queue replay burst — fixed with a
+  one-generation grace window), added FR-021's missing audit logging for revoked-device
+  rejections, built the missing `AdministratorConfirmation.tsx` mobile component (US5), and
+  extracted a shared `CaregiverCard` component during the design-compliance pass. Also
+  committed a separate in-flight fix found by actually running the app on-device: React
+  Native's `fetch` silently dropped POST bodies through the base-URL-rewrite `new Request(url,
+  request)` pattern, and several mobile services were re-reading `result.response.json()` after
+  openapi-fetch had already consumed it. `/speckit-converge` surfaced one finding (FR-023's
+  "tenant's configured timezone" assumption vs. no timezone field anywhere in the domain
+  model) — resolved by documenting the simplification per an explicit decision, not new scope.
+  T052 (wiring check-in/out through feature 008's offline queue) is intentionally not
+  implemented — PIN correctness can't be verified client-side, so an optimistic queue risks a
+  false "checked in" record, which undermines this feature's whole audit purpose; see
+  tasks.md's T052 entry for the full reasoning.
