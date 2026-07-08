@@ -255,13 +255,13 @@ one, confirm it's no longer active.
 
 **Purpose**: Documentation and final validation across all stories.
 
-- [ ] T043 [P] Update `backend/ERROR_KEYS.md` with a new "Web Admin Scaffold (feature
+- [X] T043 [P] Update `backend/ERROR_KEYS.md` with a new "Web Admin Scaffold (feature
   `007a-web-admin-scaffold`)" section noting `GET /api/devices` and `GET
   /api/organisations/me` introduce no new error keys (standard `401`/`403` only) — for
   discoverability alongside every other feature's endpoints
-- [ ] T044 Run `specs/007a-web-admin-scaffold/quickstart.md`'s validation scenarios end-to-end
+- [X] T044 Run `specs/007a-web-admin-scaffold/quickstart.md`'s validation scenarios end-to-end
   against a local backend + `web/` dev server
-- [ ] T045 Confirm `dotnet build backend/ChildCare.sln`, `dotnet test backend/ChildCare.sln`,
+- [X] T045 Confirm `dotnet build backend/ChildCare.sln`, `dotnet test backend/ChildCare.sln`,
   `cd web && npm run typecheck && npm test && npm run build` all pass
 
 ---
