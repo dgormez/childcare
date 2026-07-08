@@ -23,6 +23,7 @@ export default function LoginScreen() {
   const [password,         setPassword]         = useState("");
   const [loading,          setLoading]          = useState(false);
   const [error,            setError]            = useState("");
+  const [showPassword,     setShowPassword]     = useState(false);
 
   const handleLogin = async () => {
     setError("");
@@ -92,16 +93,26 @@ export default function LoginScreen() {
           />
 
           <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("login.password")}</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            placeholderTextColor={colors.placeholder}
-            secureTextEntry
-            returnKeyType="done"
-            onSubmitEditing={handleLogin}
-            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 py-4 mb-6"
-          />
+          <View className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg mb-6">
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.placeholder}
+              secureTextEntry={!showPassword}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+              className="flex-1 text-text dark:text-text-dark px-4 py-4"
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword((v) => !v)}
+              style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium">
+                {showPassword ? t("login.hidePassword") : t("login.showPassword")}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             onPress={handleLogin}

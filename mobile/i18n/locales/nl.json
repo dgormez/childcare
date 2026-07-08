@@ -4,6 +4,8 @@
     "organisationSlug": "Organisatie",
     "email": "E-mailadres",
     "password": "Wachtwoord",
+    "showPassword": "Tonen",
+    "hidePassword": "Verbergen",
     "submit": "Aanmelden",
     "offlineFirstLogin": "Aanmelden zonder internetverbinding is niet mogelijk bij de eerste keer."
   },

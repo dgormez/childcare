@@ -86,8 +86,12 @@ export function PinKeypad({ name, pinLength, onSubmit, onCancel, onSuccess }: Pr
   return (
     <View className="flex-1 bg-black/70 items-center justify-center px-6">
       <Animated.View
-        style={{ transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-12, 12] }) }] }}
-        className="w-full bg-surface dark:bg-surface-dark rounded-2xl p-8"
+        style={{
+          transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-12, 12] }) }],
+          width: "100%",
+          maxWidth: 420,
+        }}
+        className="bg-surface dark:bg-surface-dark rounded-2xl p-8"
       >
         <Text className="text-text dark:text-text-dark text-xl font-bold text-center mb-2">
           {name ? t("pin.enterPin", { name }) : t("roomSetup.overridePinLabel")}
@@ -113,7 +117,10 @@ export function PinKeypad({ name, pinLength, onSubmit, onCancel, onSuccess }: Pr
           </Text>
         )}
 
-        <View className="flex-row flex-wrap justify-center" style={{ gap: 12 }}>
+        <View
+          className="flex-row flex-wrap justify-center self-center"
+          style={{ gap: 12, width: 3 * 72 + 2 * 12 }}
+        >
           {KEYS.map((key, i) => (
             <TouchableOpacity
               key={i}

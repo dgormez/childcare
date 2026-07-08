@@ -2,22 +2,27 @@
  * roomShift.ts — roster, check-in/check-out, and PIN confirmation calls (feature 008a).
  * All device-authenticated (apiClient attaches the device token automatically once paired —
  * see apiClient.ts's auth middleware).
+ *
+ * Reads error/success bodies from openapi-fetch's own result.data/result.error, never from
+ * result.response.json() — openapi-fetch already consumes the response body internally to
+ * populate those, so a second read on result.response throws ("body stream already read"),
+ * which masqueraded as a generic failure everywhere it was tried (found on-device: a real 200
+ * success from /api/auth/login was being misreported as invalid credentials for this exact
+ * reason — see auth.ts).
  */
 import { apiClient } from "./apiClient";
 import { handleDeviceRejection } from "./deviceAuth";
 import type { RoomRosterCard } from "../types";
 import type { PinKeypadResult } from "../components/PinKeypad";
 
-async function bodyOf(response: Response): Promise<{ errorKey?: string; lockedUntil?: string; attemptsRemaining?: number }> {
-  return response.json().catch(() => ({}));
-}
+type ErrorBody = { errorKey?: string; lockedUntil?: string; attemptsRemaining?: number };
 
 /** FR-021/022: a revoked or expired device token clears local credentials and returns to
  * room-setup — every device-authenticated call in this file checks for this uniformly. */
-async function handleIfDeviceRejected(response: Response): Promise<boolean> {
-  if (response.status !== 401) return false;
-  const body = await bodyOf(response);
-  if (body.errorKey === "errors.devices.revoked" || body.errorKey === "errors.devices.token_expired") {
+async function handleIfDeviceRejected(status: number, error: unknown): Promise<boolean> {
+  if (status !== 401) return false;
+  const errorKey = (error as ErrorBody | undefined)?.errorKey;
+  if (errorKey === "errors.devices.revoked" || errorKey === "errors.devices.token_expired") {
     await handleDeviceRejection();
     return true;
   }
@@ -26,9 +31,9 @@ async function handleIfDeviceRejected(response: Response): Promise<boolean> {
 
 export async function getRoster(): Promise<RoomRosterCard[]> {
   const result = await apiClient.GET("/api/room-shifts/roster");
-  if (await handleIfDeviceRejected(result.response)) return [];
+  if (await handleIfDeviceRejected(result.response.status, result.error)) return [];
   if (!result.response.ok) throw new Error("roster_load_failed");
-  return (await result.response.json()) as RoomRosterCard[];
+  return result.data as unknown as RoomRosterCard[];
 }
 
 /**
@@ -46,10 +51,10 @@ export async function checkIn(staffId: string, pin: string): Promise<PinKeypadRe
   } catch {
     return { ok: false, errorKey: "errors.network" };
   }
-  if (await handleIfDeviceRejected(result.response)) return { ok: false, errorKey: "errors.devices.revoked" };
+  if (await handleIfDeviceRejected(result.response.status, result.error)) return { ok: false, errorKey: "errors.devices.revoked" };
   if (result.response.ok) return { ok: true };
-  const body = await bodyOf(result.response);
-  return { ok: false, errorKey: body.errorKey, lockedUntil: body.lockedUntil };
+  const body = result.error as ErrorBody | undefined;
+  return { ok: false, errorKey: body?.errorKey, lockedUntil: body?.lockedUntil };
 }
 
 export async function checkOut(staffId: string, pin: string): Promise<PinKeypadResult> {
@@ -59,10 +64,10 @@ export async function checkOut(staffId: string, pin: string): Promise<PinKeypadR
   } catch {
     return { ok: false, errorKey: "errors.network" };
   }
-  if (await handleIfDeviceRejected(result.response)) return { ok: false, errorKey: "errors.devices.revoked" };
+  if (await handleIfDeviceRejected(result.response.status, result.error)) return { ok: false, errorKey: "errors.devices.revoked" };
   if (result.response.ok) return { ok: true };
-  const body = await bodyOf(result.response);
-  return { ok: false, errorKey: body.errorKey, lockedUntil: body.lockedUntil };
+  const body = result.error as ErrorBody | undefined;
+  return { ok: false, errorKey: body?.errorKey, lockedUntil: body?.lockedUntil };
 }
 
 /** FR-017/018: sensitive-action administrator confirmation. `skip: true` always succeeds
@@ -72,12 +77,12 @@ export async function confirmAdministrator(
   staffId: string | null, pin: string | null, skip: boolean,
 ): Promise<{ administeredByStaffProfileId: string | null } & PinKeypadResult> {
   const result = await apiClient.POST("/api/room-shifts/confirm-administrator", { body: { staffId, pin, skip } });
-  if (await handleIfDeviceRejected(result.response))
+  if (await handleIfDeviceRejected(result.response.status, result.error))
     return { ok: false, errorKey: "errors.devices.revoked", administeredByStaffProfileId: null };
   if (result.response.ok) {
-    const data = (await result.response.json()) as { administeredByStaffProfileId: string | null };
+    const data = result.data as unknown as { administeredByStaffProfileId: string | null };
     return { ok: true, administeredByStaffProfileId: data.administeredByStaffProfileId };
   }
-  const body = await bodyOf(result.response);
-  return { ok: false, errorKey: body.errorKey, lockedUntil: body.lockedUntil, administeredByStaffProfileId: null };
+  const body = result.error as ErrorBody | undefined;
+  return { ok: false, errorKey: body?.errorKey, lockedUntil: body?.lockedUntil, administeredByStaffProfileId: null };
 }

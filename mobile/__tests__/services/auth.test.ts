@@ -48,13 +48,21 @@ const getMock = apiClientMock.__mockGet;
 const configStore = localDbMock.__mockConfigStore;
 const deletedTenantIds = localDbMock.__mockDeletedTenantIds;
 
-function jsonResponse(status: number, body: unknown): { response: Response } {
+// Mirrors openapi-fetch's real result shape (data on success, error on failure) — found
+// on-device that auth.ts previously re-read result.response.json() instead of using
+// result.data/result.error, which throws against a real openapi-fetch response (the body is
+// already consumed internally) but silently "worked" against this mock's fresh Response object
+// every time, which is exactly why this suite never caught the bug.
+function jsonResponse(status: number, body: unknown): { response: Response; data?: unknown; error?: unknown } {
+  const ok = status >= 200 && status < 300;
   return {
     response: {
-      ok: status >= 200 && status < 300,
+      ok,
       status,
       json: async () => body,
     } as unknown as Response,
+    data: ok ? body : undefined,
+    error: ok ? undefined : body,
   };
 }
 

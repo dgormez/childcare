@@ -4,6 +4,8 @@
     "organisationSlug": "Organisation",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
+    "showPassword": "Afficher",
+    "hidePassword": "Masquer",
     "submit": "Se connecter",
     "offlineFirstLogin": "Impossible de se connecter sans connexion internet la première fois."
   },

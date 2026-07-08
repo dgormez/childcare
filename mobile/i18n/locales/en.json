@@ -4,6 +4,8 @@
     "organisationSlug": "Organisation",
     "email": "Email address",
     "password": "Password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
     "submit": "Sign in",
     "offlineFirstLogin": "Can't sign in without a network connection the first time."
   },

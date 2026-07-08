@@ -85,11 +85,14 @@ export async function pairDevice(
     body: { locationId, groupId, directorOverridePin },
   });
   if (!result.response.ok) {
-    const body = await result.response.json().catch(() => ({}));
-    throw new Error((body as { errorKey?: string }).errorKey ?? "errors.devices.pair_failed");
+    // openapi-fetch already consumed the body into result.data/result.error — re-reading
+    // result.response.json() here throws and gets misreported as a generic failure (found
+    // on-device: same root cause as auth.ts's login()/refresh()).
+    const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey ?? "errors.devices.pair_failed";
+    throw new Error(errorKey);
   }
 
-  const data = (await result.response.json()) as PairDeviceResponse;
+  const data = result.data as unknown as PairDeviceResponse;
   await storeDeviceToken(data.deviceToken);
   applyDevicePairing({ deviceId: data.deviceId, locationId, groupId, locationName, groupName });
 }
@@ -101,8 +104,8 @@ export async function exitRoomMode(directorOverridePin: string): Promise<void> {
     body: { directorOverridePin },
   });
   if (!result.response.ok) {
-    const body = await result.response.json().catch(() => ({}));
-    throw new Error((body as { errorKey?: string }).errorKey ?? "errors.devices.invalid_override_pin");
+    const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey ?? "errors.devices.invalid_override_pin";
+    throw new Error(errorKey);
   }
 
   await clearDeviceCredentials();

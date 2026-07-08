@@ -61,7 +61,26 @@ const authMiddleware: Middleware = {
     if (token) request.headers.set("Authorization", `Bearer ${token}`);
 
     if (baseUrl && request.url.startsWith(PLACEHOLDER_ORIGIN)) {
-      return new Request(request.url.replace(PLACEHOLDER_ORIGIN, baseUrl), request);
+      // `new Request(url, request)` — passing a Request object as `init` — does not reliably
+      // carry the body over in React Native's fetch implementation (confirmed on-device: every
+      // POST landed at the server with a completely empty body, while the identical code path
+      // in Jest's Node-based fetch worked fine, which is why the existing test for this exact
+      // rewrite only covers a bodyless GET and never caught it).
+      //
+      // First attempt at a fix gated the body-read on `request.body` (the ReadableStream
+      // getter) — that getter isn't reliably implemented in RN's fetch polyfill either, so it
+      // read as falsy even when a body genuinely existed, silently reproducing the same bug
+      // through a different path. Always reading via `.text()` instead — which every fetch
+      // implementation (browser, Node, RN) implements correctly regardless of the raw `.body`
+      // stream property — sidesteps that unreliable getter entirely. `.text()` on a bodyless
+      // request just resolves to `""`, which is safe to omit.
+      const newUrl = request.url.replace(PLACEHOLDER_ORIGIN, baseUrl);
+      const text = await request.text();
+      return new Request(newUrl, {
+        method: request.method,
+        headers: request.headers,
+        body: text || undefined,
+      });
     }
     return request;
   },

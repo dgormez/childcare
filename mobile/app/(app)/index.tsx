@@ -23,13 +23,15 @@ export function calculateAge(dateOfBirth: string): number {
 async function fetchChildren(): Promise<ChildResponse[]> {
   const groupsResult = await apiClient.GET("/api/groups");
   if (!groupsResult.response.ok) throw new Error("group_view_load_failed");
-  const groups = (await groupsResult.response.json()) as GroupResponse[];
+  // openapi-fetch already parses the body into result.data — result.response.json() would
+  // throw ("body already read") since the stream is already consumed.
+  const groups = groupsResult.data as unknown as GroupResponse[];
 
   const perGroup = await Promise.all(
     groups.map(async (group) => {
       const childrenResult = await apiClient.GET("/api/children", { params: { query: { groupId: group.id } } });
       if (!childrenResult.response.ok) return [];
-      return (await childrenResult.response.json()) as ChildResponse[];
+      return childrenResult.data as unknown as ChildResponse[];
     })
   );
 

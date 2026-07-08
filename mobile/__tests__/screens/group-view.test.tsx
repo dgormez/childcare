@@ -37,8 +37,17 @@ const readCacheMock = jest.requireMock("../../services/readCache") as { __mockCa
 const getMock = (jest.requireMock("../../services/apiClient") as { __mockGet: jest.Mock }).__mockGet;
 const syncEngineMock = jest.requireMock("../../services/syncEngine") as { __mockSyncPendingQueue: jest.Mock };
 
+// Mirrors openapi-fetch's real result shape (data on success, error on failure) — see
+// auth.test.ts's jsonResponse for why this matters (result.response.json() throws against a
+// real openapi-fetch response since the body is already consumed internally, but this mock's
+// fresh Response object silently allowed it, masking the bug this suite would otherwise catch).
 function jsonResponse(status: number, body: unknown) {
-  return { response: { ok: status >= 200 && status < 300, status, json: async () => body } };
+  const ok = status >= 200 && status < 300;
+  return {
+    response: { ok, status, json: async () => body },
+    data: ok ? body : undefined,
+    error: ok ? undefined : body,
+  };
 }
 
 const group: GroupResponse = { id: "g1", name: "Group A", locationId: "loc1" };

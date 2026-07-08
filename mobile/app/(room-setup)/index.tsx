@@ -28,6 +28,7 @@ export default function RoomSetupScreen() {
   const [overridePinConfirm, setOverridePinConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showOverridePin, setShowOverridePin] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -36,8 +37,10 @@ export default function RoomSetupScreen() {
           apiClient.GET("/api/locations"),
           apiClient.GET("/api/groups"),
         ]);
-        if (locationsResult.response.ok) setLocations((await locationsResult.response.json()) as LocationResponse[]);
-        if (groupsResult.response.ok) setGroups((await groupsResult.response.json()) as GroupResponse[]);
+        // openapi-fetch already parses the body into result.data — result.response.json()
+        // would throw ("body already read") since the stream is already consumed.
+        if (locationsResult.response.ok) setLocations(locationsResult.data as unknown as LocationResponse[]);
+        if (groupsResult.response.ok) setGroups(groupsResult.data as unknown as GroupResponse[]);
       } finally {
         setLoading(false);
       }
@@ -127,28 +130,52 @@ export default function RoomSetupScreen() {
       {!!groupId && (
         <>
           <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1 mt-4">{t("roomSetup.overridePinLabel")}</Text>
-          <TextInput
-            value={overridePin}
-            onChangeText={setOverridePin}
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={6}
-            placeholderTextColor={colors.placeholder}
-            style={{ minHeight: 64 }}
-            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 mb-4 text-lg"
-          />
+          <View className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg mb-4">
+            <TextInput
+              value={overridePin}
+              onChangeText={setOverridePin}
+              keyboardType="number-pad"
+              secureTextEntry={!showOverridePin}
+              maxLength={6}
+              placeholderTextColor={colors.placeholder}
+              style={{ minHeight: 64 }}
+              className="flex-1 text-text dark:text-text-dark px-4 text-lg"
+            />
+            <TouchableOpacity
+              onPress={() => setShowOverridePin((v) => !v)}
+              style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium">
+                {showOverridePin ? t("login.hidePassword") : t("login.showPassword")}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("roomSetup.overridePinConfirmLabel")}</Text>
-          <TextInput
-            value={overridePinConfirm}
-            onChangeText={setOverridePinConfirm}
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={6}
-            placeholderTextColor={colors.placeholder}
-            style={{ minHeight: 64 }}
-            className="bg-surface-soft dark:bg-surface-soft-dark text-text dark:text-text-dark rounded-lg px-4 mb-6 text-lg"
-          />
+          <View className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg mb-6">
+            <TextInput
+              value={overridePinConfirm}
+              onChangeText={setOverridePinConfirm}
+              keyboardType="number-pad"
+              secureTextEntry={!showOverridePin}
+              maxLength={6}
+              placeholderTextColor={colors.placeholder}
+              style={{ minHeight: 64 }}
+              className="flex-1 text-text dark:text-text-dark px-4 text-lg"
+            />
+            <TouchableOpacity
+              onPress={() => setShowOverridePin((v) => !v)}
+              style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium">
+                {showOverridePin ? t("login.hidePassword") : t("login.showPassword")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {!!overridePin && !!overridePinConfirm && overridePin !== overridePinConfirm && (
+            <Text className="text-danger dark:text-danger-dark text-sm mb-4">{t("roomSetup.overridePinMismatch")}</Text>
+          )}
 
           <TouchableOpacity
             onPress={handleSubmit}

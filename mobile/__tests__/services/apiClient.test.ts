@@ -29,6 +29,24 @@ it("rewrites every request to the currently configured base URL (placeholder-ori
   expect(sentRequest.url).toBe("http://api.test/api/groups");
 });
 
+// Found on-device (not by this test originally — it didn't exist): `new Request(url, request)`
+// dropped the body silently in React Native's fetch, while the identical code worked fine
+// against Jest's Node-based fetch. The GET-only test above never exercised a request with a
+// body at all, so this regressed unnoticed until a real login POST landed at the server empty.
+it("preserves the request body through the base-URL rewrite for a POST", async () => {
+  mockFetch.mockResolvedValue(jsonResponse(200, {}));
+
+  await apiClient.POST("/api/auth/login", {
+    body: { organisationSlug: "org-a", email: "director@test.com", password: "password123" },
+    fetch: mockFetch,
+  });
+
+  const sentRequest = mockFetch.mock.calls[0][0] as Request;
+  expect(sentRequest.url).toBe("http://api.test/api/auth/login");
+  const sentBody = await sentRequest.clone().json();
+  expect(sentBody).toEqual({ organisationSlug: "org-a", email: "director@test.com", password: "password123" });
+});
+
 it("attaches the Bearer token from the auth slice to every request", async () => {
   useStore.setState({
     auth: { userId: "u1", email: "c@test.com", role: "staff", organisationSlug: "org-a", accessToken: "tok-1" },
