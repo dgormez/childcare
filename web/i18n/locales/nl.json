@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Sluiten"
+  },
   "login": {
     "productName": "ChildCare",
     "productTagline": "Beheerdersportaal",

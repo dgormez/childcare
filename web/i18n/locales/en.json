@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Close"
+  },
   "login": {
     "productName": "ChildCare",
     "productTagline": "Director Admin",

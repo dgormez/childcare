@@ -23,6 +23,55 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://localhost:5099");
 });
 
+// ── login ─────────────────────────────────────────────────────────────────────
+
+describe("login", () => {
+  it("succeeds and returns a session including the organisation name", async () => {
+    const authResponse = {
+      accessToken: "tok_abc",
+      refreshToken: "rt_xyz",
+      user: { id: "u1", email: "director@acme.test", emailVerified: true, role: "director", name: "Jane Director" },
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((input: string | Request) => {
+        const url = typeof input === "string" ? input : input.url;
+        if (url.endsWith("/api/auth/login")) {
+          return Promise.resolve(new Response(JSON.stringify(authResponse), { status: 200 }));
+        }
+        if (url === "/api/set-refresh-token") {
+          return Promise.resolve(new Response(null, { status: 200 }));
+        }
+        // GET /api/organisations/me
+        return Promise.resolve(new Response(JSON.stringify({ name: "Acme KDV" }), { status: 200 }));
+      }),
+    );
+
+    const { login } = await import("../lib/auth");
+    const session = await login("acme", "director@acme.test", "password123");
+
+    expect(session.user.email).toBe("director@acme.test");
+    expect(session.organisationSlug).toBe("acme");
+    expect(session.organisationName).toBe("Acme KDV");
+    expect(memoryLocalStorage.getItem("childcare_organisation_slug")).toBe("acme");
+  });
+
+  it("throws with the server's errorKey on invalid credentials", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ errorKey: "errors.auth.invalid_credentials" }), { status: 401 }),
+      ),
+    );
+
+    const { login } = await import("../lib/auth");
+    await expect(login("acme", "director@acme.test", "wrong-password")).rejects.toThrow(
+      "errors.auth.invalid_credentials",
+    );
+  });
+});
+
 // ── tryRestoreSession ─────────────────────────────────────────────────────────
 
 describe("tryRestoreSession", () => {

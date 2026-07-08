@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Fermer"
+  },
   "login": {
     "productName": "ChildCare",
     "productTagline": "Portail administrateur",

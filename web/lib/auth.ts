@@ -44,7 +44,9 @@ async function storeRefreshToken(refreshToken: string, organisationSlug: string)
 
 async function buildSession(data: AuthResponse, organisationSlug: string): Promise<Session> {
   setAccessToken(data.accessToken);
-  const organisationName = await fetchOrganisationName();
+  // Fall back to the slug (always known, never empty) if the name fetch fails — spec.md Edge
+  // Cases: the shell must show sensible fallback text, never blank space.
+  const organisationName = (await fetchOrganisationName()) || organisationSlug;
   return { user: data.user, accessToken: data.accessToken, organisationSlug, organisationName };
 }
 

@@ -341,3 +341,20 @@ Task: "Create web/components/ErrorState.tsx"
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - No task in this feature touches `mobile/` or introduces a database migration
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps found by `/speckit-converge` after implementation — see the
+findings summary reported alongside this phase for full evidence per item.
+
+- [X] T046 Replace the hardcoded `"Close"` screen-reader-only label in
+  `web/components/ui/dialog.tsx` with a `common.close` i18n key (added to
+  `web/i18n/locales/{nl,fr,en}.json`) per Constitution IV (CRITICAL, contradicts)
+- [X] T047 Add a fallback string (e.g. the organisation slug) for `Sidebar.tsx`'s
+  organisation-name display when `lib/auth.ts`'s `fetchOrganisationName()` returns an empty
+  string, per spec.md Edge Cases (partial)
+- [X] T048 Add `login()` success and failure test cases to `web/__tests__/auth.test.ts` — no
+  existing test exercises the actual login call, only `tryRestoreSession`/`logout`, per the
+  spec's Testing Requirements (partial)
