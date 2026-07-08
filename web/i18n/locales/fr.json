@@ -27,5 +27,38 @@
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  "staff": {
+    "title": "Personnel",
+    "searchPlaceholder": "Rechercher par nom…",
+    "columnName": "Nom",
+    "columnRole": "Rôle",
+    "columnLocations": "Site(s)",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "role": {
+      "director": "Directeur/trice",
+      "staff": "Puéricultrice/eur",
+      "parent": "Parent"
+    },
+    "statusActive": "Actif",
+    "statusDeactivated": "Désactivé",
+    "actionResetPin": "Réinitialiser le code",
+    "actionDeactivate": "Désactiver",
+    "actionReactivate": "Réactiver",
+    "emptyState": "Aucun membre du personnel pour le moment.",
+    "loadError": "Impossible de charger le personnel. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "pinDialogTitle": "Réinitialiser le code pour {name}",
+    "pinDialogDescription": "Saisissez un nouveau code à 4 chiffres pour cette personne.",
+    "pinDialogInputLabel": "Code à 4 chiffres",
+    "pinDialogInvalidFormat": "Le code doit contenir exactement 4 chiffres.",
+    "pinDialogNotUnique": "Ce code est déjà utilisé par une autre personne sur le même site.",
+    "pinDialogGenericError": "Impossible d'enregistrer le code. Veuillez réessayer.",
+    "pinDialogCancel": "Annuler",
+    "pinDialogConfirm": "Enregistrer le code",
+    "deactivateDialogTitle": "Désactiver le membre du personnel",
+    "reactivateDialogTitle": "Réactiver le membre du personnel",
+    "toggleDialogDescription": "Confirmez-vous pour {name} ?"
   }
 }

@@ -27,5 +27,38 @@
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
+  },
+  "staff": {
+    "title": "Staff",
+    "searchPlaceholder": "Search by name…",
+    "columnName": "Name",
+    "columnRole": "Role",
+    "columnLocations": "Location(s)",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "role": {
+      "director": "Director",
+      "staff": "Caregiver",
+      "parent": "Parent"
+    },
+    "statusActive": "Active",
+    "statusDeactivated": "Deactivated",
+    "actionResetPin": "Reset PIN",
+    "actionDeactivate": "Deactivate",
+    "actionReactivate": "Reactivate",
+    "emptyState": "No staff members yet.",
+    "loadError": "Couldn't load staff. Please try again.",
+    "retry": "Retry",
+    "pinDialogTitle": "Reset PIN for {name}",
+    "pinDialogDescription": "Enter a new 4-digit PIN for this caregiver.",
+    "pinDialogInputLabel": "4-digit PIN",
+    "pinDialogInvalidFormat": "PIN must be exactly 4 digits.",
+    "pinDialogNotUnique": "This PIN is already used by another caregiver at the same location.",
+    "pinDialogGenericError": "Couldn't save the PIN. Please try again.",
+    "pinDialogCancel": "Cancel",
+    "pinDialogConfirm": "Save PIN",
+    "deactivateDialogTitle": "Deactivate staff member",
+    "reactivateDialogTitle": "Reactivate staff member",
+    "toggleDialogDescription": "Are you sure about {name}?"
   }
 }

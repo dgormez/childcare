@@ -181,7 +181,7 @@ reset and a deactivate/reactivate action, confirm the change reflects in the lis
 
 ### Tests for User Story 2
 
-- [ ] T027 [P] [US2] Create `web/__tests__/staff.test.ts`: table renders staff rows with
+- [X] T027 [P] [US2] Create `web/__tests__/staff.test.ts`: table renders staff rows with
   resolved location names; search/filter narrows visible rows; PIN reset success shows
   confirmation; PIN reset conflict (`409 errors.pin.not_unique_at_location`) shows an inline
   form error; deactivate/reactivate require confirmation and update row state; empty tenant
@@ -189,17 +189,17 @@ reset and a deactivate/reactivate action, confirm the change reflects in the lis
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Create `web/components/StaffTable.tsx` (shadcn `Table`): columns name, role,
+- [X] T028 [US2] Create `web/components/StaffTable.tsx` (shadcn `Table`): columns name, role,
   location(s) — resolved by joining `EligibleLocationIds` against `GET /api/locations` client-
   side (data-model.md's StaffRow) — active/deactivated status badge, row actions (reset PIN,
   deactivate/reactivate) — depends on T006, T014, T018, T019, T020
-- [ ] T029 [US2] Create `web/app/(app)/staff/page.tsx`: fetches `GET /api/staff`, search input
+- [X] T029 [US2] Create `web/app/(app)/staff/page.tsx`: fetches `GET /api/staff`, search input
   (client-side name filter), renders `StaffTable.tsx`, loading skeleton — depends on T028
-- [ ] T030 [US2] Wire PIN reset: a `ConfirmDialog`-hosted 4-digit-PIN input calling `PUT
+- [X] T030 [US2] Wire PIN reset: a `ConfirmDialog`-hosted 4-digit-PIN input calling `PUT
   /api/staff/{id}/pin`, surfacing `errors.pin.not_unique_at_location` inline — depends on T029
-- [ ] T031 [US2] Wire deactivate/reactivate: `ConfirmDialog` calling `POST
+- [X] T031 [US2] Wire deactivate/reactivate: `ConfirmDialog` calling `POST
   /api/staff/{id}/deactivate` / `POST /api/staff/{id}/reactivate` — depends on T029
-- [ ] T032 [US2] Add `staff` i18n key namespace to `web/i18n/locales/{nl,fr,en}.json` covering
+- [X] T032 [US2] Add `staff` i18n key namespace to `web/i18n/locales/{nl,fr,en}.json` covering
   table headers, search placeholder, action labels, confirmation copy, empty/error state text —
   depends on T028, T029, T030, T031
 

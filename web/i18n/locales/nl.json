@@ -27,5 +27,38 @@
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
+  },
+  "staff": {
+    "title": "Personeel",
+    "searchPlaceholder": "Zoek op naam…",
+    "columnName": "Naam",
+    "columnRole": "Rol",
+    "columnLocations": "Locatie(s)",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "role": {
+      "director": "Directeur",
+      "staff": "Begeleider",
+      "parent": "Ouder"
+    },
+    "statusActive": "Actief",
+    "statusDeactivated": "Gedeactiveerd",
+    "actionResetPin": "Code resetten",
+    "actionDeactivate": "Deactiveren",
+    "actionReactivate": "Heractiveren",
+    "emptyState": "Nog geen personeelsleden.",
+    "loadError": "Personeel kon niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "pinDialogTitle": "Code resetten voor {name}",
+    "pinDialogDescription": "Voer een nieuwe 4-cijferige code in voor deze begeleider.",
+    "pinDialogInputLabel": "4-cijferige code",
+    "pinDialogInvalidFormat": "De code moet exact 4 cijfers bevatten.",
+    "pinDialogNotUnique": "Deze code is al in gebruik door een andere begeleider op dezelfde locatie.",
+    "pinDialogGenericError": "De code kon niet worden opgeslagen. Probeer het opnieuw.",
+    "pinDialogCancel": "Annuleren",
+    "pinDialogConfirm": "Code opslaan",
+    "deactivateDialogTitle": "Personeelslid deactiveren",
+    "reactivateDialogTitle": "Personeelslid heractiveren",
+    "toggleDialogDescription": "Weet je het zeker voor {name}?"
   }
 }
