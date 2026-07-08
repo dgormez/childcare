@@ -4,6 +4,8 @@
     "organisationSlug": "Organisatie",
     "email": "E-mailadres",
     "password": "Wachtwoord",
+    "showPassword": "Tonen",
+    "hidePassword": "Verbergen",
     "submit": "Aanmelden",
     "offlineFirstLogin": "Aanmelden zonder internetverbinding is niet mogelijk bij de eerste keer."
   },
@@ -44,5 +46,34 @@
     "medicalQuickAccess": "Medische gegevens",
     "medicalConditions": "Medische aandoeningen",
     "dietaryRestrictions": "Dieetbeperkingen"
+  },
+  "roomSetup": {
+    "title": "Deze tablet instellen",
+    "locationLabel": "Locatie",
+    "groupLabel": "Groep",
+    "overridePinLabel": "Directeur-overschrijvingscode (6 cijfers)",
+    "overridePinConfirmLabel": "Bevestig overschrijvingscode",
+    "overridePinMismatch": "De twee codes komen niet overeen.",
+    "submit": "Tablet koppelen",
+    "reactivateTitle": "Heractivatie vereist",
+    "reactivateBody": "De verbinding van deze tablet is verlopen of ingetrokken. Meld je aan om opnieuw in te stellen.",
+    "reactivateButton": "Aanmelden"
+  },
+  "roomHome": {
+    "noCaregivers": "Er zijn nog geen begeleiders toegewezen aan deze locatie.",
+    "checkedInAt": "Ingecheckt om {{time}}",
+    "exitRoomMode": "Afsluiten door directeur"
+  },
+  "pin": {
+    "enterPin": "Geef je code in, {{name}}",
+    "confirmAdministrator": "Bevestig wie dit registreert",
+    "invalid": "Ongeldige code",
+    "locked": "Te veel pogingen. Probeer opnieuw na {{time}}.",
+    "skip": "Overslaan",
+    "submit": "Bevestigen"
+  },
+  "devices": {
+    "revoked": "Deze tablet is gedeactiveerd.",
+    "revokedBody": "Vraag een directeur om deze opnieuw in te stellen."
   }
 }

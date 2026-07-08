@@ -31,6 +31,10 @@ jest.mock("../../services/localDb", () => {
       const row = mockRows.find((r) => r.id === id);
       if (row) row.sync_error = error;
     },
+    // Feature 008a: offlineQueue.ts's currentTenantId() falls back to this when useStore's
+    // in-memory auth slice is null (a paired tablet's cold-start case) — null here matches
+    // "no active session" for these tests.
+    getConfigValue: (_key: string) => null,
     __mockRows: mockRows,
   };
 });

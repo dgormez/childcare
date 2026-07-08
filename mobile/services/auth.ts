@@ -42,7 +42,7 @@ async function fetchAndApplyStaffMe(): Promise<void> {
   try {
     const result = await apiClient.GET("/api/staff/me");
     if (result.response.ok) {
-      const me = (await result.response.json()) as StaffMeResponse;
+      const me = result.data as unknown as StaffMeResponse;
       const { auth } = useStore.getState();
       if (auth) {
         useStore.getState().setAuth({
@@ -72,11 +72,16 @@ export async function login(baseUrl: string, organisationSlug: string, email: st
   }
 
   if (!result.response.ok) {
-    const body = await result.response.json().catch(() => ({}));
-    throw new Error((body as { errorKey?: string }).errorKey ?? "errors.auth.invalid_credentials");
+    // openapi-fetch already consumed the response body to populate result.data/result.error —
+    // re-reading result.response.json() here would throw ("body stream already read"), which
+    // this catch previously masked as a plain "invalid credentials" for every failure reason,
+    // including ones that had nothing to do with credentials (found on-device: a real 200
+    // success was being misreported as invalid credentials for the same underlying reason).
+    const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey ?? "errors.auth.invalid_credentials";
+    throw new Error(errorKey);
   }
 
-  const data = (await result.response.json()) as AuthResponse;
+  const data = result.data as unknown as AuthResponse;
   await storeRefreshToken(data.refreshToken);
   applyAuthResponse(data, organisationSlug);
   await fetchAndApplyStaffMe();
@@ -107,7 +112,7 @@ export async function refresh(): Promise<boolean> {
       return false;
     }
 
-    const data = (await result.response.json()) as AuthResponse;
+    const data = result.data as unknown as AuthResponse;
     await storeRefreshToken(data.refreshToken);
     applyAuthResponse(data, organisationSlug);
     return true;

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AuthState } from "../types";
+import type { AuthState, DeviceState } from "../types";
 
 interface AppState {
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -9,6 +9,13 @@ interface AppState {
   setAuth:           (auth: AuthState) => void;
   updateAccessToken: (token: string) => void;
   resetAuth:         () => void;
+
+  // ── Kiosk mode device (feature 008a) ─────────────────────────────────────
+  device: DeviceState | null;
+
+  // ── Device actions ────────────────────────────────────────────────────────
+  setDevice:   (device: DeviceState) => void;
+  resetDevice: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -20,4 +27,9 @@ export const useStore = create<AppState>((set, get) => ({
     if (auth) set({ auth: { ...auth, accessToken } });
   },
   resetAuth: () => set({ auth: null }),
+
+  device: null,
+
+  setDevice: (device) => set({ device }),
+  resetDevice: () => set({ device: null }),
 }));

@@ -4,6 +4,8 @@
     "organisationSlug": "Organisation",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
+    "showPassword": "Afficher",
+    "hidePassword": "Masquer",
     "submit": "Se connecter",
     "offlineFirstLogin": "Impossible de se connecter sans connexion internet la première fois."
   },
@@ -44,5 +46,34 @@
     "medicalQuickAccess": "Informations médicales",
     "medicalConditions": "Conditions médicales",
     "dietaryRestrictions": "Restrictions alimentaires"
+  },
+  "roomSetup": {
+    "title": "Configurer cette tablette",
+    "locationLabel": "Site",
+    "groupLabel": "Groupe",
+    "overridePinLabel": "Code de dérogation directeur (6 chiffres)",
+    "overridePinConfirmLabel": "Confirmer le code de dérogation",
+    "overridePinMismatch": "Les deux codes ne correspondent pas.",
+    "submit": "Associer cette tablette",
+    "reactivateTitle": "Réactivation requise",
+    "reactivateBody": "La connexion de cette tablette a expiré ou a été révoquée. Connectez-vous pour la reconfigurer.",
+    "reactivateButton": "Se connecter"
+  },
+  "roomHome": {
+    "noCaregivers": "Aucun intervenant n'est encore assigné à ce site.",
+    "checkedInAt": "Arrivée enregistrée à {{time}}",
+    "exitRoomMode": "Sortie directeur"
+  },
+  "pin": {
+    "enterPin": "Entrez votre code, {{name}}",
+    "confirmAdministrator": "Confirmez qui enregistre ceci",
+    "invalid": "Code incorrect",
+    "locked": "Trop de tentatives. Réessayez après {{time}}.",
+    "skip": "Passer",
+    "submit": "Confirmer"
+  },
+  "devices": {
+    "revoked": "Cette tablette a été désactivée.",
+    "revokedBody": "Demandez à un directeur de la reconfigurer."
   }
 }

@@ -144,6 +144,27 @@ This feature also reuses `errors.child.not_found` (404, `POST /api/children/{chi
 
 This feature also extends the authorization on two existing feature-006 routes rather than inventing new error keys: `GET /api/children` (now `StaffOrDirector`, gains an optional `groupId` filter and Staff-role location-scoping) and `GET /api/groups` (now `StaffOrDirector`, gains Staff-role location-scoping) both reuse their existing success/empty-array behavior — a Staff caller querying outside their eligible locations receives `200` with an empty array, never a new error key (FR-007a). `GET /api/children/{id}` reuses the existing `errors.child.not_found` (404) for a Staff caller requesting a child outside their eligible locations, indistinguishable from the child not existing at all (found during implementation — the list endpoint's scoping alone did not prevent a direct id lookup from bypassing it).
 
+## Caregiver App Kiosk Mode (feature `008a-caregiver-kiosk-mode`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.pin.invalid` | 401 | `POST /api/room-shifts/check-in`, `/check-out`, `/confirm-administrator` — incorrect PIN for the given `staffId`. Never distinguishes "wrong PIN" from any other reason (FR-012/FR-017). |
+| `errors.pin.locked` | 423 | Same three endpoints — this `staffId`'s PIN is in its 10-minute sliding-window lockout (FR-012), shared across all three surfaces. |
+| `errors.staff.not_eligible_here` | 403 | Same three endpoints, and `PUT/DELETE /api/staff/{id}/pin` — `staffId` is deactivated or not eligible (`StaffLocationEligibility`) at the device token's own location (FR-004/024/025). Checked before the PIN comparison. |
+| `errors.room_shifts.already_checked_in` | 409 | `POST /api/room-shifts/check-in` — this `staffId` already has an open `RoomShift`. |
+| `errors.room_shifts.not_checked_in` | 409 | `POST /api/room-shifts/check-out` — no open `RoomShift` for this `staffId`; also `POST /api/room-shifts/confirm-administrator` — `staffId` is valid/eligible but not currently checked in (FR-017). |
+| `errors.devices.location_not_found` (reuses `errors.location.not_found`) | 404 | `POST /api/devices/pair` — `locationId` doesn't exist in this tenant. |
+| `errors.devices.group_not_found` | 404 | `POST /api/devices/pair` — `groupId` doesn't exist, or doesn't belong to `locationId`. |
+| `errors.devices.location_required` / `errors.devices.group_required` / `errors.devices.override_pin_required` / `errors.devices.override_pin_invalid_format` | 422 | `POST /api/devices/pair` — FluentValidation field errors (missing location/group, or the override PIN isn't exactly 6 digits), nested under the standard `errors.validation` envelope's `fieldErrors`. |
+| `errors.devices.invalid_override_pin` | 401 | `POST /api/devices/exit-room-mode` — incorrect director-override PIN. |
+| `errors.devices.override_pin_locked` | 423 | `POST /api/devices/exit-room-mode` — 10 incorrect override-PIN attempts on this device within 30 minutes (FR-005), tracked on `DevicePairing` directly, unrelated to caregiver-PIN lockout. |
+| `errors.devices.revoked` | 401 | Any `DeviceAuthenticated` endpoint — this device has been revoked by a director (FR-021), checked on every request. |
+| `errors.devices.token_expired` | 401 | Any `DeviceAuthenticated` endpoint — the device token is expired, malformed, missing, or superseded by a rotation the tablet missed (FR-022). |
+| `errors.devices.not_found` | 404 | `POST /api/devices/{id}/revoke` — no `DevicePairing` with that id in this tenant. |
+| `errors.pin.required` / `errors.pin.invalid_format` | 422 | `PUT /api/staff/{id}/pin` — FluentValidation: PIN missing, or not exactly 4 digits. |
+| `errors.room_shifts.not_found` | 404 | `PATCH /api/room-shifts/{id}` — no `RoomShift` with that id in this tenant. |
+| `errors.pin.not_unique_at_location` | 409 | `PUT /api/staff/{id}/pin` — another caregiver eligible at any of the same locations already holds this PIN (FR-007). |
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

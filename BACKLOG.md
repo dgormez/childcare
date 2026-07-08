@@ -25,6 +25,7 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
+| 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | 🔲 Not started |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | 🔲 Not started |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
@@ -480,6 +481,84 @@ Out of scope:
 
 ---
 
+### 007a — Web Admin Scaffold
+
+**Added 2026-07-08, while planning feature 008a.** Every feature so far — including 005 (staff)
+and 007 (contracts) — has referenced "the web admin" for director-facing screens, but nothing
+has actually built it: `web/` is still the original Habits walking-skeleton template
+(`app/(app)/habits/`, `subscription/`, `settings/`), and features 005/007 shipped backend-only,
+with zero corresponding UI. Feature 008a's PIN-management and device-revocation user stories
+are scoped backend-only for exactly this reason (see its spec's Assumptions) — this feature is
+the actual mobile-scaffold-equivalent for the web app, so 008a (and future features) have
+somewhere real to put a screen.
+
+```
+Bootstrap the director web admin app — mirrors what feature 008 did for the
+caregiver Expo app, but for Next.js. Remove the Habits walking skeleton,
+wire director authentication, establish the navigation shell, and ship one
+real screen (staff list, since features 005/008a both need it) so future
+features stop having to defer their web UI.
+
+What to build:
+
+1. App cleanup and structure
+   - Remove all Habits screens, navigation, and references (habits/, subscription/, settings/
+     as they exist today) from the Next.js app.
+   - Establish the app directory structure: (auth)/login, (app)/layout.tsx (sidebar nav,
+     per design-decisions.md's "director web uses sidebar navigation"), (app)/staff/page.tsx.
+   - Tailwind + shadcn/ui, per constitution's stack — high-density layouts per
+     platform-rules.md's Director Web section (tables, filtering, information density).
+   - i18n wired (next-intl), NL/FR/EN from day one, per constitution Principle IV.
+
+2. Director authentication
+   - Login screen: email + password, and Google OAuth (constitution: "Web admin: email/password
+     + Google OAuth") — reuses feature 003's existing auth contract, same as feature 008 reused
+     it for the caregiver app.
+   - JWT + refresh token, stored appropriately for a web context (httpOnly cookie via the
+     existing app/api/set-refresh-token route already scaffolded in web/, not localStorage).
+   - Session persists across browser restarts until explicit logout or token expiry.
+
+3. Navigation shell
+   - Sidebar navigation (design-decisions.md), collapsible, showing the organisation name and
+     the signed-in director's name.
+   - Empty/placeholder nav entries are fine for sections not yet built (locations, contracts,
+     etc.) — this feature only needs Staff to be real.
+
+4. Staff list screen (first real content)
+   - GET /api/staff (feature 005, already exists) rendered as a filterable/searchable table —
+     per platform-rules.md's director-web density expectations, not a caregiver-tablet-style
+     card list.
+   - Each row: name, role, location(s), active/deactivated status.
+   - Row action: set/reset a caregiver's 4-digit PIN (feature 008a's
+     PUT/DELETE /api/staff/{id}/pin, already built by that feature — this screen is the first
+     real caller of it).
+   - Row action: deactivate/reactivate (feature 005, already exists as an API, wire the UI).
+
+5. Devices screen (feature 008a device management)
+   - List paired tablets (location, group, paired-by, paired-at).
+   - Revoke action (feature 008a's POST /api/devices/{id}/revoke).
+
+Key constraints:
+- Follow design-system.md/platform-rules.md/reference-products.md, same as every feature since
+  008 — director web should feel like Linear/Notion/Airtable, not a caregiver-tablet layout
+  stretched wide.
+- All user-facing strings use i18n keys (NL/FR/EN).
+- Reuse feature 008's openapi-typescript + openapi-fetch API-client pattern rather than the
+  Habits-era `lib/api.ts` fetch wrapper currently in web/.
+
+Out of scope:
+- Any screen beyond Staff and Devices — locations, contracts, children, reporting, etc. are
+  later features' job, this one just proves the shell works end-to-end with one real screen.
+- Google OAuth for caregivers/parents — unrelated to this feature.
+```
+
+**Post-shipping note (added while planning, before this feature has been implemented):** if a
+future feature's spec needs a "web admin" screen and this feature isn't done yet, treat that as
+a hard dependency, not something to defer with another backend-only workaround — the pattern
+of "web admin" being referenced-but-never-built has already happened twice (005, 007).
+
+---
+
 ### 008 — Caregiver App Scaffold
 
 ```
@@ -664,18 +743,31 @@ What to build:
    - "Who's here" list below the keypad — visible at a glance.
 
 3. Caregiver check-in / check-out
-   - Caregiver enters their 4-digit PIN.
+   UX pattern: select-then-PIN (industry standard for small, known
+   populations; PIN-only is better suited for large parent pools).
+
+   - Room home screen shows all caregivers assigned to this group as
+     large photo cards (name + avatar). Checked-in caregivers are
+     visually distinct (e.g. green ring, check-mark).
+   - Caregiver taps their own photo card.
+   - A PIN keypad overlay appears: "Geef je code in, [Name]".
    - If not checked in: POST /room-shifts/check-in with device token +
-     PIN. Server validates PIN (bcrypt), checks caregiver is assigned
-     to this location, records check-in timestamp. Caregiver name
-     appears in the "who's here" list.
-   - If already checked in: POST /room-shifts/check-out. Records
-     check-out timestamp. Name leaves the list.
+     { staff_id, pin }. Server validates PIN (bcrypt) against the
+     caregiver identified by staff_id, checks they are assigned to
+     this location, records check-in timestamp. Card updates to
+     checked-in state.
+   - If already checked in: same flow → POST /room-shifts/check-out.
+     Records check-out timestamp. Card returns to unchecked state.
    - The app returns to the room home screen immediately after either
      action. No "session" is opened — the tablet state is unchanged.
    - Incorrect PIN: shake animation + "Ongeldige code" message.
      Rate limit: 5 failed attempts in 2 minutes → 10-minute lockout
-     for that specific PIN (device token remains valid for other PINs).
+     for that staff_id on this device (device token remains valid).
+   - Why select-then-PIN over PIN-only: with 2 caregivers per room,
+     photo cards are immediately obvious and eliminate lookup ambiguity.
+     The server receives staff_id explicitly; it does not need to
+     reverse-lookup who owns the PIN (cleaner, avoids 4-digit
+     collisions across a growing staff list).
 
 4. Event logging (no auth gate)
    - Any caregiver can tap a child and log any routine event at any time.
@@ -688,13 +780,19 @@ What to build:
 
 5. Medical events — PIN confirmation
    - medication and temperature events prompt an extra step before submit:
-     "Bevestig wie dit registreert" + PIN keypad.
+     "Bevestig wie dit registreert" — same select-then-PIN pattern as
+     check-in/out (section 3): shows the currently-checked-in caregivers
+     as tappable cards (typically 1-2, per BKR), caregiver taps their own,
+     then a PIN keypad overlay addressed by name. POST with { staff_id, pin }.
    - Entering a valid PIN attaches that caregiver's ID to a dedicated
      administered_by field (separate from recorded_by).
    - This is a UX confirmation step, not a re-auth. The device token
      already authorised the request; the PIN just names the individual.
    - If the caregiver taps "Skip" (allowed): administered_by = null.
      Director can fill it in retroactively from the web admin.
+   - Sending staff_id keeps this on the same simple per-caregiver PIN
+     lockout as check-in/out (shared counter, section 3) rather than
+     needing a separate mechanism for an anonymous PIN-only guess.
 
 6. PIN management (web admin, feature 005 extended)
    - Director sets or resets a caregiver's PIN from the staff screen.

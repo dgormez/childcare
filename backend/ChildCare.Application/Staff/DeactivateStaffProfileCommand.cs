@@ -34,13 +34,27 @@ public class DeactivateStaffProfileCommandHandler(ITenantDbContext db, IEnumerab
 
         if (profile.DeactivatedAt is null)
         {
-            profile.DeactivatedAt = DateTime.UtcNow;
-            profile.UpdatedAt = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            profile.DeactivatedAt = now;
+            profile.UpdatedAt = now;
 
             if (user.Role == UserRole.Staff)
             {
                 var tokens = db.RefreshTokens.Where(t => t.TenantUserId == user.Id);
                 db.RefreshTokens.RemoveRange(tokens);
+            }
+
+            // Feature 008a FR-024: a caregiver's open room shift closes immediately on
+            // deactivation. VerifyPinCommand's own eligibility check (filters to non-deactivated
+            // profiles) already makes their PIN stop matching on any *subsequent* check-in
+            // attempt — this is the other half, for a shift already in progress right now.
+            var openShifts = await db.RoomShifts
+                .Where(s => s.StaffProfileId == profile.Id && s.CheckedOutAt == null)
+                .ToListAsync(cancellationToken);
+            foreach (var shift in openShifts)
+            {
+                shift.CheckedOutAt = now;
+                shift.ClosedReason = "deactivated";
             }
 
             await db.SaveChangesAsync(cancellationToken);

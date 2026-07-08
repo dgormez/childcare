@@ -1,6 +1,43 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.1.0 → 1.2.0 (MINOR — existing guidance materially expanded)
+
+Modified sections:
+- Technology Stack Constraints, "Auth" bullet — the "Caregiver app:
+  email/password only (employer-provisioned)" line is superseded by feature
+  `008a-caregiver-kiosk-mode`'s room-tablet model: a director still pairs a
+  tablet via email/password (feature 008's existing flow, unchanged) to
+  obtain a long-lived, revocable device token, which is the tablet's actual
+  security boundary; individual caregivers on that tablet then identify via
+  a 4-digit PIN checked against a server-side shift-presence log, which is
+  accountability/attribution tracking, not a second HTTP authentication
+  mechanism. Email/password remains real and in use — it just no longer
+  happens per caregiver per shift, only once per tablet at setup time.
+
+Trigger: /speckit-plan on feature 008a found the Constitution Check gate
+would otherwise fail against stale stack-constraint text, the same class of
+issue the 1.1.0 amendment addressed for feature 001 — codifying the change
+here rather than bending it via an undocumented plan-level justification.
+
+Added sections: none (this is a clarifying rewrite of one existing bullet,
+not a new principle)
+
+Removed sections: none
+
+Templates requiring updates:
+- .specify/templates/plan-template.md — ✅ compatible as-is
+- specs/008-caregiver-app-scaffold/plan.md — not updated (out of scope,
+  already merged; its own auth description was accurate for what it shipped
+  — feature 008's email/password flow is unchanged, only extended by 008a)
+
+Follow-up TODOs: none. RATIFICATION_DATE unchanged; LAST_AMENDED_DATE
+updated to this amendment's date.
+-->
+
+<!--
+Sync Impact Report (previous)
+==================
 Version change: 1.0.0 → 1.1.0 (MINOR — existing guidance materially expanded)
 
 Modified principles:
@@ -203,7 +240,12 @@ records a change:
 - **Backend**: .NET 10 / C#, Minimal APIs, EF Core 9, PostgreSQL 16.
 - **Auth**: ASP.NET Core Identity + JWT, per-device refresh token
   rotation. Parent app: Google OAuth + Apple Sign-In + email/password.
-  Caregiver app: email/password only (employer-provisioned). Web admin:
+  Caregiver app: room-tablet model (feature 008a) — a director pairs a
+  tablet once via email/password (feature 008's flow, unchanged) to obtain
+  a long-lived, revocable device token that is the tablet's actual
+  security boundary; individual caregivers then identify via a 4-digit PIN
+  checked against a server-side shift-presence log — accountability
+  tracking, not a second HTTP authentication mechanism. Web admin:
   email/password + Google OAuth.
 - **PDF**: QuestPDF (MIT licence) — no other PDF library.
 - **Push notifications**: Expo Push Notification Service.
@@ -270,4 +312,4 @@ checked against Principles I (tenant isolation) and II (regulatory
 compliance) explicitly, since these are the two categories most likely
 to cause customer-facing (licensing or data-leak) harm if violated.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02
+**Version**: 1.2.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-08

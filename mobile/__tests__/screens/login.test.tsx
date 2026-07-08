@@ -48,7 +48,8 @@ it("calls login with trimmed organisation slug, email, and password", async () =
   await fireEvent.press(getByText("login.submit"));
 
   await waitFor(() => expect(login).toHaveBeenCalledWith(expect.any(String), "org-a", "user@test.com", "password123"));
-  await waitFor(() => expect(replace).toHaveBeenCalledWith("/(app)"));
+  // Feature 008a: kiosk-first — a successful login always continues into room setup now.
+  await waitFor(() => expect(replace).toHaveBeenCalledWith("/(room-setup)"));
 });
 
 it("shows error modal when login fails", async () => {

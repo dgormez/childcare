@@ -139,8 +139,8 @@ Includes:
 
 ## Classroom Operations
 
-No detail file yet — overlaps with Daily Child Care; split out once a feature needs
-schedule/staffing/ratio detail specifically, rather than folding it into `dailycare.md`.
+Detail: `Workflows/classroom-operations.md` (feature 008a — room shift register; the
+schedule/activities/ratios content below is still unwritten, added when a feature needs it).
 
 Manages how caregivers run childcare rooms.
 
