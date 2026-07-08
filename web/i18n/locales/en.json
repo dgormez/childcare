@@ -60,5 +60,23 @@
     "deactivateDialogTitle": "Deactivate staff member",
     "reactivateDialogTitle": "Reactivate staff member",
     "toggleDialogDescription": "Are you sure about {name}?"
+  },
+  "devices": {
+    "title": "Devices",
+    "columnLocation": "Location",
+    "columnGroup": "Group",
+    "columnPairedBy": "Paired by",
+    "columnPairedAt": "Paired at",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "statusActive": "Active",
+    "statusRevoked": "Revoked",
+    "actionRevoke": "Revoke",
+    "emptyState": "No devices have been paired yet.",
+    "loadError": "Couldn't load devices. Please try again.",
+    "retry": "Retry",
+    "revokeDialogTitle": "Revoke device",
+    "revokeDialogDescription": "This tablet ({group} at {location}) will need to be re-paired before it can be used again. Continue?",
+    "revokeDialogCancel": "Cancel"
   }
 }

@@ -60,5 +60,23 @@
     "deactivateDialogTitle": "Désactiver le membre du personnel",
     "reactivateDialogTitle": "Réactiver le membre du personnel",
     "toggleDialogDescription": "Confirmez-vous pour {name} ?"
+  },
+  "devices": {
+    "title": "Appareils",
+    "columnLocation": "Site",
+    "columnGroup": "Groupe",
+    "columnPairedBy": "Associé par",
+    "columnPairedAt": "Associé le",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "statusActive": "Actif",
+    "statusRevoked": "Révoqué",
+    "actionRevoke": "Révoquer",
+    "emptyState": "Aucun appareil n'a encore été associé.",
+    "loadError": "Impossible de charger les appareils. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "revokeDialogTitle": "Révoquer l'appareil",
+    "revokeDialogDescription": "Cette tablette ({group} à {location}) devra être ré-associée avant de pouvoir être réutilisée. Continuer ?",
+    "revokeDialogCancel": "Annuler"
   }
 }

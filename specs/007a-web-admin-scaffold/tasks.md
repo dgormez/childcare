@@ -231,19 +231,19 @@ one, confirm it's no longer active.
 
 ### Tests for User Story 3 (frontend)
 
-- [ ] T037 [P] [US3] Create `web/__tests__/devices.test.ts`: table renders device rows; revoke
+- [X] T037 [P] [US3] Create `web/__tests__/devices.test.ts`: table renders device rows; revoke
   requires confirmation and updates row state; empty tenant shows `EmptyState`; API failure
   shows `ErrorState` with working retry
 
 ### Implementation for User Story 3 (frontend)
 
-- [ ] T038 [US3] Create `web/components/DevicesTable.tsx` (shadcn `Table`): columns location,
+- [X] T038 [US3] Create `web/components/DevicesTable.tsx` (shadcn `Table`): columns location,
   group, paired by, paired at, status — depends on T006, T014, T018, T019, T020, T035
-- [ ] T039 [US3] Create `web/app/(app)/devices/page.tsx`: fetches `GET /api/devices`, renders
+- [X] T039 [US3] Create `web/app/(app)/devices/page.tsx`: fetches `GET /api/devices`, renders
   `DevicesTable.tsx`, loading skeleton — depends on T038
-- [ ] T040 [US3] Wire revoke: `ConfirmDialog` calling `POST /api/devices/{id}/revoke` — depends
+- [X] T040 [US3] Wire revoke: `ConfirmDialog` calling `POST /api/devices/{id}/revoke` — depends
   on T039
-- [ ] T041 [US3] Add `devices` i18n key namespace to `web/i18n/locales/{nl,fr,en}.json` covering
+- [X] T041 [US3] Add `devices` i18n key namespace to `web/i18n/locales/{nl,fr,en}.json` covering
   table headers, action labels, confirmation copy, empty/error state text — depends on T038,
   T039, T040
 

@@ -60,5 +60,23 @@
     "deactivateDialogTitle": "Personeelslid deactiveren",
     "reactivateDialogTitle": "Personeelslid heractiveren",
     "toggleDialogDescription": "Weet je het zeker voor {name}?"
+  },
+  "devices": {
+    "title": "Toestellen",
+    "columnLocation": "Locatie",
+    "columnGroup": "Groep",
+    "columnPairedBy": "Gekoppeld door",
+    "columnPairedAt": "Gekoppeld op",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "statusActive": "Actief",
+    "statusRevoked": "Ingetrokken",
+    "actionRevoke": "Intrekken",
+    "emptyState": "Er zijn nog geen toestellen gekoppeld.",
+    "loadError": "Toestellen konden niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "revokeDialogTitle": "Toestel intrekken",
+    "revokeDialogDescription": "Deze tablet ({group} bij {location}) moet opnieuw gekoppeld worden voor hij weer gebruikt kan worden. Doorgaan?",
+    "revokeDialogCancel": "Annuleren"
   }
 }
