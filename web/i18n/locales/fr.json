@@ -19,6 +19,7 @@
   "sidebar": {
     "staff": "Personnel",
     "devices": "Appareils",
+    "attendance": "Présences",
     "locations": "Sites",
     "contracts": "Contrats",
     "children": "Enfants",
@@ -81,6 +82,36 @@
     "revokeDialogTitle": "Révoquer l'appareil",
     "revokeDialogDescription": "Cette tablette ({group} à {location}) devra être ré-associée avant de pouvoir être réutilisée. Continuer ?",
     "revokeDialogCancel": "Annuler"
+  },
+  "attendance": {
+    "title": "Présences",
+    "locationLabel": "Site",
+    "dateLabel": "Date",
+    "columnChild": "Enfant",
+    "columnStatus": "Statut",
+    "columnCheckIn": "Arrivée",
+    "columnCheckOut": "Départ",
+    "columnPlannedDuration": "Durée prévue",
+    "columnActions": "Actions",
+    "status": {
+      "present": "Présent",
+      "absent": "Absent",
+      "closure": "Fermé"
+    },
+    "justified": "justifiée",
+    "unjustified": "non justifiée",
+    "minutes": "{count} min",
+    "actionCorrect": "Corriger",
+    "emptyState": "Aucun enregistrement de présence pour cette date.",
+    "loadError": "Impossible de charger les présences. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "correctionDialogTitle": "Corriger la présence de {name}",
+    "correctionDialogDescription": "Mettez à jour l'heure d'arrivée ou de départ pour cet enregistrement.",
+    "correctionDialogCancel": "Annuler",
+    "correctionDialogSave": "Enregistrer",
+    "correctionErrorClosureImmutable": "Les jours de fermeture ne peuvent pas être définis manuellement.",
+    "correctionErrorValidation": "Certaines informations ne sont pas valides. Veuillez vérifier et réessayer.",
+    "correctionErrorGeneric": "Impossible d'enregistrer cette correction. Veuillez réessayer."
   },
   "errorBoundary": {
     "title": "Une erreur s'est produite",

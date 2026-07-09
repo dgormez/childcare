@@ -34,6 +34,7 @@ public interface ITenantDbContext
     DbSet<RoomShift> RoomShifts { get; }
     DbSet<DevicePairing> DevicePairings { get; }
     DbSet<ChildEvent> ChildEvents { get; }
+    DbSet<AttendanceRecord> AttendanceRecords { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

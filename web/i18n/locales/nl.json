@@ -19,6 +19,7 @@
   "sidebar": {
     "staff": "Personeel",
     "devices": "Toestellen",
+    "attendance": "Aanwezigheid",
     "locations": "Locaties",
     "contracts": "Contracten",
     "children": "Kinderen",
@@ -81,6 +82,36 @@
     "revokeDialogTitle": "Toestel intrekken",
     "revokeDialogDescription": "Deze tablet ({group} bij {location}) moet opnieuw gekoppeld worden voor hij weer gebruikt kan worden. Doorgaan?",
     "revokeDialogCancel": "Annuleren"
+  },
+  "attendance": {
+    "title": "Aanwezigheid",
+    "locationLabel": "Locatie",
+    "dateLabel": "Datum",
+    "columnChild": "Kind",
+    "columnStatus": "Status",
+    "columnCheckIn": "Inchecken",
+    "columnCheckOut": "Uitchecken",
+    "columnPlannedDuration": "Geplande duur",
+    "columnActions": "Acties",
+    "status": {
+      "present": "Aanwezig",
+      "absent": "Afwezig",
+      "closure": "Gesloten"
+    },
+    "justified": "gerechtvaardigd",
+    "unjustified": "niet gerechtvaardigd",
+    "minutes": "{count} min",
+    "actionCorrect": "Corrigeren",
+    "emptyState": "Nog geen aanwezigheidsregistraties voor deze datum.",
+    "loadError": "Aanwezigheid kon niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "correctionDialogTitle": "Aanwezigheid corrigeren voor {name}",
+    "correctionDialogDescription": "Werk het in- of uitchecktijdstip voor deze registratie bij.",
+    "correctionDialogCancel": "Annuleren",
+    "correctionDialogSave": "Opslaan",
+    "correctionErrorClosureImmutable": "Sluitingsdagen kunnen niet handmatig worden ingesteld.",
+    "correctionErrorValidation": "Sommige gegevens zijn niet geldig. Controleer en probeer opnieuw.",
+    "correctionErrorGeneric": "Deze correctie kon niet worden opgeslagen. Probeer het opnieuw."
   },
   "errorBoundary": {
     "title": "Er is iets misgegaan",

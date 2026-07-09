@@ -71,3 +71,27 @@ export interface ApiErrorBody {
   errorKey: string;
   fieldErrors?: Record<string, string>;
 }
+
+// ── Attendance (feature 010) ─────────────────────────────────────────────────────
+export type AttendanceStatus = "present" | "absent" | "closure";
+
+export interface AttendanceRecordResponse {
+  id: string;
+  childId: string;
+  locationId: string;
+  date: string;
+  status: AttendanceStatus;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  plannedDurationMinutes: number | null;
+  absenceJustified: boolean | null;
+  absenceReason: string | null;
+  recordedBy: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PagedAttendanceResponse {
+  items: AttendanceRecordResponse[];
+  nextCursor: string | null;
+}

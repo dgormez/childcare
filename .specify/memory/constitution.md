@@ -1,6 +1,40 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.2.1 → 1.3.0 (MINOR — existing guidance materially expanded)
+
+Modified sections:
+- II. Regulatory Compliance by Design (NON-NEGOTIABLE) — added a "Carve-out (leefgroep ratio,
+  pending group-type data model)" clause. The BKR ratio thresholds (solo max 8; 2+ caregivers max
+  9/caregiver; nap time max 14; leefgroep max 18) were previously listed as a single block this
+  principle requires enforcing; the leefgroep cap specifically cannot be enforced yet because no
+  feature to date has given `Group`/`Location` any way to be flagged as a leefgroep versus a
+  standard room — there is no data for the system to branch on. The other three thresholds are
+  unaffected and remain required.
+
+Trigger: /speckit-plan on feature `010-attendance` found the Constitution Check gate would
+otherwise fail — feature 010 implements live BKR computation but, per its own clarification
+session, explicitly does not implement the leefgroep regime (no group-type distinction exists to
+implement it against). Per the precedent set by the 1.1.0 and 1.2.0 amendments (codify the
+exception here rather than bend it via an undocumented plan-level justification), this amendment
+records the carve-out formally instead.
+
+Added sections: none (this is an additive carve-out clause within an existing principle, not a
+new principle)
+
+Removed sections: none
+
+Templates requiring updates:
+- .specify/templates/plan-template.md — ✅ compatible as-is (Constitution Check section reads
+  gates dynamically from this file; no edits needed)
+
+Follow-up TODOs: none. RATIFICATION_DATE unchanged; LAST_AMENDED_DATE updated to this amendment's
+date.
+-->
+
+<!--
+Sync Impact Report (previous)
+==================
 Version change: 1.2.0 → 1.2.1 (PATCH — wording/documentation-accuracy fix, no semantic change)
 
 Modified sections:
@@ -162,9 +196,28 @@ locations of the same organisation; and closure-calendar notification
 rules. A feature that only checks a regulatory constraint client-side is
 incomplete.
 
+**Carve-out (leefgroep ratio, pending group-type data model)**: The
+leefgroep (living group) 18-child cap is not yet enforceable — no
+feature to date has introduced a way to flag a `Group`/`Location` as a
+leefgroep versus a standard room, so the system has no data to decide
+which cap applies where. Feature `010-attendance` implements and
+enforces the other three thresholds (solo max 8; 2+ caregivers max
+9/caregiver; nap time max 14, inferred from open sleep events) but does
+not implement the leefgroep cap. This exemption ends the moment a future
+feature adds a group-type distinction to the data model — at that point
+the leefgroep cap MUST be enforced for any group flagged as such.
+
 **Rationale**: Erkenning (the operating licence) depends on these ratios
 being genuinely enforced. UI-only checks can be bypassed by direct API
-calls or bugs, risking the customer's licence.
+calls or bugs, risking the customer's licence. The leefgroep carve-out
+targets a genuinely different problem than the rule it modifies: unlike
+the other three thresholds (computable today from existing check-in and
+staff-qualification data), leefgroep enforcement requires a data-model
+concept — which rooms are leefgroepen — that does not exist anywhere yet.
+Inventing a speculative `Group.IsLeefgroep` flag now, with no feature
+ready to set or consume it correctly, risks exactly the kind of premature,
+throwaway field Principle I's own tenant-isolation carve-out reasoning
+warns against.
 
 ### III. CQRS via MediatR & Thin Endpoints
 
@@ -339,4 +392,4 @@ checked against Principles I (tenant isolation) and II (regulatory
 compliance) explicitly, since these are the two categories most likely
 to cause customer-facing (licensing or data-leak) harm if violated.
 
-**Version**: 1.2.1 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-09
+**Version**: 1.3.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-09

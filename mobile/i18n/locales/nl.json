@@ -25,6 +25,15 @@
       "invalid_payload": "Sommige gegevens zijn niet geldig. Controleer en probeer opnieuw.",
       "list_failed": "Kon de gebeurtenissen van dit kind niet laden.",
       "summary_failed": "Kon het dagoverzicht niet laden."
+    },
+    "attendance": {
+      "not_found": "Er is geen bijbehorende aanwezigheidsregistratie gevonden.",
+      "already_recorded": "Dit kind is vandaag al geregistreerd.",
+      "closure_day": "De opvang is vandaag gesloten — inchecken is niet mogelijk.",
+      "edit_window_expired": "Deze registratie kan hier niet meer worden gecorrigeerd.",
+      "closure_status_immutable": "Sluitingsdagen kunnen niet handmatig worden ingesteld.",
+      "mark_absent_failed": "Kon dit kind niet als afwezig registreren. Probeer het opnieuw.",
+      "bkr_failed": "Kon de huidige ratio niet laden."
     }
   },
   "session": {
@@ -47,7 +56,8 @@
   "groupView": {
     "title": "Vandaag",
     "empty": "Er zijn momenteel geen kinderen aan jou toegewezen.",
-    "pullToRefresh": "Trek omlaag om te vernieuwen"
+    "pullToRefresh": "Trek omlaag om te vernieuwen",
+    "viewDetail": "Details bekijken"
   },
   "child": {
     "allergyAlert": "Allergie",
@@ -172,6 +182,29 @@
       "quality": "Kwaliteit",
       "name": "Naam",
       "text": "Tekst"
+    }
+  },
+  "attendance": {
+    "status": {
+      "absent": "Afwezig"
+    },
+    "bkr": {
+      "label": "Ratio",
+      "labelNapTime": "Ratio (slaaptijd)",
+      "status": {
+        "green": "Binnen ratio",
+        "amber": "Op capaciteit",
+        "red": "Ratio overschreden"
+      }
+    },
+    "absence": {
+      "title": "{{name}} afwezig melden",
+      "prompt": "Was deze afwezigheid vooraf goedgekeurd?",
+      "justified": "Gerechtvaardigd",
+      "unjustified": "Niet gerechtvaardigd",
+      "reasonPlaceholder": "Reden (optioneel)",
+      "cancel": "Annuleren",
+      "confirm": "Bevestigen"
     }
   }
 }

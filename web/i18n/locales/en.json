@@ -19,6 +19,7 @@
   "sidebar": {
     "staff": "Staff",
     "devices": "Devices",
+    "attendance": "Attendance",
     "locations": "Locations",
     "contracts": "Contracts",
     "children": "Children",
@@ -81,6 +82,36 @@
     "revokeDialogTitle": "Revoke device",
     "revokeDialogDescription": "This tablet ({group} at {location}) will need to be re-paired before it can be used again. Continue?",
     "revokeDialogCancel": "Cancel"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "locationLabel": "Location",
+    "dateLabel": "Date",
+    "columnChild": "Child",
+    "columnStatus": "Status",
+    "columnCheckIn": "Check-in",
+    "columnCheckOut": "Check-out",
+    "columnPlannedDuration": "Planned duration",
+    "columnActions": "Actions",
+    "status": {
+      "present": "Present",
+      "absent": "Absent",
+      "closure": "Closed"
+    },
+    "justified": "justified",
+    "unjustified": "unjustified",
+    "minutes": "{count} min",
+    "actionCorrect": "Correct",
+    "emptyState": "No attendance records for this date yet.",
+    "loadError": "Couldn't load attendance. Please try again.",
+    "retry": "Retry",
+    "correctionDialogTitle": "Correct attendance for {name}",
+    "correctionDialogDescription": "Update the check-in or check-out time for this record.",
+    "correctionDialogCancel": "Cancel",
+    "correctionDialogSave": "Save",
+    "correctionErrorClosureImmutable": "Closure days can't be set manually.",
+    "correctionErrorValidation": "Some information isn't valid. Please check and try again.",
+    "correctionErrorGeneric": "Couldn't save this correction. Please try again."
   },
   "errorBoundary": {
     "title": "Something went wrong",

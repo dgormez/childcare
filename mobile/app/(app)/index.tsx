@@ -2,12 +2,19 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Thermometer } from "lucide-react-native";
+import { AlertTriangle, Thermometer, ChevronRight } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getCached, setCached } from "../../services/readCache";
 import { syncPendingQueue } from "../../services/syncEngine";
+import { checkIn, checkOut, getBkrRatio, getTodayAttendanceByChildId, todayDateString } from "../../services/attendance";
 import { useColors } from "../../hooks/useColors";
-import type { ChildResponse, GroupResponse } from "../../types";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
+import { useStore } from "../../store/useStore";
+import { BkrIndicator } from "../../components/BkrIndicator";
+import { AbsenceDialog } from "../../components/AbsenceDialog";
+import type { AttendanceRecordResponse, BkrRatioResponse, ChildResponse, GroupResponse } from "../../types";
+
+const BKR_POLL_INTERVAL_MS = 15_000; // FR-008a: refresh at least every 15 seconds
 
 export const CHILDREN_CACHE_KEY = "children:today";
 
@@ -55,10 +62,25 @@ export default function GroupViewScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const colors = useColors();
+  const { isConnected } = useNetworkStatus();
+  const { device } = useStore();
 
   const [children, setChildren] = useState<ChildResponse[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [attendanceByChildId, setAttendanceByChildId] = useState<Record<string, AttendanceRecordResponse>>({});
+  const [bkr, setBkr] = useState<BkrRatioResponse | null>(null);
+  const [absenceTarget, setAbsenceTarget] = useState<ChildResponse | null>(null);
+
+  const refreshBkr = useCallback(async () => {
+    if (!device) return;
+    try {
+      setBkr(await getBkrRatio(device.locationId));
+    } catch {
+      // BKR is a live display-only indicator (FR-009) — a failed refresh just leaves the
+      // previous value showing rather than disrupting the screen.
+    }
+  }, [device]);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -75,12 +97,56 @@ export default function GroupViewScreen() {
     } finally {
       if (isRefresh) setRefreshing(false); else setLoading(false);
     }
-  }, []);
+    try {
+      setAttendanceByChildId(await getTodayAttendanceByChildId());
+    } catch {
+      // Offline or request failed — the group view still renders, just without today's
+      // present/absent state until the next successful load.
+    }
+    await refreshBkr();
+  }, [refreshBkr]);
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // FR-008a: refresh from the server at least every 15 seconds, so a change made by staff on a
+  // different device/tablet in the same room becomes visible promptly.
+  useEffect(() => {
+    const interval = setInterval(refreshBkr, BKR_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [refreshBkr]);
+
+  const handleCardPress = useCallback(
+    async (child: ChildResponse) => {
+      const existing = attendanceByChildId[child.id];
+      const today = todayDateString();
+      try {
+        if (existing?.status === "present" && !existing.checkOutAt) {
+          const updated = await checkOut(child.id, today, isConnected);
+          if (updated) setAttendanceByChildId((prev) => ({ ...prev, [child.id]: updated }));
+        } else {
+          const updated = await checkIn(child.id, today, isConnected);
+          setAttendanceByChildId((prev) => ({ ...prev, [child.id]: updated }));
+        }
+      } finally {
+        // FR-008a: reflect a locally-taken action within 5 seconds — an immediate refresh
+        // rather than waiting for the next 15-second poll.
+        refreshBkr();
+      }
+    },
+    [attendanceByChildId, isConnected, refreshBkr]
+  );
+
+  const handleAbsenceSaved = useCallback(async () => {
+    try {
+      setAttendanceByChildId(await getTodayAttendanceByChildId());
+    } catch {
+      // Leave the previous state showing if the refetch fails.
+    }
+    refreshBkr();
+  }, [refreshBkr]);
 
   if (loading) {
     return (
@@ -91,51 +157,98 @@ export default function GroupViewScreen() {
   }
 
   return (
-    <FlatList
-      testID="group-view-list"
-      style={{ backgroundColor: colors.background }}
-      data={children ?? []}
-      keyExtractor={(c) => c.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
-      contentContainerStyle={{ padding: 16, flexGrow: 1 }}
-      ListEmptyComponent={
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 64 }}>
-          <Text style={{ color: colors.textSoft }}>{t("groupView.empty")}</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {bkr && (
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <BkrIndicator bkr={bkr} />
         </View>
-      }
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          onPress={() => router.push(`/(app)/child/${item.id}`)}
-          style={{ minHeight: 48 }}
-          className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-xl p-4 mb-3"
-        >
-          {item.photoDownloadUrl ? (
-            <Image
-              source={{ uri: item.photoDownloadUrl }}
-              style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12 }}
-            />
-          ) : (
-            <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: colors.border }} />
-          )}
-          <View style={{ flex: 1 }}>
-            <Text className="text-text dark:text-text-dark font-semibold text-base">
-              {item.firstName} {item.lastName}
-            </Text>
-            <Text style={{ color: colors.textSoft }}>{calculateAge(item.dateOfBirth)}</Text>
-          </View>
-          {!!item.allergiesDescription && (
-            <View accessibilityLabel={t("child.allergyAlert")} style={{ marginLeft: 8 }}>
-              <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
-            </View>
-          )}
-          {/* Fever alert slot — inactive placeholder; feature 009 added temperature tracking
-              and the daily-summary query this would read from, but wiring a per-child "fever
-              today" badge into this list is a separate UI task not yet scoped. */}
-          <View accessibilityLabel={t("child.feverAlert")} style={{ marginLeft: 4, opacity: 0.2 }}>
-            <Thermometer size={20} strokeWidth={2} color={colors.textSoft} />
-          </View>
-        </TouchableOpacity>
       )}
-    />
+      <FlatList
+        testID="group-view-list"
+        style={{ backgroundColor: colors.background }}
+        data={children ?? []}
+        keyExtractor={(c) => c.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
+        contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+        ListEmptyComponent={
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 64 }}>
+            <Text style={{ color: colors.textSoft }}>{t("groupView.empty")}</Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const attendance = attendanceByChildId[item.id];
+          const present = attendance?.status === "present" && !attendance.checkOutAt;
+          const absent = attendance?.status === "absent";
+
+          return (
+            // A plain View wraps the row (not a TouchableOpacity) — EventTimeline.tsx's existing
+            // pattern for a row with more than one tappable region, since nesting a TouchableOpacity
+            // inside another doesn't reliably scope touch handling to just the inner one.
+            <View
+              className={`flex-row items-center rounded-xl mb-3 ${
+                present
+                  ? "bg-success-bg dark:bg-success-bg-dark border-2 border-success dark:border-success-dark"
+                  : absent
+                    ? "bg-surface-soft dark:bg-surface-soft-dark border-2 border-border dark:border-border-dark opacity-60"
+                    : "bg-surface-soft dark:bg-surface-soft-dark"
+              }`}
+            >
+              <TouchableOpacity
+                // FR-001/FR-017: a single tap toggles check-in/check-out — the primary,
+                // highest-frequency action on this screen. Absence (a separate, deliberate
+                // action, FR-005/FR-017) is reached via long-press, never this same tap.
+                onPress={() => handleCardPress(item)}
+                onLongPress={() => setAbsenceTarget(item)}
+                style={{ minHeight: 48, flex: 1 }}
+                className="flex-row items-center p-4"
+              >
+                {item.photoDownloadUrl ? (
+                  <Image
+                    source={{ uri: item.photoDownloadUrl }}
+                    style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12 }}
+                  />
+                ) : (
+                  <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: colors.border }} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text className="text-text dark:text-text-dark font-semibold text-base">
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  <Text style={{ color: colors.textSoft }}>
+                    {absent ? t("attendance.status.absent") : calculateAge(item.dateOfBirth)}
+                  </Text>
+                </View>
+                {!!item.allergiesDescription && (
+                  <View accessibilityLabel={t("child.allergyAlert")} style={{ marginLeft: 8 }}>
+                    <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
+                  </View>
+                )}
+                {/* Fever alert slot — inactive placeholder; feature 009 added temperature tracking
+                    and the daily-summary query this would read from, but wiring a per-child "fever
+                    today" badge into this list is a separate UI task not yet scoped. */}
+                <View accessibilityLabel={t("child.feverAlert")} style={{ marginLeft: 4, opacity: 0.2 }}>
+                  <Thermometer size={20} strokeWidth={2} color={colors.textSoft} />
+                </View>
+              </TouchableOpacity>
+              {/* Secondary affordance — event-logging/timeline navigation moved here since the
+                  card's own tap is now check-in/out (FR-001/FR-017). */}
+              <TouchableOpacity
+                onPress={() => router.push(`/(app)/child/${item.id}`)}
+                accessibilityLabel={t("groupView.viewDetail")}
+                style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center", marginRight: 8 }}
+              >
+                <ChevronRight size={20} strokeWidth={2} color={colors.textSoft} />
+              </TouchableOpacity>
+            </View>
+          );
+        }}
+      />
+      <AbsenceDialog
+        child={absenceTarget}
+        isConnected={isConnected}
+        onClose={() => setAbsenceTarget(null)}
+        onSaved={handleAbsenceSaved}
+      />
+    </View>
   );
 }

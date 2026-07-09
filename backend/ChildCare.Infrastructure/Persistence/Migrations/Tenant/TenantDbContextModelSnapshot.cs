@@ -24,6 +24,61 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.AttendanceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("AbsenceJustified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AbsenceReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CheckInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CheckOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("PlannedDurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.PrimitiveCollection<List<Guid>>("RecordedBy")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId", "LocationId", "Date")
+                        .IsUnique();
+
+                    b.HasIndex("LocationId", "Date", "Status");
+
+                    b.ToTable("attendance_records", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Child", b =>
                 {
                     b.Property<Guid>("Id")
@@ -752,6 +807,21 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("ChildId");
 
                     b.ToTable("vaccination_records", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.AttendanceRecord", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.ChildContact", b =>

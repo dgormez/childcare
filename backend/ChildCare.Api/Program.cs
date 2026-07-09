@@ -165,6 +165,11 @@ QuestPDF.Settings.License = LicenseType.Community;
 builder.Services.AddScoped<ITemperatureAlertService, TemperatureAlertService>();
 builder.Services.AddScoped<IExpoPushSender, ExpoPushSender>();
 
+// ── Attendance (feature 010-attendance) ─────────────────────────────────────
+// Plain injectable service (not a MediatR command), called directly from CheckInCommand's
+// handler — mirrors IShiftAttributionService/CloseStaleShiftsHelper's existing pattern.
+builder.Services.AddScoped<ChildCare.Application.Attendance.PlannedDurationCalculator>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -595,6 +600,7 @@ app.MapContractsEndpoints();
 app.MapDevicePairingEndpoints();
 app.MapRoomShiftEndpoints();
 app.MapChildEventEndpoints();
+app.MapAttendanceEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.
