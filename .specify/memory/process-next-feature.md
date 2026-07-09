@@ -251,3 +251,23 @@ use the static code review instead.
   backlog item (`009a`) was logged for a caregiver-requested "custom event type" + a
   `measurement`→`growth_check` rename, raised mid-review and deliberately kept out of this
   feature's scope rather than expanding it mid-flight.
+- 009a (`009a-child-events-custom-type`): ✅ Done, merged 2026-07-09 (PR #13, squash-merged after
+  green CI — 267/267 backend + 96/96 mobile tests). Adds the `custom` type (`{ label, text? }`)
+  and bundles the `measurement`→`growth_check` rename. This backlog item's own prompt flagged two
+  genuinely open design questions with no recommended default ("what does `custom` provide over
+  `note`?", "bundle the rename or split it?") — per the standing rule about pausing on no-precedent
+  scope questions, both were resolved with the user via `AskUserQuestion` before specifying, rather
+  than guessed: label+text (not a key/value bag), and bundle the rename into this feature. The
+  rename ships as a new `backfill-growth-check` CLI command (mirrors `migrate-tenants`'s tenant-loop
+  pattern, feature 002) — a raw per-tenant SQL `UPDATE`, not an EF migration, since no schema
+  changes. **Must run against every tenant schema before deploying** the build that drops
+  `"measurement"` recognition (hard cutover, no dual-write window) or reads on any un-migrated row
+  throw. Two real bugs were caught by the new tests before merge, not assumed away: the backfill's
+  first draft used lowercase `event_type`/`id` column names, but this codebase's Postgres columns
+  are PascalCase (`"EventType"`, `"Id"`, no snake_case convention configured) — worth remembering
+  for any future raw-SQL-against-this-schema work; and `@testing-library/react-native` v14/React 19
+  needs `fireEvent.changeText` explicitly wrapped in `await act(async () => ...)`, unlike
+  `fireEvent.press` — otherwise the state update never flushes before the next assertion.
+  `/speckit-checklist`/`/speckit-analyze` found small gaps (missing offline-sync and
+  `EditEventModal` test coverage for `custom`, an orphaned `note.text` i18n key after a
+  field-label refactor) — all fixed, not deferred, same standing rule as every prior feature.
