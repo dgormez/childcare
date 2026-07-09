@@ -82,7 +82,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// "contacts" below already removes entirely — no separate revert step needed for it beyond
     /// the __EFMigrationsHistory row. Feature 010's "AddAttendanceRecords" migration repeats the
     /// pattern once more — attendance_records has FKs to children/locations, so it's dropped
-    /// before either.
+    /// before either. Feature 011's "AddClosureCalendar" migration adds closure notification
+    /// and message tables that depend on contacts and closure_days, plus attendance_records now
+    /// depends on closure_days, so those closure tables are dropped before contacts.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -91,6 +93,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
             DROP TABLE "{schemaName}"."attendance_records";
+            DROP TABLE "{schemaName}"."closure_notification_deliveries";
+            DROP TABLE "{schemaName}"."parent_closure_messages";
+            DROP TABLE "{schemaName}"."kdv_closure_days";
             DROP TABLE "{schemaName}"."child_events";
             DROP TABLE "{schemaName}"."room_shifts";
             DROP TABLE "{schemaName}"."device_pairings";
@@ -116,7 +121,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar';
             """);
     }
 

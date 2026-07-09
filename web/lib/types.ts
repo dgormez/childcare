@@ -95,3 +95,51 @@ export interface PagedAttendanceResponse {
   items: AttendanceRecordResponse[];
   nextCursor: string | null;
 }
+
+// ── Closure calendar (feature 011) ─────────────────────────────────────────────
+export type ClosureType = "holiday" | "training" | "extraordinary";
+export type ClosureStatus = "draft" | "published" | "cancelled";
+
+export interface ClosureDeliverySummaryResponse {
+  sent: number;
+  failed: number;
+  messageCount: number;
+}
+
+export interface ClosureDayResponse {
+  id: string;
+  locationId: string;
+  date: string;
+  label: string;
+  closureType: ClosureType;
+  notifyParents: boolean;
+  status: ClosureStatus;
+  notificationSentAt: string | null;
+  publishedAt: string | null;
+  cancelledAt: string | null;
+  deliverySummary: ClosureDeliverySummaryResponse;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClosureNotificationSummaryResponse {
+  recipients: number;
+  pushSent: number;
+  pushFailed: number;
+  messagesCreated: number;
+}
+
+export interface PublishClosureDayResponse {
+  closure: ClosureDayResponse;
+  attendanceRecordsCreated: number;
+  attendanceRecordsUpdated: number;
+  requiresAttendanceConfirmation: boolean;
+  notificationSummary: ClosureNotificationSummaryResponse;
+}
+
+export interface CancelClosureDayResponse {
+  closure: ClosureDayResponse;
+  attendanceRecordsReleased: number;
+  attendanceRecordsPreserved: number;
+  notificationSummary: ClosureNotificationSummaryResponse;
+}

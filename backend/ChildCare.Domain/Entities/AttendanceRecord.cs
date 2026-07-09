@@ -31,6 +31,10 @@ public class AttendanceRecord
     // correction, the director's own TenantUserId wrapped in a single-element array.
     public List<Guid> RecordedBy { get; set; } = [];
 
+    public Guid? ClosureDayId { get; set; }
+    public string? PriorStateJson { get; set; }
+    public Guid? ClosureConfirmedBy { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

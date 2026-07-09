@@ -35,6 +35,9 @@ public interface ITenantDbContext
     DbSet<DevicePairing> DevicePairings { get; }
     DbSet<ChildEvent> ChildEvents { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
+    DbSet<KdvClosureDay> KdvClosureDays { get; }
+    DbSet<ClosureNotificationDelivery> ClosureNotificationDeliveries { get; }
+    DbSet<ParentClosureMessage> ParentClosureMessages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

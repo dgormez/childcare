@@ -20,6 +20,7 @@ using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
 using ChildCare.Application.ChildEvents;
 using ChildCare.Application.Contracts;
+using ChildCare.Application.ClosureCalendar;
 using ChildCare.Application.RoomShifts;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Concurrency;
@@ -169,6 +170,12 @@ builder.Services.AddScoped<IExpoPushSender, ExpoPushSender>();
 // Plain injectable service (not a MediatR command), called directly from CheckInCommand's
 // handler — mirrors IShiftAttributionService/CloseStaleShiftsHelper's existing pattern.
 builder.Services.AddScoped<ChildCare.Application.Attendance.PlannedDurationCalculator>();
+
+// ── Closure calendar (feature 011) ─────────────────────────────────────────
+builder.Services.AddScoped<ClosureParentRecipientResolver>();
+builder.Services.AddScoped<ClosureNotificationService>();
+builder.Services.AddScoped<ClosureAttendanceService>();
+builder.Services.AddScoped<IClosureCalendarReader, ClosureCalendarReader>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
@@ -601,6 +608,7 @@ app.MapDevicePairingEndpoints();
 app.MapRoomShiftEndpoints();
 app.MapChildEventEndpoints();
 app.MapAttendanceEndpoints();
+app.MapClosureCalendarEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

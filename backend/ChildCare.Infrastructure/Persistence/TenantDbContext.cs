@@ -56,6 +56,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
+    public DbSet<KdvClosureDay> KdvClosureDays => Set<KdvClosureDay>();
+
+    public DbSet<ClosureNotificationDelivery> ClosureNotificationDeliveries => Set<ClosureNotificationDelivery>();
+
+    public DbSet<ParentClosureMessage> ParentClosureMessages => Set<ParentClosureMessage>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -371,6 +377,67 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             ar.HasIndex(x => new { x.ChildId, x.LocationId, x.Date }).IsUnique();
             // BKR present-count query's access pattern (research.md R2).
             ar.HasIndex(x => new { x.LocationId, x.Date, x.Status });
+            ar.Property(x => x.PriorStateJson).HasColumnType("jsonb");
+            ar.HasOne<KdvClosureDay>().WithMany().HasForeignKey(x => x.ClosureDayId);
+        });
+
+        modelBuilder.Entity<KdvClosureDay>(cd =>
+        {
+            cd.ToTable("kdv_closure_days");
+            cd.HasKey(x => x.Id);
+            cd.Property(x => x.Label).IsRequired().HasMaxLength(200);
+            cd.Property(x => x.ClosureType)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ClosureType)Enum.Parse(typeof(ClosureType), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            cd.Property(x => x.Status)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ClosureStatus)Enum.Parse(typeof(ClosureStatus), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            cd.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            cd.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+            cd.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.UpdatedBy).OnDelete(DeleteBehavior.Restrict);
+            cd.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.PublishedBy).OnDelete(DeleteBehavior.Restrict);
+            cd.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CancelledBy).OnDelete(DeleteBehavior.Restrict);
+            cd.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.AttendanceGeneratedBy).OnDelete(DeleteBehavior.Restrict);
+            cd.HasIndex(x => new { x.LocationId, x.Date }).IsUnique();
+            cd.HasIndex(x => new { x.LocationId, x.Status, x.Date });
+        });
+
+        modelBuilder.Entity<ClosureNotificationDelivery>(d =>
+        {
+            d.ToTable("closure_notification_deliveries");
+            d.HasKey(x => x.Id);
+            d.Property(x => x.Kind)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ClosureNotificationKind)Enum.Parse(typeof(ClosureNotificationKind), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            d.Property(x => x.PushStatus)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ClosureDeliveryStatus)Enum.Parse(typeof(ClosureDeliveryStatus), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            d.Property(x => x.PushToken).HasMaxLength(200);
+            d.Property(x => x.Error).HasMaxLength(500);
+            d.HasOne<KdvClosureDay>().WithMany().HasForeignKey(x => x.ClosureDayId);
+            d.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+            d.HasOne<ParentClosureMessage>().WithMany().HasForeignKey(x => x.MessageId);
+            d.HasIndex(x => new { x.ClosureDayId, x.ContactId, x.Kind }).IsUnique();
+        });
+
+        modelBuilder.Entity<ParentClosureMessage>(m =>
+        {
+            m.ToTable("parent_closure_messages");
+            m.HasKey(x => x.Id);
+            m.Property(x => x.Kind)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ClosureNotificationKind)Enum.Parse(typeof(ClosureNotificationKind), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            m.Property(x => x.TitleKey).IsRequired().HasMaxLength(120);
+            m.Property(x => x.BodyKey).IsRequired().HasMaxLength(120);
+            m.Property(x => x.ArgumentsJson).HasColumnType("jsonb").IsRequired();
+            m.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+            m.HasOne<KdvClosureDay>().WithMany().HasForeignKey(x => x.ClosureDayId);
+            m.HasIndex(x => new { x.ClosureDayId, x.ContactId, x.Kind }).IsUnique();
         });
     }
 }
