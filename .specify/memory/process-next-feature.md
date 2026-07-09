@@ -232,3 +232,22 @@ use the static code review instead.
   locally): the committed `package-lock.json` was missing a nested `next-intl`/`@swc/helpers`
   resolution that only `npm ci` (not `npm install`) validates strictly — fixed by a clean
   reinstall, pushed as a follow-up commit before merge.
+- 009 (`009-child-events`): ✅ Done, merged 2026-07-09 (PR #12, squash-merged after green CI —
+  258/258 backend + 88/88 mobile tests). Child event timeline: 11 event types in one JSONB
+  table, caregiver-tablet quick-entry (2-tap routine types), temperature push-alerts, same-day
+  corrections, daily-summary query. Biggest deviation from plan: FR-006's edit authorization was
+  originally clarified as a per-caregiver `StaffLocationEligibility` check, discovered
+  mid-implementation to be impossible — device-token-authenticated routine actions carry no
+  individual caregiver identity to check eligibility against (constitution's Technology Stack
+  Constraints). Corrected to a device-location match instead (research.md R4) — worth
+  remembering generally: a clarification answer that assumes an identity a given auth path
+  doesn't actually carry needs re-checking against the real auth model, not just implemented as
+  agreed. Also added `DeviceOrDirector` (first dual-auth-scheme policy in this codebase — a
+  BACKLOG draft had incorrectly assumed `RoomShiftEndpoints` already had precedent for this) and
+  `ChildEventTypeExtensions` (multi-word enum wire-string mapping, since the default
+  `ToString().ToLowerInvariant()` convention silently drops underscores). `/speckit-converge`
+  found two data-model constraints (`EndedAt`/`AdministeredBy` type restrictions) that nothing
+  enforced — fixed, not deferred, same as every prior feature's standing rule. A follow-up
+  backlog item (`009a`) was logged for a caregiver-requested "custom event type" + a
+  `measurement`→`growth_check` rename, raised mid-review and deliberately kept out of this
+  feature's scope rather than expanding it mid-flight.
