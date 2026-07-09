@@ -271,3 +271,17 @@ use the static code review instead.
   `/speckit-checklist`/`/speckit-analyze` found small gaps (missing offline-sync and
   `EditEventModal` test coverage for `custom`, an orphaned `note.text` i18n key after a
   field-label refactor) — all fixed, not deferred, same standing rule as every prior feature.
+- 010 (`010-attendance`): ✅ Done, merged 2026-07-09 (PR #14, squash-merged after green CI —
+  309/309 backend + 23/23 web checks; local validation also ran 105/105 mobile tests and web
+  typecheck). Daily attendance register: tenant `attendance_records`, caregiver-tablet one-tap
+  check-in/out with offline queue registration, absence marking, director/caregiver correction
+  rules, director web history/correction UI, `planned_duration_minutes` derivation, and a live
+  caregiver BKR indicator sourced from attendance + 008a room-shift roster + 009 sleep events.
+  Prompt deltas were made explicit rather than hidden: `recorded_by` follows feature 009 as a
+  `uuid[]` checked-in-caregiver set because device-token writes cannot identify a single caregiver;
+  closure-day generation remains feature 011 (010 only ships the `closure` status/blocking rule);
+  exchange/extra-day request UI remains feature 013 (010 already supports extra-day manual
+  check-in with `planned_duration_minutes = null`); and the leefgroep 18-cap is out of scope until
+  a group/location type flag exists. Finish pass fixed a real director-web gap (correction dialog
+  originally edited only times and kept stale form state; now handles status/absence fields with
+  tests) and a CI-only PostgreSQL timestamp precision assertion (`.4072354Z` vs `.4072350Z`).

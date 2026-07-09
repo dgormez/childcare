@@ -30,7 +30,7 @@
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
-| 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
+| 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
@@ -1205,6 +1205,36 @@ Out of scope:
 - QR contactless check-in (Phase 2).
 - Paxton/Net2 hardware integration (Phase 4).
 ```
+
+**Shipped 2026-07-09** — `specs/010-attendance/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 57/57 tasks, PR #14 squash-merged after green CI —
+309/309 backend + 23/23 web checks; local validation also covered 105/105 mobile tests and web
+typecheck). Scope deltas worth knowing before starting feature 011/012/014:
+
+- **Attendance now has the end-to-end operational spine**: tenant-schema `attendance_records`
+  (`present`/`absent`/`closure`), device-token caregiver check-in/check-out, director/caregiver
+  corrections under the same-day/location edit-window rule, director history/correction web UI,
+  absence registration with justified/unjustified classification, and a caregiver-tablet BKR
+  indicator sourced from present children plus feature 008a's room-shift roster.
+- **The prompt's single `recorded_by UUID` became a `uuid[]` array**, following feature 009's
+  already-shipped precedent: device-token tablet writes identify the room tablet, not one exact
+  caregiver, so attribution stores the checked-in caregiver set at the time of the action rather
+  than inventing false precision.
+- **Closure and exchange/extra-day dependencies are extension points, not placeholder workflows**:
+  010 ships the `closure` status and blocks manual check-in against an existing closure record,
+  but bulk closure generation remains feature 011. Parent exchange/extra-day request UI remains
+  feature 013; 010 already supports manual check-in on a non-contracted weekday by storing
+  `planned_duration_minutes = null`.
+- **BKR is warning-only and uses the data model that exists today**: solo max 8, 2+ qualified
+  caregivers max 9 each, nap-time max 14 inferred from open sleep events, students/volunteers
+  excluded. The backlog's leefgroep 18-cap stays out of scope because no group/location type flag
+  exists yet; this is documented in the spec/plan and constitution carve-out rather than guessed.
+- **Two finish-pass issues were fixed before merge**: the director web correction dialog initially
+  only edited check-in/check-out times and kept stale form state between records; it now supports
+  status/absence corrections with i18n coverage and a regression test. CI also exposed an overly
+  strict exact `DateTime` equality assertion after a PostgreSQL round-trip (`.4072354Z` vs
+  `.4072350Z`); the test now asserts sub-millisecond stability while still catching a real
+  overwrite.
 
 ---
 
