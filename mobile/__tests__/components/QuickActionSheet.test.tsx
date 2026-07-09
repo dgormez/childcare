@@ -93,3 +93,36 @@ it("starting a nap (no in-progress sleep) is a single tap with no fields", async
     expect(recordChildEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: "sleep", payload: {} }), true)
   );
 });
+
+// feature 009a: `custom` event — free-text label (required) + optional detail text, no
+// autocomplete/suggestion of prior labels (2026-07-09 clarification).
+
+it("blocks saving a custom event with no label entered", async () => {
+  const { getByText, queryByText } = await render(
+    <QuickActionSheet visible childId="child-1" inProgressSleepEventId={null} onClose={jest.fn()} onEventRecorded={jest.fn()} />
+  );
+
+  fireEvent.press(getByText("childEvents.types.custom"));
+  await waitFor(() => expect(queryByText("childEvents.custom.label")).toBeTruthy());
+  await act(async () => fireEvent.press(getByText("childEvents.save")));
+
+  expect(recordChildEvent).not.toHaveBeenCalled();
+});
+
+it("records a custom event with a label only", async () => {
+  const { getByText, getByPlaceholderText } = await render(
+    <QuickActionSheet visible childId="child-1" inProgressSleepEventId={null} onClose={jest.fn()} onEventRecorded={jest.fn()} />
+  );
+
+  fireEvent.press(getByText("childEvents.types.custom"));
+  await waitFor(() => expect(getByPlaceholderText("childEvents.custom.labelPlaceholder")).toBeTruthy());
+  await act(async () => fireEvent.changeText(getByPlaceholderText("childEvents.custom.labelPlaceholder"), "Sunscreen applied"));
+  await act(async () => fireEvent.press(getByText("childEvents.save")));
+
+  await waitFor(() =>
+    expect(recordChildEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: "custom", payload: { label: "Sunscreen applied" } }),
+      true
+    )
+  );
+});

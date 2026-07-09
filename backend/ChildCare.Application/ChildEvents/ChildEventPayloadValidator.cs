@@ -27,13 +27,15 @@ public static class ChildEventPayloadValidator
         [ChildEventType.Activity] = ["description"],
         [ChildEventType.Note] = ["text"],
         [ChildEventType.Weight] = ["kg"],
-        [ChildEventType.Measurement] = ["weightKg", "heightCm", "headCm"],
+        [ChildEventType.GrowthCheck] = ["weightKg", "heightCm", "headCm"],
+        [ChildEventType.Custom] = ["label", "text"],
     };
 
     private static readonly string[] MedicationNames = ["perdolan", "nurofen", "antibiotics", "other"];
     private static readonly string[] DiaperTypes = ["wet", "dirty", "both"];
     private static readonly string[] MoodValues = ["great", "good", "okay", "difficult"];
     private static readonly string[] SleepQualities = ["good", "okay", "restless"];
+    private const int CustomLabelMaxLength = 100;
 
     /// <param name="endedAt">
     /// Only relevant for <see cref="ChildEventType.Sleep"/> — <c>quality</c> is required only
@@ -101,23 +103,29 @@ public static class ChildEventPayloadValidator
                 RequireDecimalInRange(payload, "kg", 0m, 30m, failures);
                 break;
 
-            case ChildEventType.Measurement:
-                ValidateMeasurement(payload, failures);
+            case ChildEventType.GrowthCheck:
+                ValidateGrowthCheck(payload, failures);
+                break;
+
+            case ChildEventType.Custom:
+                RequireString(payload, "label", failures);
+                RequireMaxLength(payload, "label", CustomLabelMaxLength, failures);
                 break;
         }
 
         return failures;
     }
 
-    private static void ValidateMeasurement(JsonElement payload, List<ValidationFailure> failures)
+    private static void ValidateGrowthCheck(JsonElement payload, List<ValidationFailure> failures)
     {
         var weightKg = OptionalDecimal(payload, "weightKg");
         var heightCm = OptionalDecimal(payload, "heightCm");
         var headCm = OptionalDecimal(payload, "headCm");
 
-        // "Any subset is valid" means any *non-empty* subset (2026-07-08 clarification, FR-002).
+        // "Any subset is valid" means any *non-empty* subset (2026-07-08 clarification, FR-002,
+        // unchanged by the measurement -> growth_check rename, feature 009a's FR-009).
         if (weightKg is null && heightCm is null && headCm is null)
-            failures.Add(new ValidationFailure("measurement", "errors.child_events.empty_measurement"));
+            failures.Add(new ValidationFailure("growthCheck", "errors.child_events.empty_growth_check"));
 
         InRangeIfPresent("weightKg", weightKg, 0m, 30m, failures);
         InRangeIfPresent("heightCm", heightCm, 30m, 120m, failures);
@@ -128,6 +136,13 @@ public static class ChildEventPayloadValidator
     {
         if (!payload.TryGetProperty(field, out var el) || el.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(el.GetString()))
             failures.Add(new ValidationFailure(field, "errors.child_events.field_required"));
+    }
+
+    private static void RequireMaxLength(JsonElement payload, string field, int maxLength, List<ValidationFailure> failures)
+    {
+        if (payload.TryGetProperty(field, out var el) && el.ValueKind == JsonValueKind.String
+            && el.GetString() is { } value && value.Length > maxLength)
+            failures.Add(new ValidationFailure(field, "errors.child_events.value_too_long"));
     }
 
     private static void RequireInt(JsonElement payload, string field, List<ValidationFailure> failures)

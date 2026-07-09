@@ -40,20 +40,86 @@ public class ChildEventPayloadValidationTests(OrganisationOnboardingWebAppFactor
     }
 
     [Fact]
-    public async Task RecordEvent_EmptyMeasurementPayload_Returns422()
+    public async Task RecordEvent_EmptyGrowthCheckPayload_Returns422()
     {
         var (client, deviceToken, childId) = await SetupAsync();
-        var response = await PostChildEventAsync(client, deviceToken, childId, "measurement", DateTime.UtcNow, new { });
+        var response = await PostChildEventAsync(client, deviceToken, childId, "growth_check", DateTime.UtcNow, new { });
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Contains("errors.child_events.empty_measurement", await response.Content.ReadAsStringAsync());
+        Assert.Contains("errors.child_events.empty_growth_check", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
-    public async Task RecordEvent_MeasurementWithOnlyWeight_IsValid()
+    public async Task RecordEvent_GrowthCheckWithOnlyWeight_IsValid()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "growth_check", DateTime.UtcNow, new { weightKg = 12.5 });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    // ── feature 009a: measurement -> growth_check is a hard cutover, no dual-write window ──
+
+    [Fact]
+    public async Task RecordEvent_LiteralMeasurementEventType_Returns400()
     {
         var (client, deviceToken, childId) = await SetupAsync();
         var response = await PostChildEventAsync(client, deviceToken, childId, "measurement", DateTime.UtcNow, new { weightKg = 12.5 });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("errors.child_events.invalid_event_type", await response.Content.ReadAsStringAsync());
+    }
+
+    // ── feature 009a: `custom` event type (label + optional text) ──
+
+    [Fact]
+    public async Task RecordEvent_CustomMissingLabel_Returns422()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow, new { });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RecordEvent_CustomWhitespaceLabel_Returns422()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow, new { label = "   " });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RecordEvent_CustomLabelOverMaxLength_Returns422()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow, new { label = new string('a', 101) });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Contains("errors.child_events.value_too_long", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task RecordEvent_CustomLabelOnly_Returns201()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow, new { label = "Sunscreen applied" });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RecordEvent_CustomLabelAndText_Returns201AndRoundTrips()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow,
+            new { label = "Sunscreen applied", text = "Reapplied after outdoor play" });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = (await response.Content.ReadFromJsonAsync<ChildCare.Contracts.Responses.ChildEventResponse>())!;
+        Assert.Equal("custom", created.EventType);
+    }
+
+    [Fact]
+    public async Task RecordEvent_CustomUnexpectedField_Returns422()
+    {
+        var (client, deviceToken, childId) = await SetupAsync();
+        // "ml" belongs to feeding_bottle, not custom.
+        var response = await PostChildEventAsync(client, deviceToken, childId, "custom", DateTime.UtcNow, new { label = "Sunscreen applied", ml = 100 });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     [Theory]
