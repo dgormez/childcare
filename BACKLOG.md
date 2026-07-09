@@ -44,7 +44,7 @@
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
-| 020 | `020-email-communications` | Bulk parent emails by location/section, emailed daily reports | 004, 006, 009, 011, 013 | 🔲 Not started |
+| 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -1763,13 +1763,24 @@ What to build:
 - Bulk parent email: director selects a location (and, optionally, a
   specific group/section within it — the group/section assignment already
   modelled on the child in feature 006) and sends a one-off email to every
-  parent/contact of children currently enrolled there. One email per family
-  household, not per child — a parent with two children at the same location
-  must receive a single combined email, not two.
+  parent/contact of children currently enrolled there, with the subject/body
+  they compose. One email per family household, not per child — a parent
+  with two children at the same location must receive a single combined
+  email, not two.
+- Bulk email attachment: when composing a bulk email, the director can
+  upload a document (PDF or image — e.g. a menu, a policy update, a permission
+  slip) via a GCS signed URL (constitution's storage convention) and have it
+  attached to the email sent to every recipient.
 - Daily report email: the same aggregated daily summary shown in the parent
-  app (feature 013, sourced from child_events in feature 009) can be sent
-  as an email to a child's contacts, either on-demand (director/caregiver
-  triggers it) or as an opt-in daily digest per contact.
+  app (feature 013, sourced from child_events in feature 009) is emailed
+  automatically once per day, at end of day, to each of a child's contacts.
+  Default-on (opt-out), not opt-in — every contact with an email on file
+  receives it unless they've unsubscribed. Each email includes an unsubscribe
+  link/action; an unsubscribed contact stops receiving the daily digest until
+  they re-subscribe (unsubscribe state is per-contact, not per-child, since a
+  contact may have children at multiple locations). A director/caregiver can
+  additionally trigger an on-demand one-off resend, independent of the daily
+  automatic send and unaffected by a contact's digest-unsubscribe state.
 - Closure day emails: closure day notifications (feature 011) and
   announcements (feature 013) gain an email channel alongside push/in-app,
   reusing the same bulk-send mechanism built here.
@@ -1790,6 +1801,12 @@ Key constraints:
   with every other feature (constitution non-negotiable #3).
 - Respect the photos/media consent flags already on the contract (feature 007)
   if a daily report email includes photos.
+- The daily-digest unsubscribe action must work with no login required (a
+  signed, single-use-purpose link is standard for this) — a parent should
+  never need to authenticate just to opt out of an email.
+- Uploaded bulk-email attachments follow the existing GCS signed-URL,
+  no-public-blob-URL convention (constitution) and a sane size cap (decide
+  at plan time) to avoid provider rejection on large sends.
 
 Edge cases:
 - A location or group/section has zero enrolled children at send time —
@@ -1799,6 +1816,9 @@ Edge cases:
 - A daily report is requested for a child with no events recorded yet that
   day — send an email that clearly says "no updates yet" rather than an
   empty-looking template.
+- A contact has unsubscribed from the daily digest but is also the target of
+  an on-demand resend or a bulk/announcement email — those are separate
+  channels from the digest-unsubscribe flag and must still be delivered.
 - Rate limiting / provider throttling on large bulk sends (a big location
   could have 100+ families) — batch or queue rather than sending
   synchronously in the request.
@@ -1806,8 +1826,9 @@ Edge cases:
 Out of scope:
 - SMS or WhatsApp channels.
 - Open/click tracking or delivery analytics.
-- Parent-side unsubscribe/preference centre (Phase 3, alongside the
-  broader notification preferences work).
+- A full multi-channel notification preference centre (per-notification-type
+  granularity across push/in-app/email) — Phase 3. The daily-digest
+  unsubscribe above is a single, narrow opt-out flag, not that broader system.
 ```
 
 ---
@@ -1821,4 +1842,5 @@ Out of scope:
 - BKR ratio enforcement lives in attendance (010), not in contracts
 - IKT compliance (019) requires an X.509 certificate — initiate procurement at least 4 weeks before Phase 3 starts
 - Email communications (020) consolidates the "Email notification fallback (Phase 2)" items deferred by both 011 (closure calendar) and 013 (parent communication) — no need to build email delivery separately in either of those specs
+- **020's scope was refined 2026-07-09** (direct product-owner request, not yet planned): the daily-report email is default-on/opt-out (auto-sent every day) with a per-contact unsubscribe, not the originally-drafted opt-in digest; bulk parent emails also need a document-upload/attachment capability. Both are written into 020's prompt block above — flagging here since this changes the shape of 020's data model (an unsubscribe flag on `Contact`) versus what an earlier read of this backlog might have assumed.
 - **Flag for 005 (Staff), 007 (Contracts), 012 (Caregiver Scheduling)**: feature 004 (Locations) deliberately does not build any "move/relocate a location" continuity — when a KDV physically relocates (old building closes, new one opens), 004 only offers a "duplicate location" convenience (clones location-level settings, no data carryover). Whoever builds 005/007/012 needs to design the actual staff/child reassignment UX for a location closing down, keeping in mind staff are NOT bound to a single location (a caregiver can already work different locations on different days per 012's scheduling model) — so "moving" a location is really a bulk reassignment of active contracts (007) and future schedule entries (012), not a 1:1 staff/child transfer.
