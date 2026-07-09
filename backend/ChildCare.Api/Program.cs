@@ -18,12 +18,14 @@ using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
 using ChildCare.Application.Common.Behaviors;
+using ChildCare.Application.ChildEvents;
 using ChildCare.Application.Contracts;
 using ChildCare.Application.RoomShifts;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Concurrency;
 using ChildCare.Infrastructure.Pdf;
 using ChildCare.Infrastructure.Persistence;
+using ChildCare.Infrastructure.Push;
 using ChildCare.Infrastructure.Storage;
 using FluentValidation;
 using MediatR;
@@ -142,6 +144,10 @@ builder.Services.AddScoped<ILocationDeactivationGuard, ContractLocationDeactivat
 builder.Services.AddScoped<IChildDeactivationGuard, ContractChildDeactivationGuard>();
 builder.Services.AddScoped<IContractPdfGenerator, QuestPdfContractGenerator>();
 QuestPDF.Settings.License = LicenseType.Community;
+
+// ── Child events (feature 009-child-events) ─────────────────────────────────
+builder.Services.AddScoped<ITemperatureAlertService, TemperatureAlertService>();
+builder.Services.AddScoped<IExpoPushSender, ExpoPushSender>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
@@ -315,6 +321,15 @@ builder.Services.AddAuthorization(options =>
     // director's own session token is not a device token).
     options.AddPolicy("DeviceAuthenticated", policy => policy
         .AddAuthenticationSchemes("DeviceToken")
+        .RequireAuthenticatedUser());
+
+    // Feature 009 — PATCH/DELETE /api/child-events/{id} accept either a paired tablet's device
+    // token (caregiver, same-day-and-location only — checked in the handler via
+    // ChildEventEditWindowPolicy) or a director's user JWT (any event, any day). ASP.NET Core
+    // tries each listed scheme and succeeds if either authenticates (research.md R4,
+    // contracts/child-events-api.md — no existing endpoint needed this combination before).
+    options.AddPolicy("DeviceOrDirector", policy => policy
+        .AddAuthenticationSchemes("DeviceToken", JwtBearerDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser());
 });
 
@@ -563,6 +578,7 @@ app.MapGroupsEndpoints();
 app.MapContractsEndpoints();
 app.MapDevicePairingEndpoints();
 app.MapRoomShiftEndpoints();
+app.MapChildEventEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

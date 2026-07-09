@@ -52,6 +52,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<DevicePairing> DevicePairings => Set<DevicePairing>();
 
+    public DbSet<ChildEvent> ChildEvents => Set<ChildEvent>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -99,6 +101,13 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         var migrator = context.GetService<IMigrator>();
         return migrator.GenerateScript(fromMigration: fromMigration, options: MigrationsSqlGenerationOptions.Default);
     }
+
+    // Extracted to a plain method — HasConversion's expression-tree lambda can't contain an
+    // out-var declaration or a throw-expression directly (CS8198/CS8188).
+    private static ChildEventType ParseChildEventType(string value) =>
+        ChildEventTypeExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown ChildEventType: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -229,6 +238,7 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.Phone).IsRequired().HasMaxLength(30);
             c.Property(x => x.Email).HasMaxLength(254);
             c.Property(x => x.Locale).IsRequired().HasMaxLength(5);
+            c.Property(x => x.PushToken).HasMaxLength(200);
         });
 
         modelBuilder.Entity<ChildContact>(cc =>
@@ -315,6 +325,28 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             dp.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
             dp.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.PairedByTenantUserId);
             dp.HasIndex(x => x.RevokedAt);
+        });
+
+        modelBuilder.Entity<ChildEvent>(ce =>
+        {
+            ce.ToTable("child_events");
+            ce.HasKey(x => x.Id);
+            ce.Property(x => x.EventType)
+              .HasConversion(v => v.ToWireString(), v => ParseChildEventType(v))
+              .HasMaxLength(30)
+              .IsRequired();
+            ce.Property(x => x.Payload).HasColumnType("jsonb").IsRequired();
+            // Native Npgsql array mapping (uuid[]) — simpler than a jsonb array for a flat list
+            // of ids (research.md R1's jsonb rationale is about the polymorphic Payload, not
+            // this field).
+            ce.Property(x => x.RecordedBy).HasColumnType("uuid[]");
+            ce.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            ce.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            ce.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            ce.HasOne<DevicePairing>().WithMany().HasForeignKey(x => x.RecordedByDeviceId);
+            // Primary timeline access pattern (data-model.md).
+            ce.HasIndex(x => new { x.ChildId, x.OccurredAt });
+            ce.HasIndex(x => new { x.ChildId, x.EventType, x.OccurredAt });
         });
     }
 }

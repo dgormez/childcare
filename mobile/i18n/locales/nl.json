@@ -16,6 +16,15 @@
       "organisation_slug_required": "Organisatie is verplicht.",
       "email_required": "E-mailadres is verplicht.",
       "password_required": "Wachtwoord is verplicht."
+    },
+    "network": "Geen internetverbinding. Probeer het opnieuw.",
+    "validation": "Sommige gegevens zijn niet geldig. Controleer en probeer opnieuw.",
+    "child_events": {
+      "not_found": "Deze gebeurtenis kon niet worden gevonden.",
+      "edit_window_expired": "Deze gebeurtenis kan hier niet meer worden bewerkt.",
+      "invalid_payload": "Sommige gegevens zijn niet geldig. Controleer en probeer opnieuw.",
+      "list_failed": "Kon de gebeurtenissen van dit kind niet laden.",
+      "summary_failed": "Kon het dagoverzicht niet laden."
     }
   },
   "session": {
@@ -75,5 +84,90 @@
   "devices": {
     "revoked": "Deze tablet is gedeactiveerd.",
     "revokedBody": "Vraag een directeur om deze opnieuw in te stellen."
+  },
+  "childEvents": {
+    "quickActionTitle": "Gebeurtenis registreren",
+    "empty": "Vandaag nog geen gebeurtenissen geregistreerd.",
+    "pendingSync": "Synchronisatie in behandeling",
+    "needsReview": "Controle nodig",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "deleteConfirmTitle": "Deze gebeurtenis verwijderen?",
+    "deleteConfirmMessage": "Dit kan niet ongedaan worden gemaakt vanaf dit scherm.",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "endNap": "Slaapje beëindigen",
+    "inProgress": "Bezig",
+    "types": {
+      "sleep": "Slaap",
+      "temperature": "Temperatuur",
+      "medication": "Medicatie",
+      "feeding_bottle": "Fles",
+      "feeding_solid": "Vast voedsel",
+      "diaper": "Luier",
+      "mood": "Stemming",
+      "activity": "Activiteit",
+      "note": "Notitie",
+      "weight": "Gewicht",
+      "measurement": "Meting"
+    },
+    "diaper": {
+      "wet": "Nat",
+      "dirty": "Vuil",
+      "both": "Beide",
+      "notes": "Notities (optioneel)"
+    },
+    "mood": {
+      "great": "Uitstekend",
+      "good": "Goed",
+      "okay": "Oké",
+      "difficult": "Moeilijk"
+    },
+    "sleep": {
+      "quality": {
+        "good": "Goed",
+        "okay": "Oké",
+        "restless": "Onrustig"
+      }
+    },
+    "medication": {
+      "name": {
+        "perdolan": "Perdolan",
+        "nurofen": "Nurofen",
+        "antibiotics": "Antibiotica",
+        "other": "Andere"
+      },
+      "doseDescription": "Dosis",
+      "reason": "Reden"
+    },
+    "feedingBottle": {
+      "ml": "Hoeveelheid (ml)"
+    },
+    "feedingSolid": {
+      "description": "Beschrijving"
+    },
+    "temperature": {
+      "celsius": "Temperatuur (°C)"
+    },
+    "weight": {
+      "kg": "Gewicht (kg)"
+    },
+    "measurement": {
+      "weightKg": "Gewicht (kg)",
+      "heightCm": "Lengte (cm)",
+      "headCm": "Hoofdomtrek (cm)"
+    },
+    "activity": {
+      "description": "Beschrijving"
+    },
+    "note": {
+      "text": "Notitie"
+    },
+    "fieldLabels": {
+      "type": "Type",
+      "value": "Waarde",
+      "quality": "Kwaliteit",
+      "name": "Naam"
+    }
   }
 }

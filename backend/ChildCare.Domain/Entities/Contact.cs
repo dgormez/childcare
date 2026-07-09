@@ -12,6 +12,11 @@ public class Contact
     public string? Email    { get; set; }
     public string Locale    { get; set; } = "nl";
 
+    // Expo push token (feature 009) — nullable, never populated by any client yet since no
+    // parent-facing registration path exists (accepted gap, spec.md Assumptions). Exists now so
+    // the temperature-alert recipient query is real/testable ahead of that registration UI.
+    public string? PushToken { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -33,6 +33,7 @@ public interface ITenantDbContext
     DbSet<Contract> Contracts { get; }
     DbSet<RoomShift> RoomShifts { get; }
     DbSet<DevicePairing> DevicePairings { get; }
+    DbSet<ChildEvent> ChildEvents { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

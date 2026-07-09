@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { AlertTriangle, Thermometer } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getCached, setCached } from "../../services/readCache";
 import { syncPendingQueue } from "../../services/syncEngine";
@@ -123,14 +124,16 @@ export default function GroupViewScreen() {
             <Text style={{ color: colors.textSoft }}>{calculateAge(item.dateOfBirth)}</Text>
           </View>
           {!!item.allergiesDescription && (
-            <Text accessibilityLabel={t("child.allergyAlert")} style={{ fontSize: 20, marginLeft: 8 }}>
-              ⚠️
-            </Text>
+            <View accessibilityLabel={t("child.allergyAlert")} style={{ marginLeft: 8 }}>
+              <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
+            </View>
           )}
-          {/* Fever alert slot — always inactive until a temperature/health-check feature exists. */}
-          <Text accessibilityLabel={t("child.feverAlert")} style={{ fontSize: 20, marginLeft: 4, opacity: 0.2 }}>
-            🌡️
-          </Text>
+          {/* Fever alert slot — inactive placeholder; feature 009 added temperature tracking
+              and the daily-summary query this would read from, but wiring a per-child "fever
+              today" badge into this list is a separate UI task not yet scoped. */}
+          <View accessibilityLabel={t("child.feverAlert")} style={{ marginLeft: 4, opacity: 0.2 }}>
+            <Thermometer size={20} strokeWidth={2} color={colors.textSoft} />
+          </View>
         </TouchableOpacity>
       )}
     />

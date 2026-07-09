@@ -76,3 +76,36 @@ export interface PairDeviceResponse {
   deviceToken:  string;
   tokenVersion: number;
 }
+
+// ── Child events (feature 009) ──────────────────────────────────────────────────
+export type ChildEventType =
+  | "sleep" | "temperature" | "medication" | "feeding_bottle" | "feeding_solid"
+  | "diaper" | "mood" | "activity" | "note" | "weight" | "measurement";
+
+export interface ChildEventResponse {
+  id:              string;
+  childId:         string;
+  eventType:       ChildEventType;
+  occurredAt:      string;
+  endedAt:         string | null;
+  payload:         Record<string, unknown>;
+  visibleToParent: boolean;
+  recordedBy:      string[];
+  administeredBy:  string | null;
+  createdAt:       string;
+  updatedAt:       string;
+}
+
+export interface PagedChildEventsResponse {
+  items:      ChildEventResponse[];
+  nextCursor: string | null;
+}
+
+export interface DailySummaryResponse {
+  napsCount:                number;
+  bottlesCount:              number;
+  diaperChangesCount:        number;
+  latestMood:                string | null;
+  latestTemperatureCelsius:  number | null;
+  medicationAdministered:    boolean;
+}

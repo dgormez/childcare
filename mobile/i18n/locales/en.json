@@ -16,6 +16,15 @@
       "organisation_slug_required": "Organisation is required.",
       "email_required": "Email address is required.",
       "password_required": "Password is required."
+    },
+    "network": "No network connection. Please try again.",
+    "validation": "Some information isn't valid. Please check and try again.",
+    "child_events": {
+      "not_found": "This event could not be found.",
+      "edit_window_expired": "This event can no longer be edited from here.",
+      "invalid_payload": "Some information isn't valid. Please check and try again.",
+      "list_failed": "Could not load this child's events.",
+      "summary_failed": "Could not load today's summary."
     }
   },
   "session": {
@@ -75,5 +84,90 @@
   "devices": {
     "revoked": "This tablet has been deactivated.",
     "revokedBody": "Please ask a director to set it up again."
+  },
+  "childEvents": {
+    "quickActionTitle": "Log an event",
+    "empty": "No events recorded yet today.",
+    "pendingSync": "Pending sync",
+    "needsReview": "Needs review",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete this event?",
+    "deleteConfirmMessage": "This cannot be undone from this screen.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "endNap": "End nap",
+    "inProgress": "In progress",
+    "types": {
+      "sleep": "Sleep",
+      "temperature": "Temperature",
+      "medication": "Medication",
+      "feeding_bottle": "Bottle",
+      "feeding_solid": "Solid food",
+      "diaper": "Diaper",
+      "mood": "Mood",
+      "activity": "Activity",
+      "note": "Note",
+      "weight": "Weight",
+      "measurement": "Measurement"
+    },
+    "diaper": {
+      "wet": "Wet",
+      "dirty": "Dirty",
+      "both": "Both",
+      "notes": "Notes (optional)"
+    },
+    "mood": {
+      "great": "Great",
+      "good": "Good",
+      "okay": "Okay",
+      "difficult": "Difficult"
+    },
+    "sleep": {
+      "quality": {
+        "good": "Good",
+        "okay": "Okay",
+        "restless": "Restless"
+      }
+    },
+    "medication": {
+      "name": {
+        "perdolan": "Perdolan",
+        "nurofen": "Nurofen",
+        "antibiotics": "Antibiotics",
+        "other": "Other"
+      },
+      "doseDescription": "Dose",
+      "reason": "Reason"
+    },
+    "feedingBottle": {
+      "ml": "Amount (ml)"
+    },
+    "feedingSolid": {
+      "description": "Description"
+    },
+    "temperature": {
+      "celsius": "Temperature (°C)"
+    },
+    "weight": {
+      "kg": "Weight (kg)"
+    },
+    "measurement": {
+      "weightKg": "Weight (kg)",
+      "heightCm": "Height (cm)",
+      "headCm": "Head circumference (cm)"
+    },
+    "activity": {
+      "description": "Description"
+    },
+    "note": {
+      "text": "Note"
+    },
+    "fieldLabels": {
+      "type": "Type",
+      "value": "Value",
+      "quality": "Quality",
+      "name": "Name"
+    }
   }
 }

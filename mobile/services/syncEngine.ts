@@ -11,7 +11,7 @@ import { refresh } from "./auth";
 import { getApiBaseUrl } from "./apiClient";
 import { getDeviceToken } from "./deviceTokenStorage";
 import { handleDeviceRejection } from "./deviceAuth";
-import { setLastSyncTime } from "./localDb";
+import { setLastSyncTime, getQueueRowById } from "./localDb";
 import { useStore } from "../store/useStore";
 
 export interface SyncHandler {
@@ -54,17 +54,25 @@ export function isSyncingNow(): boolean {
  * token first once paired). research.md R3: replay never rotates the token mid-burst — every
  * queued row in one run carries whichever token was current when replay() first reads it, all
  * still valid, since rotation only swaps the *stored* token for the *next* fresh call.
+ *
+ * Feature 009 (research.md R3/CHK008): re-reads the row's current `payload` from local storage
+ * immediately before transmitting, rather than trusting the in-memory batch snapshot
+ * syncPendingQueue() read at the start of this run — closes a race where a sleep-end merge
+ * (childEvents.ts's endSleepEvent) landing after the batch read but before this row's send would
+ * otherwise ship the stale, pre-merge payload. Falls back to the passed-in row if the row has
+ * since been deleted/synced (defensive only; markSynced never deletes rows).
  */
 async function replay(row: QueueRow): Promise<Response> {
   const deviceToken = await getDeviceToken();
   const token = deviceToken ?? useStore.getState().auth?.accessToken;
-  return fetch(`${getApiBaseUrl()}${row.endpoint}`, {
-    method: row.http_method,
+  const current = getQueueRowById(row.id) ?? row;
+  return fetch(`${getApiBaseUrl()}${current.endpoint}`, {
+    method: current.http_method,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: row.payload,
+    body: current.payload,
   });
 }
 
@@ -148,6 +156,19 @@ export async function syncPendingQueue(): Promise<SyncResult> {
         await markSyncError(row.id, `sync failed after refresh retry: ${retryResponse.status}`);
         failed += 1;
         break; // FR-015: the retried call also failed — stop the whole run
+      }
+
+      if (response.status === 422) {
+        // Feature 009 FR-014a (analyze finding C1/research.md R10): a genuine validation
+        // rejection is a permanent failure, not a transient one — retrying it forever would
+        // never succeed, since nothing about the row or the request changes between attempts.
+        // The "rejected: " prefix is what EventTimeline reads to render a "needs review" state
+        // distinct from ordinary "pending sync".
+        const serverBody = await response.json().catch(() => null);
+        const errorKey = (serverBody as { errorKey?: string } | null)?.errorKey ?? "errors.validation";
+        await markSyncError(row.id, `rejected: ${errorKey}`);
+        failed += 1;
+        continue;
       }
 
       // Transient error (5xx or similar) — leave pending, continue to the next row.
