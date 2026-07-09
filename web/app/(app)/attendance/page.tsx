@@ -130,7 +130,7 @@ export default function AttendancePage() {
       </div>
 
       {state === "loading" && (
-        <div className="h-64 animate-pulse rounded-xl bg-surface-soft dark:bg-surface-soft-dark" />
+        <div className="h-64 rounded-xl bg-surface-soft dark:bg-surface-soft-dark" />
       )}
 
       {state === "error" && <ErrorState message={t("loadError")} retryLabel={t("retry")} onRetry={load} />}

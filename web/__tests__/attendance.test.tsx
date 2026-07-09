@@ -99,6 +99,36 @@ describe("AttendancePage", () => {
     );
   });
 
+  it("saves a status correction to absent with absence details", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
+      if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;
+      if (path === "/api/attendance") return Promise.resolve(okResponse({ items: [makeRecord()], nextCursor: null })) as never;
+      if (path === "/api/children") return Promise.resolve(okResponse([{ id: "child-1", firstName: "Emma", lastName: "Peeters" }])) as never;
+      return Promise.resolve(okResponse([])) as never;
+    });
+    vi.mocked(apiClient.PATCH).mockResolvedValue(okResponse(makeRecord({ status: "absent", absenceJustified: false })) as never);
+
+    renderAttendancePage();
+    await screen.findByText("Emma Peeters");
+
+    await userEvent.click(screen.getByRole("button", { name: "Correct" }));
+    await userEvent.selectOptions(await screen.findByRole("combobox", { name: "Status" }), "absent");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Absence type" }), "false");
+    await userEvent.type(screen.getByRole("textbox", { name: "Reason" }), "Sick");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(apiClient.PATCH).toHaveBeenCalledWith(
+      "/api/attendance/{id}",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          status: "absent",
+          absenceJustified: false,
+          absenceReason: "Sick",
+        }),
+      }),
+    );
+  });
+
   it("shows a retryable error state when attendance fails to load", async () => {
     vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
       if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;
