@@ -29,6 +29,7 @@
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
+| 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | 🔲 Not started |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
@@ -1018,6 +1019,41 @@ Edge cases:
 Out of scope:
 - Meal list for kitchen (read-only view from planning data — tracked here).
 - Learning journal narrative (Phase 2).
+```
+
+---
+
+### 009a — Child Events: Custom Type
+
+**Added 2026-07-09, during a live review of feature 009's implementation** (which shipped the
+11 fixed event types listed above, still `🔲 Not started` at the table row above until this
+follow-up lands — 009 itself was implemented and tested in the same session this entry was
+added). Two things came up that were deliberately deferred rather than reopening 009 mid-flight:
+
+```
+Add a `custom` child event type — a caregiver-defined label plus free text — for anything the
+11 fixed event types (sleep, temperature, medication, feeding_bottle, feeding_solid, diaper,
+mood, activity, note, weight, measurement) don't cover.
+
+Context: feature 009 was asked whether EventType should be "an enum instead of a string" — it
+already is, end-to-end (ChildCare.Domain.Enums.ChildEventType on the backend, a closed TS union
+in mobile/types/index.ts), so no change needed there. Separately, whether a distinct `custom`
+type should exist alongside the closed 11: `note` (free text) already serves as the catch-all
+today, so this needs a real design decision, not just "add an enum value" — what does `custom`
+provide that `note` doesn't? Candidates: a caregiver-supplied label/title distinct from the body
+text (so the timeline can show something more specific than "Note"), or a structured key/value
+bag for a one-off measurement the fixed types don't anticipate. Needs a clarify pass to settle
+this before planning, not an assumption.
+
+Also evaluate renaming `measurement` → `growth_check` (or similar) — it bundles weightKg/
+heightCm/headCm together (a pediatric growth check), not just height; the current name reads as
+narrower than what it actually captures. This is a rename touching a shipped enum value (backend
+enum + DB column values via ChildEventTypeExtensions' wire-string mapping, mobile TS union,
+i18n keys, and existing test fixtures) — treat it as a deliberate migration-safe rename
+(add-new-alongside-old, backfill, remove-old), not a find-and-replace, since feature 009's
+`child_events` table will have live data under the old wire value by the time this runs.
+
+Depends on 009 (extends its ChildEventType enum, validator, and quick-action UI directly).
 ```
 
 ---

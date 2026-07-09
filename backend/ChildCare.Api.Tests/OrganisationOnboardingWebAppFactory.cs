@@ -118,6 +118,10 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
                 return new FakeEmailSender(innerEmailService);
             });
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
+
+            // Feature 009 — never call the real Expo push service in tests.
+            services.AddSingleton<FakeExpoPushSender>();
+            services.AddSingleton<IExpoPushSender>(sp => sp.GetRequiredService<FakeExpoPushSender>());
         });
     }
 }

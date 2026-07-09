@@ -11,6 +11,19 @@ jest.mock("../../services/readCache", () => ({
   getCached: jest.fn(),
 }));
 
+jest.mock("../../services/childEvents", () => ({
+  listChildEvents: jest.fn().mockResolvedValue({ items: [], nextCursor: null }),
+  recordChildEvent: jest.fn(),
+  updateChildEvent: jest.fn(),
+  deleteChildEvent: jest.fn(),
+  endSleepEvent: jest.fn(),
+}));
+
+jest.mock("../../services/offlineQueue", () => ({
+  getPending: jest.fn().mockResolvedValue([]),
+  enqueue: jest.fn(),
+}));
+
 const { useLocalSearchParams } = require("expo-router");
 const { getCached } = require("../../services/readCache");
 

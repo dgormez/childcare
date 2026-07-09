@@ -61,3 +61,14 @@ export function markQueueRowSyncError(id: string, error: string) {
   const row = queueRows.find((r) => r.id === id);
   if (row) row.sync_error = error;
 }
+
+export function getQueueRowById(id: string): QueueRow | null {
+  return queueRows.find((r) => r.id === id) ?? null;
+}
+
+export function updateQueueRowPayload(id: string, payload: string): boolean {
+  const row = queueRows.find((r) => r.id === id && r.synced_at === null);
+  if (!row) return false;
+  row.payload = payload;
+  return true;
+}

@@ -12,6 +12,7 @@ module.exports = {
       "expo-secure-store|expo-sqlite|expo-constants|expo-linking|expo-status-bar|" +
       "@expo|react-native|@react-native|nativewind|react-native-reanimated|" +
       "react-native-screens|react-native-safe-area-context|react-native-toast-message|" +
+      "react-native-svg|lucide-react-native|" +
       "@react-navigation|zustand" +
     ")/)",
   ],

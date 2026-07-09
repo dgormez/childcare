@@ -17,6 +17,15 @@ jest.mock("../../services/offlineQueue", () => {
 jest.mock("../../services/auth", () => ({ refresh: jest.fn() }));
 jest.mock("../../services/apiClient", () => ({ getApiBaseUrl: () => "http://api.test" }));
 
+jest.mock("../../services/localDb", () => {
+  const mockGetQueueRowById = jest.fn().mockReturnValue(null);
+  return {
+    setLastSyncTime: jest.fn(),
+    getQueueRowById: (...args: unknown[]) => mockGetQueueRowById(...args),
+    __mockGetQueueRowById: mockGetQueueRowById,
+  };
+});
+
 import { syncPendingQueue, registerSyncHandler } from "../../services/syncEngine";
 
 const offlineQueueMock = jest.requireMock("../../services/offlineQueue") as {
@@ -25,6 +34,7 @@ const offlineQueueMock = jest.requireMock("../../services/offlineQueue") as {
   __mockMarkSyncError: jest.Mock;
 };
 const authMock = jest.requireMock("../../services/auth") as { refresh: jest.Mock };
+const localDbMock = jest.requireMock("../../services/localDb") as { __mockGetQueueRowById: jest.Mock };
 
 interface Row {
   id: string;
@@ -64,6 +74,7 @@ beforeEach(() => {
     auth: { userId: "u1", email: "carer@test.com", role: "staff", organisationSlug: "org-a", accessToken: "tok" },
   });
   global.fetch = jest.fn();
+  localDbMock.__mockGetQueueRowById.mockReturnValue(null);
 });
 
 it("sends queued rows sequentially, in order, and marks each synced_at on success (FR-012, FR-013)", async () => {
@@ -167,4 +178,33 @@ it("50+ synthetic queued rows all eventually sync, strictly in order, none silen
   expect(result).toEqual({ succeeded: 55, failed: 0, conflicted: 0 });
   const syncedOrder = offlineQueueMock.__mockMarkSynced.mock.calls.map((c) => c[0]);
   expect(syncedOrder).toEqual(rows.map((r) => r.id));
+});
+
+// ── Feature 009 (research.md R3/CHK008, T022a): replay() re-reads the current payload ──
+
+it("re-reads a row's current payload from local storage before transmitting, not the batch snapshot (CHK008)", async () => {
+  const staleRow = row({ id: "r1", entity_type: "child_event", payload: JSON.stringify({ endedAt: null }) });
+  offlineQueueMock.__mockGetPending.mockResolvedValue([staleRow]);
+  // Simulates a sleep-end merge landing after the batch read but before this row's send —
+  // getQueueRowById returns the already-merged payload, not the stale one syncPendingQueue read.
+  localDbMock.__mockGetQueueRowById.mockReturnValue({ ...staleRow, payload: JSON.stringify({ endedAt: "2026-01-01T01:00:00.000Z" }) });
+  (global.fetch as jest.Mock).mockResolvedValue(fetchResponse(200));
+
+  await syncPendingQueue();
+
+  const [, requestInit] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(JSON.parse(requestInit.body)).toEqual({ endedAt: "2026-01-01T01:00:00.000Z" });
+});
+
+// ── Feature 009 (FR-014a/research.md R10, T022b): a 422 is a permanent rejection ──
+
+it("marks a 422 with a distinguishable 'rejected:' prefix rather than retrying it as transient (FR-014a)", async () => {
+  offlineQueueMock.__mockGetPending.mockResolvedValue([row({ id: "r1", entity_type: "child_event" })]);
+  (global.fetch as jest.Mock).mockResolvedValue(fetchResponse(422, { errorKey: "errors.validation" }));
+
+  const result = await syncPendingQueue();
+
+  expect(result).toEqual({ succeeded: 0, failed: 1, conflicted: 0 });
+  expect(offlineQueueMock.__mockMarkSynced).not.toHaveBeenCalled();
+  expect(offlineQueueMock.__mockMarkSyncError).toHaveBeenCalledWith("r1", "rejected: errors.validation");
 });

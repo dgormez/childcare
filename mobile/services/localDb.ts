@@ -132,6 +132,25 @@ export function getPendingQueueRows(tenantId: string): QueueRow[] {
   );
 }
 
+/** Feature 009 (research.md R3/CHK008): syncEngine.ts's replay() re-reads a row's current
+ * payload immediately before transmitting, rather than trusting the in-memory batch snapshot
+ * getPendingQueueRows() returned at the start of a sync run — closes a race where a sleep-end
+ * merge landing after the batch read but before that row's send would otherwise ship stale data. */
+export function getQueueRowById(id: string): QueueRow | null {
+  if (Platform.OS === "web") return null;
+  return db.getFirstSync<QueueRow>("SELECT * FROM offline_queue WHERE id = ?", [id]) ?? null;
+}
+
+/** Feature 009 (research.md R3): merges an in-progress sleep event's end into its still-queued
+ * create row's payload, in place — used only while the row is still unsynced (synced_at IS
+ * NULL); the caller falls back to a normal queued PATCH once it isn't. Returns true if a row was
+ * actually updated (i.e. it was still pending at the moment of the call). */
+export function updateQueueRowPayload(id: string, payload: string): boolean {
+  if (Platform.OS === "web") return false;
+  const result = db.runSync("UPDATE offline_queue SET payload = ? WHERE id = ? AND synced_at IS NULL", [payload, id]);
+  return result.changes > 0;
+}
+
 export function markQueueRowSynced(id: string, note: string | null) {
   if (Platform.OS === "web") return;
   db.runSync("UPDATE offline_queue SET synced_at = ?, sync_error = ? WHERE id = ?", [new Date().toISOString(), note, id]);

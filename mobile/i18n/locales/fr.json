@@ -16,6 +16,15 @@
       "organisation_slug_required": "L'organisation est requise.",
       "email_required": "L'adresse e-mail est requise.",
       "password_required": "Le mot de passe est requis."
+    },
+    "network": "Aucune connexion réseau. Veuillez réessayer.",
+    "validation": "Certaines informations ne sont pas valides. Veuillez vérifier et réessayer.",
+    "child_events": {
+      "not_found": "Cet événement est introuvable.",
+      "edit_window_expired": "Cet événement ne peut plus être modifié depuis ici.",
+      "invalid_payload": "Certaines informations ne sont pas valides. Veuillez vérifier et réessayer.",
+      "list_failed": "Impossible de charger les événements de cet enfant.",
+      "summary_failed": "Impossible de charger le résumé du jour."
     }
   },
   "session": {
@@ -75,5 +84,90 @@
   "devices": {
     "revoked": "Cette tablette a été désactivée.",
     "revokedBody": "Demandez à un directeur de la reconfigurer."
+  },
+  "childEvents": {
+    "quickActionTitle": "Enregistrer un événement",
+    "empty": "Aucun événement enregistré aujourd'hui.",
+    "pendingSync": "Synchronisation en attente",
+    "needsReview": "À vérifier",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Supprimer cet événement ?",
+    "deleteConfirmMessage": "Cette action ne peut pas être annulée depuis cet écran.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "endNap": "Terminer la sieste",
+    "inProgress": "En cours",
+    "types": {
+      "sleep": "Sommeil",
+      "temperature": "Température",
+      "medication": "Médicament",
+      "feeding_bottle": "Biberon",
+      "feeding_solid": "Repas solide",
+      "diaper": "Couche",
+      "mood": "Humeur",
+      "activity": "Activité",
+      "note": "Note",
+      "weight": "Poids",
+      "measurement": "Mesure"
+    },
+    "diaper": {
+      "wet": "Mouillée",
+      "dirty": "Sale",
+      "both": "Les deux",
+      "notes": "Notes (facultatif)"
+    },
+    "mood": {
+      "great": "Très bien",
+      "good": "Bien",
+      "okay": "Correct",
+      "difficult": "Difficile"
+    },
+    "sleep": {
+      "quality": {
+        "good": "Bonne",
+        "okay": "Correcte",
+        "restless": "Agitée"
+      }
+    },
+    "medication": {
+      "name": {
+        "perdolan": "Perdolan",
+        "nurofen": "Nurofen",
+        "antibiotics": "Antibiotiques",
+        "other": "Autre"
+      },
+      "doseDescription": "Dose",
+      "reason": "Motif"
+    },
+    "feedingBottle": {
+      "ml": "Quantité (ml)"
+    },
+    "feedingSolid": {
+      "description": "Description"
+    },
+    "temperature": {
+      "celsius": "Température (°C)"
+    },
+    "weight": {
+      "kg": "Poids (kg)"
+    },
+    "measurement": {
+      "weightKg": "Poids (kg)",
+      "heightCm": "Taille (cm)",
+      "headCm": "Périmètre crânien (cm)"
+    },
+    "activity": {
+      "description": "Description"
+    },
+    "note": {
+      "text": "Note"
+    },
+    "fieldLabels": {
+      "type": "Type",
+      "value": "Valeur",
+      "quality": "Qualité",
+      "name": "Nom"
+    }
   }
 }
