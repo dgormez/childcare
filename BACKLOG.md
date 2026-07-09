@@ -29,7 +29,7 @@
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
-| 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | 🔲 Not started |
+| 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
@@ -1101,6 +1101,38 @@ i18n keys, and existing test fixtures) — treat it as a deliberate migration-sa
 
 Depends on 009 (extends its ChildEventType enum, validator, and quick-action UI directly).
 ```
+
+**Shipped 2026-07-09** — `specs/009a-child-events-custom-type/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 26/26 tasks, 21 new backend tests + 9 new mobile
+tests, 267/267 backend + 96/96 mobile passing). Two design decisions were resolved with the
+product owner before specifying, since the backlog prompt above explicitly flagged them as
+needing a real decision rather than an assumption: `custom`'s payload is `{ label, text? }`
+(a caregiver-supplied headline distinct from `note`'s body-only shape, plain free text with no
+autocomplete), and the `measurement` → `growth_check` rename was bundled into this feature rather
+than split out, since both already touch `ChildEventType` end-to-end. Scope deltas worth knowing:
+
+- **The rename's data backfill ships as a new `backfill-growth-check` CLI command**, mirroring
+  feature 002's `migrate-tenants` tenant-loop pattern exactly, run as a raw per-tenant SQL
+  `UPDATE` rather than an EF Core migration (no schema/column change, just a value rewrite). This
+  command **must run against every tenant schema before deploying the build** that removes
+  `"measurement"` recognition from `ChildEventTypeExtensions` — a hard cutover with no dual-write
+  window (an un-migrated row would otherwise throw when the value converter reads it back).
+- **A real bug was caught by the new tests before merge**: the first draft of the backfill SQL
+  used lowercase `event_type`/`id` column names, but this codebase's Postgres columns are
+  PascalCase (`"EventType"`, `"Id"`) since no snake_case naming convention is configured anywhere
+  in `TenantDbContext` — fixed in both the CLI command and its test once the tests failed against
+  a real database (constitution Principle V doing exactly what it's for).
+- **A `fireEvent.changeText` + `act()` quirk was found while writing mobile tests**: in this
+  repo's `@testing-library/react-native` v14 / React 19 setup, `changeText` (unlike `press`)
+  needs an explicit `await act(async () => ...)` wrap or the state update never flushes before
+  the next assertion — worth remembering for any future mobile test that types into a `TextInput`
+  and immediately asserts on the result.
+- `/speckit-checklist` and `/speckit-analyze` each surfaced small gaps (a missing offline-sync
+  test for `custom`, a missing `EditEventModal` test, an orphaned `note.text` i18n key left behind
+  by a field-label refactor) — all fixed during implementation/convergence, not deferred.
+- The constitution's `child_events` event-type list (Development Workflow section) was updated
+  from `measurement` to `growth_check`/`custom` as a PATCH-level (1.2.0 → 1.2.1) documentation-
+  accuracy fix — no principle changed, only the descriptive example list.
 
 ---
 
