@@ -31,7 +31,7 @@
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
-| 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
+| 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking | 007, 011 | 🔲 Not started |
@@ -1291,6 +1291,23 @@ Out of scope:
 - iCal / Google Calendar export for parents (Phase 2).
 - Advance warning rules (remind director to notify 4 weeks before) — Phase 2.
 ```
+
+**Shipped 2026-07-09** — `specs/011-closure-calendar/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 65/65 tasks, PR #15 squash-merged after green CI).
+Scope deltas worth knowing before starting feature 012/014/020:
+
+- **Closure days now have a draft/publish/cancel lifecycle**: directors create per-location
+  closure days in the web admin, publish them to make them operational, and cancellation preserves
+  audit history for published closures while draft removals stay quiet.
+- **Attendance integration is real, not a placeholder**: publishing a closure creates `closure`
+  attendance records for actively contracted children, blocks manual check-in, requires explicit
+  confirmation before replacing same-day checked-in records, and restores preserved attendance on
+  cancellation where appropriate.
+- **Parent notification is closure-specific until feature 020**: publish/cancel writes parent
+  closure messages and per-recipient push delivery records, with partial push failures retained for
+  audit/retry visibility. Email fallback remains feature 020.
+- **Invoicing has a stable reader contract**: feature 014 should use the shipped billable-exclusion
+  closure reader/API rather than re-querying closure tables ad hoc.
 
 ---
 
