@@ -25,6 +25,15 @@
       "invalid_payload": "Certaines informations ne sont pas valides. Veuillez vérifier et réessayer.",
       "list_failed": "Impossible de charger les événements de cet enfant.",
       "summary_failed": "Impossible de charger le résumé du jour."
+    },
+    "attendance": {
+      "not_found": "Aucun enregistrement de présence correspondant n'a été trouvé.",
+      "already_recorded": "Cet enfant a déjà été enregistré aujourd'hui.",
+      "closure_day": "Le centre est fermé aujourd'hui — l'enregistrement n'est pas possible.",
+      "edit_window_expired": "Cet enregistrement ne peut plus être corrigé depuis ici.",
+      "closure_status_immutable": "Les jours de fermeture ne peuvent pas être définis manuellement.",
+      "mark_absent_failed": "Impossible de marquer cet enfant absent. Veuillez réessayer.",
+      "bkr_failed": "Impossible de charger le ratio actuel."
     }
   },
   "session": {
@@ -47,7 +56,8 @@
   "groupView": {
     "title": "Aujourd'hui",
     "empty": "Aucun enfant ne vous est actuellement assigné.",
-    "pullToRefresh": "Tirez vers le bas pour actualiser"
+    "pullToRefresh": "Tirez vers le bas pour actualiser",
+    "viewDetail": "Voir les détails"
   },
   "child": {
     "allergyAlert": "Allergie",
@@ -172,6 +182,29 @@
       "quality": "Qualité",
       "name": "Nom",
       "text": "Texte"
+    }
+  },
+  "attendance": {
+    "status": {
+      "absent": "Absent"
+    },
+    "bkr": {
+      "label": "Ratio",
+      "labelNapTime": "Ratio (sieste)",
+      "status": {
+        "green": "Dans le ratio",
+        "amber": "À pleine capacité",
+        "red": "Ratio dépassé"
+      }
+    },
+    "absence": {
+      "title": "Marquer {{name}} absent",
+      "prompt": "Cette absence était-elle préapprouvée ?",
+      "justified": "Justifiée",
+      "unjustified": "Non justifiée",
+      "reasonPlaceholder": "Motif (facultatif)",
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
     }
   }
 }

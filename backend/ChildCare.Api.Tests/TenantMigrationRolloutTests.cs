@@ -80,7 +80,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// children/locations/groups/device_pairings, so it's dropped before all four. Its
     /// "AddContactPushToken" migration only adds a column to contacts, which the DROP TABLE
     /// "contacts" below already removes entirely — no separate revert step needed for it beyond
-    /// the __EFMigrationsHistory row.
+    /// the __EFMigrationsHistory row. Feature 010's "AddAttendanceRecords" migration repeats the
+    /// pattern once more — attendance_records has FKs to children/locations, so it's dropped
+    /// before either.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -88,6 +90,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."attendance_records";
             DROP TABLE "{schemaName}"."child_events";
             DROP TABLE "{schemaName}"."room_shifts";
             DROP TABLE "{schemaName}"."device_pairings";
@@ -113,7 +116,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords';
             """);
     }
 

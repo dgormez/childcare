@@ -66,6 +66,12 @@ text. Never use `primary` as a text color on a light background. If primary-hued
 needed (a link, an active tab label), use `primary-hover` instead — verified ~5.9:1 against
 `background`, clears AA comfortably.
 
+### Theming
+
+All three surfaces always follow the device/system light-dark setting — never force a theme,
+and never pick one based on surface, lighting assumptions, or time of day. Users choose their
+own OS-level preference for a reason; the app respects it uniformly, caregiver tablet included.
+
 ### Semantic (formalizing what was chosen ad hoc in feature 008 — unchanged by the v2 neutral/primary revision)
 
 - **danger** — allergy alerts, incidents, form errors.
@@ -82,6 +88,11 @@ needed (a link, an active tab label), use `primary-hover` instead — verified ~
 tappable button. `warning` is amber, not the raw `yellow-500` feature 008 shipped with — same
 family, warmer, less hazard-tape. Semantic colors are **locked platform-wide** — never reused
 for branding or per-surface identity (see Per-Surface Accents below for why that matters).
+
+**Never convey a semantic state by color alone** (WCAG 1.4.1). Every badge and banner pairs its
+color with an icon (from the Icons scale below) — a colorblind caregiver, or anyone glancing
+fast enough that hue doesn't register, still needs to tell `danger` from `warning` from `info`
+without reading a color. See Status indicators under Components for the paired icon per state.
 
 ### Per-surface accents (chrome-only — reviewed 2026-07-07)
 
@@ -149,9 +160,19 @@ placeholder.
 
 ## Density
 
-- Tablet: medium density.
-- Mobile: low density.
-- Web: high density.
+Row/list-item height and internal padding, pinned to the Spacing scale above so density is a
+falsifiable number, not a description:
+
+- **Mobile (parent) — low density**: `56px` row/item min-height, `16px` internal padding,
+  `32px` section gap.
+- **Tablet (caregiver) — medium density**: `48px` row/item min-height, `12px` internal
+  padding, `24px` section gap.
+- **Web (director) — high density**: `40px` row min-height, `8px` vertical / `12px`
+  horizontal cell padding, `16px` section gap.
+
+Tablet's `48px` row height isn't a coincidence — it matches the 48pt touch-target floor
+exactly, so a dense list is never denser than what's still tappable. Web has no touch-target
+floor (mouse/keyboard), so its rows can run tighter.
 
 ## Components
 
@@ -188,10 +209,15 @@ placeholder.
   offline banner, the sync-pending banner.
 - Never use a per-surface accent color (see above) for either — badges and banners are exactly
   where an accent would be misread as a semantic state.
+- **Every badge and banner pairs its semantic color with an icon** — never color alone (see
+  Color's Semantic section). Fixed pairing: `danger` → alert-triangle, `warning` → clock (pending/
+  offline), `success` → check-circle, `info` → refresh/sync. Reuse the same icon for the same
+  meaning everywhere; don't pick a new glyph per screen.
 
 ## Motion
 
-- Subtle only, under 250ms, no bouncing.
+- Subtle only, under 250ms, no bouncing. Ease out — `ease-out-quart`/`ease-out-expo` curves,
+  never linear, never elastic/spring.
 - **Reward state changes, not initial render.** The most common AI-UI motion tell is a
   staggered fade-up on every list as it first appears — don't do that. The group-view list
   should just be there on load. Save motion for something actually changing (a queued item
@@ -200,6 +226,10 @@ placeholder.
 - **Offline banner**: slide down on appearing, slide up on disappearing (~200ms) — a real
   state transition, worth animating, unlike a decorative list entrance.
 - **Screen transitions**: platform-native stack push/pop only. No custom transitions.
+- **Reduced motion is not optional.** Every animation needs a reduced-motion alternative —
+  swap to an instant state change or a plain opacity crossfade, never skip the state change
+  itself. Web: honor `prefers-reduced-motion`. Mobile: honor
+  `AccessibilityInfo.isReduceMotionEnabled()` / `useReducedMotion()`.
 
 ## Accessibility
 

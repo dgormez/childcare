@@ -54,6 +54,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<ChildEvent> ChildEvents => Set<ChildEvent>();
 
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md
@@ -347,6 +349,28 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Primary timeline access pattern (data-model.md).
             ce.HasIndex(x => new { x.ChildId, x.OccurredAt });
             ce.HasIndex(x => new { x.ChildId, x.EventType, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<AttendanceRecord>(ar =>
+        {
+            ar.ToTable("attendance_records");
+            ar.HasKey(x => x.Id);
+            ar.Property(x => x.Status)
+              .HasConversion(
+                  v => v.ToString().ToLowerInvariant(),
+                  v => (AttendanceStatus)Enum.Parse(typeof(AttendanceStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            // Native Npgsql array mapping (uuid[]) — same pattern as ChildEvent.RecordedBy
+            // (research.md R1).
+            ar.Property(x => x.RecordedBy).HasColumnType("uuid[]");
+            ar.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            ar.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            // FR-003: at most one record per child per location per day — the source of the
+            // 409-on-duplicate conflict behavior (research.md R4).
+            ar.HasIndex(x => new { x.ChildId, x.LocationId, x.Date }).IsUnique();
+            // BKR present-count query's access pattern (research.md R2).
+            ar.HasIndex(x => new { x.LocationId, x.Date, x.Status });
         });
     }
 }

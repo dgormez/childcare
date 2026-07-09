@@ -173,6 +173,20 @@ with no feature-specific failure modes: both return only the standard `401`
 (`TenantMiddleware`, missing/invalid auth) and `403` (`DirectorOnly`, wrong role) responses
 already shared by every other `DirectorOnly` endpoint in this file.
 
+## Daily Attendance Registration (feature `010-attendance`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.attendance.already_recorded` | 409 | `POST /api/attendance/check-in` — a `present`-status record already exists for this child/location/date (FR-003/FR-012); `POST /api/attendance/absence` — any existing record already exists for this child/location/date (FR-005), including the race case where a concurrent check-in/absence-mark won. |
+| `errors.attendance.closure_day` | 403 | `POST /api/attendance/check-in` — an existing record for this child/location/date already has `status = closure` (FR-015; the `closure` status itself is never set by this feature, only checked against). |
+| `errors.attendance.not_found` | 404 | `POST /api/attendance/check-out` — no matching `present`-status record with `checkInAt` set and `checkOutAt` still null (FR-002a, covers both "never checked in" and "already checked out"); `PATCH`/`DELETE /api/attendance/{id}` — unknown id. |
+| `errors.attendance.edit_window_expired` | 403 | `PATCH`/`DELETE /api/attendance/{id}` — a device-token request where the record's `date` isn't today (`Europe/Brussels`) or the requesting device's `LocationId` claim doesn't match the record's `LocationId` (FR-010, mirrors feature 009's `errors.child_events.edit_window_expired`). |
+| `errors.attendance.closure_status_immutable` | 403 | `PATCH /api/attendance/{id}` — attempting to set `status = closure` directly (FR-015; reserved for a future feature 011 mechanism). |
+| `errors.validation` | 422 | `PATCH /api/attendance/{id}` — the merged result would violate a status invariant (FR-011a): `present` with no `checkInAt`, or `absent` with no `absenceJustified` — the standard `ValidationBehavior` pipeline response (`fieldErrors`), reused rather than a bespoke shape. |
+
+This feature also reuses `errors.children.not_found` (404, feature 006) unchanged for
+`POST /api/attendance/check-in`/`absence` when `childId` doesn't resolve within the tenant.
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

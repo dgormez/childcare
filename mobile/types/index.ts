@@ -109,3 +109,36 @@ export interface DailySummaryResponse {
   latestTemperatureCelsius:  number | null;
   medicationAdministered:    boolean;
 }
+
+// ── Attendance (feature 010) ─────────────────────────────────────────────────────
+export type AttendanceStatus = "present" | "absent" | "closure";
+
+export interface AttendanceRecordResponse {
+  id:                     string;
+  childId:                string;
+  locationId:             string;
+  date:                   string;
+  status:                 AttendanceStatus;
+  checkInAt:              string | null;
+  checkOutAt:             string | null;
+  plannedDurationMinutes: number | null;
+  absenceJustified:       boolean | null;
+  absenceReason:          string | null;
+  recordedBy:             string[];
+  createdAt:              string;
+  updatedAt:              string;
+}
+
+export interface PagedAttendanceResponse {
+  items:      AttendanceRecordResponse[];
+  nextCursor: string | null;
+}
+
+// "green" | "amber" | "red" — FR-007e's precise threshold comparison, never a UI-computed value.
+export interface BkrRatioResponse {
+  presentCount:        number;
+  qualifiedStaffCount: number;
+  isNapTime:           boolean;
+  threshold:           number;
+  status:              "green" | "amber" | "red";
+}

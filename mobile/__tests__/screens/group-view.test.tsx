@@ -29,7 +29,12 @@ jest.mock("../../services/readCache", () => {
 
 jest.mock("../../services/syncEngine", () => {
   const mockSyncPendingQueue = jest.fn().mockResolvedValue({ succeeded: 0, failed: 0, conflicted: 0 });
-  return { syncPendingQueue: (...args: unknown[]) => mockSyncPendingQueue(...args), __mockSyncPendingQueue: mockSyncPendingQueue };
+  return {
+    syncPendingQueue: (...args: unknown[]) => mockSyncPendingQueue(...args),
+    __mockSyncPendingQueue: mockSyncPendingQueue,
+    // feature 010: attendance.ts registers a sync handler at module load time.
+    registerSyncHandler: jest.fn(),
+  };
 });
 
 const { useRouter } = require("expo-router");
@@ -78,7 +83,10 @@ it("loads and renders children from the group view, with an allergy icon and an 
   expect(getByLabelText("child.feverAlert")).toBeTruthy();
 });
 
-it("navigates to the child detail route when a card is tapped (FR-008)", async () => {
+// FR-001/FR-017 (feature 010): a card's own tap is now check-in/out, the screen's
+// highest-frequency action — navigation to the detail/timeline moved to a distinct secondary
+// affordance so it doesn't compete with that one-tap gesture.
+it("navigates to the child detail route via the secondary 'view details' affordance", async () => {
   getMock.mockImplementation((path: string) => {
     if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
     if (path === "/api/children") return Promise.resolve(jsonResponse(200, [child]));
@@ -87,11 +95,32 @@ it("navigates to the child detail route when a card is tapped (FR-008)", async (
   const push = jest.fn();
   useRouter.mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
 
-  const { findByText } = await render(<GroupViewScreen />);
-  const card = await findByText("Timmy Tester");
-  fireEvent.press(card);
+  const { findByText, getByLabelText } = await render(<GroupViewScreen />);
+  await findByText("Timmy Tester");
+  fireEvent.press(getByLabelText("groupView.viewDetail"));
 
   expect(push).toHaveBeenCalledWith("/(app)/child/c1");
+});
+
+it("tapping the card itself checks the child in, not navigate (FR-001/FR-017)", async () => {
+  getMock.mockImplementation((path: string) => {
+    if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
+    if (path === "/api/children") return Promise.resolve(jsonResponse(200, [child]));
+    return Promise.resolve(jsonResponse(404, {}));
+  });
+  const postMock = (jest.requireMock("../../services/apiClient") as { apiClient: { POST: jest.Mock } }).apiClient.POST;
+  postMock.mockResolvedValue(jsonResponse(201, { id: "a1", childId: "c1", status: "present", checkInAt: "2026-01-05T08:00:00Z" }));
+  const push = jest.fn();
+  useRouter.mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
+
+  const { findByText } = await render(<GroupViewScreen />);
+  const card = await findByText("Timmy Tester");
+  await act(async () => {
+    fireEvent.press(card);
+  });
+
+  expect(postMock).toHaveBeenCalledWith("/api/attendance/check-in", expect.objectContaining({ body: { childId: "c1", date: expect.any(String) } }));
+  expect(push).not.toHaveBeenCalled();
 });
 
 it("renders from read_cache when offline, with no network call succeeding (FR-009, SC-002)", async () => {
