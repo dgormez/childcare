@@ -80,6 +80,7 @@ Includes:
 - Absences.
 - Late arrivals.
 - Capacity tracking.
+- KDV closure days that mark enrolled children as closed for a location/date.
 
 ---
 
@@ -113,6 +114,7 @@ Includes:
 - Messages.
 - Daily updates.
 - Announcements.
+- Closure notifications and cancellation notices.
 - Photos.
 - Notifications.
 - Parent feedback.

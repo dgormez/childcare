@@ -41,11 +41,12 @@ A child arrives or leaves childcare.
    check-out, wrong status); a caregiver can correct only same-day records from the room's own
    tablet.
 
-Not yet implemented, reserved for later features: bulk auto-marking `status = closure` from a
-KDV closure calendar (feature 011 — the `closure` status value and the "no manual check-in
-against a closure record" rule already exist as of feature 010) and parent-initiated
-exchange/extra-day requests appearing here once approved (feature 013 — the underlying "extra
-day" check-in capability already works, feature 013 only needs to add the request/approval UI).
+Feature 011 implements bulk auto-marking `status = closure` from a KDV closure calendar:
+publishing a closure day for a location/date creates closure attendance records for enrolled
+children, and the feature 010 "no manual check-in against a closure record" rule blocks check-in
+on those records. Parent-initiated exchange/extra-day requests remain reserved for feature 013
+— the underlying "extra day" check-in capability already works, feature 013 only needs to add
+the request/approval UI.
 
 ### Applications
 
