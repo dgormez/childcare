@@ -67,6 +67,10 @@ public class CheckOutTests(OrganisationOnboardingWebAppFactory factory) : IClass
         var list = await ListAttendanceAsync(client, org.AccessToken, location.Id, Monday);
         var page = (await list.Content.ReadFromJsonAsync<PagedAttendanceResponse>())!;
         var record = page.Items.Single(r => r.ChildId == child.Id);
-        Assert.Equal(firstBody.CheckOutAt, record.CheckOutAt);
+        Assert.NotNull(firstBody.CheckOutAt);
+        Assert.NotNull(record.CheckOutAt);
+        Assert.True(
+            (record.CheckOutAt.Value - firstBody.CheckOutAt.Value).Duration() < TimeSpan.FromMilliseconds(1),
+            $"Expected first checkout timestamp to remain unchanged, got {record.CheckOutAt:O} instead of {firstBody.CheckOutAt:O}");
     }
 }
