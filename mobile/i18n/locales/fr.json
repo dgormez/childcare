@@ -109,7 +109,8 @@
       "activity": "Activité",
       "note": "Note",
       "weight": "Poids",
-      "measurement": "Mesure"
+      "growth_check": "Contrôle de croissance",
+      "custom": "Personnalisé"
     },
     "diaper": {
       "wet": "Mouillée",
@@ -152,7 +153,7 @@
     "weight": {
       "kg": "Poids (kg)"
     },
-    "measurement": {
+    "growthCheck": {
       "weightKg": "Poids (kg)",
       "heightCm": "Taille (cm)",
       "headCm": "Périmètre crânien (cm)"
@@ -160,14 +161,17 @@
     "activity": {
       "description": "Description"
     },
-    "note": {
-      "text": "Note"
+    "custom": {
+      "label": "Libellé",
+      "labelPlaceholder": "p. ex. Crème solaire appliquée",
+      "text": "Détails (facultatif)"
     },
     "fieldLabels": {
       "type": "Type",
       "value": "Valeur",
       "quality": "Qualité",
-      "name": "Nom"
+      "name": "Nom",
+      "text": "Texte"
     }
   }
 }

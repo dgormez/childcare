@@ -1,6 +1,33 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.2.0 → 1.2.1 (PATCH — wording/documentation-accuracy fix, no semantic change)
+
+Modified sections:
+- Development Workflow & Phase Discipline, `child_events` bullet — the parenthetical event-type
+  list is updated from `measurement` to `growth_check` (renamed) plus a new `custom` type, per
+  feature `009a-child-events-custom-type`. Purely descriptive text (examples of what lives in
+  the single JSONB-backed table) — the rule itself ("single table, no per-type table") is
+  unchanged.
+
+Trigger: feature 009a's own tasks.md (Polish phase) flagged this bullet as stale once the
+`measurement` -> `growth_check` rename and the new `custom` type shipped, per the standing
+practice (see 1.2.0/1.1.0 entries below) of keeping this file's descriptive examples in sync
+with what's actually implemented rather than letting them silently drift.
+
+Added sections: none
+
+Removed sections: none
+
+Templates requiring updates: none (no template references this bullet's specific event-type list)
+
+Follow-up TODOs: none. RATIFICATION_DATE unchanged; LAST_AMENDED_DATE updated to this
+amendment's date.
+-->
+
+<!--
+Sync Impact Report (previous)
+==================
 Version change: 1.1.0 → 1.2.0 (MINOR — existing guidance materially expanded)
 
 Modified sections:
@@ -275,9 +302,9 @@ records a change:
   decision to re-scope, since IKT in particular adds regulatory
   complexity that is intentionally deferred.
 - **`child_events`**: daily tracking events (sleep, temperature,
-  medication, feeding, diaper, mood, activity, note, weight, measurement)
-  live in a single JSONB-backed table — do not create a separate table
-  per event type.
+  medication, feeding, diaper, mood, activity, note, weight, growth_check,
+  custom) live in a single JSONB-backed table — do not create a separate
+  table per event type.
 - **Branching**: solo-developer workflow per user's global conventions —
   work happens directly on `master`; `release/x.x` branches cut
   production releases; `develop/x.x` branches are used when needed.
@@ -312,4 +339,4 @@ checked against Principles I (tenant isolation) and II (regulatory
 compliance) explicitly, since these are the two categories most likely
 to cause customer-facing (licensing or data-leak) harm if violated.
 
-**Version**: 1.2.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-08
+**Version**: 1.2.1 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-09

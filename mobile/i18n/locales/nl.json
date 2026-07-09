@@ -109,7 +109,8 @@
       "activity": "Activiteit",
       "note": "Notitie",
       "weight": "Gewicht",
-      "measurement": "Meting"
+      "growth_check": "Groeicontrole",
+      "custom": "Aangepast"
     },
     "diaper": {
       "wet": "Nat",
@@ -152,7 +153,7 @@
     "weight": {
       "kg": "Gewicht (kg)"
     },
-    "measurement": {
+    "growthCheck": {
       "weightKg": "Gewicht (kg)",
       "heightCm": "Lengte (cm)",
       "headCm": "Hoofdomtrek (cm)"
@@ -160,14 +161,17 @@
     "activity": {
       "description": "Beschrijving"
     },
-    "note": {
-      "text": "Notitie"
+    "custom": {
+      "label": "Label",
+      "labelPlaceholder": "bijv. Zonnebrand aangebracht",
+      "text": "Details (optioneel)"
     },
     "fieldLabels": {
       "type": "Type",
       "value": "Waarde",
       "quality": "Kwaliteit",
-      "name": "Naam"
+      "name": "Naam",
+      "text": "Tekst"
     }
   }
 }

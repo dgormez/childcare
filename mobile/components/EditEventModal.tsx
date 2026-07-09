@@ -25,11 +25,14 @@ const FIELD_LABEL_KEYS: Record<string, string> = {
   reason: "childEvents.medication.reason",
   ml: "childEvents.feedingBottle.ml",
   description: "childEvents.feedingSolid.description",
-  text: "childEvents.note.text",
+  // Shared by `note` (required body) and `custom` (optional detail) — a generic label rather
+  // than a per-type one, since this editor's field map is keyed by field name, not event type.
+  text: "childEvents.fieldLabels.text",
   kg: "childEvents.weight.kg",
-  weightKg: "childEvents.measurement.weightKg",
-  heightCm: "childEvents.measurement.heightCm",
-  headCm: "childEvents.measurement.headCm",
+  weightKg: "childEvents.growthCheck.weightKg",
+  heightCm: "childEvents.growthCheck.heightCm",
+  headCm: "childEvents.growthCheck.headCm",
+  label: "childEvents.custom.label",
 };
 
 // Server-computed — editing it here would just be silently overwritten by
@@ -83,7 +86,9 @@ export function EditEventModal({ event, isConnected, onClose, onSaved }: Props) 
       <Pressable className="flex-1 justify-center items-center bg-black/60 px-8" onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()} className="w-full bg-surface dark:bg-surface-dark rounded-xl p-5" style={{ maxWidth: 420 }}>
           <Text className="text-text dark:text-text-dark text-lg font-bold mb-4">
-            {t(`childEvents.types.${event.eventType}`)}
+            {event.eventType === "custom" && typeof event.payload.label === "string"
+              ? event.payload.label
+              : t(`childEvents.types.${event.eventType}`)}
           </Text>
 
           {Object.entries(fields).map(([field, value]) => (

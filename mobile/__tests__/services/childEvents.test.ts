@@ -134,4 +134,19 @@ describe("recordChildEvent", () => {
     expect(result.payload).toEqual({ type: "wet" });
     expect(result.recordedBy).toEqual([]);
   });
+
+  // feature 009a FR-005: a `custom` event queues/syncs identically to every other event type —
+  // the offline queue has no type-specific branching, so this is the same generic path US1's
+  // other event types already exercise above, just asserted explicitly for `custom`.
+  it("offline: a custom event enqueues exactly like any other event type (no type-specific branching)", async () => {
+    const result = await recordChildEvent(
+      { childId: "c1", eventType: "custom", occurredAt: "2026-01-01T10:00:00.000Z", payload: { label: "Sunscreen applied" } },
+      false
+    );
+
+    expect(offlineQueueMock.__mockEnqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ entityType: "child_event", operation: "create", httpMethod: "POST" })
+    );
+    expect(result.payload).toEqual({ label: "Sunscreen applied" });
+  });
 });

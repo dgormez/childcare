@@ -77,10 +77,10 @@ export interface PairDeviceResponse {
   tokenVersion: number;
 }
 
-// ── Child events (feature 009) ──────────────────────────────────────────────────
+// ── Child events (feature 009, extended by 009a: growth_check rename + custom type) ────────────
 export type ChildEventType =
   | "sleep" | "temperature" | "medication" | "feeding_bottle" | "feeding_solid"
-  | "diaper" | "mood" | "activity" | "note" | "weight" | "measurement";
+  | "diaper" | "mood" | "activity" | "note" | "weight" | "growth_check" | "custom";
 
 export interface ChildEventResponse {
   id:              string;

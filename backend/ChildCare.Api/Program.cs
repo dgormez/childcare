@@ -47,6 +47,22 @@ if (args.Length > 0 && args[0] == "migrate-tenants")
     Environment.Exit(exitCode);
 }
 
+// backfill-growth-check CLI subcommand (feature 009a-child-events-custom-type,
+// contracts/child-events-api-delta.md, research.md R1/R2) — same early-exit shape as
+// migrate-tenants above; MUST be run against every tenant schema before deploying a build
+// whose ChildEventTypeExtensions no longer recognizes the literal "measurement" wire value.
+if (args.Length > 0 && args[0] == "backfill-growth-check")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await BackfillGrowthCheckCommand.RunAsync(cliScope.ServiceProvider);
+    Environment.Exit(exitCode);
+}
+
 // Raises the ThreadPool's minimum worker threads above the .NET default (= ProcessorCount)
 // so a sudden burst of concurrent requests doesn't stall on the pool's slow "hill-climbing"
 // thread-injection rate. Auth endpoints in particular call BCrypt.Verify/HashPassword

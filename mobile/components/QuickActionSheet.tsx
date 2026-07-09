@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
   Moon, Thermometer, Pill, Milk, UtensilsCrossed, Droplets, Smile, Activity as ActivityIcon,
-  StickyNote, Scale, Ruler, X,
+  StickyNote, Scale, Ruler, Tag, X,
 } from "lucide-react-native";
 import { useColors } from "../hooks/useColors";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
@@ -33,7 +33,8 @@ const EVENT_TYPES: { type: ChildEventType; Icon: typeof Moon }[] = [
   { type: "activity", Icon: ActivityIcon },
   { type: "note", Icon: StickyNote },
   { type: "weight", Icon: Scale },
-  { type: "measurement", Icon: Ruler },
+  { type: "growth_check", Icon: Ruler },
+  { type: "custom", Icon: Tag },
 ];
 
 // FR-016/User Story 2: medication and temperature route through the select-then-PIN
@@ -223,8 +224,8 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
                 onSubmit={() => handleQuickSelect({ kg: Number(numericFields.kg) })}
                 t={t}
               />
-            ) : selectedType === "measurement" ? (
-              <MeasurementForm
+            ) : selectedType === "growth_check" ? (
+              <GrowthCheckForm
                 values={numericFields}
                 onChange={(field, v) => setNumericFields((f) => ({ ...f, [field]: v }))}
                 onSubmit={() => {
@@ -238,6 +239,8 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
               />
             ) : selectedType === "medication" ? (
               <MedicationForm onSubmit={handleQuickSelect} t={t} />
+            ) : selectedType === "custom" ? (
+              <CustomForm onSubmit={handleQuickSelect} t={t} />
             ) : (
               <View>
                 <TextInput
@@ -318,7 +321,7 @@ function NumericEntry({
   );
 }
 
-function MeasurementForm({
+function GrowthCheckForm({
   values, onChange, onSubmit, t,
 }: {
   values: Record<string, string>;
@@ -331,7 +334,7 @@ function MeasurementForm({
     <View>
       {(["weightKg", "heightCm", "headCm"] as const).map((field) => (
         <View key={field} className="mb-3">
-          <Text className="text-text-soft dark:text-text-soft-dark text-sm mb-1">{t(`childEvents.measurement.${field}`)}</Text>
+          <Text className="text-text-soft dark:text-text-soft-dark text-sm mb-1">{t(`childEvents.growthCheck.${field}`)}</Text>
           <TextInput
             keyboardType="decimal-pad"
             value={values[field] ?? ""}
@@ -396,6 +399,50 @@ function MedicationForm({ onSubmit, t }: { onSubmit: (payload: Record<string, un
 
       <TouchableOpacity
         onPress={() => onSubmit({ name, doseDescription, reason })}
+        disabled={!canSubmit}
+        style={{ minHeight: 48 }}
+        className={`items-center justify-center rounded-lg ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
+      >
+        <Text className="text-white font-semibold">{t("childEvents.save")}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const CUSTOM_LABEL_MAX_LENGTH = 100;
+
+// feature 009a: `custom` event — a caregiver-supplied label (required, plain free text, no
+// autocomplete per the 2026-07-09 clarification) plus optional detail text, distinct from
+// `note`'s body-only shape.
+function CustomForm({ onSubmit, t }: { onSubmit: (payload: Record<string, unknown>) => void; t: TFunction }) {
+  const [label, setLabel] = useState("");
+  const [text, setText] = useState("");
+
+  const canSubmit = label.trim().length > 0 && label.length <= CUSTOM_LABEL_MAX_LENGTH;
+
+  return (
+    <View>
+      <Text className="text-text-soft dark:text-text-soft-dark text-sm mb-1">{t("childEvents.custom.label")}</Text>
+      <TextInput
+        value={label}
+        onChangeText={setLabel}
+        maxLength={CUSTOM_LABEL_MAX_LENGTH}
+        placeholder={t("childEvents.custom.labelPlaceholder")}
+        className="bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-3 text-text dark:text-text-dark mb-3"
+        style={{ minHeight: 48 }}
+      />
+
+      <Text className="text-text-soft dark:text-text-soft-dark text-sm mb-1">{t("childEvents.custom.text")}</Text>
+      <TextInput
+        multiline
+        value={text}
+        onChangeText={setText}
+        className="bg-surface-soft dark:bg-surface-soft-dark rounded-lg p-3 text-text dark:text-text-dark mb-3"
+        style={{ minHeight: 96 }}
+      />
+
+      <TouchableOpacity
+        onPress={() => onSubmit(text.trim() ? { label: label.trim(), text: text.trim() } : { label: label.trim() })}
         disabled={!canSubmit}
         style={{ minHeight: 48 }}
         className={`items-center justify-center rounded-lg ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}

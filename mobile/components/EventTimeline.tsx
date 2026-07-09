@@ -65,6 +65,11 @@ export function EventTimeline({ events, syncStatusByEventId = {}, onEdit, onDele
         const editable = isToday(event.occurredAt);
         const syncStatus = syncStatusByEventId[event.id] ?? "synced";
         const inProgress = event.eventType === "sleep" && !event.endedAt;
+        // FR-004: a `custom` event shows its caregiver-supplied label as the headline (in place
+        // of the generic type name every other type uses), with `text` as secondary detail.
+        const isCustom = event.eventType === "custom";
+        const customLabel = isCustom && typeof event.payload.label === "string" ? event.payload.label : null;
+        const customText = isCustom && typeof event.payload.text === "string" ? event.payload.text : null;
 
         return (
           <View
@@ -72,7 +77,12 @@ export function EventTimeline({ events, syncStatusByEventId = {}, onEdit, onDele
             className="flex-row items-start justify-between bg-surface-soft dark:bg-surface-soft-dark rounded-xl p-3 mb-2"
           >
             <View style={{ flex: 1 }}>
-              <Text className="text-text dark:text-text-dark font-semibold">{t(`childEvents.types.${event.eventType}`)}</Text>
+              <Text className="text-text dark:text-text-dark font-semibold">
+                {customLabel ?? t(`childEvents.types.${event.eventType}`)}
+              </Text>
+              {customText && (
+                <Text className="text-text-soft dark:text-text-soft-dark text-sm mt-1">{customText}</Text>
+              )}
               <Text className="text-text-soft dark:text-text-soft-dark text-xs" style={{ fontVariant: ["tabular-nums"] }}>
                 {formatTime(event.occurredAt)}
               </Text>
