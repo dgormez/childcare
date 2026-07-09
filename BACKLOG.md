@@ -28,7 +28,7 @@
 | 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | ✅ Done |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
-| 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | 🔲 Not started |
+| 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | 🔲 Not started |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | 🔲 Not started |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | 🔲 Not started |
@@ -1020,6 +1020,52 @@ Out of scope:
 - Meal list for kitchen (read-only view from planning data — tracked here).
 - Learning journal narrative (Phase 2).
 ```
+
+**Shipped 2026-07-09** — `specs/009-child-events/` (spec → clarify → plan → tasks → checklist →
+analyze → implement → converge, 53/53 tasks incl. an 8-task checklist-driven mid-implementation
+correction and a 3-task convergence pass, 33 new backend tests + 12 new mobile tests, 258/258
+backend + 88/88 mobile passing). Scope deltas worth knowing before starting a dependent feature:
+
+- **FR-006's edit authorization was redesigned mid-implementation**: the spec and its own
+  clarification session originally called for checking a caregiver's `StaffLocationEligibility`
+  row, but that's not implementable — routine tablet actions are device-token authenticated only
+  (constitution's Technology Stack Constraints), so there is no individual caregiver identity on
+  the request to check eligibility against. Corrected to comparing the requesting *device's own*
+  `LocationId` claim against the event's `LocationId` instead (research.md R4) — same-day
+  corrections are scoped to "any caregiver at that room's tablet," not a per-staff-member check.
+  **Flag for any future feature considering a per-caregiver authorization rule on a
+  device-token-authenticated route**: it isn't available; only device/location identity is.
+- **A new `DeviceOrDirector` authorization policy was added** (`Program.cs`) — no existing
+  endpoint in this codebase previously accepted both a device token and a director JWT on the
+  same route (an earlier BACKLOG draft claimed `RoomShiftEndpoints`'s correction route did this;
+  it doesn't, it's `DirectorOnly` only). `PATCH`/`DELETE /api/child-events/{id}` are the first
+  routes using this pattern — reuse it rather than inventing a third dual-auth mechanism.
+- **`ChildEventType`'s multi-word wire values need explicit mapping**: `feeding_bottle`/
+  `feeding_solid` don't round-trip through the `.ToString().ToLowerInvariant()` convention every
+  other enum in this codebase uses (e.g. `ContractStatus`), since that produces `feedingbottle`
+  with no underscore. `ChildEventTypeExtensions.ToWireString()`/`TryParseWireString()` handles
+  this — any future multi-word enum with a snake_case wire format should follow the same pattern
+  rather than the default convention.
+- **`Contact` gains a nullable `PushToken` column** (feature 009, not feature 006) — added so the
+  temperature-alert recipient query has something real to filter on. No client populates it yet;
+  the parent-app feature (013) is expected to add the registration path, not a new column.
+- **`lucide-react-native` + `react-native-svg` finally added** per design-system.md's standing
+  instruction ("add it as part of whichever feature next touches iconography") — features 008/
+  008a didn't. The remaining emoji placeholders on the caregiver group view (allergy/fever icons)
+  were replaced as part of this same change since leaving a mixed emoji/lucide app was exactly
+  the inconsistency design-system.md warns about.
+- **`/speckit-converge` found two data-model constraints nothing enforced**: `EndedAt` (spec:
+  "Sleep only") and `AdministeredBy` (spec: "Medication/temperature only") were both accepted
+  silently for any event type by `RecordChildEventCommand`/`UpdateChildEventCommand` — fixed
+  with explicit validation rather than left as documented-but-unenforced.
+- Photo attachment (in the original backlog prompt below) was descoped during `/speckit-clarify`
+  — no dedicated user story existed for it, and building it without one risked scope creep. It's
+  not tracked as a separate backlog item since no concrete requirement was ever specified beyond
+  "photos can be attached" — a future feature should treat this as unscoped, not deferred.
+- Reachable only via raw API, no UI in this app: a director's any-day event correction
+  (`PATCH`/`DELETE` via `DeviceOrDirector` + `DirectorOnly` role) and filling in a skipped
+  `AdministeredBy` retroactively. Whichever feature builds director-facing web screens for
+  `child_events` next should wire these rather than building new backend capability for them.
 
 ---
 
