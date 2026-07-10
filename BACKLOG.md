@@ -33,7 +33,7 @@
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | ✅ Done |
-| 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | 🔲 Not started |
+| 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | ✅ Done |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
@@ -2043,6 +2043,51 @@ Out of scope:
 - Automated notification when a place becomes available (feature 023).
 - Tour invitation workflow (feature 023).
 ```
+
+**Shipped 2026-07-10** — `specs/012a-waiting-list/` (spec → clarify → plan → tasks → checklist →
+analyze → implement → converge, 67/67 tasks incl. a 3-task convergence pass, 36 new backend
+integration tests + all 359 pre-existing passing (395/395), 7 new web component tests + all 34
+pre-existing passing (41/41)). Scope deltas from the plan above, worth knowing before starting
+feature 013+:
+
+- **Occupancy reads from contracts, not attendance** — corrected during specification against
+  this prompt's own premise: feature 010's attendance data is same-day/historical and doesn't
+  exist yet for the future dates a waiting-list occupancy check actually needs. Computed
+  instead from active `Contract`s (007) against `Location.MaxCapacity` (004), with published
+  `KdvClosureDay`s (011) marking a date `Closed` rather than a numeric count — a regression
+  test (`OccupancyTests.Occupancy_FutureDateWithNoAttendanceRecords_StillComputesFromContracts`)
+  exists specifically to catch any future change that accidentally couples the two. Worth
+  remembering generally, same lesson as feature 012's BKR/rota decoupling: a BACKLOG prompt's
+  assumed data source needs re-checking against what an earlier feature actually shipped, not
+  implemented as written.
+- Priority ordering is per-location, not global — reordering and the default sort both operate
+  within one selected location's queue; moving a family in location A never touches location
+  B's order (`ReorderTests`).
+- Reordering is restricted to `waiting`-status entries only — `offered`/`enrolled`/`withdrawn`
+  entries return `409 errors.waiting_list.not_reorderable_in_current_status`.
+- The status lifecycle is an explicit allow-list (`waiting→offered`, `waiting→withdrawn`,
+  `offered→enrolled`, `offered→withdrawn`, `offered→waiting`) — anything else, including any
+  transition originating from `enrolled`/`withdrawn`, is rejected with
+  `409 errors.waiting_list.invalid_status_transition`. The offer email fires only on
+  `waiting→offered` with a contact email present; the `offered→waiting` revert never emails.
+- Duplicate detection (same child first/last name + DOB) always compares against the full
+  location roster regardless of the currently applied status filter — a `waiting` entry and a
+  `withdrawn` twin are still flagged even when the list is filtered to the default
+  `waiting`-only view. This was a real gap (CHK012) caught by the requirements-quality
+  checklist pass, fixed in spec.md before implementation.
+- `/speckit-converge` found three real gaps after implementation, all fixed rather than
+  deferred: (1) `GetOccupancyQuery`'s contract projection crashed with an EF
+  "tracking query... owned entity" exception because it projected `ContractedDays` (an
+  owned-type collection) without `.AsNoTracking()` — worth remembering generally for any future
+  query projecting an EF owned-type collection into an anonymous type; (2) `Notes` had no
+  `MaximumLength(2000)` validator despite the column being capped at 2000 chars, so an
+  over-length value would have reached Postgres as an unhandled exception (500) instead of a
+  clean `400 errors.validation`; (3) occupancy silently computed normally for a deactivated
+  location instead of being rejected, contradicting this feature's own spec Edge Cases section.
+- Extending `TenantMigrationRolloutTests`' schema-revert helper for the new table's FKs (to
+  both `children` and `locations`) is now a required step for any future feature adding a table
+  with a foreign key — every migration-adding feature since 003 has hit this same test and
+  needed the same fix; the test's own docstring lists the full precedent chain.
 
 ---
 
