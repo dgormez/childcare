@@ -187,17 +187,17 @@
 
 ### Tests for User Story 4
 
-- [ ] T084 [P] [US4] Integration test: notification centre lists message, announcement, and temperature-alert notifications, most-recent-first, each correctly typed in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
-- [ ] T085 [P] [US4] Integration test: marking one notification read does not affect another's read state in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
-- [ ] T086 [P] [US4] Integration test: a parent cannot mark or view another parent's notification — 403/404 in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
-- [ ] T086a [P] [US4] Integration test: a parent from tenant A cannot view or mark-read a notification belonging to a parent in tenant B, even with a structurally valid notification id (FR-018) in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
-- [ ] T087 [P] [US4] Integration test: a temperature event over threshold creates a `Notification(Type=TemperatureAlert)` row (extends existing `TemperatureAlertServiceTests`) in `backend/ChildCare.Api.Tests/ChildEvents/TemperatureAlertServiceTests.cs`
+- [X] T084 [P] [US4] Integration test: notification centre lists message, announcement, and temperature-alert notifications, most-recent-first, each correctly typed in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
+- [X] T085 [P] [US4] Integration test: marking one notification read does not affect another's read state in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
+- [X] T086 [P] [US4] Integration test: a parent cannot mark or view another parent's notification — 403/404 in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
+- [X] T086a [P] [US4] Integration test: a parent from tenant A cannot view or mark-read a notification belonging to a parent in tenant B, even with a structurally valid notification id (FR-018) in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
+- [X] T087 [P] [US4] Integration test: a temperature event over threshold creates a `Notification(Type=TemperatureAlert)` row (extends existing `TemperatureAlertServiceTests`) in `backend/ChildCare.Api.Tests/ChildEvents/TemperatureAlertServiceTests.cs`
 - [ ] T088 [P] [US4] Mobile test: notification centre renders all three types and mark-read isolation in `parent-mobile/__tests__/notifications.test.tsx`
 
 ### Implementation for User Story 4
 
 - [X] T089 [US4] Implement `ListNotificationsQuery`+Handler and `MarkNotificationReadCommand`+Validator+Handler in `backend/ChildCare.Application/Notifications/ListNotificationsQuery.cs` and `MarkNotificationReadCommand.cs`
-- [ ] T090 [US4] Extend `TemperatureAlertService.NotifyAsync` to write a `Notification(Type=TemperatureAlert, SourceId=childEvent.Id)` row per recipient before/alongside the existing push send (research.md R4) in `backend/ChildCare.Application/ChildEvents/TemperatureAlertService.cs`
+- [X] T090 [US4] Extend `TemperatureAlertService.NotifyAsync` to write a `Notification(Type=TemperatureAlert, SourceId=childEvent.Id)` row per recipient before/alongside the existing push send (research.md R4) in `backend/ChildCare.Application/ChildEvents/TemperatureAlertService.cs`
 - [X] T091 [US4] Map `GET /api/parent/notifications` and `POST /api/parent/notifications/{id}/read` (ParentOnly) in `backend/ChildCare.Api/Endpoints/NotificationEndpoints.cs`
 - [ ] T092 [US4] Regenerate OpenAPI types in `parent-mobile/services/generated/api-types.ts`
 - [ ] T093 [US4] Implement `parent-mobile/app/(app)/notifications/index.tsx` (typed list, icon-paired per type per design-system.md Status indicators, tap-to-navigate, mark-read on open)

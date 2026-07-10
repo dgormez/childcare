@@ -1,4 +1,6 @@
 using ChildCare.Application.Common;
+using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +12,11 @@ namespace ChildCare.Application.ChildEvents;
 /// user-facing string in this codebase (constitution Principle IV), so it must arrive
 /// pre-rendered. Mirrors QuestPdfContractGenerator's locale-dictionary pattern (the other place
 /// this backend renders locale-aware text server-side).
+///
+/// Feature 013 (research.md R4): every eligible recipient with an active parent account also
+/// gets an in-app Notification row, independent of whether they have a push token — this closes
+/// a real pre-013 gap (this alert previously had zero in-app fallback, only a push attempt).
+/// Push dispatch itself remains gated on having a token, same as before.
 /// </summary>
 public class TemperatureAlertService(ITenantDbContext db, IExpoPushSender pushSender, ILogger<TemperatureAlertService> logger)
     : ITemperatureAlertService
@@ -21,16 +28,15 @@ public class TemperatureAlertService(ITenantDbContext db, IExpoPushSender pushSe
         ["en"] = ("Fever reported", "A raised temperature of {0}°C has been recorded."),
     };
 
-    public async Task NotifyAsync(Guid childId, decimal celsius, CancellationToken cancellationToken = default)
+    public async Task NotifyAsync(Guid childId, Guid childEventId, decimal celsius, CancellationToken cancellationToken = default)
     {
-        // FR-010: every ChildContact with CanPickup = true and a registered push token.
+        // FR-010: every ChildContact with CanPickup = true.
         var recipients = await db.ChildContacts
             .Where(cc => cc.ChildId == childId && cc.CanPickup)
-            .Join(db.Contacts, cc => cc.ContactId, c => c.Id, (cc, c) => new { c.PushToken, c.Locale })
-            .Where(r => r.PushToken != null)
+            .Join(db.Contacts, cc => cc.ContactId, c => c.Id, (cc, c) => new { c.TenantUserId, c.PushToken, c.Locale })
             .ToListAsync(cancellationToken);
 
-        // FR-011: zero eligible/registered recipients — log and continue, never fail the save.
+        // FR-011: zero eligible recipients — log and continue, never fail the save.
         if (recipients.Count == 0)
         {
             logger.LogInformation(
@@ -38,7 +44,23 @@ public class TemperatureAlertService(ITenantDbContext db, IExpoPushSender pushSe
             return;
         }
 
-        foreach (var recipient in recipients)
+        var withAccount = recipients.Where(r => r.TenantUserId is not null).ToList();
+        foreach (var recipient in withAccount)
+        {
+            db.Notifications.Add(new Notification
+            {
+                TenantUserId = recipient.TenantUserId!.Value,
+                Type = NotificationType.TemperatureAlert,
+                SourceId = childEventId,
+                TitleKey = "parent.notifications.temperature_alert.title",
+                BodyKey = "parent.notifications.temperature_alert.body",
+                ArgumentsJson = System.Text.Json.JsonSerializer.Serialize(new { celsius }),
+            });
+        }
+        if (withAccount.Count > 0)
+            await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var recipient in recipients.Where(r => r.PushToken is not null))
         {
             var (title, bodyTemplate) = Labels.TryGetValue(recipient.Locale, out var labels) ? labels : Labels["nl"];
             try
