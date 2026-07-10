@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
+using ChildCare.Application.Common;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -263,6 +264,57 @@ public class ParentInvitationEndpointsTests(OrganisationOnboardingWebAppFactory 
             new AcceptParentInvitationRequest(org.Organisation.Slug, token, "password123"));
 
         var updatedContact = await db.Contacts.SingleAsync(c => c.Id == contact.Id);
+        var isParticipant = await db.MessageThreadParticipants
+            .AnyAsync(p => p.ThreadId == thread.Id && p.TenantUserId == updatedContact.TenantUserId);
+        Assert.True(isParticipant);
+    }
+
+    // ── Convergence F1/FR-000b: Google sign-in before ever accepting still links the Contact
+    // and backfills threads ──────────────────────────────────────────────────────────────────
+    // A parent whose account was invited (TenantUser created, PasswordHash empty) can complete
+    // registration via Google/Apple sign-in instead of setting a password (FR-000b). Before
+    // ParentAccountLinker existed, GoogleSignInCommandHandler/AppleSignInCommandHandler issued a
+    // valid token for this exact case but never set Contact.TenantUserId or ran FR-006a's
+    // backfill — every ParentOnly endpoint then 403'd forever for an account that looked
+    // successfully "signed in". This proves the fix, mirroring
+    // AcceptParentInvitation_BackfillsExistingThreadParticipation's seeding shape.
+
+    [Fact]
+    public async Task GoogleSignIn_BeforeAcceptingInvitation_LinksContactAndBackfillsThreads()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Google Preaccept Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        var (child, contact) = await CreateEligibleContactAsync(client, org.AccessToken, contactEmail);
+
+        var schema = await GetSchemaNameAsync(org.Organisation.Id);
+        var resolver = factory.Services.GetRequiredService<Application.Common.ITenantDbContextResolver>();
+        var db = resolver.ForSchema(schema);
+        var thread = new Domain.Entities.MessageThread { Subject = "Existing thread", ChildId = child.Id };
+        db.MessageThreads.Add(thread);
+        await db.SaveChangesAsync();
+
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/parent-invitations", org.AccessToken, new CreateParentInvitationRequest(contact.Id)));
+
+        var fakeGoogle = factory.Services.GetRequiredService<FakeGoogleTokenValidator>();
+        var googleToken = $"fake-google-{Guid.NewGuid():N}";
+        fakeGoogle.Behavior = t => t == googleToken ? new GoogleIdentity("google-sub-preaccept", contactEmail) : null;
+
+        try
+        {
+            var response = await client.PostAsJsonAsync("/api/auth/google",
+                new { organisationSlug = org.Organisation.Slug, idToken = googleToken });
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        finally
+        {
+            fakeGoogle.Behavior = null;
+        }
+
+        var updatedContact = await db.Contacts.SingleAsync(c => c.Id == contact.Id);
+        Assert.NotNull(updatedContact.TenantUserId);
+
         var isParticipant = await db.MessageThreadParticipants
             .AnyAsync(p => p.ThreadId == thread.Id && p.TenantUserId == updatedContact.TenantUserId);
         Assert.True(isParticipant);

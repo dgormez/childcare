@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Application.ParentInvitations;
 using ChildCare.Contracts.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,11 @@ public class GoogleSignInCommandHandler(
 
         if (user.GoogleId is null) user.GoogleId = identity.Sub;
         if (!user.EmailVerified) user.EmailVerified = true; // Google has already verified this email
+
+        // FR-000b: a Parent-role user completing registration via Google sign-in (rather than
+        // the password accept-invitation flow) still needs their Contact linked and existing
+        // threads backfilled — see ParentAccountLinker's doc comment for the bug this fixes.
+        await ParentAccountLinker.LinkIfUnlinkedParentAsync(db, user, cancellationToken);
 
         var refreshToken = RefreshTokenFactory.AddRefreshToken(db, user, tokenIssuer);
         await db.SaveChangesAsync(cancellationToken);

@@ -242,6 +242,31 @@
 
 ---
 
+## Phase 10: Convergence
+
+**Purpose**: `/speckit-converge` findings against the completed spec/plan/tasks, run after T106. All three
+found real, unrequested-by-the-original-tasks gaps in the already-implemented US0 backend — fixed
+immediately rather than deferred, per this loop's standing rule.
+
+- [X] T107 CRITICAL: `GoogleSignInCommandHandler`/`AppleSignInCommandHandler` authenticate a pre-invited
+  `Role=Parent` user by email match but never set `Contact.TenantUserId` or run the FR-006a thread
+  backfill (only `AcceptParentInvitationCommandHandler` did) — a parent who signs in via Google/Apple
+  before ever completing the password accept flow got a valid token but every `ParentOnly` endpoint
+  403'd forever. Fixed by extracting `ParentAccountLinker` (shared link+backfill logic) and calling it
+  from both OAuth handlers and the accept handler. per FR-000b, FR-006a (contradicts)
+- [X] T108 HIGH: `Apple:BundleId` defaulted/configured to `com.dgit.childcare` (caregiver app's bundle
+  id) even though Apple Sign-In is Parent-only (`AuthMethodPolicy.AppleAllowedFor`) — real Apple
+  ID-token audience validation would fail against parent-mobile's actual bundle id
+  `com.dgit.childcareparent`. Fixed the handler's fallback default and `appsettings.Development.json`.
+  per Constitution Technology Stack Constraints (contradicts)
+- [X] T109 MEDIUM: `parent-mobile/app/(auth)/parent-invitation.tsx` only offered password-based
+  completion; FR-000b describes completing an invitation via Google/Apple sign-in too, and the
+  deep-link screen already has the `organisationSlug` needed for that flow. Added Google/Apple buttons
+  to the invitation screen, reusing `services/auth.ts`'s `loginWithGoogle`/`loginWithApple`. per
+  FR-000b (partial)
+
+---
+
 ## Dependencies & Execution Order
 
 - **Phase 1 (Setup)** → **Phase 2 (Foundational)**: strictly sequential; Phase 2 blocks every user story.

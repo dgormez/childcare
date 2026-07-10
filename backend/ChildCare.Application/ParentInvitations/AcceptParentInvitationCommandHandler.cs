@@ -46,36 +46,11 @@ public class AcceptParentInvitationCommandHandler(
             return AcceptParentInvitationResult.Fail(ParentInvitationFailure.InvitationInvalidOrExpired);
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        contact.TenantUserId = user.Id;
 
         // FR-006a: backfill this contact onto every existing thread for their linked children,
-        // with access to full prior history (not just messages sent after they joined).
-        var childIds = await db.ChildContacts
-            .Where(cc => cc.ContactId == contact.Id)
-            .Select(cc => cc.ChildId)
-            .ToListAsync(cancellationToken);
-
-        if (childIds.Count > 0)
-        {
-            var threadIds = await db.MessageThreads
-                .Where(t => t.ChildId != null && childIds.Contains(t.ChildId!.Value))
-                .Select(t => t.Id)
-                .ToListAsync(cancellationToken);
-
-            var alreadyParticipant = await db.MessageThreadParticipants
-                .Where(p => p.TenantUserId == user.Id && threadIds.Contains(p.ThreadId))
-                .Select(p => p.ThreadId)
-                .ToListAsync(cancellationToken);
-
-            foreach (var threadId in threadIds.Except(alreadyParticipant))
-            {
-                db.MessageThreadParticipants.Add(new MessageThreadParticipant
-                {
-                    ThreadId = threadId,
-                    TenantUserId = user.Id,
-                });
-            }
-        }
+        // with access to full prior history (not just messages sent after they joined) — shared
+        // with the Google/Apple sign-in completion path (ParentAccountLinker).
+        await ParentAccountLinker.LinkAndBackfillThreadsAsync(db, contact, user, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 

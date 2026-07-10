@@ -14,7 +14,30 @@ jest.mock("../../services/apiClient", () => {
   };
 });
 
+jest.mock("../../services/auth", () => ({
+  loginWithGoogle: jest.fn(),
+  loginWithApple: jest.fn(),
+}));
+jest.mock("expo-web-browser", () => ({ maybeCompleteAuthSession: jest.fn() }));
+jest.mock("expo-auth-session/providers/google", () => ({
+  useAuthRequest: jest.fn(() => [null, null, jest.fn()]),
+}));
+jest.mock("expo-apple-authentication", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(false),
+  signInAsync: jest.fn(),
+  AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 },
+}));
+jest.mock("expo-constants", () => ({
+  expoConfig: {
+    extra: {
+      googleIosClientId: "YOUR_GOOGLE_IOS_CLIENT_ID",
+      googleWebClientId: "YOUR_GOOGLE_WEB_CLIENT_ID",
+    },
+  },
+}));
+
 const postMock = (jest.requireMock("../../services/apiClient") as { __mockPost: jest.Mock }).__mockPost;
+const { loginWithGoogle } = require("../../services/auth");
 const { useLocalSearchParams, useRouter } = require("expo-router");
 
 function jsonResponse(status: number, body: unknown) {
@@ -70,4 +93,28 @@ it("shows a generic, non-enumerable error for an expired or already-used token",
   await fireEvent.press(getByText("parentInvitation.submit"));
 
   expect(await findByText("errors.invitation.not_found")).toBeTruthy();
+});
+
+// Convergence F3/FR-000b: completing an invitation via Google/Apple, not just a password,
+// must be reachable straight from the invitation deep link itself.
+
+it("offers Google sign-in as an alternative way to complete the invitation", async () => {
+  const { findByText } = await render(<ParentInvitationScreen />);
+  expect(await findByText("login.continueWithGoogle")).toBeTruthy();
+});
+
+it("completes the invitation via Google sign-in using the org slug from the deep link", async () => {
+  loginWithGoogle.mockResolvedValue(undefined);
+  const replace = jest.fn();
+  useRouter.mockReturnValue({ replace, push: jest.fn(), back: jest.fn() });
+  const { useAuthRequest } = require("expo-auth-session/providers/google");
+  useAuthRequest.mockReturnValue([null, {
+    type: "success",
+    authentication: { idToken: "google-id-token" },
+  }, jest.fn()]);
+
+  await render(<ParentInvitationScreen />);
+
+  await waitFor(() => expect(loginWithGoogle).toHaveBeenCalledWith(expect.any(String), "org-a", "google-id-token"));
+  await waitFor(() => expect(replace).toHaveBeenCalledWith("/(app)"));
 });
