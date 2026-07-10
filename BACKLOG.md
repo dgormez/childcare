@@ -33,7 +33,12 @@
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
+| 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | 🔲 Not started |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
+| 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
+| 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
+| 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
+| 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, printable | 007, 009 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking | 007, 011 | 🔲 Not started |
 
 ### Phase 2 (after Phase 1 is stable)
@@ -45,12 +50,26 @@
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
+| 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff interaction needed | 010 | 🔲 Not started |
+| 022 | `022-eid-registration` | Belgian eID child/parent registration via federal Web Components API | 006 | 🔲 Not started |
+| 023 | `023-digital-enrollment` | Public online enrollment form + parent-initiated waiting list self-registration | 012a | 🔲 Not started |
+| 024 | `024-esignature` | Digital contract e-signature; SEPA direct debit mandate embedded in signing flow | 007 | 🔲 Not started |
+| 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | 🔲 Not started |
+| 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | 🔲 Not started |
+| 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — own schedule view, leave/exchange day requests, push notifications | 012 | 🔲 Not started |
+| 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
 | 019 | `019-ikt-compliance` | IKT subsidy integration, Opgroeien API | All Phase 1 | 🔲 Not started |
+
+### Phase 4 — Integrations (later)
+
+| # | Branch | Feature | Depends on | Status |
+|---|---|---|---|---|
+| 029 | `029-accounting-export` | Accounting system export (Exact Online, Yuki, CSV) for bookkeepers | 014 | 🔲 Not started |
 
 ---
 
@@ -1914,6 +1933,832 @@ Out of scope:
 - A full multi-channel notification preference centre (per-notification-type
   granularity across push/in-app/email) — Phase 3. The daily-digest
   unsubscribe above is a single, narrow opt-out flag, not that broader system.
+```
+
+### 012a — Waiting List
+
+```
+Build the KDV waiting list — the day-to-day tool directors use to track
+families who want a place but don't have one yet.
+
+What to build:
+- waiting_list_entries table (tenant schema):
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_first_name TEXT NOT NULL,
+    child_last_name  TEXT NOT NULL,
+    date_of_birth    DATE NOT NULL,
+    contact_name     TEXT NOT NULL,
+    contact_email    TEXT,
+    contact_phone    TEXT,
+    location_id      UUID REFERENCES locations(id),  -- which KDV they want
+    requested_start_date DATE,
+    priority         INT DEFAULT 0,  -- manual ordering; lower = higher priority
+    status           TEXT CHECK (status IN (
+                       'waiting','offered','enrolled','withdrawn'
+                     )) DEFAULT 'waiting',
+    notes            TEXT,
+    registered_at    TIMESTAMPTZ DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ
+
+- Web admin list view: sortable by priority, filtered by status.
+  Shows: child name, DOB, contact, requested start date, status.
+- Priority drag-and-drop reordering (or up/down arrows).
+- Alongside the list: an occupancy view — which days have free capacity
+  from the requested start date. Reads from attendance (010) + contracts (007).
+- Status transitions: waiting → offered (director contacts family) →
+  enrolled (contract created in 007) or withdrawn (family declined/cancelled).
+- When status becomes 'enrolled', allow linking to the child record created
+  in 006 (manual link — not auto-created; director confirms identity match).
+- Basic email notification when status changes to 'offered' — uses the
+  EmailService from 020 if already shipped, otherwise a simple MailKit
+  send inline.
+
+Key constraints:
+- Waiting list entries are pre-enrolment — no child record, no contract.
+  They are intentionally lightweight (name + DOB + contact only).
+- The occupancy view must honour closure days (011) — do not show a closed
+  day as having free capacity.
+- All user-facing strings use i18n keys (NL/FR/EN).
+- Soft-delete is sufficient for withdrawn entries (keep for history).
+
+Edge cases:
+- A family withdraws and then re-applies. Director creates a new entry —
+  no merge with the old one required for MVP.
+- The same child appears twice (duplicate entry). Flag visually (same name
+  + DOB on multiple rows) — do not auto-merge.
+- Director converts a waiting list entry to enrolled but no matching child
+  exists in 006 yet. The conversion flow should prompt: "Create child record
+  now?" with first/last name + DOB pre-filled.
+
+Out of scope:
+- Parent self-registration to the waiting list via public URL (feature 023).
+- Automated notification when a place becomes available (feature 023).
+- Tour invitation workflow (feature 023).
+```
+
+---
+
+### 013a — Day Reservations
+
+```
+Allow parents to submit day requests (absence, extra day, exchange day)
+through the parent app, and give directors a single approval queue.
+
+Context: parents currently have no self-service. They call or text to
+say their child is sick, or to ask for an extra day. This feature moves
+that workflow into the app, creating an audit trail and removing friction
+for both sides.
+
+What to build:
+- day_reservations table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_id        UUID REFERENCES children(id) NOT NULL,
+    type            TEXT CHECK (type IN (
+                      'absence',    -- child won't come (sick, holiday, other)
+                      'extra',      -- parent wants an additional day
+                      'exchange'    -- parent swaps a contracted day for another
+                    )) NOT NULL,
+    requested_date  DATE NOT NULL,
+    exchange_for_date DATE,         -- if type='exchange': which contracted day to swap
+    reason          TEXT,           -- parent's free-text reason
+    absence_justified BOOLEAN,      -- set by director on approval (justified = respijtdag, no charge)
+    status          TEXT CHECK (status IN (
+                      'pending','approved','rejected'
+                    )) DEFAULT 'pending',
+    requested_by    UUID REFERENCES users(id),
+    decided_by      UUID REFERENCES users(id),
+    decided_at      TIMESTAMPTZ,
+    director_notes  TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ
+
+- Parent app: three entry points — "Mijn kind is ziek", "Extra dag aanvragen",
+  "Dagwissel aanvragen". Each opens a simple form (date picker + optional reason).
+- Director web admin: a "Verzoeken" to-do list — all pending requests across
+  all children, newest first. Director approves or rejects with one tap.
+  For absence requests: director sets absence_justified flag at approval time
+  (justified = free for parent per billing model; unjustified = charged).
+- Push notification to parent when status changes to approved or rejected.
+  If director adds a note on rejection, include it in the notification.
+- Approved absences feed directly into attendance (010) as pre-registered
+  absences for that date. Approved exchanges update the effective care schedule
+  for invoice purposes (014).
+
+Key constraints:
+- A parent can only submit requests for their own children.
+- Exchange requests must validate that exchange_for_date is a contracted day
+  for that child (cross-check with contracts in 007). Reject at submission
+  if not.
+- Absence requests for dates in the past (> 1 day ago) are blocked — parent
+  must ask the director directly for retroactive corrections.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Parent submits an extra-day request for a date that is full (no capacity).
+  Director sees the capacity warning when approving — can reject with a note.
+- Exchange date falls on a closure day (011). Block at submission.
+- Parent withdraws a pending request before the director acts. Add a
+  'cancelled' status transition (parent-only action, only on 'pending').
+
+Out of scope:
+- Staff leave requests (feature 027-staff-app).
+- Automatic slot-availability check at submission time (show warning but
+  do not hard-block; director makes the final capacity decision).
+```
+
+---
+
+### 013b — Incident Reports
+
+```
+Build a digital incident/accident report form. This is a legal requirement
+under the Besluit Kwaliteit Kinderopvang — every KDV must record incidents
+involving children and keep them on file for inspection.
+
+What to build:
+- incident_reports table (tenant schema):
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_id            UUID REFERENCES children(id) NOT NULL,
+    occurred_at         TIMESTAMPTZ NOT NULL,
+    location_detail     TEXT,           -- 'indoor' | 'outdoor' | 'transit' | free text
+    description         TEXT NOT NULL,  -- what happened
+    injury_type         TEXT CHECK (injury_type IN (
+                          'none','scrape','bump','cut','fall',
+                          'bite','burn','allergic_reaction','other'
+                        )),
+    first_aid_given     TEXT,
+    doctor_called       BOOLEAN DEFAULT FALSE,
+    doctor_notes        TEXT,
+    parent_notified     BOOLEAN DEFAULT FALSE,
+    parent_notified_at  TIMESTAMPTZ,
+    parent_notified_how TEXT,           -- 'phone' | 'app' | 'in_person'
+    reported_by         UUID REFERENCES users(id),
+    witnesses           TEXT,
+    follow_up           TEXT,
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ
+
+- Caregiver app: "Incident melden" button on child profile. Opens a form
+  pre-filled with child name and current timestamp. Required fields: what
+  happened, injury type.
+- Web admin: incident history per child (in the child file). Director can
+  also view all incidents across the KDV for a date range (inspection view).
+- PDF export of a single incident report (QuestPDF) — formatted for printing
+  or handing to Zorginspectie. Includes all fields + signature line.
+- Push notification to director when a caregiver files an incident report
+  for their location.
+
+Key constraints:
+- Incident reports are immutable after 24 hours (legal document). Directors
+  can add a follow-up note but cannot edit the original description.
+- Report remains linked to the child record even if the child is
+  deactivated/soft-deleted — never cascade-delete.
+- All user-facing strings use i18n keys (NL/FR/EN).
+- The PDF must include the KDV name, address, and erkenningsnummer
+  (from location settings in 004).
+
+Edge cases:
+- Caregiver files a report for a past incident (discovered later).
+  Allow backdating occurred_at but log the discrepancy (created_at ≠ occurred_at).
+- Two caregivers file a report for the same incident. Director merges
+  them manually via director_notes — no auto-merge for MVP.
+- A child has no parent push token (no app). Parent notification is
+  logged as 'phone' or 'in_person' by the caregiver.
+
+Out of scope:
+- Parent digital acknowledgment / e-signature on the incident report (Phase 2).
+- Zorginspectie reporting API integration (Phase 3).
+```
+
+---
+
+### 013c — Vaccine & Health Records
+
+```
+Track each child's vaccination schedule and health records. Belgian KDVs
+are legally required to track vaccinations (Vaccinatieboekje) and are
+expected to flag when boosters are due. This is also a parental trust signal.
+
+What to build:
+- vaccine_records table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_id        UUID REFERENCES children(id) NOT NULL,
+    vaccine_name    TEXT NOT NULL,   -- 'DTP', 'MMR', 'Hep B', 'Meningococcal', etc.
+    dose_number     INT,             -- 1, 2, 3, 4 (for multi-dose vaccines)
+    administered_on DATE NOT NULL,
+    next_due_date   DATE,            -- optional; set when schedule is known
+    administered_by TEXT,            -- doctor / clinic name
+    notes           TEXT,
+    recorded_by     UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+
+- health_records table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_id        UUID REFERENCES children(id) NOT NULL,
+    record_type     TEXT CHECK (record_type IN (
+                      'allergy',        -- separate from the existing allergy field; detailed records
+                      'chronic_condition',
+                      'medication_standing', -- standing medication (not event-based)
+                      'doctor_note',
+                      'other'
+                    )) NOT NULL,
+    title           TEXT NOT NULL,
+    description     TEXT NOT NULL,
+    valid_from      DATE,
+    valid_until     DATE,
+    attachment_url  TEXT,   -- signed GCS URL for uploaded PDF/image
+    recorded_by     UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ
+
+- Web admin (director) and caregiver app (read-only for caregivers):
+  Child file → "Gezondheid" tab showing vaccine history and health records.
+- Director alert dashboard: children with a next_due_date ≤ 30 days from
+  today appear in a "Vaccinations due soon" block.
+- Caregiver app quick-access: from the group view a caregiver can tap a
+  child and see their allergy/health summary without navigating into the
+  full child file (critical for daily care decisions).
+
+Key constraints:
+- Health records and vaccine records are medical data — they are subject
+  to stricter GDPR rules. Never include them in bulk exports or email
+  summaries unless the director explicitly selects them.
+- Attachments follow the GCS signed-URL convention (no public blob URLs).
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- A vaccine next_due_date passes without the vaccination being recorded.
+  Keep showing the alert — do not auto-dismiss.
+- A child transfers to a different KDV (contract ends). Health records
+  stay in the system for the legal retention period; they are not
+  transferred automatically.
+
+Out of scope:
+- Automated parent reminder for upcoming vaccines (Phase 2 push notification).
+- Integration with Belgian vaccinatienet.be (Phase 3).
+```
+
+---
+
+### 013d — Meal List (Maaltijdenlijst)
+
+```
+Generate a daily meal list for the kitchen — who eats what today,
+with allergen flags visible at a glance.
+
+Context: Belgian KDV kitchens prepare meals for 10–40 children daily.
+They need a printed or displayed list of: which children are present,
+their dietary restrictions/allergies, and any special instructions.
+D-care has this; it is a daily operational necessity.
+
+What to build:
+- No new table — derived from existing data:
+    - Present children: attendance_records (010) for today where
+      check_in IS NOT NULL AND is_absent = FALSE.
+    - Dietary data: children.allergy_notes + health_records of type
+      'allergy' or 'chronic_condition' (013c).
+    - Meal plan: children.feeding_notes (add this TEXT field to children
+      if not already present) for standing meal instructions
+      (e.g. "no nuts", "vegetarian", "puréed texture").
+
+- API endpoint: GET /locations/{id}/meal-list?date= — returns the
+  day's attendees with their dietary flags, grouped by group/section.
+- Web admin: a "Maaltijdenlijst" page that renders this list and offers
+  a Print button (CSS print stylesheet, no PDF generation needed here).
+- Caregiver app: accessible from the group home screen. Shows only
+  the current group's children.
+- Allergen severity colour-coding: RED = anaphylactic risk (epipen note),
+  AMBER = intolerance/preference, GREY = no restrictions.
+
+Key constraints:
+- The list must never show a child who is absent today.
+- Allergen information is sensitive — the meal list is an operational
+  document but must not be emailed or left accessible to parents
+  (it shows other children's data).
+- All user-facing strings use i18n keys (NL/FR/EN).
+- The list must be printable in black & white (colour-blind-safe severity
+  indicators — use icons in addition to colour).
+
+Edge cases:
+- A child arrives late (not yet checked in but is expected). Director can
+  "include expected" toggle — shows children with a contracted day today
+  who have not yet checked in, in a separate "Expected" section.
+- A child has a standing medication (013c health_record type
+  'medication_standing'). Show a pill icon next to their name —
+  kitchen staff need to know to prepare the medication-time reminder.
+
+Out of scope:
+- Menu planning / weekly meal schedule (Phase 2).
+- Kitchen supplier integration (Phase 3).
+- Nutritional tracking (out of scope entirely).
+```
+
+---
+
+### 021 — QR Contactless Check-In
+
+```
+Allow parents to check their child in and out by showing a QR code on
+their phone, scanned by the caregiver tablet. No staff action required
+beyond holding up the tablet.
+
+Context: D-care uses physical touch PCs mounted in hallways; their check-in
+requires staff intervention. Our approach: parent shows their phone, tablet
+scans it — faster, touchless, no hardware purchase needed.
+
+What to build:
+- QR code per parent–child pair: encode a signed JWT containing
+  {child_id, parent_user_id, tenant_id}. Signed with a tenant-specific
+  secret. Short TTL (e.g. 5 minutes) to prevent replay attacks.
+- Parent app: "Check-in" screen showing a refreshing QR code (auto-refreshes
+  every 4 minutes). One QR per child if multiple children.
+- Caregiver app: a "QR scannen" mode on the group home screen.
+  Opens the device camera with a QR scanning overlay. On successful scan:
+  validates the JWT (tenant, child, TTL), resolves which child it is,
+  and performs the same check-in/out action as a manual tap (calls the
+  same POST /attendance/check-in endpoint from feature 010).
+- Feedback: success shows the child's name + photo + "Ingecheckt" for 3
+  seconds, then returns to scan mode. Error (expired, invalid, wrong
+  location) shows a clear message.
+- Both directions: first scan of the day = check-in; subsequent scan =
+  check-out (mirrors the manual toggle in 010).
+
+Key constraints:
+- The QR JWT must be signed, not just encoded. An unsigned QR could be
+  forged by a parent to check in someone else's child.
+- QR scan works offline (local JWT validation) but the actual attendance
+  record is queued in the offline_queue (from 008) if no connectivity.
+- No new attendance record schema — this is purely a new entry path
+  into the existing attendance flow.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Parent scans for a child at the wrong location. JWT contains tenant_id
+  + location — validate against the tablet's device token scope. Reject
+  with "Dit kind is niet ingeschreven op deze locatie."
+- Parent's QR expires mid-scan (timing edge). Caregiver sees "Code
+  verlopen — vraag de ouder een nieuwe code" and the parent app auto-refreshes.
+- Caregiver tablet camera fails. Fallback: manual tap check-in still works.
+
+Out of scope:
+- Paxton / NFC / badge check-in (Phase 4).
+- QR sticker on child's bag (physical QR, not phone-based) — later.
+```
+
+---
+
+### 022 — eID Registration
+
+```
+Allow directors to register children and parents by reading their Belgian
+electronic identity card (eID). Eliminates manual data entry and reduces
+transcription errors on names, dates of birth, and addresses.
+
+Context: D-care supports this; it is a genuine differentiator for KDVs
+that onboard many children at the start of each year. The Belgian federal
+government provides an official Web Components library for this.
+
+What to build:
+- Integrate the Belgian federal eID Web Components API
+  (https://eid.belgium.be/en/web-components) into the web admin.
+- Child registration flow: on the "Nieuw kind" screen, add a
+  "Lees eID-kaart" button. When clicked, triggers the eID Web Component,
+  which reads the chip from a connected card reader. On success: pre-fills
+  first name, last name, date of birth, place of birth, address, and
+  national register number (NRN) into the registration form.
+- Parent/contact registration flow: same flow on the "Voeg contact toe"
+  screen for parent/guardian contacts.
+- NRN handling: the NRN (rijksregisternummer) read from the eID is
+  sensitive personal data (GDPR special category). Store it encrypted
+  at rest. It is required for Belcotax Fiche 281.86 (Phase 3) and for
+  Opgroeien matching — but do NOT display it in plain text anywhere
+  after initial capture; show only the last 4 digits for verification.
+- Card reader: the eID Web Components work with any PC/SC-compatible
+  reader. The KDV needs a USB card reader (commodity hardware, ~€20).
+  List supported readers in onboarding docs.
+- No card reader? The form falls back to manual entry — eID reading is
+  an enhancement, not a hard dependency.
+
+Key constraints:
+- eID reading only works in the web admin (the Expo apps cannot access
+  PC/SC from a phone/tablet).
+- The NRN must never appear in logs, API responses, or error messages.
+- Consent for NRN storage must be logged (timestamp + who consented) on
+  the child or contact record.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Card reader not connected or driver not installed. Show a clear setup
+  guide link, not a raw browser error.
+- Child is under 12 (no chip on their Kids-ID card pre-2022). Fallback
+  to manual entry.
+- eID data conflicts with what is already on file (name spelling difference,
+  address changed). Show a diff and let the director choose which values
+  to keep.
+
+Out of scope:
+- Mobile NFC eID reading (not supported by the federal Web Components).
+- Automatic NRN lookup in Opgroeien systems (Phase 3, IKT compliance).
+```
+
+---
+
+### 023 — Digital Online Enrollment
+
+```
+Give parents a public enrollment form they can complete at any time —
+without calling the KDV — and let them add themselves to the waiting list
+directly. Feeds directly into 012a (waiting list) and pre-populates child
+data when the director converts an entry to enrolled.
+
+What to build:
+- Public enrollment form: a publicly accessible URL per KDV location
+  (e.g. /enroll/{location-slug}) that requires no login. Form fields:
+  child first/last name, date of birth, requested start date, parent/
+  guardian name, email, phone, and optional notes. Honeypot + rate limiting
+  to prevent spam.
+- On submission: creates a waiting_list_entry (012a) with status='waiting',
+  sends a confirmation email to the parent (using EmailService from 020),
+  and alerts the director via in-app notification.
+- Director conversion: when the director converts a waiting list entry to
+  'offered' or 'enrolled', the form data pre-fills the child creation flow
+  (006) and the contact creation flow — director just confirms, not re-types.
+- Parent self-registration to waiting list: same form. The parent receives
+  a reference number by email they can use to inquire about their position.
+- Tour invitation: from the waiting list (012a) the director can send a
+  tour invitation email — a templated email with a proposed date/time and
+  an accept/decline link. Director marks the tour outcome manually.
+
+Key constraints:
+- The public form has no auth. The submitted data goes into the waiting list
+  as an unverified entry — director always reviews before converting.
+- Rate limit: max 3 submissions per IP per hour (anti-spam).
+- The form and confirmation emails respect the location's primary language
+  setting (NL/FR) — but also support EN via a language toggle on the form.
+- No child data is committed to the tenant schema until the director
+  explicitly converts the waiting list entry.
+
+Edge cases:
+- Parent submits a duplicate entry (same child name + DOB already in
+  waiting list). Flag to director on the list view (as in 012a), do not
+  auto-reject — family may have a legitimate reason to reapply.
+- Location is at capacity with no projected availability. The director can
+  disable the public form temporarily from web admin settings.
+
+Out of scope:
+- Online payment of a registration deposit at enrollment time (Phase 3).
+- Parent portal with full account management (future).
+```
+
+---
+
+### 024 — Digital Contract E-Signature
+
+```
+Allow parents to sign their enrolment contract digitally — no printing,
+scanning, or in-person appointment required. Embed a SEPA direct debit
+mandate in the same signing flow so payment collection is authorised
+at the same moment.
+
+What to build:
+- Contract signing flow: when a director finalises a contract (007), they
+  can send a signing invitation to the parent's email (using EmailService
+  from 020). The email contains a secure, time-limited link (signed JWT,
+  72-hour TTL).
+- Signing page (no login required): parent opens the link, reviews the
+  contract PDF inline, scrolls to bottom, draws or types their signature,
+  and clicks "Ondertekenen."
+- SEPA mandate: below the contract, a second section captures the parent's
+  IBAN and authorises the KDV to collect invoices via direct debit. The
+  SEPA mandate creditor ID and mandate reference are generated per signing.
+  Mandate data stored on the contract record.
+- On completion: contract record updated with signed_at, signature_data
+  (SVG or base64 image of the drawn signature), signed_by_ip. A final
+  signed PDF (contract + signature block + SEPA mandate) is generated
+  (QuestPDF) and stored to GCS. Both director and parent receive a copy.
+- contracts table additions:
+    signing_token       TEXT,           -- UUID, one-time use
+    signing_token_exp   TIMESTAMPTZ,
+    signed_at           TIMESTAMPTZ,
+    signature_data      TEXT,           -- base64
+    signed_by_ip        INET,
+    sepa_iban           TEXT,           -- encrypted at rest
+    sepa_mandate_ref    TEXT,
+    sepa_authorised_at  TIMESTAMPTZ
+
+Key constraints:
+- The signing link is single-use. Once signed, the token is invalidated.
+- IBAN is sensitive financial data — encrypt at rest (same approach as NRN in 022).
+- The signed PDF is the legal document. Store it in GCS and never re-generate
+  it from live data after signing — the stored PDF is the source of truth.
+- All user-facing strings on the signing page use i18n keys (NL/FR/EN).
+  The signing page language defaults to the parent's locale preference.
+
+Edge cases:
+- Token expires before the parent signs. Director can re-send a new link.
+  Old token is invalidated immediately on re-send.
+- Parent signs on a mobile browser (not the Expo app). The signing page
+  must be a responsive web page, not an app screen.
+- Director wants to revise the contract after sending but before signing.
+  Invalidate the existing token, save the revised contract, issue a new link.
+
+Out of scope:
+- Qualified electronic signature (eIDAS Level 2+) — the simple/advanced
+  e-signature implemented here is sufficient for a Belgian KDV contract
+  (same level as DocuSign standard). Level 2 requires eID integration (022).
+- In-app signing via the parent mobile app (Phase 3).
+```
+
+---
+
+### 025 — CODA/CODABOX Payment Matching
+
+```
+Import bank statements in CODA format and automatically match payments
+to open invoices. Directors currently do this manually in Excel or their
+bank's online portal — this feature saves significant monthly admin time.
+
+What to build:
+- CODA file import: director uploads a .coda file (downloaded from their
+  bank) in web admin. Parser extracts transactions: date, amount, sender
+  IBAN, communication (gestructureerde mededeling / OGM reference).
+- Matching logic:
+    1. Exact OGM match: compare the transaction's structured communication
+       against invoice OGM references (already on invoices in 014). If match
+       found: mark invoice as paid with the transaction date and amount.
+    2. Amount + IBAN match: if no OGM match, look for an open invoice of the
+       same amount from a family whose IBAN matches the sender. Suggest as
+       a likely match — director confirms.
+    3. Unmatched: transactions that don't match any invoice are listed as
+       "onbekende overschrijving" for manual review.
+- coda_transactions table (tenant schema):
+    id            UUID PRIMARY KEY,
+    import_date   DATE,
+    value_date    DATE,
+    amount_cents  INT,
+    sender_iban   TEXT,
+    sender_name   TEXT,
+    communication TEXT,
+    matched_invoice_id UUID REFERENCES invoices(id),
+    match_type    TEXT CHECK (match_type IN ('ogm','iban_amount','manual','unmatched')),
+    created_at    TIMESTAMPTZ DEFAULT NOW()
+
+- CODABOX integration (Phase 2 extension): CODABOX is a Belgian service
+  that delivers CODA files directly to software via API — no manual upload
+  needed. Integrate the CODABOX API as an optional upgrade over manual
+  import. This avoids the director needing to visit their bank portal
+  each month.
+
+Key constraints:
+- CODA format is a Belgian standard (Isabel/KBC/BNP format). Use an
+  existing .NET CODA parser (NuGet) — do not implement from scratch.
+- An invoice can only be marked paid once. If a duplicate payment arrives,
+  flag it as "dubbele betaling" for director review.
+- IBAN data is financial PII — store encrypted at rest, log access.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- A parent pays the wrong amount (partial payment). Do not auto-close the
+  invoice. Show the partial payment against the invoice with a remaining
+  balance.
+- A payment references an invoice from a prior month that was already
+  written off. Flag as "betaling voor afgesloten factuur."
+- CODABOX API is unreachable. Fall back to manual CODA file upload without
+  data loss.
+
+Out of scope:
+- Direct bank API integration (PSD2 / open banking) — later.
+- Multi-bank account support per tenant (single account per location for MVP).
+```
+
+---
+
+### 026 — SEPA Direct Debit
+
+```
+Generate SEPA direct debit XML (pain.008.001.02 format) so the KDV
+can collect invoice amounts directly from parent bank accounts in a
+single batch, rather than waiting for individual transfers.
+
+Context: most Belgian KDVs collect payment by bank transfer today.
+SEPA direct debit lets the KDV initiate the collection — parent never
+needs to remember to pay. Requires a SEPA mandate (feature 024) signed
+by the parent, and a creditor identifier (CID) registered with the KDV's
+bank.
+
+What to build:
+- SEPA batch generation: director selects a set of invoices (e.g. all
+  invoices for month M, status='sent') and triggers "Genereer SEPA XML."
+- Output: a pain.008.001.02 XML file ready for upload to the KDV's bank
+  portal (Isabel6, KBC Business Dashboard, etc.).
+- Each debit instruction in the XML maps to one invoice: amount, debtor
+  IBAN (from contract.sepa_iban via 024), mandate reference, mandate
+  signing date, end-to-end ID (= invoice OGM reference).
+- Settings: store the KDV's creditor identifier (CID), creditor name,
+  and creditor IBAN in the location settings (004). These are required
+  headers in the pain.008 file.
+- After export: invoices in the batch are marked status='pending_debit'.
+  When the bank confirms collection (via CODA import in 025), they are
+  marked 'paid' automatically.
+
+Key constraints:
+- Only invoices for parents with a signed SEPA mandate (sepa_authorised_at
+  NOT NULL on the contract) can be included in a batch.
+- A parent can revoke their SEPA mandate (add revoked_at to the contract).
+  Revoked mandates are excluded from future batches.
+- The pain.008 format is strict. Validate the generated XML against the
+  EPC schema before offering the download.
+- Execution date must be at least 1 business day in the future for a CORE
+  sequence (standard consumer direct debit). Let director set the date.
+
+Edge cases:
+- A parent's IBAN changes between mandate signing and debit execution.
+  Director must update the IBAN and re-sign a new mandate — no silent override.
+- A debit is returned (R-transaction: RTRN, RJCT). Director sees the
+  returned invoice back in 'sent' status with a note. No auto-retry.
+
+Out of scope:
+- B2B SEPA scheme (businesses as debtors) — not relevant for parent payments.
+- Pre-notification email to parents before debit (legally required 14 days
+  prior for CORE) — add to 020 (email communications) when 026 is shipped.
+```
+
+---
+
+### 027 — Staff App
+
+```
+A separate Expo mobile app for caregivers/staff (distinct from the shared
+caregiver group tablet). Staff use this on their personal phones to view
+their own schedule, submit leave or shift requests, and receive push
+notifications about schedule changes.
+
+Context: the caregiver group tablet (008/008a) is shared in the room.
+Staff need a personal app on their phone for: "Am I working next Wednesday?"
+and "I need to request a sick day." D-care doesn't have this; BitCare does.
+
+What to build:
+New Expo project (separate from the caregiver group tablet app):
+
+- Schedule view: staff see their own upcoming shifts (from staff_schedules
+  in 012) for the next 4 weeks. Day view + week view toggle.
+- Leave request: staff submits a leave request (date range, type: sick /
+  annual leave / other, optional note). Creates a new entry in:
+    staff_leave_requests table (tenant schema):
+        id           UUID PRIMARY KEY,
+        staff_id     UUID REFERENCES staff_members(id),
+        type         TEXT CHECK (type IN ('sick','annual','other')),
+        date_from    DATE,
+        date_to      DATE,
+        notes        TEXT,
+        status       TEXT CHECK (status IN ('pending','approved','rejected')),
+        decided_by   UUID REFERENCES users(id),
+        decided_at   TIMESTAMPTZ,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+- Shift exchange request: staff proposes swapping a shift with a named
+  colleague. Director approves or rejects.
+- Push notifications: staff receives push when their schedule is published,
+  a leave request is approved/rejected, or a shift is changed.
+- Director web admin additions: a "Verlofaanvragen" queue (similar to the
+  day-reservations queue in 013a) where directors approve/reject staff
+  leave requests. Approved requests auto-mark the staff member absent in
+  staff_schedules (012).
+
+Key constraints:
+- The staff app authenticates with a personal email/password (unlike the
+  room tablet which uses a device token). Standard JWT auth from 003.
+- A staff member can only see their own schedule. They cannot see other
+  staff members' schedules.
+- Push token for the staff app is stored separately from the caregiver
+  tablet device token — different table/field.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Staff member is on sick leave and their shift is still in the schedule.
+  The shift shows as 'absent' in the rota (012) and BKR count (010)
+  automatically adjusts.
+- Staff member requests leave for a date that is a closure day (011).
+  Still allow it — some staff may want to use leave on closure days for
+  personal reasons.
+
+Out of scope:
+- Time registration / clock in/out (feature 028).
+- Staff HR dossier (feature 028).
+- Staff-to-staff group chat (Phase 3).
+```
+
+---
+
+### 028 — Staff HR Dossier & Time Registration
+
+```
+Give directors a digital HR file per staff member — employment contracts,
+training records, qualification documents — and let staff clock in/out
+so the KDV has accurate hours worked for payroll and for the
+medewerkersbeleid subsidy application (Opgroeien 2025 subsidy that rewards
+KDVs meeting the new BKR ratios early, verified by hour counts per
+caregiver per function).
+
+What to build:
+- Staff time registration:
+    staff_time_entries table (tenant schema):
+        id           UUID PRIMARY KEY,
+        staff_id     UUID REFERENCES staff_members(id),
+        location_id  UUID REFERENCES locations(id),
+        group_id     UUID REFERENCES groups(id),  -- nullable
+        clocked_in_at  TIMESTAMPTZ NOT NULL,
+        clocked_out_at TIMESTAMPTZ,
+        function     TEXT CHECK (function IN (
+                       'kinderbegeleider','logistiek','verantwoordelijke'
+                     )) NOT NULL,  -- required for medewerkersbeleid subsidy calculation
+        notes        TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+
+- Clock in/out: via the staff app (027) — staff tap "Begin dienst" /
+  "Einde dienst" on their personal phone. Time auto-filled; staff selects
+  their function for the day if they work multiple roles.
+- Staff HR dossier (web admin, director only):
+    staff_documents table (tenant schema):
+        id            UUID PRIMARY KEY,
+        staff_id      UUID REFERENCES staff_members(id),
+        document_type TEXT CHECK (document_type IN (
+                        'employment_contract','amendment','qualification',
+                        'training','other'
+                      )),
+        title         TEXT,
+        gcs_url       TEXT,   -- signed GCS URL
+        valid_from    DATE,
+        valid_until   DATE,   -- nullable; set for contracts with an end date
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+- Contract expiry alerts: director dashboard shows a "Personeel — verlopende
+  contracten" block with staff whose employment contracts expire within 60 days.
+- Medewerkersbeleid subsidy report (web admin):
+  A report page showing total child-hours ÷ staff-hours by function, per
+  location, for a selected period. This is exactly what Opgroeien requires
+  to verify that the KDV meets the new ratios (1:5 baby, 1:7 mixed, 1:8
+  toddler-only). Directors download this report when applying for the subsidy.
+
+Key constraints:
+- Time entries are immutable after a configurable lock period (e.g. 7 days).
+  Director can unlock for corrections.
+- The GCS signed-URL convention applies to all staff documents.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Staff member forgets to clock out. Clocked_out_at is null. Director
+  can fill it in retroactively from the web admin.
+- Staff member works across two groups in one day (e.g. morning in babies,
+  afternoon in toddlers). Two separate time entries.
+
+Out of scope:
+- Payroll calculation (pay rates, deductions) — the hour export feeds a
+  payroll system; we don't do payroll.
+- Humanwave API integration (Phase 4) — for now, provide a CSV export of
+  hours per staff member per period.
+```
+
+---
+
+### 029 — Accounting Export
+
+```
+Export invoicing and payment data to common Belgian accounting packages.
+Directors or their bookkeepers use Exact Online, Yuki, Accountable, or
+similar tools — this avoids re-typing invoice data.
+
+What to build:
+- CSV export: a configurable export of invoices (and optionally payments)
+  for a selected date range. Columns: invoice number, family name,
+  amount excl. VAT, VAT amount, amount incl. VAT, due date, paid date,
+  payment reference. Downloadable from web admin under Financiën → Export.
+- Exact Online UBL export: generate UBL 2.1 XML (the format Exact Online
+  and most Belgian accounting packages accept for invoice import). One
+  UBL file per invoice, or a ZIP of the period's invoices.
+- Yuki export: Yuki uses a specific XML format (Yuki Sales Invoice XML).
+  Generate this as an alternative to UBL if the director selects Yuki as
+  their accounting package (a setting in the director's profile).
+- Accounting package preference: a dropdown in Settings → Boekhouding
+  where the director selects their package. Determines which export format
+  is offered as the primary option.
+
+Key constraints:
+- VAT: Belgian KDVs operating under the Opgroeien licence are VAT-exempt
+  (BTW vrijgesteld, Article 44 §2 5° WBTW). All exports must reflect
+  this — no VAT amount on any line.
+- Export is read-only. No import, no sync, no API keys needed from the
+  accounting package for MVP (file-based only).
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- A credit note (negative invoice from a correction) must export correctly
+  with a negative amount in the UBL/CSV.
+- Director exports the same period twice (e.g. re-running after a late
+  payment). The export is idempotent — same data produces the same file.
+
+Out of scope:
+- Live API sync with accounting packages (Exact Online REST API, Yuki
+  API) — later, after file-based export proves its value.
+- Payroll export (028 handles staff hours; payroll is out of scope).
 ```
 
 ---
