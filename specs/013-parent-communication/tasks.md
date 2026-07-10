@@ -120,25 +120,25 @@
 
 ### Tests for User Story 2
 
-- [ ] T054 [P] [US2] Integration test: parent creates a child-scoped thread, message visible to both the parent and every eligible participant in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T055 [P] [US2] Integration test: two parent accounts for the same child both land as participants on one shared thread — not two separate threads (FR-003a) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T056 [P] [US2] Integration test: director/staff reply appears in the same thread, in chronological order, visible to all participants in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T057 [P] [US2] Integration test: a parent who is not a thread participant is denied access regardless of request shape (FR-006) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T058 [P] [US2] Integration test: a general (non-child-specific) thread can be created and is accessible to the creating parent only in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T058a [P] [US2] Integration test: a general (non-child-specific) thread is visible and replyable by any director/staff member org-wide, the same as a child-scoped thread (FR-004) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T059 [P] [US2] Integration test: thread list ordered by most-recently-active first, with an unread indicator in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T059a [P] [US2] Integration test: a director/staff caller from tenant A cannot view or reply to a thread belonging to tenant B, even with a structurally valid thread id (FR-018) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T054 [P] [US2] Integration test: parent creates a child-scoped thread, message visible to both the parent and every eligible participant in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T055 [P] [US2] Integration test: two parent accounts for the same child both land as participants on one shared thread — not two separate threads (FR-003a) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T056 [P] [US2] Integration test: director/staff reply appears in the same thread, in chronological order, visible to all participants in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T057 [P] [US2] Integration test: a parent who is not a thread participant is denied access regardless of request shape (FR-006) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T058 [P] [US2] Integration test: a general (non-child-specific) thread can be created and is accessible to the creating parent only in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T058a [P] [US2] Integration test: a general (non-child-specific) thread is visible and replyable by any director/staff member org-wide, the same as a child-scoped thread (FR-004) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T059 [P] [US2] Integration test: thread list ordered by most-recently-active first, with an unread indicator in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T059a [P] [US2] Integration test: a director/staff caller from tenant A cannot view or reply to a thread belonging to tenant B, even with a structurally valid thread id (FR-018) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [ ] T060 [P] [US2] Web component test: director thread list and reply flow in `web/__tests__/messages.test.tsx`
 - [ ] T061 [P] [US2] Mobile test: parent thread list, thread detail, and compose flow in `parent-mobile/__tests__/messages.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T062 [US2] Implement `CreateMessageThreadCommand`+Validator+Handler (resolves and adds every eligible parent contact of the child as participant, per FR-003a) in `backend/ChildCare.Application/Messaging/CreateMessageThreadCommand.cs`
-- [ ] T063 [US2] Implement `SendMessageCommand`+Validator+Handler (shared by parent and staff/director callers; sets `MessageThread.LastActivityAt`; sets cross-side `ReadAt` per research.md R7) in `backend/ChildCare.Application/Messaging/SendMessageCommand.cs`
-- [ ] T064 [P] [US2] Implement `ListParentThreadsQuery`, `GetThreadQuery` (parent-scoped, authorized via `ICurrentParentContactResolver`) in `backend/ChildCare.Application/Messaging/ListParentThreadsQuery.cs` and `GetThreadQuery.cs`
-- [ ] T065 [P] [US2] Implement `ListOrgThreadsQuery` (director/staff-scoped, includes unread-from-parent count per FR-013) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
-- [ ] T066 [US2] Wire `SendMessageCommand` to create a `Notification(Type=NewMessage)` for every other participant (parent recipients only — staff/director awareness is the unread-count query, research.md R4/R7) and dispatch a push via `IExpoPushSender` (research.md R3)
-- [ ] T067 [US2] Map parent routes (`POST/GET /api/parent/message-threads`, `GET /api/parent/message-threads/{id}`, `POST /api/parent/message-threads/{id}/messages`) and director/staff routes (`GET /api/message-threads`, `GET /api/message-threads/{id}`, `POST /api/message-threads/{id}/messages`) in `backend/ChildCare.Api/Endpoints/MessageThreadEndpoints.cs`
+- [X] T062 [US2] Implement `CreateMessageThreadCommand`+Validator+Handler (resolves and adds every eligible parent contact of the child as participant, per FR-003a) in `backend/ChildCare.Application/Messaging/CreateMessageThreadCommand.cs`
+- [X] T063 [US2] Implement `SendMessageCommand`+Validator+Handler (shared by parent and staff/director callers; sets `MessageThread.LastActivityAt`; sets cross-side `ReadAt` per research.md R7) in `backend/ChildCare.Application/Messaging/SendMessageCommand.cs`
+- [X] T064 [P] [US2] Implement `ListParentThreadsQuery`, `GetThreadQuery` (parent-scoped, authorized via `ICurrentParentContactResolver`) in `backend/ChildCare.Application/Messaging/ListParentThreadsQuery.cs` and `GetThreadQuery.cs`
+- [X] T065 [P] [US2] Implement `ListOrgThreadsQuery` (director/staff-scoped, includes unread-from-parent count per FR-013) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
+- [X] T066 [US2] Wire `SendMessageCommand` to create a `Notification(Type=NewMessage)` for every other participant (parent recipients only — staff/director awareness is the unread-count query, research.md R4/R7) and dispatch a push via `IExpoPushSender` (research.md R3)
+- [X] T067 [US2] Map parent routes (`POST/GET /api/parent/message-threads`, `GET /api/parent/message-threads/{id}`, `POST /api/parent/message-threads/{id}/messages`) and director/staff routes (`GET /api/message-threads`, `GET /api/message-threads/{id}`, `POST /api/message-threads/{id}/messages`) in `backend/ChildCare.Api/Endpoints/MessageThreadEndpoints.cs`
 - [ ] T068 [US2] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
 - [ ] T069 [P] [US2] Implement `web/app/(app)/messages/page.tsx` (thread list, high-density table per platform-rules.md) and `web/app/(app)/messages/[id]/page.tsx` (thread detail + reply)
 - [ ] T070 [P] [US2] Implement `parent-mobile/app/(app)/messages/index.tsx` (thread list) and `parent-mobile/app/(app)/messages/[id].tsx` (thread detail + compose), warm/timeline styling per platform-rules.md Parent Mobile section
@@ -196,9 +196,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T089 [US4] Implement `ListNotificationsQuery`+Handler and `MarkNotificationReadCommand`+Validator+Handler in `backend/ChildCare.Application/Notifications/ListNotificationsQuery.cs` and `MarkNotificationReadCommand.cs`
+- [X] T089 [US4] Implement `ListNotificationsQuery`+Handler and `MarkNotificationReadCommand`+Validator+Handler in `backend/ChildCare.Application/Notifications/ListNotificationsQuery.cs` and `MarkNotificationReadCommand.cs`
 - [ ] T090 [US4] Extend `TemperatureAlertService.NotifyAsync` to write a `Notification(Type=TemperatureAlert, SourceId=childEvent.Id)` row per recipient before/alongside the existing push send (research.md R4) in `backend/ChildCare.Application/ChildEvents/TemperatureAlertService.cs`
-- [ ] T091 [US4] Map `GET /api/parent/notifications` and `POST /api/parent/notifications/{id}/read` (ParentOnly) in `backend/ChildCare.Api/Endpoints/NotificationEndpoints.cs`
+- [X] T091 [US4] Map `GET /api/parent/notifications` and `POST /api/parent/notifications/{id}/read` (ParentOnly) in `backend/ChildCare.Api/Endpoints/NotificationEndpoints.cs`
 - [ ] T092 [US4] Regenerate OpenAPI types in `parent-mobile/services/generated/api-types.ts`
 - [ ] T093 [US4] Implement `parent-mobile/app/(app)/notifications/index.tsx` (typed list, icon-paired per type per design-system.md Status indicators, tap-to-navigate, mark-read on open)
 
@@ -221,8 +221,8 @@
 
 ### Implementation for User Story 5
 
-- [ ] T098 [US5] Implement `RegisterPushTokenCommand`+Validator+Handler (resolves caller's `Contact` via `ICurrentParentContactResolver`, overwrites `PushToken`) in `backend/ChildCare.Application/Parent/RegisterPushTokenCommand.cs`
-- [ ] T099 [US5] Map `PUT /api/parent/push-token` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
+- [X] T098 [US5] Implement `RegisterPushTokenCommand`+Validator+Handler (resolves caller's `Contact` via `ICurrentParentContactResolver`, overwrites `PushToken`) in `backend/ChildCare.Application/Parent/RegisterPushTokenCommand.cs`
+- [X] T099 [US5] Map `PUT /api/parent/push-token` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
 - [ ] T100 [US5] Add unread-from-parent count to `ListOrgThreadsQuery`'s response (if not already covered by T065 — verify and close any gap) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
 - [ ] T101 [US5] Add an unread-count badge to the web `/messages` nav entry in `web/components/Sidebar.tsx` and thread list in `web/app/(app)/messages/page.tsx`
 - [ ] T102 [US5] Implement `parent-mobile/` push-token registration on login/launch using `expo-notifications`, calling `PUT /api/parent/push-token` in `parent-mobile/services/pushToken.ts`, wired into the auth flow from T026
