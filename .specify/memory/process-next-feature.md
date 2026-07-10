@@ -303,3 +303,26 @@ use the static code review instead.
   tests) caught a real bug mocked tests couldn't have — `Date.toISOString()` round-tripping
   through UTC shifted the week grid's dates backward by a day in positive-UTC-offset
   timezones.
+- 012a (`012a-waiting-list`): ✅ Done, merged 2026-07-10 (PR #17, squash-merged after green CI —
+  395/395 backend + 41/41 web passing). This run resumed mid-flight: a prior session had
+  already written spec/plan/tasks and most of the `Application` layer (commands/queries) with
+  zero commits and no endpoints/migration/tests/web UI — this session picked up from tasks.md's
+  checkboxes rather than re-running specify/plan/tasks. Director-web waiting-list tool:
+  registration with cross-status duplicate flagging, per-location priority reorder (pointer +
+  keyboard), a `waiting → offered → enrolled/withdrawn` allow-list lifecycle with an
+  offer-notification email, a forward-looking occupancy view, and a manual child-record
+  link/create on enrollment. Same BACKLOG-premise correction pattern as feature 012:
+  occupancy was specified to read from attendance (010) + contracts (007), but attendance is
+  same-day/historical and doesn't exist for the future dates a waiting-list check needs —
+  corrected during specification to read only from active contracts against
+  `Location.MaxCapacity`, honoring the closure calendar (011), with a dedicated regression
+  test proving it never reads attendance. `/speckit-converge` found three real gaps after
+  implementation, all fixed rather than deferred: an EF tracking-query crash from projecting an
+  owned-type collection (`ContractedDays`) without `.AsNoTracking()`, a missing
+  `MaximumLength(2000)` validator on `Notes` that would have let an over-length value reach
+  Postgres as an unhandled 500 instead of a clean 400, and occupancy silently computing for a
+  deactivated location instead of being rejected per the spec's own Edge Cases section. Also
+  extended `TenantMigrationRolloutTests`' schema-revert helper for the new table's FKs (to both
+  `children` and `locations`) — every migration-adding feature since 003 has hit this same
+  test and needed the identical fix; worth checking that test first when adding any new
+  tenant-schema table with a foreign key.
