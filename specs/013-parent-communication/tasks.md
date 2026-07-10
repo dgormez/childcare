@@ -91,19 +91,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T042 [P] [US1] Integration test: daily summary aggregates visible events correctly (naps/bottles/diapers/mood/temperature/medication/activities) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
-- [ ] T043 [P] [US1] Integration test: `visible_to_parent=false` events never appear in the response, regardless of event type in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
-- [ ] T044 [P] [US1] Integration test: a parent cannot fetch a summary for a child they are not a contact of — 403 in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
-- [ ] T044a [P] [US1] Integration test: a parent authenticated against tenant A cannot fetch a daily summary for a child that exists only in tenant B, even with a structurally valid child id (FR-018) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
-- [ ] T045 [P] [US1] Integration test: `GET /api/parent/children` returns only the caller's own children in `backend/ChildCare.Api.Tests/Parent/ParentChildrenTests.cs`
+- [X] T042 [P] [US1] Integration test: daily summary aggregates visible events correctly (naps/bottles/diapers/mood/temperature/medication/activities) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
+- [X] T043 [P] [US1] Integration test: `visible_to_parent=false` events never appear in the response, regardless of event type in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
+- [X] T044 [P] [US1] Integration test: a parent cannot fetch a summary for a child they are not a contact of — 403 in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
+- [X] T044a [P] [US1] Integration test: a parent authenticated against tenant A cannot fetch a daily summary for a child that exists only in tenant B, even with a structurally valid child id (FR-018) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
+- [X] T045 [P] [US1] Integration test: `GET /api/parent/children` returns only the caller's own children in `backend/ChildCare.Api.Tests/Parent/ParentChildrenTests.cs`
 - [ ] T046 [P] [US1] Mobile test: home screen renders two children's summaries clearly separated, and a "no updates yet" empty state when a child has zero events in `parent-mobile/__tests__/home.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T047 [US1] Extend `GetDailySummaryQuery`/Handler with an `activities` field (research.md R5) in `backend/ChildCare.Application/ChildEvents/GetDailySummaryQuery.cs`
-- [ ] T048 [US1] Implement `GetParentDailySummaryQuery`+Handler (authorizes via `ICurrentParentContactResolver` + `ChildContact`, delegates to `GetDailySummaryQuery`) in `backend/ChildCare.Application/Parent/GetParentDailySummaryQuery.cs`
-- [ ] T049 [P] [US1] Implement `GetParentChildrenQuery`+Handler in `backend/ChildCare.Application/Parent/GetParentChildrenQuery.cs`
-- [ ] T050 [US1] Map `GET /api/parent/children/{childId}/daily-summary` and `GET /api/parent/children` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
+- [X] T047 [US1] Extend `GetDailySummaryQuery`/Handler with an `activities` field (research.md R5) in `backend/ChildCare.Application/ChildEvents/GetDailySummaryQuery.cs`
+- [X] T048 [US1] Implement `GetParentDailySummaryQuery`+Handler (authorizes via `ICurrentParentContactResolver` + `ChildContact`, delegates to `GetDailySummaryQuery`) in `backend/ChildCare.Application/Parent/GetParentDailySummaryQuery.cs`
+- [X] T049 [P] [US1] Implement `GetParentChildrenQuery`+Handler in `backend/ChildCare.Application/Parent/GetParentChildrenQuery.cs`
+- [X] T050 [US1] Map `GET /api/parent/children/{childId}/daily-summary` and `GET /api/parent/children` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
 - [ ] T051 [US1] Regenerate OpenAPI types for parent endpoints in `parent-mobile/services/generated/api-types.ts`
 - [ ] T052 [P] [US1] Implement `DailySummaryCard` component (per-child, icon-paired sections, "no updates yet" empty state per design-system.md) in `parent-mobile/components/DailySummaryCard.tsx`
 - [ ] T053 [US1] Implement `parent-mobile/app/(app)/index.tsx` home screen (fetches children + summaries, renders one card per child, pull-to-refresh)
