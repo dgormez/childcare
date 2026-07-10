@@ -156,21 +156,21 @@
 
 ### Tests for User Story 3
 
-- [ ] T072 [P] [US3] Integration test: location-scoped announcement reaches every eligible contact of currently-enrolled children at that location in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T072a [P] [US3] Integration test: a currently-enrolled child's contact who has NOT completed a parent-app invitation (no `Contact.TenantUserId`) is excluded from announcement recipients, even though they are otherwise in scope (FR-008) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T073 [P] [US3] Integration test: group-scoped announcement reaches only contacts of children in that group in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T074 [P] [US3] Integration test: a scope with zero currently-enrolled children completes with zero recipients, not an error in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T074a [P] [US3] Integration test: sending an announcement dispatches a push (via `IExpoPushSender` test double) to every recipient with a valid `PushToken`, satisfying FR-012's announcement-push requirement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T075 [P] [US3] Integration test: no endpoint allows a parent to reply to an announcement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T076 [P] [US3] Integration test: a parent can only view an announcement they are a recipient of — 403/404 otherwise in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T076a [P] [US3] Integration test: a director from tenant A cannot target a location/group belonging to tenant B when composing an announcement, and a parent from tenant A cannot view an announcement belonging to tenant B (FR-018) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T072 [P] [US3] Integration test: location-scoped announcement reaches every eligible contact of currently-enrolled children at that location in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T072a [P] [US3] Integration test: a currently-enrolled child's contact who has NOT completed a parent-app invitation (no `Contact.TenantUserId`) is excluded from announcement recipients, even though they are otherwise in scope (FR-008) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T073 [P] [US3] Integration test: group-scoped announcement reaches only contacts of children in that group in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T074 [P] [US3] Integration test: a scope with zero currently-enrolled children completes with zero recipients, not an error in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T074a [P] [US3] Integration test: sending an announcement dispatches a push (via `IExpoPushSender` test double) to every recipient with a valid `PushToken`, satisfying FR-012's announcement-push requirement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T075 [P] [US3] Integration test: no endpoint allows a parent to reply to an announcement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T076 [P] [US3] Integration test: a parent can only view an announcement they are a recipient of — 403/404 otherwise in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [X] T076a [P] [US3] Integration test: a director from tenant A cannot target a location/group belonging to tenant B when composing an announcement, and a parent from tenant A cannot view an announcement belonging to tenant B (FR-018) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T077 [P] [US3] Web component test: announcement compose flow (location/group scope picker, subject/body) in `web/__tests__/announcements.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T078 [US3] Implement `SendAnnouncementCommand`+Validator+Handler (resolves recipients = eligible contacts in scope per research.md R8, creates `AnnouncementRecipient` + `Notification(Type=Announcement)` rows, dispatches pushes) in `backend/ChildCare.Application/Announcements/SendAnnouncementCommand.cs`
-- [ ] T079 [P] [US3] Implement `ListAnnouncementsQuery` (director sent history) and `GetParentAnnouncementQuery` (parent read, marks `AnnouncementRecipient.ReadAt`) in `backend/ChildCare.Application/Announcements/ListAnnouncementsQuery.cs` and `GetParentAnnouncementQuery.cs`
-- [ ] T080 [US3] Map `POST/GET /api/announcements` (DirectorOnly) and `GET /api/parent/announcements/{id}` (ParentOnly) in `backend/ChildCare.Api/Endpoints/AnnouncementEndpoints.cs`
+- [X] T078 [US3] Implement `SendAnnouncementCommand`+Validator+Handler (resolves recipients = eligible contacts in scope per research.md R8, creates `AnnouncementRecipient` + `Notification(Type=Announcement)` rows, dispatches pushes) in `backend/ChildCare.Application/Announcements/SendAnnouncementCommand.cs`
+- [X] T079 [P] [US3] Implement `ListAnnouncementsQuery` (director sent history) and `GetParentAnnouncementQuery` (parent read, marks `AnnouncementRecipient.ReadAt`) in `backend/ChildCare.Application/Announcements/ListAnnouncementsQuery.cs` and `GetParentAnnouncementQuery.cs`
+- [X] T080 [US3] Map `POST/GET /api/announcements` (DirectorOnly) and `GET /api/parent/announcements/{id}` (ParentOnly) in `backend/ChildCare.Api/Endpoints/AnnouncementEndpoints.cs`
 - [ ] T081 [US3] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
 - [ ] T082 [US3] Implement `web/app/(app)/announcements/page.tsx` (compose form with location/group scope picker, sent history list)
 - [ ] T083 [US3] Implement `parent-mobile/app/(app)/announcements/[id].tsx` (read-only announcement view, no reply UI)

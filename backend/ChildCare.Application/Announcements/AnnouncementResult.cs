@@ -2,10 +2,11 @@ using ChildCare.Contracts.Responses;
 
 namespace ChildCare.Application.Announcements;
 
+// LocationNotFound/GroupNotFound are deliberately not members here — those checks run in
+// SendAnnouncementCommandValidator via FluentValidation (422 errors.validation), mirroring
+// ParentInvitationFailure's precedent for the same reason.
 public enum AnnouncementFailure
 {
-    LocationNotFound,
-    GroupNotFound,
     NotFound,
     NotRecipient,
 }
@@ -18,16 +19,6 @@ public class AnnouncementResult
 
     public static AnnouncementResult Success(AnnouncementResponse response) => new() { Succeeded = true, Response = response };
     public static AnnouncementResult Fail(AnnouncementFailure failure) => new() { Failure = failure };
-}
-
-public class AnnouncementListResult
-{
-    public bool Succeeded { get; init; }
-    public AnnouncementFailure? Failure { get; init; }
-    public IReadOnlyList<AnnouncementResponse> Announcements { get; init; } = [];
-
-    public static AnnouncementListResult Success(IReadOnlyList<AnnouncementResponse> announcements) => new() { Succeeded = true, Announcements = announcements };
-    public static AnnouncementListResult Fail(AnnouncementFailure failure) => new() { Failure = failure };
 }
 
 public class ParentAnnouncementResult
