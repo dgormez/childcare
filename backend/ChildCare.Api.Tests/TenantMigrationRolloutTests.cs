@@ -86,7 +86,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// and message tables that depend on contacts and closure_days, plus attendance_records now
     /// depends on closure_days, so those closure tables are dropped before contacts. Feature
     /// 012's "AddStaffSchedules" migration repeats the pattern once more — staff_schedules has
-    /// FKs to staff_profiles/locations/groups, so it's dropped before all three.
+    /// FKs to staff_profiles/locations/groups, so it's dropped before all three. Feature
+    /// 012a's "AddWaitingListEntries" migration repeats it again — waiting_list_entries has
+    /// FKs to both children and locations, so it's dropped before either.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -94,6 +96,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."waiting_list_entries";
             DROP TABLE "{schemaName}"."attendance_records";
             DROP TABLE "{schemaName}"."closure_notification_deliveries";
             DROP TABLE "{schemaName}"."parent_closure_messages";
@@ -124,7 +127,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries';
             """);
     }
 

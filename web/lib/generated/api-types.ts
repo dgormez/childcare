@@ -3233,6 +3233,256 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/waiting-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    locationId: string;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateWaitingListEntryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/occupancy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    locationId: string;
+                    from: string;
+                    to: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateWaitingListEntryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/waiting-list/{id}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReorderWaitingListEntryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TransitionWaitingListStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/{id}/link-child": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LinkChildToWaitingListEntryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3414,6 +3664,20 @@ export interface components {
             /** Format: time */
             endTime: string;
         };
+        CreateWaitingListEntryRequest: {
+            childFirstName: string;
+            childLastName: string;
+            /** Format: date */
+            dateOfBirth: string;
+            contactName: string;
+            contactEmail: null | string;
+            contactPhone: null | string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            requestedStartDate: null | string;
+            notes: null | string;
+        };
         DayOfWeek: number;
         ExitRoomModeRequest: {
             directorOverridePin: string;
@@ -3427,6 +3691,11 @@ export interface components {
             idToken: string;
         };
         JsonElement: unknown;
+        LinkChildToWaitingListEntryRequest: {
+            /** Format: uuid */
+            childId: null | string;
+            createNewChild: boolean;
+        };
         LinkContactToChildRequest: {
             /** Format: uuid */
             contactId: string;
@@ -3501,6 +3770,9 @@ export interface components {
             email: string;
             password: string;
         };
+        ReorderWaitingListEntryRequest: {
+            direction: string;
+        };
         ResetPasswordRequest: {
             organisationSlug: string;
             token: string;
@@ -3512,6 +3784,9 @@ export interface components {
         TerminateContractRequest: {
             /** Format: date */
             endDate: string;
+        };
+        TransitionWaitingListStatusRequest: {
+            status: string;
         };
         UpdateChildContactLinkRequest: {
             relationship: string;
@@ -3592,6 +3867,20 @@ export interface components {
             startTime: string;
             /** Format: time */
             endTime: string;
+        };
+        UpdateWaitingListEntryRequest: {
+            childFirstName: string;
+            childLastName: string;
+            /** Format: date */
+            dateOfBirth: string;
+            contactName: string;
+            contactEmail: null | string;
+            contactPhone: null | string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            requestedStartDate: null | string;
+            notes: null | string;
         };
         VerifyEmailRequest: {
             organisationSlug: string;

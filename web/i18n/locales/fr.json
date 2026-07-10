@@ -29,7 +29,8 @@
     "collapse": "Réduire",
     "expand": "Développer",
     "notYetAvailable": "Cette section n'est pas encore disponible.",
-    "scheduling": "Planning"
+    "scheduling": "Planning",
+    "waitingList": "Liste d'attente"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -229,5 +230,68 @@
     "body": "Une erreur inattendue s'est produite. Actualisez la page ou réessayez ci-dessous.",
     "appBody": "Cette page a rencontré une erreur. Vos données sont en sécurité.",
     "retry": "Réessayer"
+  },
+  "waitingList": {
+    "title": "Liste d'attente",
+    "locationLabel": "Site",
+    "statusLabel": "Statut",
+    "statusFilter": {
+      "waiting": "En attente",
+      "all": "Tous les statuts",
+      "offered": "Place proposée",
+      "enrolled": "Inscrit",
+      "withdrawn": "Retiré"
+    },
+    "status": {
+      "waiting": "En attente",
+      "offered": "Place proposée",
+      "enrolled": "Inscrit",
+      "withdrawn": "Retiré"
+    },
+    "add": "Ajouter à la liste d'attente",
+    "addTitle": "Ajouter à la liste d'attente",
+    "editTitle": "Modifier l'entrée",
+    "dialogDescription": "Enregistrez une famille intéressée par une place dans ce site.",
+    "childFirstNameLabel": "Prénom de l'enfant",
+    "childLastNameLabel": "Nom de l'enfant",
+    "dateOfBirthLabel": "Date de naissance",
+    "contactNameLabel": "Nom du contact",
+    "contactEmailLabel": "E-mail du contact",
+    "contactPhoneLabel": "Téléphone du contact",
+    "requestedStartDateLabel": "Date de début souhaitée",
+    "notesLabel": "Notes",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "duplicateBadge": "Doublon possible",
+    "emptyState": "Aucune famille en liste d'attente pour l'instant.",
+    "loadError": "Impossible de charger la liste d'attente. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "genericError": "Impossible d'enregistrer cette entrée. Veuillez réessayer.",
+    "columnChild": "Enfant",
+    "columnContact": "Contact",
+    "columnRequestedStart": "Début souhaité",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "offer": "Proposer une place",
+    "enroll": "Inscrire",
+    "withdraw": "Retirer",
+    "revertToWaiting": "Remettre en attente",
+    "linkChild": "Lier une fiche enfant",
+    "linkChildTitle": "Lier une fiche enfant",
+    "linkChildDescription": "Liez cette entrée à un enfant existant, ou créez une nouvelle fiche.",
+    "linkExisting": "Lier à un enfant existant",
+    "createNew": "Créer une nouvelle fiche enfant",
+    "childSelectLabel": "Enfant",
+    "confirmLink": "Lier",
+    "invalidStatusTransition": "Ce changement de statut n'est pas autorisé.",
+    "notReorderable": "Cette entrée ne peut plus être réordonnée.",
+    "occupancy": "Occupation prévue",
+    "occupancyClosed": "Fermé",
+    "occupancyFreeCapacity": "{count} place(s) libre(s)",
+    "occupancyFrom": "Du",
+    "occupancyTo": "Au",
+    "viewOccupancy": "Voir l'occupation"
   }
 }

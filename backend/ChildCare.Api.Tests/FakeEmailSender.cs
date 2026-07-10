@@ -14,6 +14,9 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
 {
     public bool ThrowOnStaffInvitation { get; set; }
 
+    /// <summary>Records every SendWaitingListOfferedAsync invocation (feature 012a FR-008/FR-009 tests).</summary>
+    public List<(string ToEmail, string ContactName, string ChildName, string LocationName)> WaitingListOfferedCalls { get; } = [];
+
     public Task SendEmailVerificationAsync(string toEmail, string verifyLink) =>
         inner.SendEmailVerificationAsync(toEmail, verifyLink);
 
@@ -26,5 +29,11 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
             throw new InvalidOperationException("Simulated SMTP failure (test).");
 
         return inner.SendStaffInvitationAsync(toEmail, inviteLink);
+    }
+
+    public Task SendWaitingListOfferedAsync(string toEmail, string contactName, string childName, string locationName)
+    {
+        WaitingListOfferedCalls.Add((toEmail, contactName, childName, locationName));
+        return inner.SendWaitingListOfferedAsync(toEmail, contactName, childName, locationName);
     }
 }

@@ -64,6 +64,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<StaffSchedule> StaffSchedules => Set<StaffSchedule>();
 
+    public DbSet<WaitingListEntry> WaitingListEntries => Set<WaitingListEntry>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -471,6 +473,27 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Rota-builder week view and feature 010-adjacent projected on-duty lookups
             // (data-model.md, spec.md Technical Requirements).
             ss.HasIndex(x => new { x.LocationId, x.Date });
+        });
+
+        modelBuilder.Entity<WaitingListEntry>(w =>
+        {
+            w.ToTable("waiting_list_entries");
+            w.HasKey(x => x.Id);
+            w.Property(x => x.ChildFirstName).IsRequired().HasMaxLength(200);
+            w.Property(x => x.ChildLastName).IsRequired().HasMaxLength(200);
+            w.Property(x => x.ContactName).IsRequired().HasMaxLength(200);
+            w.Property(x => x.ContactEmail).HasMaxLength(320);
+            w.Property(x => x.ContactPhone).HasMaxLength(50);
+            w.Property(x => x.Notes).HasMaxLength(2000);
+            w.Property(x => x.Status)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (WaitingListStatus)Enum.Parse(typeof(WaitingListStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            w.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            w.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            // List/sort/filter query per location, filtered by status, ordered by priority
+            // (data-model.md, plan.md Performance considerations).
+            w.HasIndex(x => new { x.LocationId, x.Status, x.Priority });
         });
     }
 }
