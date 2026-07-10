@@ -131,7 +131,7 @@ When something happens that needs a parent's attention (new message reply, annou
 - A push notification token is expired or invalid at send time: logged, does not crash or block the triggering action, in-app notification still created.
 - A parent uninstalls and reinstalls the app: new token replaces the old one on next login, per-contact (not per-device-ever-seen).
 - A contact with no email/push token at all: unaffected by push delivery; still reachable via in-app notification centre on next login.
-- A message thread has no director/staff participant yet (KDV hasn't triaged it): the parent's message is still saved and visible to them; it becomes visible to staff/director per FR routing rules (see Assumptions).
+- A message thread has no director/staff participant yet (KDV hasn't triaged it): the parent's message is still saved and visible to them; it is immediately visible to every director/staff member at the organisation, since thread visibility is organisation-wide rather than requiring an explicit staff participant to be added first (FR-004).
 
 ## Requirements *(mandatory)*
 
@@ -144,12 +144,12 @@ When something happens that needs a parent's attention (new message reply, annou
 - **FR-002**: The daily summary and every other parent-facing view MUST exclude any underlying record marked internal/staff-only (`visible_to_parent = false`), enforced at the data-access layer so no new or future parent-facing query can accidentally leak internal-only records.
 - **FR-003**: A parent MUST be able to start a new message thread addressed to the KDV, either tied to a specific one of their children or as a general (non-child-specific) thread.
 - **FR-003a**: When a message thread is tied to a specific child, every parent contact of that child who has an active parent account MUST be a participant on that same thread — a child's parents share one conversation with the KDV, not one each.
-- **FR-004**: A director or staff member MUST be able to view and reply to any parent-initiated message thread for a child at their organisation.
+- **FR-004**: A director or staff member MUST be able to view and reply to any parent-initiated message thread at their organisation — both threads tied to a specific child and general (non-child-specific) threads, both visible organisation-wide to every director/staff member, not scoped to a particular location or the specific person who first replied.
 - **FR-005**: Message threads MUST preserve full history in chronological order, visible identically to every participant.
 - **FR-006**: A parent MUST only be able to access threads they are a participant of; access to any other thread MUST be denied regardless of how it is requested.
 - **FR-006a**: When a second parent account is later linked to a child who already has an active thread, that parent MUST be added as a participant and gain access to the thread's existing history (not just messages sent after they joined).
 - **FR-007**: A director MUST be able to compose and send a one-to-many announcement scoped to either a single location or a single group within a location.
-- **FR-008**: An announcement MUST reach every parent/guardian contact of a currently-enrolled child within the announcement's scope at send time.
+- **FR-008**: An announcement MUST reach every parent/guardian contact of a currently-enrolled child within the announcement's scope at send time **who has an active parent account** (per FR-000a/FR-000b — a contact who was never invited or has not completed registration has no notification centre or push token to reach, and is not a gap this feature introduces; see Assumptions).
 - **FR-009**: An announcement MUST be read-only to parents — the system MUST NOT allow a parent to reply to an announcement the way they can reply within a two-way message thread.
 - **FR-010**: The system MUST provide a parent-facing in-app notification centre listing, most-recent-first, every notification-worthy event addressed to that parent (new message/reply, announcement, temperature alert), each identifiable by type and linking to its underlying content.
 - **FR-011**: A parent MUST be able to mark a notification as read; marking one notification read MUST NOT affect the read state of any other notification.
@@ -165,7 +165,7 @@ When something happens that needs a parent's attention (new message reply, annou
 
 - **Parent Invitation**: A director-issued, signed, time-limited invitation linking a specific Contact record to a not-yet-created parent account; consumed once on successful registration.
 - **Message Thread**: A conversation between a family (all of a child's parent accounts, sharing one thread per child) and the KDV, optionally tied to a specific child, with a subject and a set of participants (the parent account(s) plus any director/staff who has engaged with it).
-- **Message**: A single entry within a thread — sender, body text, sent time, read state per recipient.
+- **Message**: A single entry within a thread — sender, body text, sent time, and a single "read by the other side" marker (not a per-individual read receipt): for a parent-authored message, set on the first director/staff read; for a staff-authored message, set on the first read by any parent participant on that thread.
 - **Announcement**: A one-to-many broadcast from a director to every parent contact within a location or group scope, at a point in time; read-only, no reply path.
 - **Notification**: An in-app, per-parent-contact record representing something needing their attention (new message, announcement, temperature alert), with a type, a link to its source, and a read state.
 - **Push Token**: A per-user registration of a device's push-notification address, always representing the most recently registered device/install for that user.
@@ -196,3 +196,4 @@ When something happens that needs a parent's attention (new message reply, annou
 - The parent app has no offline read/write infrastructure in v1 — unlike the caregiver app (feature 008), messaging and the daily summary require connectivity. This is a reasonable v1 scope reduction: a parent checking in during their workday is expected to have normal connectivity, unlike a caregiver mid-shift on a room tablet.
 - A parent with no email or push token on file is not blocked from anything — they simply rely on the in-app notification centre when they next open the app, consistent with feature 020's later (unshipped) precedent for the same fallback pattern.
 - Day reservation request submission UI (referenced as "decide at plan time" in the original prompt) is deferred entirely to feature 013a — this feature ships no request-submission UI of any kind.
+- Parent account access continuity when a child departs the KDV or a contact is deactivated is explicitly out of scope for v1 — this feature introduces the first parent accounts, so there is no existing deactivation mechanism to hook into yet, and no prior feature's contact/child soft-delete flow was designed with a linked login account in mind. A parent's access is not automatically revoked by this feature when their child leaves; that is deferred to a future feature once this gap is felt in practice, rather than guessed at now.
