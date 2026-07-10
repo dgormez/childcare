@@ -38,6 +38,7 @@ public interface ITenantDbContext
     DbSet<KdvClosureDay> KdvClosureDays { get; }
     DbSet<ClosureNotificationDelivery> ClosureNotificationDeliveries { get; }
     DbSet<ParentClosureMessage> ParentClosureMessages { get; }
+    DbSet<StaffSchedule> StaffSchedules { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

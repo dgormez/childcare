@@ -28,7 +28,8 @@
     "signOut": "Déconnexion",
     "collapse": "Réduire",
     "expand": "Développer",
-    "notYetAvailable": "Cette section n'est pas encore disponible."
+    "notYetAvailable": "Cette section n'est pas encore disponible.",
+    "scheduling": "Planning"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -180,6 +181,48 @@
       "published": "Publiée",
       "cancelled": "Annulée"
     }
+  },
+  "scheduling": {
+    "title": "Planning",
+    "weekLabel": "Semaine du {date}",
+    "locationLabel": "Site",
+    "emptyState": "Aucun horaire prévu pour cette semaine.",
+    "addShift": "Ajouter un horaire",
+    "editShift": "Modifier l'horaire",
+    "groupLabel": "Groupe",
+    "unassignedGroup": "Non assigné",
+    "startTimeLabel": "Heure de début",
+    "endTimeLabel": "Heure de fin",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "markAbsent": "Marquer absent",
+    "unmarkAbsent": "Retirer l'absence",
+    "absenceReasonLabel": "Motif",
+    "absenceReason": {
+      "sick": "Maladie",
+      "leave": "Congé",
+      "holiday": "Vacances"
+    },
+    "absentBadge": "Absent",
+    "copyWeek": "Copier vers la semaine suivante",
+    "copyWeekTitle": "Copier la semaine",
+    "copyWeekDescription": "Copier l'horaire de cette semaine vers la semaine cible.",
+    "copyWeekConfirm": "Copier",
+    "copySkippedSummary": "{count} horaire(s) ignoré(s)",
+    "copySkippedClosure": "Le site est fermé ce jour-là",
+    "copySkippedExisting": "Un horaire existe déjà à ce créneau",
+    "projectedOnDuty": "Présence prévue : {count}",
+    "overlapError": "Ce membre du personnel est déjà planifié sur un créneau chevauchant.",
+    "pastDateError": "Les horaires passés ne peuvent pas être modifiés.",
+    "genericError": "Impossible d'enregistrer cet horaire. Veuillez réessayer.",
+    "loadError": "Impossible de charger le planning. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "weekNav": {
+      "previous": "Semaine précédente",
+      "next": "Semaine suivante"
+    },
+    "notEligibleError": "Ce membre du personnel n'est pas affecté à ce site. Affectez-le d'abord depuis l'écran du personnel."
   },
   "errorBoundary": {
     "title": "Une erreur s'est produite",
