@@ -94,6 +94,7 @@
 - [ ] T042 [P] [US1] Integration test: daily summary aggregates visible events correctly (naps/bottles/diapers/mood/temperature/medication/activities) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
 - [ ] T043 [P] [US1] Integration test: `visible_to_parent=false` events never appear in the response, regardless of event type in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
 - [ ] T044 [P] [US1] Integration test: a parent cannot fetch a summary for a child they are not a contact of — 403 in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
+- [ ] T044a [P] [US1] Integration test: a parent authenticated against tenant A cannot fetch a daily summary for a child that exists only in tenant B, even with a structurally valid child id (FR-018) in `backend/ChildCare.Api.Tests/Parent/ParentDailySummaryTests.cs`
 - [ ] T045 [P] [US1] Integration test: `GET /api/parent/children` returns only the caller's own children in `backend/ChildCare.Api.Tests/Parent/ParentChildrenTests.cs`
 - [ ] T046 [P] [US1] Mobile test: home screen renders two children's summaries clearly separated, and a "no updates yet" empty state when a child has zero events in `parent-mobile/__tests__/home.test.tsx`
 
@@ -124,7 +125,9 @@
 - [ ] T056 [P] [US2] Integration test: director/staff reply appears in the same thread, in chronological order, visible to all participants in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [ ] T057 [P] [US2] Integration test: a parent who is not a thread participant is denied access regardless of request shape (FR-006) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [ ] T058 [P] [US2] Integration test: a general (non-child-specific) thread can be created and is accessible to the creating parent only in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [ ] T058a [P] [US2] Integration test: a general (non-child-specific) thread is visible and replyable by any director/staff member org-wide, the same as a child-scoped thread (FR-004) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [ ] T059 [P] [US2] Integration test: thread list ordered by most-recently-active first, with an unread indicator in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [ ] T059a [P] [US2] Integration test: a director/staff caller from tenant A cannot view or reply to a thread belonging to tenant B, even with a structurally valid thread id (FR-018) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [ ] T060 [P] [US2] Web component test: director thread list and reply flow in `web/__tests__/messages.test.tsx`
 - [ ] T061 [P] [US2] Mobile test: parent thread list, thread detail, and compose flow in `parent-mobile/__tests__/messages.test.tsx`
 
@@ -154,10 +157,13 @@
 ### Tests for User Story 3
 
 - [ ] T072 [P] [US3] Integration test: location-scoped announcement reaches every eligible contact of currently-enrolled children at that location in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [ ] T072a [P] [US3] Integration test: a currently-enrolled child's contact who has NOT completed a parent-app invitation (no `Contact.TenantUserId`) is excluded from announcement recipients, even though they are otherwise in scope (FR-008) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T073 [P] [US3] Integration test: group-scoped announcement reaches only contacts of children in that group in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T074 [P] [US3] Integration test: a scope with zero currently-enrolled children completes with zero recipients, not an error in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [ ] T074a [P] [US3] Integration test: sending an announcement dispatches a push (via `IExpoPushSender` test double) to every recipient with a valid `PushToken`, satisfying FR-012's announcement-push requirement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T075 [P] [US3] Integration test: no endpoint allows a parent to reply to an announcement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T076 [P] [US3] Integration test: a parent can only view an announcement they are a recipient of — 403/404 otherwise in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
+- [ ] T076a [P] [US3] Integration test: a director from tenant A cannot target a location/group belonging to tenant B when composing an announcement, and a parent from tenant A cannot view an announcement belonging to tenant B (FR-018) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [ ] T077 [P] [US3] Web component test: announcement compose flow (location/group scope picker, subject/body) in `web/__tests__/announcements.test.tsx`
 
 ### Implementation for User Story 3
@@ -184,6 +190,7 @@
 - [ ] T084 [P] [US4] Integration test: notification centre lists message, announcement, and temperature-alert notifications, most-recent-first, each correctly typed in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
 - [ ] T085 [P] [US4] Integration test: marking one notification read does not affect another's read state in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
 - [ ] T086 [P] [US4] Integration test: a parent cannot mark or view another parent's notification — 403/404 in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
+- [ ] T086a [P] [US4] Integration test: a parent from tenant A cannot view or mark-read a notification belonging to a parent in tenant B, even with a structurally valid notification id (FR-018) in `backend/ChildCare.Api.Tests/Notifications/NotificationEndpointsTests.cs`
 - [ ] T087 [P] [US4] Integration test: a temperature event over threshold creates a `Notification(Type=TemperatureAlert)` row (extends existing `TemperatureAlertServiceTests`) in `backend/ChildCare.Api.Tests/ChildEvents/TemperatureAlertServiceTests.cs`
 - [ ] T088 [P] [US4] Mobile test: notification centre renders all three types and mark-read isolation in `parent-mobile/__tests__/notifications.test.tsx`
 
@@ -229,7 +236,7 @@
 **Purpose**: Final consistency pass across all stories.
 
 - [ ] T103 [P] Verify NL/FR/EN completeness for every new i18n key added in T005/T010 (no fallback-to-English gaps) across `web/i18n/locales/` and `parent-mobile/i18n/locales/`
-- [ ] T104 [P] Verify every parent-facing query (daily summary, threads, notifications, announcements) is covered by a cross-tenant and cross-family negative test (SC-003, SC-007) — add any missing case found
+- [ ] T104 [P] Final audit: confirm every parent-facing query (daily summary, threads, notifications, announcements) has the explicit cross-tenant and cross-family negative test coverage added in T044a/T057/T059a/T076/T076a/T086/T086a (SC-003, SC-007) — add any remaining gap found
 - [ ] T105 Run `quickstart.md`'s five scenarios end-to-end against a local dev stack; fix any gap found
 - [ ] T106 [P] Design-compliance pass on all new `parent-mobile/` and `web/(app)/messages`, `web/(app)/announcements` screens against design-system.md/platform-rules.md (spacing scale, no nested cards, icon-paired status badges, 48pt touch targets)
 

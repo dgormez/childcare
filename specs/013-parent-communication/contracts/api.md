@@ -18,7 +18,7 @@ Minimal APIs, MediatR-backed (constitution Principle III). Auth policy noted per
 - `GET /api/parent/message-threads` — **ParentOnly**. Lists caller's threads, most-recently-active first, with unread indicator.
 - `GET /api/parent/message-threads/{id}` — **ParentOnly**. 403/404 if caller is not a participant (FR-006). Marks staff-authored messages as read on fetch.
 - `POST /api/parent/message-threads/{id}/messages` — **ParentOnly**. Body: `{ body }`. 403/404 if not a participant.
-- `GET /api/message-threads` — **DirectorOnly** (staff replies happen from director web per spec Assumptions; backend policy is `StaffOrDirector` on the reply route below for architectural consistency, per spec Assumptions). Lists all threads for the org, with unread-from-parent count (FR-013).
+- `GET /api/message-threads` — **DirectorOnly**. Lists all threads for the org, with unread-from-parent count (FR-013). Only the list/detail-read routes are `DirectorOnly` since no staff-facing web UI ships in v1 (spec Assumptions); the reply route below is `StaffOrDirector` regardless, matching every other endpoint's authorization pattern in this codebase rather than narrowing the policy to match the currently-shipped UI surface.
 - `GET /api/message-threads/{id}` — **DirectorOnly**. Full thread view.
 - `POST /api/message-threads/{id}/messages` — **StaffOrDirector**. Body: `{ body }`. Sender = caller.
 

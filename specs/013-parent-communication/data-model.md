@@ -94,7 +94,7 @@ Generic in-app notification-centre entry (R4). Scoped to `NewMessage` / `Announc
 | `Id` | `Guid` | PK. |
 | `TenantUserId` | `Guid` | FK → `TenantUser` (recipient — always `Role = Parent` for this feature). |
 | `Type` | `NotificationType` enum | `NewMessage`, `Announcement`, `TemperatureAlert`. |
-| `SourceId` | `Guid` | Points at the `MessageThread.Id`, `Announcement.Id`, or `ChildEvent.Id` depending on `Type`. |
+| `SourceId` | `Guid` | Points at the `MessageThread.Id`, `Announcement.Id`, or `ChildEvent.Id` depending on `Type`. **No database-level FK constraint** — this column is intentionally polymorphic across three different target tables, so a single FK cannot be declared without breaking two of the three `Type` values. Referential integrity for this column is an application-layer concern, not a schema one. |
 | `TitleKey` | `string` | i18n key, same pattern as `ParentClosureMessage.TitleKey`. |
 | `BodyKey` | `string` | i18n key. |
 | `ArgumentsJson` | `string` | Serialized args for the body template (e.g. child name, sender name). |
