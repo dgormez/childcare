@@ -147,6 +147,26 @@ describe("ClosuresPage", () => {
     await waitFor(() => expect(apiClient.POST).toHaveBeenCalledTimes(2));
   });
 
+  it("does not show attendance confirmation for other publish conflicts", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
+      if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;
+      if (path === "/api/closures") return Promise.resolve(okResponse([makeClosure()])) as never;
+      return Promise.resolve(okResponse([])) as never;
+    });
+    vi.mocked(apiClient.POST).mockResolvedValue(errorResponse(409, "errors.closures.not_publishable") as never);
+
+    renderClosuresPage();
+    await screen.findByText("Kerstvakantie");
+
+    await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+
+    expect(await screen.findByText("Couldn't save this closure. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByText("Some children are already checked in for this date.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Publish anyway" })).not.toBeInTheDocument();
+    expect(apiClient.POST).toHaveBeenCalledTimes(1);
+  });
+
   it("cancels a published closure after confirmation", async () => {
     vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
       if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;

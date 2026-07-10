@@ -30,13 +30,16 @@ public class CancelClosureDayCommandHandler(
         if (closure.Status != ClosureStatus.Published)
             return CancelClosureCalendarResult.Fail(ClosureCalendarFailure.NotEditable);
 
-        var attendanceSummary = await attendance.ReleaseClosureAsync(closure, cancellationToken);
-
-        closure.Status = ClosureStatus.Cancelled;
-        closure.CancelledAt = DateTime.UtcNow;
-        closure.CancelledBy = request.CancelledBy;
-        closure.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        var attendanceSummary = await db.ExecuteInTransactionAsync(async ct =>
+        {
+            var summary = await attendance.ReleaseClosureAsync(closure, ct);
+            closure.Status = ClosureStatus.Cancelled;
+            closure.CancelledAt = DateTime.UtcNow;
+            closure.CancelledBy = request.CancelledBy;
+            closure.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            return summary;
+        }, cancellationToken);
 
         var notificationSummary = closure.NotifyParents && closure.NotificationSentAt is not null
             ? await notifications.NotifyAsync(closure, ClosureNotificationKind.Cancelled, cancellationToken)

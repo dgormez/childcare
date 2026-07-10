@@ -1,11 +1,21 @@
 using ChildCare.Application.Common;
 using ChildCare.Contracts.Responses;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.ClosureCalendar;
 
 public record ListClosureDaysQuery(Guid LocationId, int Year) : IRequest<ListClosureCalendarResult>;
+
+public class ListClosureDaysQueryValidator : AbstractValidator<ListClosureDaysQuery>
+{
+    public ListClosureDaysQueryValidator()
+    {
+        RuleFor(x => x.LocationId).NotEmpty();
+        RuleFor(x => x.Year).InclusiveBetween(1, 9999);
+    }
+}
 
 public class ListClosureDaysQueryHandler(ITenantDbContext db) : IRequestHandler<ListClosureDaysQuery, ListClosureCalendarResult>
 {

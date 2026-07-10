@@ -22,6 +22,14 @@ public class ClosureCalendarReader(ITenantDbContext db)
             .Select(c => c.Date)
             .ToListAsync(cancellationToken);
 
+    public async Task<bool> IsPublishedClosureDateAsync(
+        Guid locationId, DateOnly date, CancellationToken cancellationToken = default) =>
+        await db.KdvClosureDays.AnyAsync(
+            c => c.LocationId == locationId
+              && c.Status == ClosureStatus.Published
+              && c.Date == date,
+            cancellationToken);
+
     public async Task<BillableClosureDatesResponse> Handle(ListBillableClosureDatesQuery request, CancellationToken cancellationToken)
     {
         var dates = await ListPublishedClosureDatesAsync(request.LocationId, request.From, request.To, cancellationToken);

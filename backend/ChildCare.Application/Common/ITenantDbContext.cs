@@ -41,6 +41,10 @@ public interface ITenantDbContext
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
+    Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Applies any pending migrations to this tenant's schema (research.md R8).</summary>
     Task MigrateAsync(CancellationToken cancellationToken = default);
 

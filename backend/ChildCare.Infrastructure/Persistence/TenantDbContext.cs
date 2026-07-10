@@ -62,6 +62,16 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<ParentClosureMessage> ParentClosureMessages => Set<ParentClosureMessage>();
 
+    public async Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+        var result = await operation(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return result;
+    }
+
     /// <summary>
     /// Applies any pending migrations to this schema. Deliberately does NOT call the ordinary
     /// Database.MigrateAsync() — discovered during implementation (tasks.md T032/research.md

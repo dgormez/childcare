@@ -28,17 +28,18 @@ public class ClosureNotificationService(
         CancellationToken cancellationToken = default)
     {
         var location = await db.Locations.FirstAsync(l => l.Id == closure.LocationId, cancellationToken);
-        var targetRecipients = await recipients.ResolveAsync(closure.LocationId, closure.Date, cancellationToken);
-        var pushSent = 0;
-        var pushFailed = 0;
+        var targetRecipients = await ResolveRecipientsAsync(closure, kind, cancellationToken);
+        var existingContactIds = await db.ClosureNotificationDeliveries
+            .Where(d => d.ClosureDayId == closure.Id && d.Kind == kind)
+            .Select(d => d.ContactId)
+            .ToListAsync(cancellationToken);
+        var alreadyDelivered = existingContactIds.ToHashSet();
         var messagesCreated = 0;
+        var deliveriesToSend = new List<(ClosureParentRecipient Recipient, ClosureNotificationDelivery Delivery)>();
 
         foreach (var recipient in targetRecipients)
         {
-            var exists = await db.ClosureNotificationDeliveries.AnyAsync(
-                d => d.ClosureDayId == closure.Id && d.ContactId == recipient.ContactId && d.Kind == kind,
-                cancellationToken);
-            if (exists)
+            if (alreadyDelivered.Contains(recipient.ContactId))
                 continue;
 
             var message = new ParentClosureMessage
@@ -72,34 +73,66 @@ public class ClosureNotificationService(
                 MessageId = message.Id,
                 PushStatus = string.IsNullOrWhiteSpace(recipient.PushToken)
                     ? ClosureDeliveryStatus.NotApplicable
-                    : ClosureDeliveryStatus.Sent,
+                    : ClosureDeliveryStatus.Pending,
             };
 
-            if (!string.IsNullOrWhiteSpace(recipient.PushToken))
-            {
-                var labels = Labels.TryGetValue(recipient.Locale, out var localized) ? localized : Labels["nl"];
-                var title = kind == ClosureNotificationKind.Published ? labels.PublishedTitle : labels.CancelledTitle;
-                var body = kind == ClosureNotificationKind.Published
-                    ? string.Format(labels.PublishedBody, location.Name, closure.Date, closure.Label)
-                    : string.Format(labels.CancelledBody, location.Name, closure.Date);
-                try
-                {
-                    await pushSender.SendAsync(recipient.PushToken, title, body, cancellationToken);
-                    pushSent++;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Closure notification dispatch failed for closure {ClosureDayId}.", closure.Id);
-                    delivery.PushStatus = ClosureDeliveryStatus.Failed;
-                    delivery.Error = ex.GetType().Name;
-                    pushFailed++;
-                }
-            }
-
             db.ClosureNotificationDeliveries.Add(delivery);
+            if (!string.IsNullOrWhiteSpace(recipient.PushToken))
+                deliveriesToSend.Add((recipient, delivery));
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        var pushSent = 0;
+        var pushFailed = 0;
+        foreach (var (recipient, delivery) in deliveriesToSend)
+        {
+            var labels = Labels.TryGetValue(recipient.Locale, out var localized) ? localized : Labels["nl"];
+            var title = kind == ClosureNotificationKind.Published ? labels.PublishedTitle : labels.CancelledTitle;
+            var body = kind == ClosureNotificationKind.Published
+                ? string.Format(labels.PublishedBody, location.Name, closure.Date, closure.Label)
+                : string.Format(labels.CancelledBody, location.Name, closure.Date);
+            try
+            {
+                await pushSender.SendAsync(recipient.PushToken!, title, body, cancellationToken);
+                delivery.PushStatus = ClosureDeliveryStatus.Sent;
+                pushSent++;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Closure notification dispatch failed for closure {ClosureDayId}.", closure.Id);
+                delivery.PushStatus = ClosureDeliveryStatus.Failed;
+                delivery.Error = ex.GetType().Name;
+                pushFailed++;
+            }
+        }
+
+        if (deliveriesToSend.Count > 0)
+            await db.SaveChangesAsync(cancellationToken);
+
         return new ClosureNotificationSummary(targetRecipients.Count, pushSent, pushFailed, messagesCreated);
+    }
+
+    private async Task<IReadOnlyList<ClosureParentRecipient>> ResolveRecipientsAsync(
+        KdvClosureDay closure,
+        ClosureNotificationKind kind,
+        CancellationToken cancellationToken)
+    {
+        if (kind == ClosureNotificationKind.Published)
+            return await recipients.ResolveAsync(closure.LocationId, closure.Date, cancellationToken);
+
+        var publishedContacts = await db.ClosureNotificationDeliveries
+            .Where(d => d.ClosureDayId == closure.Id && d.Kind == ClosureNotificationKind.Published)
+            .Join(
+                db.Contacts,
+                d => d.ContactId,
+                c => c.Id,
+                (d, c) => new ClosureParentRecipient(c.Id, c.Locale, c.PushToken ?? d.PushToken))
+            .ToListAsync(cancellationToken);
+
+        return publishedContacts
+            .GroupBy(r => r.ContactId)
+            .Select(g => g.First())
+            .ToList();
     }
 }

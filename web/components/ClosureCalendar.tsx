@@ -31,7 +31,7 @@ export function ClosureCalendar({ year, closures, onSelect }: ClosureCalendarPro
   const byDate = new Map(closures.map((closure) => [closure.date, closure]));
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
       {months.map((month) => (
         <section key={month} aria-label={t("monthLabel", { month: month + 1 })}>
           <h2 className="mb-2 text-sm font-semibold text-text dark:text-text-dark">

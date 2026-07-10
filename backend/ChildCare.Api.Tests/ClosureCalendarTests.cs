@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
@@ -138,6 +139,34 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     [Fact]
+    public async Task Create_MissingClosureType_ReturnsValidation()
+    {
+        var (client, org, location, _, _) = await SetupAsync();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/closures")
+        {
+            Content = new StringContent(
+                $$"""{"locationId":"{{location.Id}}","date":"2026-07-13","label":"Missing type","notifyParents":true}""",
+                Encoding.UTF8,
+                "application/json"),
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", org.AccessToken);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task List_InvalidYear_ReturnsValidation()
+    {
+        var (client, org, location, _, _) = await SetupAsync();
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={location.Id}&year=0", org.AccessToken));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
     public async Task ClosureEndpoints_RequireDirectorRole()
     {
         var (client, org, location, _, _) = await SetupAsync();
@@ -219,6 +248,36 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     [Fact]
+    public async Task Publish_OnlyParentGuardianContactsReceiveNotifications()
+    {
+        var (client, org, location, _, schema) = await SetupAsync();
+        var child = await CreateChildAsync(client, org.AccessToken, "Emma");
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, Monday.DayOfWeek);
+        var mother = await CreateContactAsync(client, org.AccessToken, "Mother");
+        var pickup = await CreateContactAsync(client, org.AccessToken, "Pickup");
+        Assert.Equal(HttpStatusCode.Created, (await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/children/{child.Id}/contacts", org.AccessToken,
+            new LinkContactToChildRequest(mother.Id, "Mother", true, false)))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/children/{child.Id}/contacts", org.AccessToken,
+            new LinkContactToChildRequest(pickup.Id, "EmergencyContact", true, false)))).StatusCode);
+        var db = ResolveTenantDb(factory.Services, schema);
+        (await db.Contacts.SingleAsync(c => c.Id == mother.Id)).PushToken = "ExponentPushToken[mother]";
+        (await db.Contacts.SingleAsync(c => c.Id == pickup.Id)).PushToken = "ExponentPushToken[pickup]";
+        await db.SaveChangesAsync();
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday);
+
+        var response = await PublishClosureAsync(client, org.AccessToken, closure.Id);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<PublishClosureDayResponse>())!;
+        Assert.Equal(1, body.NotificationSummary.Recipients);
+        var deliveries = await db.ClosureNotificationDeliveries.Where(d => d.ClosureDayId == closure.Id).ToListAsync();
+        Assert.Single(deliveries);
+        Assert.Equal(mother.Id, deliveries[0].ContactId);
+    }
+
+    [Fact]
     public async Task Publish_PushFailure_RecordsFailedDeliveryButSucceeds()
     {
         var (client, org, location, _, schema) = await SetupAsync();
@@ -252,6 +311,40 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
         var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
         var checkIn = await CheckInChildAsync(client, deviceToken, child.Id, Monday);
         Assert.Equal(HttpStatusCode.Forbidden, checkIn.StatusCode);
+    }
+
+    [Fact]
+    public async Task PublishedClosure_BlocksAttendanceEvenWithoutGeneratedRecord()
+    {
+        var (client, org, location, group, _) = await SetupAsync();
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday, notify: false);
+        Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, closure.Id)).StatusCode);
+        var child = await CreateChildAsync(client, org.AccessToken, "LateContract");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+
+        var checkIn = await CheckInChildAsync(client, deviceToken, child.Id, Monday);
+        var absence = await MarkAbsentAsDirectorAsync(client, org.AccessToken, child.Id, location.Id, Monday, justified: true);
+
+        Assert.Equal(HttpStatusCode.Forbidden, checkIn.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, absence.StatusCode);
+    }
+
+    [Fact]
+    public async Task Publish_IncludesExistingUncontractedAttendance()
+    {
+        var (client, org, location, group, schema) = await SetupAsync();
+        var child = await CreateChildAsync(client, org.AccessToken, "ExtraDay");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        Assert.Equal(HttpStatusCode.Created, (await CheckInChildAsync(client, deviceToken, child.Id, Monday)).StatusCode);
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday, notify: false);
+
+        Assert.Equal(HttpStatusCode.Conflict, (await PublishClosureAsync(client, org.AccessToken, closure.Id)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, closure.Id, confirm: true)).StatusCode);
+
+        var db = ResolveTenantDb(factory.Services, schema);
+        var attendance = await db.AttendanceRecords.SingleAsync(r => r.ChildId == child.Id && r.LocationId == location.Id && r.Date == Monday);
+        Assert.Equal(AttendanceStatus.Closure, attendance.Status);
+        Assert.NotNull(attendance.PriorStateJson);
     }
 
     [Fact]
@@ -325,6 +418,34 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     [Fact]
+    public async Task Cancel_UsesOriginalPublishedRecipientsOnly()
+    {
+        var (client, org, location, _, schema) = await SetupAsync();
+        var child = await CreateChildAsync(client, org.AccessToken, "RecipientChild");
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, Monday.DayOfWeek);
+        var original = await CreatePickupEligibleContactWithPushTokenAsync(client, factory.Services, org.AccessToken, child.Id, schema, "ExponentPushToken[original]");
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday);
+        Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, closure.Id)).StatusCode);
+
+        var later = await CreateContactAsync(client, org.AccessToken, "Later");
+        Assert.Equal(HttpStatusCode.Created, (await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/children/{child.Id}/contacts", org.AccessToken,
+            new LinkContactToChildRequest(later.Id, "Father", true, false)))).StatusCode);
+        var db = ResolveTenantDb(factory.Services, schema);
+        (await db.Contacts.SingleAsync(c => c.Id == later.Id)).PushToken = "ExponentPushToken[later]";
+        await db.SaveChangesAsync();
+
+        var cancel = await CancelClosureAsync(client, org.AccessToken, closure.Id);
+
+        Assert.Equal(HttpStatusCode.OK, cancel.StatusCode);
+        var cancellationMessages = await db.ParentClosureMessages
+            .Where(m => m.ClosureDayId == closure.Id && m.Kind == ClosureNotificationKind.Cancelled)
+            .ToListAsync();
+        Assert.Single(cancellationMessages);
+        Assert.Equal(original.Id, cancellationMessages[0].ContactId);
+    }
+
+    [Fact]
     public async Task Cancel_Draft_RemovesWithoutNotification()
     {
         var (client, org, location, _, schema) = await SetupAsync();
@@ -360,5 +481,27 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
 
         var preserved = await db.AttendanceRecords.SingleAsync(r => r.Id == attendance.Id);
         Assert.Equal(AttendanceStatus.Present, preserved.Status);
+    }
+
+    [Fact]
+    public async Task Cancel_RestoresExistingAbsentAttendance()
+    {
+        var (client, org, location, _, schema) = await SetupAsync();
+        var child = await CreateEnrolledChildWithParentAsync(client, org.AccessToken, schema, location.Id);
+        var absence = await MarkAbsentAsDirectorAsync(client, org.AccessToken, child.Id, location.Id, Monday, justified: true, "Sick");
+        Assert.Equal(HttpStatusCode.Created, absence.StatusCode);
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday, notify: false);
+        Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, closure.Id)).StatusCode);
+
+        var cancel = await CancelClosureAsync(client, org.AccessToken, closure.Id);
+
+        Assert.Equal(HttpStatusCode.OK, cancel.StatusCode);
+        var db = ResolveTenantDb(factory.Services, schema);
+        var restored = await db.AttendanceRecords.SingleAsync(r => r.ChildId == child.Id && r.LocationId == location.Id && r.Date == Monday);
+        Assert.Equal(AttendanceStatus.Absent, restored.Status);
+        Assert.True(restored.AbsenceJustified);
+        Assert.Equal("Sick", restored.AbsenceReason);
+        Assert.Null(restored.ClosureDayId);
+        Assert.Null(restored.PriorStateJson);
     }
 }

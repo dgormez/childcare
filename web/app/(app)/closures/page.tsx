@@ -109,7 +109,8 @@ export default function ClosuresPage() {
       params: { path: { id: target.id } },
       body: { confirmExistingAttendance: confirm },
     });
-    if (result.response.status === 409) {
+    const errorKey = ((result.error ?? {}) as ApiErrorBody).errorKey ?? "";
+    if (result.response.status === 409 && errorKey === "errors.closures.attendance_confirmation_required") {
       setConfirmExistingAttendance(true);
       setNotice(t("attendanceConfirmationRequired"));
       return;
@@ -147,9 +148,9 @@ export default function ClosuresPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-text dark:text-text-dark">{t("title")}</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <select
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
@@ -162,8 +163,13 @@ export default function ClosuresPage() {
           </select>
           <input
             type="number"
+            min={1}
+            max={9999}
             value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (Number.isInteger(next) && next >= 1 && next <= 9999) setYear(next);
+            }}
             aria-label={t("yearLabel")}
             className="h-10 w-24 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark"
           />
@@ -184,7 +190,7 @@ export default function ClosuresPage() {
       {state === "error" && <ErrorState message={t("loadError")} retryLabel={t("retry")} onRetry={load} />}
       {state === "loaded" && sortedClosures.length === 0 && <EmptyState icon={CalendarDays} message={t("emptyState")} />}
       {state === "loaded" && sortedClosures.length > 0 && (
-        <div className="grid grid-cols-[1fr_20rem] gap-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
           <ClosureCalendar year={year} closures={sortedClosures} onSelect={(closure) => { setEditing(closure); setDialogOpen(true); }} />
           <ClosureList
             closures={sortedClosures}

@@ -31,18 +31,22 @@ public class ClosureAttendanceService(ITenantDbContext db, ClosureParentRecipien
     public async Task<ClosureAttendanceSummary> ApplyClosureAsync(
         KdvClosureDay closure,
         Guid confirmedBy,
-        bool preservePriorState,
         CancellationToken cancellationToken = default)
     {
-        var childIds = await recipients.ResolveChildIdsAsync(closure.LocationId, closure.Date, cancellationToken);
+        var contractedChildIds = await recipients.ResolveChildIdsAsync(closure.LocationId, closure.Date, cancellationToken);
+        var existingRecords = await db.AttendanceRecords
+            .Where(r => r.LocationId == closure.LocationId && r.Date == closure.Date)
+            .ToListAsync(cancellationToken);
+        var childIds = contractedChildIds
+            .Concat(existingRecords.Select(r => r.ChildId))
+            .Distinct()
+            .ToList();
         var created = 0;
         var updated = 0;
 
         foreach (var childId in childIds)
         {
-            var existing = await db.AttendanceRecords.FirstOrDefaultAsync(
-                r => r.ChildId == childId && r.LocationId == closure.LocationId && r.Date == closure.Date,
-                cancellationToken);
+            var existing = existingRecords.FirstOrDefault(r => r.ChildId == childId);
 
             if (existing is null)
             {
@@ -61,7 +65,7 @@ public class ClosureAttendanceService(ITenantDbContext db, ClosureParentRecipien
             if (existing.Status == AttendanceStatus.Closure && existing.ClosureDayId == closure.Id)
                 continue;
 
-            if (preservePriorState && existing.PriorStateJson is null)
+            if (existing.PriorStateJson is null)
             {
                 existing.PriorStateJson = JsonSerializer.Serialize(new PriorAttendanceState(
                     existing.Status.ToString().ToLowerInvariant(),

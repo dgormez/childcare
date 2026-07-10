@@ -17,12 +17,18 @@ public static class ClosureCalendarEndpoints
 
         group.MapGet("/", async (Guid locationId, int year, IMediator mediator) =>
         {
+            if (year is < 1 or > 9999)
+                return ValidationFailure("year", "errors.validation");
+
             var result = await mediator.Send(new ListClosureDaysQuery(locationId, year));
             return result.Succeeded ? Results.Ok(result.Closures) : MapFailure(result.Failure!.Value);
         });
 
         group.MapPost("/", async (CreateClosureDayRequest req, HttpContext ctx, IMediator mediator) =>
         {
+            if (!ClosureCalendarMapper.TryParseClosureType(req.ClosureType, out _))
+                return ValidationFailure("closureType", "errors.validation");
+
             var directorId = DirectorIdOf(ctx);
             var result = await mediator.Send(new CreateClosureDayCommand(
                 req.LocationId, req.Date, req.Label, req.ClosureType, req.NotifyParents, directorId));
@@ -31,6 +37,9 @@ public static class ClosureCalendarEndpoints
 
         group.MapPatch("/{id:guid}", async (Guid id, UpdateClosureDayRequest req, HttpContext ctx, IMediator mediator) =>
         {
+            if (!ClosureCalendarMapper.TryParseClosureType(req.ClosureType, out _))
+                return ValidationFailure("closureType", "errors.validation");
+
             var result = await mediator.Send(new UpdateClosureDayCommand(id, req.Label, req.ClosureType, req.NotifyParents, DirectorIdOf(ctx)));
             return MapResult(result, onSuccess: Results.Ok);
         });
@@ -67,6 +76,10 @@ public static class ClosureCalendarEndpoints
 
     private static IResult MapResult(ClosureCalendarResult result, Func<ClosureDayResponse, IResult> onSuccess) =>
         result.Succeeded ? onSuccess(result.Response!) : MapFailure(result.Failure!.Value, result.CheckedInCount);
+
+    private static IResult ValidationFailure(string field, string key) => Results.Json(
+        new { errorKey = "errors.validation", fieldErrors = new Dictionary<string, string> { [field] = key } },
+        statusCode: StatusCodes.Status422UnprocessableEntity);
 
     private static IResult MapFailure(ClosureCalendarFailure failure, int checkedInCount = 0) => failure switch
     {

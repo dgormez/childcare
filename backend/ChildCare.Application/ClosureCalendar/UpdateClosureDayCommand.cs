@@ -14,7 +14,7 @@ public class UpdateClosureDayCommandValidator : AbstractValidator<UpdateClosureD
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Label).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ClosureType).Must(v => ClosureCalendarMapper.TryParseClosureType(v, out _));
+        RuleFor(x => x.ClosureType).NotEmpty().Must(v => ClosureCalendarMapper.TryParseClosureType(v, out _));
         RuleFor(x => x.UpdatedBy).NotEmpty();
     }
 }

@@ -26,17 +26,22 @@ public class PublishClosureDayCommandHandler(
         if (checkedInCount > 0 && !request.ConfirmExistingAttendance)
             return PublishClosureCalendarResult.Fail(ClosureCalendarFailure.AttendanceConfirmationRequired, checkedInCount);
 
-        closure.Status = ClosureStatus.Published;
-        closure.PublishedAt = DateTime.UtcNow;
-        closure.PublishedBy = request.PublishedBy;
-        closure.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+        var attendanceSummary = await db.ExecuteInTransactionAsync(async ct =>
+        {
+            var now = DateTime.UtcNow;
+            closure.Status = ClosureStatus.Published;
+            closure.PublishedAt = now;
+            closure.PublishedBy = request.PublishedBy;
+            closure.UpdatedAt = now;
+            await db.SaveChangesAsync(ct);
 
-        var attendanceSummary = await attendance.ApplyClosureAsync(
-            closure, request.PublishedBy, preservePriorState: checkedInCount > 0, cancellationToken);
-        closure.AttendanceGeneratedAt = DateTime.UtcNow;
-        closure.AttendanceGeneratedBy = request.PublishedBy;
-        await db.SaveChangesAsync(cancellationToken);
+            var summary = await attendance.ApplyClosureAsync(closure, request.PublishedBy, ct);
+            closure.AttendanceGeneratedAt = DateTime.UtcNow;
+            closure.AttendanceGeneratedBy = request.PublishedBy;
+            closure.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            return summary;
+        }, cancellationToken);
 
         var notificationSummary = closure.NotifyParents
             ? await notifications.NotifyAsync(closure, ClosureNotificationKind.Published, cancellationToken)

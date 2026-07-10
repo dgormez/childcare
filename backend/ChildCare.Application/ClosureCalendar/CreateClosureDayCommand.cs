@@ -21,7 +21,7 @@ public class CreateClosureDayCommandValidator : AbstractValidator<CreateClosureD
     {
         RuleFor(x => x.LocationId).NotEmpty();
         RuleFor(x => x.Label).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ClosureType).Must(v => ClosureCalendarMapper.TryParseClosureType(v, out _));
+        RuleFor(x => x.ClosureType).NotEmpty().Must(v => ClosureCalendarMapper.TryParseClosureType(v, out _));
         RuleFor(x => x.CreatedBy).NotEmpty();
     }
 }

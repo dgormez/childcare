@@ -26,7 +26,10 @@ public class MarkAbsentCommandValidator : AbstractValidator<MarkAbsentCommand>
     }
 }
 
-public class MarkAbsentCommandHandler(ITenantDbContext db, IShiftAttributionService attribution)
+public class MarkAbsentCommandHandler(
+    ITenantDbContext db,
+    IShiftAttributionService attribution,
+    IClosureCalendarReader closureCalendar)
     : IRequestHandler<MarkAbsentCommand, AttendanceResult>
 {
     public async Task<AttendanceResult> Handle(MarkAbsentCommand request, CancellationToken cancellationToken)
@@ -34,6 +37,9 @@ public class MarkAbsentCommandHandler(ITenantDbContext db, IShiftAttributionServ
         var childExists = await db.Children.AnyAsync(c => c.Id == request.ChildId, cancellationToken);
         if (!childExists)
             return AttendanceResult.Fail(AttendanceFailure.ChildNotFound);
+
+        if (await closureCalendar.IsPublishedClosureDateAsync(request.LocationId, request.Date, cancellationToken))
+            return AttendanceResult.Fail(AttendanceFailure.ClosureDay);
 
         var existing = await db.AttendanceRecords.FirstOrDefaultAsync(
             r => r.ChildId == request.ChildId && r.LocationId == request.LocationId && r.Date == request.Date,

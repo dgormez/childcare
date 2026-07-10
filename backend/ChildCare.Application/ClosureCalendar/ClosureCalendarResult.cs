@@ -98,9 +98,12 @@ public static class ClosureCalendarMapper
     public static string ToWire(ClosureType type) => type.ToString().ToLowerInvariant();
     public static string ToWire(ClosureStatus status) => status.ToString().ToLowerInvariant();
 
-    public static bool TryParseClosureType(string value, out ClosureType type)
+    public static bool TryParseClosureType(string? value, out ClosureType type)
     {
         type = default;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
         return value.Trim().ToLowerInvariant() switch
         {
             "holiday" => Assign(ClosureType.Holiday, out type),
