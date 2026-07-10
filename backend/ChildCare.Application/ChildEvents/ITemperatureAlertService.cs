@@ -7,5 +7,5 @@ namespace ChildCare.Application.ChildEvents;
 /// </summary>
 public interface ITemperatureAlertService
 {
-    Task NotifyAsync(Guid childId, decimal celsius, CancellationToken cancellationToken = default);
+    Task NotifyAsync(Guid childId, Guid childEventId, decimal celsius, CancellationToken cancellationToken = default);
 }

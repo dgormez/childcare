@@ -30,7 +30,9 @@
     "expand": "Développer",
     "notYetAvailable": "Cette section n'est pas encore disponible.",
     "scheduling": "Planning",
-    "waitingList": "Liste d'attente"
+    "waitingList": "Liste d'attente",
+    "messages": "Messages",
+    "announcements": "Annonces"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -293,5 +295,51 @@
     "occupancyFrom": "Du",
     "occupancyTo": "Au",
     "viewOccupancy": "Voir l'occupation"
+  },
+  "messages": {
+    "title": "Messages",
+    "invite": "Inviter un parent",
+    "emptyState": "Pas encore de messages.",
+    "loadError": "Impossible de charger les messages. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "genericError": "Impossible d'envoyer ce message. Veuillez réessayer.",
+    "columnFamily": "Famille",
+    "columnSubject": "Sujet",
+    "columnLastActivity": "Dernière activité",
+    "unread": "Non lu",
+    "generalThread": "Général",
+    "backToList": "Retour aux messages",
+    "replyPlaceholder": "Écrivez une réponse…",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "noMessages": "Pas encore de messages dans cette conversation.",
+    "inviteDialogTitle": "Inviter un parent à rejoindre l'application",
+    "inviteDialogDescription": "Recherchez un contact et envoyez-lui une invitation à l'application parent.",
+    "inviteSearchPlaceholder": "Rechercher par nom ou e-mail…",
+    "inviteNoEmail": "Aucune adresse e-mail enregistrée",
+    "inviteSend": "Envoyer l'invitation",
+    "inviteSent": "Invitation envoyée.",
+    "inviteErrorNotEligible": "Ce contact n'est pas encore éligible — une autorisation de récupération est requise pour au moins un enfant.",
+    "inviteErrorAlreadyHasAccount": "Ce contact possède déjà un compte parent.",
+    "inviteErrorGeneric": "Impossible d'envoyer l'invitation. Veuillez réessayer."
+  },
+  "announcements": {
+    "title": "Annonces",
+    "compose": "Nouvelle annonce",
+    "emptyState": "Aucune annonce envoyée pour le moment.",
+    "loadError": "Impossible de charger les annonces. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "genericError": "Impossible d'envoyer cette annonce. Veuillez réessayer.",
+    "locationLabel": "Site",
+    "groupLabel": "Groupe (facultatif)",
+    "groupAllOption": "Tout le site",
+    "subjectLabel": "Sujet",
+    "bodyLabel": "Message",
+    "send": "Envoyer l'annonce",
+    "sending": "Envoi…",
+    "columnSubject": "Sujet",
+    "columnScope": "Portée",
+    "columnSentAt": "Envoyé",
+    "columnRecipients": "Destinataires"
   }
 }

@@ -24,6 +24,72 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SentByTenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("SentAt");
+
+                    b.HasIndex("SentByTenantUserId");
+
+                    b.ToTable("announcements", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.AnnouncementRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("AnnouncementId", "ContactId")
+                        .IsUnique();
+
+                    b.ToTable("announcement_recipients", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.AttendanceRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -378,10 +444,16 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("TenantUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantUserId")
+                        .IsUnique();
 
                     b.ToTable("contacts", "tenant_template");
                 });
@@ -671,6 +743,129 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         });
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ThreadId", "SentAt");
+
+                    b.ToTable("messages", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MessageThread", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("LastActivityAt");
+
+                    b.ToTable("message_threads", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MessageThreadParticipant", b =>
+                {
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ThreadId", "TenantUserId");
+
+                    b.HasIndex("TenantUserId");
+
+                    b.ToTable("message_thread_participants", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ArgumentsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("BodyKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TitleKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantUserId", "CreatedAt");
+
+                    b.ToTable("notifications", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.ParentClosureMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -716,6 +911,40 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .IsUnique();
 
                     b.ToTable("parent_closure_messages", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.ParentInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("parent_invitations", "tenant_template");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.RoomShift", b =>
@@ -1115,6 +1344,40 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("waiting_list_entries", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.Announcement", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId");
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("SentByTenantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.AnnouncementRecipient", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Announcement", null)
+                        .WithMany()
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.AttendanceRecord", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.Child", null)
@@ -1208,6 +1471,13 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.ParentClosureMessage", null)
                         .WithMany()
                         .HasForeignKey("MessageId");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.Contact", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("TenantUserId");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.Contract", b =>
@@ -1351,6 +1621,52 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.MessageThread", null)
+                        .WithMany()
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MessageThread", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MessageThreadParticipant", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("TenantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.MessageThread", null)
+                        .WithMany()
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("TenantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.ParentClosureMessage", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.KdvClosureDay", null)
@@ -1359,6 +1675,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ChildCare.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.ParentInvitation", b =>
+                {
                     b.HasOne("ChildCare.Domain.Entities.Contact", null)
                         .WithMany()
                         .HasForeignKey("ContactId")

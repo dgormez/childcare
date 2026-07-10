@@ -7,6 +7,15 @@ mobile/ios/
 mobile/android/
 mobile/*.log
 
+# Parent mobile
+parent-mobile/node_modules/
+parent-mobile/.expo/
+parent-mobile/dist/
+parent-mobile/.env
+parent-mobile/ios/
+parent-mobile/android/
+parent-mobile/*.log
+
 # Backend
 backend/**/bin/
 backend/**/obj/

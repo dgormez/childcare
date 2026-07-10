@@ -34,12 +34,14 @@
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | ✅ Done |
 | 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | ✅ Done |
-| 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
+| 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | 🔲 Not started |
+| 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
-| 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, printable | 007, 009 | 🔲 Not started |
-| 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking | 007, 011 | 🔲 Not started |
+| 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
+| 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
+| 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
 
 ### Phase 2 (after Phase 1 is stable)
 
@@ -50,13 +52,14 @@
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
-| 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff interaction needed | 010 | 🔲 Not started |
-| 022 | `022-eid-registration` | Belgian eID child/parent registration via federal Web Components API | 006 | 🔲 Not started |
+| 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | 🔲 Not started |
+| 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff tap needed at drop-off | 010 | 🔲 Not started |
+| 022 | `022-id-verified-registration` | Streamlined child/parent registration form with director "ID/birth certificate seen" verification checkbox — replaces eID card reader approach | 006 | 🔲 Not started |
 | 023 | `023-digital-enrollment` | Public online enrollment form + parent-initiated waiting list self-registration | 012a | 🔲 Not started |
 | 024 | `024-esignature` | Digital contract e-signature; SEPA direct debit mandate embedded in signing flow | 007 | 🔲 Not started |
 | 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | 🔲 Not started |
 | 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | 🔲 Not started |
-| 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — own schedule view, leave/exchange day requests, push notifications | 012 | 🔲 Not started |
+| 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | 🔲 Not started |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
@@ -1155,6 +1158,102 @@ than split out, since both already touch `ChildEventType` end-to-end. Scope delt
 
 ---
 
+### 009b — Group Activities
+
+```
+Let caregivers record group-level activity moments — garden time, a visiting
+musician, a drawing session, a walk, a birthday celebration — with a
+description and optional photos. Parents see these in the parent app and
+in the daily report, giving them a window into their child's day beyond
+just individual events (diaper, feeding, sleep).
+
+Context: child_events (009) are per-child (a diaper change, a temperature
+reading). Group activities are different: one moment that all or most
+children in the group shared. Modelling them as child_events would mean
+duplicating the same record for every child in the group — wrong approach.
+Group activities are their own entity.
+
+What to build:
+- group_activities table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id        UUID REFERENCES groups(id) NOT NULL,
+    location_id     UUID REFERENCES locations(id) NOT NULL,
+    occurred_at     TIMESTAMPTZ NOT NULL,
+    title           TEXT NOT NULL,        -- short label: "In de tuin", "Muzikant"
+    description     TEXT,                 -- optional free text
+    activity_type   TEXT CHECK (activity_type IN (
+                      'outdoor',          -- garden, walk, playground
+                      'creative',         -- drawing, painting, crafts
+                      'music',            -- singing, instruments, visitor
+                      'story',            -- reading, storytelling
+                      'celebration',      -- birthday, seasonal event
+                      'other'
+                    )) DEFAULT 'other',
+    recorded_by     UUID REFERENCES users(id) NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+
+- group_activity_photos table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    activity_id     UUID REFERENCES group_activities(id) ON DELETE CASCADE,
+    gcs_url         TEXT NOT NULL,        -- signed GCS URL
+    thumbnail_url   TEXT,                 -- smaller version for list views
+    caption         TEXT,
+    uploaded_at     TIMESTAMPTZ DEFAULT NOW()
+
+- Caregiver app:
+  - "Activiteit toevoegen" button on the group home screen (alongside
+    individual child event logging).
+  - Form: activity type picker (icon-based), title (pre-filled from type
+    but editable), optional description, photo upload (camera or gallery,
+    up to 10 photos per activity).
+  - After saving, the activity appears in a group timeline alongside the
+    individual child events in the caregiver's view.
+
+- Parent app:
+  - Group activities appear in the daily report feed for that day. Parents
+    whose children are in that group see the activity, photos, and description.
+  - Photo display: parents only see photos of children they have consent for.
+    The photo consent flag (photo_consent_types on contracts, from 007) governs
+    this: if a parent has not given photo consent, they still see the activity
+    text and description but not the photos.
+  - A "Galerij" tab shows all group activity photos across the month for
+    their child's group — a parent-facing photo album.
+
+- Director web admin:
+  - Activities are visible in the group timeline view alongside individual events.
+  - Director can delete an activity (e.g. inappropriate photo uploaded by mistake).
+
+Key constraints:
+- Photos are stored in GCS with signed URLs; never public blob URLs.
+- Photo consent is respected at render time in the parent app, not at upload
+  time. The caregiver uploads freely; the API filters by consent when serving
+  photos to parents.
+- A child who was absent on a given day should not appear in group activity
+  photos, but we cannot enforce this technically (the caregiver took the photo).
+  Add a note in the caregiver UI: "Foto's mogen enkel aanwezige kinderen tonen."
+- All user-facing strings use i18n keys (NL/FR/EN).
+- Maximum 10 photos per activity, each max 10MB before server-side resize.
+  Resize to max 1920px on the long edge; generate a 400px thumbnail.
+
+Edge cases:
+- A parent has partial photo consent (e.g. 'internal' but not 'external').
+  Show photos in the parent app (internal use) but do not include them in
+  any external sharing or bulk export.
+- Caregiver records an activity for the wrong group (fat-finger). Director
+  can delete it; caregiver re-creates on the correct group.
+- Activity is recorded offline (no connectivity). Text + metadata are queued
+  in offline_queue (008). Photos are queued separately — upload resumes on
+  reconnect. Show a "Foto's worden geüpload..." indicator.
+
+Out of scope:
+- Director-initiated activity templates ("Every Friday we go to the garden"
+  recurring activities) — Phase 2.
+- Video upload (photo only for MVP; video storage costs are high).
+- Parent commenting on activities — Phase 2.
+```
+
+---
+
 ### 010 — Attendance
 
 ```
@@ -1487,6 +1586,36 @@ Out of scope:
 - Day reservation requests (feature 010 handles approval; the request
   submission UI for parents can be included here or in 010 — decide at plan time).
 ```
+
+**Shipped 2026-07-10** — `specs/013-parent-communication/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 109/109 tasks incl. a 3-task convergence pass,
+437/437 backend + 49/49 web + 41/41 parent-mobile tests passing). Director-invited parent
+accounts, shared per-child family message threads, director announcements, a generic
+notification centre, Expo push, and the parent daily summary — plus the first real parent
+mobile app (`parent-mobile/`, portrait, its own bundle id, no offline/device-token machinery
+since this app has no offline requirement unlike `mobile/`). This session resumed mid-flight:
+backend and web admin (`/messages`, `/announcements`) had already landed in an earlier
+session with several tasks left uncommitted and `parent-mobile/` never scaffolded at all —
+picked up from `tasks.md`'s own checkboxes rather than re-running specify/plan/tasks. Two
+real bugs were fixed in the already-written web UI before continuing: the announcement
+compose form's labels weren't associated with their inputs, and the invite dialog rendered
+"Invitation sent." in two places at once (ambiguous to both accessibility tooling and its own
+test). `/speckit-converge` found a real, unrequested-by-tasks.md gap in the already-shipped
+US0 backend: `GoogleSignInCommandHandler`/`AppleSignInCommandHandler` authenticated a
+pre-invited `Parent`-role user by email match but never linked `Contact.TenantUserId` or ran
+the FR-006a thread backfill (only the password accept-flow did) — a parent signing in via
+Google/Apple before ever completing that flow got a working token but every `ParentOnly`
+endpoint 403'd forever. Fixed by extracting a shared `ParentAccountLinker`, plus a matching
+`Apple:BundleId` misconfiguration (defaulted to the caregiver app's bundle id, even though
+Apple Sign-In is parent-only). Worth remembering generally: when a role can authenticate two
+different ways (password vs. OAuth), any account-linking side effect the "primary" flow
+performs needs to be verified against every other path that can also produce a first-time
+authenticated session for that role — a passing test suite for one path proves nothing about
+the other. The parent-mobile build itself was delegated to a background agent given its
+sheer size (a second full Expo app); its output was independently re-verified rather than
+taken on faith — this caught a handful of design-system spacing-scale violations (`py-5`,
+`pb-10`, etc., all fixed) that had been faithfully mirrored from `mobile/`'s own pre-existing,
+already-shipped instances of the same values (left untouched there, out of scope).
 
 ---
 
@@ -2297,161 +2426,329 @@ Out of scope:
 
 ```
 Generate a daily meal list for the kitchen — who eats what today,
-with allergen flags visible at a glance.
+with allergen flags and per-child meal texture visible at a glance.
 
 Context: Belgian KDV kitchens prepare meals for 10–40 children daily.
-They need a printed or displayed list of: which children are present,
-their dietary restrictions/allergies, and any special instructions.
-D-care has this; it is a daily operational necessity.
+Infants eat puréed food; toddlers eat mixed; older children eat pieces.
+D-care has this feature; it is a daily operational necessity.
 
 What to build:
-- No new table — derived from existing data:
-    - Present children: attendance_records (010) for today where
-      check_in IS NOT NULL AND is_absent = FALSE.
-    - Dietary data: children.allergy_notes + health_records of type
-      'allergy' or 'chronic_condition' (013c).
-    - Meal plan: children.feeding_notes (add this TEXT field to children
-      if not already present) for standing meal instructions
-      (e.g. "no nuts", "vegetarian", "puréed texture").
+- Add child_meal_preferences table (tenant schema):
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    child_id          UUID REFERENCES children(id) NOT NULL UNIQUE,
+    texture           TEXT CHECK (texture IN (
+                        'pureed',     -- fully blended (babies < ~8m)
+                        'mixed',      -- soft lumps (8–12m)
+                        'pieces',     -- small soft pieces (12m+)
+                        'normal'      -- regular family food (toddlers)
+                      )) DEFAULT 'normal',
+    dietary_type      TEXT[],        -- ['halal','kosher','vegetarian','vegan','gluten_free']
+    portion_size      TEXT CHECK (portion_size IN ('small','normal','large')) DEFAULT 'normal',
+    additional_notes  TEXT,          -- free-text for anything not covered above
+    updated_at        TIMESTAMPTZ,
+    updated_by        UUID REFERENCES users(id)
 
-- API endpoint: GET /locations/{id}/meal-list?date= — returns the
-  day's attendees with their dietary flags, grouped by group/section.
-- Web admin: a "Maaltijdenlijst" page that renders this list and offers
-  a Print button (CSS print stylesheet, no PDF generation needed here).
-- Caregiver app: accessible from the group home screen. Shows only
-  the current group's children.
-- Allergen severity colour-coding: RED = anaphylactic risk (epipen note),
-  AMBER = intolerance/preference, GREY = no restrictions.
+- API: GET /locations/{id}/meal-list?date= — returns day's present children
+  with their meal_preferences and allergen flags from 013c health_records,
+  grouped by group/section.
+- Web admin: "Maaltijdenlijst" page with Print button (CSS print stylesheet;
+  no PDF needed).
+- Caregiver app: accessible from group home screen, shows current group only.
+- Allergen severity: RED (anaphylactic/epipen), AMBER (intolerance),
+  GREY (none). Use icons + colour for B&W print compatibility.
+- Director can edit a child's meal preferences from the child profile.
 
 Key constraints:
-- The list must never show a child who is absent today.
-- Allergen information is sensitive — the meal list is an operational
-  document but must not be emailed or left accessible to parents
-  (it shows other children's data).
+- Never show absent children on the meal list.
+- Meal list shows dietary data from multiple children — operational document
+  only; never email it to parents.
 - All user-facing strings use i18n keys (NL/FR/EN).
-- The list must be printable in black & white (colour-blind-safe severity
-  indicators — use icons in addition to colour).
 
 Edge cases:
-- A child arrives late (not yet checked in but is expected). Director can
-  "include expected" toggle — shows children with a contracted day today
-  who have not yet checked in, in a separate "Expected" section.
-- A child has a standing medication (013c health_record type
-  'medication_standing'). Show a pill icon next to their name —
-  kitchen staff need to know to prepare the medication-time reminder.
+- Child not yet checked in but expected: "Inclusief verwacht" toggle shows
+  them in a separate "Verwacht" section.
+- Standing medication (013c): show a pill icon — kitchen prepares the
+  medication-time reminder for the caregiver.
+- No preferences set: show child with "Geen voorkeur" — never hide them.
 
 Out of scope:
-- Menu planning / weekly meal schedule (Phase 2).
+- Monthly menu planning (feature 013e).
 - Kitchen supplier integration (Phase 3).
 - Nutritional tracking (out of scope entirely).
 ```
 
 ---
 
-### 021 — QR Contactless Check-In
+### 013e — Monthly Menu
 
 ```
-Allow parents to check their child in and out by showing a QR code on
-their phone, scanned by the caregiver tablet. No staff action required
-beyond holding up the tablet.
+Let the director publish a monthly meal menu visible to parents in the
+parent app. Parents can see what their child will eat and request changes
+to their child's meal preferences. Each child's preferences are
+personalised (texture, dietary type, allergies from 013c).
 
-Context: D-care uses physical touch PCs mounted in hallways; their check-in
-requires staff intervention. Our approach: parent shows their phone, tablet
-scans it — faster, touchless, no hardware purchase needed.
+Context: parents increasingly care about what their child eats at the KDV —
+allergy awareness, halal/kosher requirements, and developmental feeding
+stages all drive this. D-care does not offer this; it is a differentiator.
 
 What to build:
-- QR code per parent–child pair: encode a signed JWT containing
-  {child_id, parent_user_id, tenant_id}. Signed with a tenant-specific
-  secret. Short TTL (e.g. 5 minutes) to prevent replay attacks.
-- Parent app: "Check-in" screen showing a refreshing QR code (auto-refreshes
-  every 4 minutes). One QR per child if multiple children.
-- Caregiver app: a "QR scannen" mode on the group home screen.
-  Opens the device camera with a QR scanning overlay. On successful scan:
-  validates the JWT (tenant, child, TTL), resolves which child it is,
-  and performs the same check-in/out action as a manual tap (calls the
-  same POST /attendance/check-in endpoint from feature 010).
-- Feedback: success shows the child's name + photo + "Ingecheckt" for 3
-  seconds, then returns to scan mode. Error (expired, invalid, wrong
-  location) shows a clear message.
-- Both directions: first scan of the day = check-in; subsequent scan =
-  check-out (mirrors the manual toggle in 010).
+- monthly_menus table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    location_id     UUID REFERENCES locations(id) NOT NULL,
+    year            INT NOT NULL,
+    month           INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+    published_at    TIMESTAMPTZ,    -- null = draft, not visible to parents
+    created_by      UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (location_id, year, month)
+
+- monthly_menu_days table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    menu_id         UUID REFERENCES monthly_menus(id) NOT NULL,
+    menu_date       DATE NOT NULL,
+    soup            TEXT,
+    main_course     TEXT,
+    dessert         TEXT,
+    notes           TEXT,           -- e.g. "geen warme maaltijd deze dag"
+    UNIQUE (menu_id, menu_date)
+
+- Web admin: "Menu" section under the location. Director creates/edits
+  monthly menus day by day (simple text fields per course). Save as draft,
+  then Publish — published menus become visible to parents in the parent app.
+  Director can un-publish to make corrections, then re-publish.
+- Parent app: "Menu" tab showing the current month's menu. For each day:
+  soup / main / dessert. Closure days (011) are shown but greyed out.
+  If the location has not published a menu for this month, show a
+  "Menu nog niet beschikbaar" placeholder.
+- Per-child personalisation indicator: next to the menu, the parent sees
+  their child's current meal preferences (texture, dietary type) from
+  child_meal_preferences (013d). A "Voorkeur aanpassen" button lets the
+  parent request a change.
+- Preference change request: a simple form (select new texture, select
+  dietary types, free-text note). Creates a preference_change_requests record:
+    id              UUID PRIMARY KEY,
+    child_id        UUID REFERENCES children(id),
+    requested_by    UUID REFERENCES users(id),
+    new_texture     TEXT,
+    new_dietary     TEXT[],
+    notes           TEXT,
+    status          TEXT DEFAULT 'pending',  -- pending / approved / rejected
+    decided_by      UUID REFERENCES users(id),
+    decided_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+  Director approves in web admin → child_meal_preferences updated.
+  Director rejects → parent notified via push with optional reason.
 
 Key constraints:
-- The QR JWT must be signed, not just encoded. An unsigned QR could be
-  forged by a parent to check in someone else's child.
-- QR scan works offline (local JWT validation) but the actual attendance
-  record is queued in the offline_queue (from 008) if no connectivity.
-- No new attendance record schema — this is purely a new entry path
-  into the existing attendance flow.
+- Only published menus are visible to parents. Draft menus are director-only.
+- The menu is per-location, not per-group (one kitchen, one menu).
+  Child allergies/preferences are shown alongside the shared menu.
 - All user-facing strings use i18n keys (NL/FR/EN).
 
 Edge cases:
-- Parent scans for a child at the wrong location. JWT contains tenant_id
-  + location — validate against the tablet's device token scope. Reject
-  with "Dit kind is niet ingeschreven op deze locatie."
-- Parent's QR expires mid-scan (timing edge). Caregiver sees "Code
-  verlopen — vraag de ouder een nieuwe code" and the parent app auto-refreshes.
-- Caregiver tablet camera fails. Fallback: manual tap check-in still works.
+- Director publishes a menu with a typo and needs to correct it mid-month.
+  Un-publish, edit, re-publish. Parents see the correction on next app open.
+- A day has no menu (KDV on closure or parents bring their own lunch).
+  Leave all fields blank — shown as "—" to parents.
+- Parent requests a preference change that conflicts with a health record
+  in 013c (e.g. requesting "normal" texture for a child with a swallowing
+  note). Director sees the health record alongside the request when deciding.
 
 Out of scope:
-- Paxton / NFC / badge check-in (Phase 4).
-- QR sticker on child's bag (physical QR, not phone-based) — later.
+- Nutritional information per dish.
+- Kitchen supplier or recipe management.
+- Allergen matrix per dish (listed on the shared menu) — Phase 3.
 ```
 
 ---
 
-### 022 — eID Registration
+### 030 — Family Siblings
 
 ```
-Allow directors to register children and parents by reading their Belgian
-electronic identity card (eID). Eliminates manual data entry and reduces
-transcription errors on names, dates of birth, and addresses.
+Support parents who have multiple children enrolled at the same KDV.
+This affects the parent app (single login → multiple children),
+invoicing (optional family bundling), day-reservation requests
+(one action for multiple children), and child/contract records.
 
-Context: D-care supports this; it is a genuine differentiator for KDVs
-that onboard many children at the start of each year. The Belgian federal
-government provides an official Web Components library for this.
+Context: it is common for Belgian KDVs to have siblings enrolled.
+D-care handles this poorly (separate logins per child). We can do better
+from the start.
 
 What to build:
-- Integrate the Belgian federal eID Web Components API
-  (https://eid.belgium.be/en/web-components) into the web admin.
-- Child registration flow: on the "Nieuw kind" screen, add a
-  "Lees eID-kaart" button. When clicked, triggers the eID Web Component,
-  which reads the chip from a connected card reader. On success: pre-fills
-  first name, last name, date of birth, place of birth, address, and
-  national register number (NRN) into the registration form.
-- Parent/contact registration flow: same flow on the "Voeg contact toe"
-  screen for parent/guardian contacts.
-- NRN handling: the NRN (rijksregisternummer) read from the eID is
-  sensitive personal data (GDPR special category). Store it encrypted
-  at rest. It is required for Belcotax Fiche 281.86 (Phase 3) and for
-  Opgroeien matching — but do NOT display it in plain text anywhere
-  after initial capture; show only the last 4 digits for verification.
-- Card reader: the eID Web Components work with any PC/SC-compatible
-  reader. The KDV needs a USB card reader (commodity hardware, ~€20).
-  List supported readers in onboarding docs.
-- No card reader? The form falls back to manual entry — eID reading is
-  an enhancement, not a hard dependency.
+- family_memberships table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    parent_user_id  UUID REFERENCES users(id) NOT NULL,
+    child_id        UUID REFERENCES children(id) NOT NULL,
+    relationship    TEXT CHECK (relationship IN (
+                      'parent','guardian','foster_parent','other'
+                    )) DEFAULT 'parent',
+    is_primary      BOOLEAN DEFAULT TRUE,  -- primary contact for invoicing
+    UNIQUE (parent_user_id, child_id)
+  (This replaces or extends the existing children→parent link from 006.
+  Audit the 006 data model and migrate if needed.)
+
+- Parent app changes:
+  - Child switcher: after login, if a parent has multiple children, show
+    a "Mijn kinderen" home screen with one card per child (photo, name,
+    group). Tap to enter a child's context (events, attendance, messages).
+  - Day reservation (013a): when submitting a sick-day or absence request,
+    parent can select "voor alle kinderen" if all siblings are also absent.
+    This creates one reservation record per child in a single API call.
+  - Daily report (013): summary view shows all children's events
+    side-by-side or with a scroll; no need to switch apps.
+  - Notifications: each push notification is child-specific but the parent
+    receives all of them. Notification text always includes the child's name
+    to avoid confusion.
+
+- Invoicing (014) — sibling discount flag:
+  - Add sibling_discount_pct NUMERIC(5,2) to the location settings (004).
+    Default 0. If set (e.g. 10%), the second+ child's invoice lines get a
+    discount line item automatically.
+  - Also support "family invoice bundling": one PDF per family per month
+    (all children's lines on one invoice) rather than separate invoices.
+    Director configures per-location.
+
+- Web admin:
+  - Child profile: shows all linked parent accounts with their relationship.
+  - Parent/contact management: when adding a contact to a child, show
+    "Is this contact already registered for another child?" — link to the
+    existing parent account rather than creating a duplicate.
 
 Key constraints:
-- eID reading only works in the web admin (the Expo apps cannot access
-  PC/SC from a phone/tablet).
-- The NRN must never appear in logs, API responses, or error messages.
-- Consent for NRN storage must be logged (timestamp + who consented) on
-  the child or contact record.
+- A parent_user_id can be linked to multiple children (siblings) and a
+  child_id can be linked to multiple parent_user_ids (co-parenting, shared
+  custody). The table is a many-to-many junction.
+- One parent_user_id per child must be marked is_primary = TRUE (invoicing
+  recipient). Enforce this at the API level.
+- Sibling discount applies only to children of the same parent account at
+  the same location.
 - All user-facing strings use i18n keys (NL/FR/EN).
 
 Edge cases:
-- Card reader not connected or driver not installed. Show a clear setup
-  guide link, not a raw browser error.
-- Child is under 12 (no chip on their Kids-ID card pre-2022). Fallback
-  to manual entry.
-- eID data conflicts with what is already on file (name spelling difference,
-  address changed). Show a diff and let the director choose which values
-  to keep.
+- Twins: two children with the same parent, same group, same contracted days.
+  Both appear in the child switcher. Day reservations can be submitted for
+  both simultaneously.
+- Separated parents, shared custody: child has two parent accounts; each
+  sees the child's events. Only one is marked is_primary for invoicing.
+  Push notifications go to both.
+- One sibling leaves (contract ends) but the other stays. The parent account
+  remains active; the child switcher shows only the active child (with a
+  "Vorige kinderen" archive toggle).
+- Family invoice with one sibling on a different payment schedule (different
+  contract start date). Handle invoicing periods correctly per child; the
+  combined invoice can have different line-item date ranges.
 
 Out of scope:
-- Mobile NFC eID reading (not supported by the federal Web Components).
-- Automatic NRN lookup in Opgroeien systems (Phase 3, IKT compliance).
+- Custody agreement scheduling (which parent has the child on which day) —
+  not relevant for KDV invoicing/attendance, only for parental communication.
+- Co-parent separate invoicing (split invoice between two parents) — Phase 3.
+```
+
+---
+
+### 027 — Staff App
+
+```
+Allow parents to check their child in and out by showing a QR code on
+their phone, scanned by the caregiver tablet. The caregiver still physically
+receives the child — no change to the handover ritual — but the attendance
+tap is replaced by a scan, which saves time at peak drop-off (8:00–8:30am)
+when multiple parents arrive at once.
+
+When is this worth it? Belgian KDVs are small (typically 14–36 children),
+so busy moments are real but brief. QR check-in is a quality-of-life
+feature, not a safety-critical one. Phase 3, after core operations are solid.
+
+What to build:
+- QR code per parent–child pair: encode a signed JWT containing
+  {child_id, parent_user_id, tenant_id}. Signed with a tenant-specific
+  secret. Short TTL (5 minutes) to prevent replay attacks.
+- Parent app: "Inklokken" screen showing a refreshing QR code (auto-refreshes
+  every 4 minutes). If a parent has multiple children (feature 030), one
+  QR per child with a child switcher.
+- Caregiver app: "QR scannen" mode on the group home screen. Opens the
+  device camera with a QR overlay. On successful scan: validates the JWT,
+  resolves the child, performs the same check-in/out action as a manual tap
+  (POST /attendance/check-in from feature 010).
+- Feedback: success shows the child's name + photo + "Ingecheckt ✓" for
+  3 seconds, then returns to scan mode.
+- Both directions: first scan = check-in; second scan = check-out.
+
+Key constraints:
+- QR JWT must be signed. An unsigned QR could be forged.
+- QR scan offline: JWT validation is local; attendance record queued in
+  offline_queue (008) if no connectivity.
+- No new attendance schema — new entry path into the existing flow only.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Parent scans for a child at the wrong location → reject with "Dit kind
+  is niet ingeschreven op deze locatie."
+- QR expires mid-scan → caregiver sees "Code verlopen" and parent app
+  auto-refreshes on next open.
+- Tablet camera fails → fallback to manual tap; QR mode is additive.
+
+Out of scope:
+- NFC / badge / Paxton door integration (Phase 4).
+- QR sticker on child's bag (physical QR, not phone-based).
+```
+
+---
+
+### 022 — ID-Verified Registration
+
+```
+Streamlined child and parent registration with a director "identity
+verified" audit trail. Replaces the original eID card-reader approach:
+most KDV children are babies/toddlers who don't have an eID chip, making
+a card reader largely useless in this context.
+
+What this solves: Opgroeien and GDPR require the KDV to have verified the
+identity of each child and guardian. The director does this in person at
+drop-in or enrolment. We just need to record that it happened and what was
+shown — no hardware required.
+
+What to build:
+- Add to the child registration form (006) and contact form:
+    id_verified_at      TIMESTAMPTZ,   -- when was identity verified
+    id_verified_by      UUID REFERENCES users(id),  -- which director
+    id_document_type    TEXT CHECK (id_document_type IN (
+                          'birth_certificate',  -- most common for babies
+                          'kids_id',            -- Belgian Kids-ID card
+                          'eid',                -- Belgian eID (12+ years)
+                          'passport',
+                          'other'
+                        )),
+    id_document_note    TEXT           -- optional free note (e.g. "seen doc nr X")
+
+- In the web admin child file and contact view: a "Identiteit bevestigen"
+  section. Director selects document type, optionally adds a note, and clicks
+  "Bevestigen." Fields are write-once via the UI (editable only by org owner
+  to prevent retroactive tampering).
+- National Register Number (NRN / rijksregisternummer): optional field on
+  the child record, encrypted at rest. Directors with an eID reader can type
+  it in manually. Never displayed in plain text after save; show only last
+  4 digits. Required for Belcotax Fiche 281.86 (Phase 3).
+- Dashboard alert: director sees a "Niet-geverifieerde dossiers" count badge
+  on the admin home — children enrolled but without id_verified_at.
+
+Key constraints:
+- id_verified_at and id_document_type together form the audit trail — both
+  required to mark a record as verified.
+- NRN is GDPR special-category data; encrypt at rest, never log.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Director verifies a child's identity months after enrolment (common when
+  the family posted documents later). Allow retroactive verification —
+  the timestamp captures when it actually happened.
+- A child turns 12 and gets an eID. Director can update id_document_type
+  from 'birth_certificate' to 'eid'.
+
+Out of scope:
+- eID card reader / federal Web Components integration — Phase 3 at earliest,
+  if IKT compliance makes it necessary.
+- Automatic NRN lookup in Opgroeien systems (Phase 3).
 ```
 
 ---
@@ -2682,62 +2979,114 @@ Out of scope:
 
 ```
 A separate Expo mobile app for caregivers/staff (distinct from the shared
-caregiver group tablet). Staff use this on their personal phones to view
-their own schedule, submit leave or shift requests, and receive push
-notifications about schedule changes.
+caregiver group tablet). Staff use this on their personal phones to:
+  1. See their personal assignment schedule — which group/room they work in
+     on each day, including upcoming weeks.
+  2. Submit leave or shift requests.
+  3. Receive push notifications about schedule changes.
+
+The director manages assignments from the web admin — planning weeks in
+advance and making on-the-fly changes when someone calls in sick.
 
 Context: the caregiver group tablet (008/008a) is shared in the room.
-Staff need a personal app on their phone for: "Am I working next Wednesday?"
-and "I need to request a sick day." D-care doesn't have this; BitCare does.
+Staff need a personal app for: "Where am I working next Wednesday?"
+and "I need to call in sick." D-care doesn't have this; BitCare does.
 
 What to build:
-New Expo project (separate from the caregiver group tablet app):
 
-- Schedule view: staff see their own upcoming shifts (from staff_schedules
-  in 012) for the next 4 weeks. Day view + week view toggle.
-- Leave request: staff submits a leave request (date range, type: sick /
-  annual leave / other, optional note). Creates a new entry in:
+── Staff assignment model (extends 012) ──────────────────────────────────
+- staff_assignments table (tenant schema):
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    staff_id        UUID REFERENCES staff_members(id) NOT NULL,
+    location_id     UUID REFERENCES locations(id) NOT NULL,
+    group_id        UUID REFERENCES groups(id),     -- nullable: unassigned to group
+    assigned_date   DATE NOT NULL,
+    shift_start     TIME,                            -- optional if day-based
+    shift_end       TIME,
+    status          TEXT CHECK (status IN (
+                      'scheduled',    -- planned in advance
+                      'confirmed',    -- staff acknowledged
+                      'absent',       -- called in sick / approved leave
+                      'covered'       -- replaced by another staff member
+                    )) DEFAULT 'scheduled',
+    cover_staff_id  UUID REFERENCES staff_members(id),  -- who covered if absent
+    notes           TEXT,
+    created_by      UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (staff_id, assigned_date, group_id)
+
+  This extends or replaces staff_schedules from 012 — audit 012's schema
+  and consolidate into this model.
+
+── Director web admin ────────────────────────────────────────────────────
+- "Rooster" section: a week-view calendar grid. Columns = days, rows = staff.
+  Each cell shows which group that staff member is assigned to that day.
+  Director drags/drops or clicks to assign. Can plan weeks in advance.
+- Part-time staff: each staff member record (005) has contracted_days TEXT[]
+  (e.g. ['mon','tue','wed']). The grid auto-greys non-working days so the
+  director cannot accidentally schedule someone on their day off.
+- Closure days (011) are greyed in the grid — no assignments on closure days.
+- On-the-fly sick cover:
+    Director marks a staff member absent for today → system shows a
+    "Wie vervangt [Name]?" prompt listing available staff not yet assigned
+    to a conflicting group. Director selects a replacement.
+    The original assignment status → 'absent', a new assignment is created
+    for the replacement with status 'covered', cover_staff_id set.
+    Both staff members receive push notifications.
+- "Rooster publiceren": director publishes the schedule for a week/period.
+  Only published schedules are visible to staff in the app.
+  Unpublished schedules are director-draft only.
+
+── Staff app (new Expo project) ──────────────────────────────────────────
+- Authentication: personal email/password (standard JWT from 003).
+  Not the room device token.
+- Schedule view: own assignments for the next 4 weeks. Day view and week
+  view toggle. Each day shows: which group/room, start time, end time.
+  Closure days shown as "KDV gesloten."
+- "Ik ben ziek" button: one-tap sick-day report for today (or tomorrow).
+  Creates a staff_leave_request (type='sick') and immediately alerts
+  the director. Director sees an "Urgent: sick cover needed" banner in
+  the web admin.
+- Leave request (planned):
     staff_leave_requests table (tenant schema):
-        id           UUID PRIMARY KEY,
-        staff_id     UUID REFERENCES staff_members(id),
-        type         TEXT CHECK (type IN ('sick','annual','other')),
-        date_from    DATE,
-        date_to      DATE,
-        notes        TEXT,
-        status       TEXT CHECK (status IN ('pending','approved','rejected')),
-        decided_by   UUID REFERENCES users(id),
-        decided_at   TIMESTAMPTZ,
-        created_at   TIMESTAMPTZ DEFAULT NOW()
-- Shift exchange request: staff proposes swapping a shift with a named
-  colleague. Director approves or rejects.
-- Push notifications: staff receives push when their schedule is published,
-  a leave request is approved/rejected, or a shift is changed.
-- Director web admin additions: a "Verlofaanvragen" queue (similar to the
-  day-reservations queue in 013a) where directors approve/reject staff
-  leave requests. Approved requests auto-mark the staff member absent in
-  staff_schedules (012).
+        id          UUID PRIMARY KEY,
+        staff_id    UUID REFERENCES staff_members(id),
+        type        TEXT CHECK (type IN ('sick','annual','other')),
+        date_from   DATE,
+        date_to     DATE,
+        notes       TEXT,
+        status      TEXT CHECK (status IN ('pending','approved','rejected'))
+                    DEFAULT 'pending',
+        decided_by  UUID REFERENCES users(id),
+        decided_at  TIMESTAMPTZ,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+- Push notifications: received when schedule is published, an assignment
+  changes, or a leave request is approved/rejected.
+- Director web admin: "Verlofaanvragen" queue — approve/reject. Approved
+  leave auto-sets assignment status to 'absent' for affected dates.
 
 Key constraints:
-- The staff app authenticates with a personal email/password (unlike the
-  room tablet which uses a device token). Standard JWT auth from 003.
-- A staff member can only see their own schedule. They cannot see other
-  staff members' schedules.
-- Push token for the staff app is stored separately from the caregiver
-  tablet device token — different table/field.
+- Staff can only see their own schedule (not colleagues').
+- Part-time staff: contracted_days drives which days appear; the rest are
+  greyed out in both the web admin grid and the staff app.
+- A schedule week must be published before staff can see it.
 - All user-facing strings use i18n keys (NL/FR/EN).
 
 Edge cases:
-- Staff member is on sick leave and their shift is still in the schedule.
-  The shift shows as 'absent' in the rota (012) and BKR count (010)
-  automatically adjusts.
-- Staff member requests leave for a date that is a closure day (011).
-  Still allow it — some staff may want to use leave on closure days for
-  personal reasons.
+- Director makes a last-minute assignment change after publishing. Staff
+  member receives a push ("Je rooster is gewijzigd") and the app refreshes.
+- Staff member is scheduled at two locations on the same day (split day).
+  Two assignment rows for the same date; both show in the staff app.
+- A public holiday falls on a working day (not a KDV closure, but a legal
+  holiday — e.g. 11 November). Director manually marks it or the system
+  flags it. No auto-block — Belgian public holidays vary; director decides
+  per-location.
 
 Out of scope:
 - Time registration / clock in/out (feature 028).
 - Staff HR dossier (feature 028).
 - Staff-to-staff group chat (Phase 3).
+- Automatic optimal scheduling / AI suggestions (Phase 4).
 ```
 
 ---

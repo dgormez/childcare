@@ -100,7 +100,7 @@ public class RecordChildEventCommandHandler(
         {
             var celsius = ExtractCelsius(request.Payload);
             if (celsius > 38.0m)
-                await temperatureAlerts.NotifyAsync(childEvent.ChildId, celsius, cancellationToken);
+                await temperatureAlerts.NotifyAsync(childEvent.ChildId, childEvent.Id, celsius, cancellationToken);
         }
 
         return ChildEventResult.Success(ChildEventMapper.ToResponse(childEvent));

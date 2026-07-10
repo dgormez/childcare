@@ -36,4 +36,18 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
         WaitingListOfferedCalls.Add((toEmail, contactName, childName, locationName));
         return inner.SendWaitingListOfferedAsync(toEmail, contactName, childName, locationName);
     }
+
+    public bool ThrowOnParentInvitation { get; set; }
+
+    /// <summary>Records every SendParentInvitationAsync invocation (feature 013 tests).</summary>
+    public List<(string ToEmail, string InviteLink)> ParentInvitationCalls { get; } = [];
+
+    public Task SendParentInvitationAsync(string toEmail, string inviteLink)
+    {
+        ParentInvitationCalls.Add((toEmail, inviteLink));
+        if (ThrowOnParentInvitation)
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendParentInvitationAsync(toEmail, inviteLink);
+    }
 }

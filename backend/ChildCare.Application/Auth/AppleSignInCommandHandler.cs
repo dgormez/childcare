@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Application.ParentInvitations;
 using ChildCare.Contracts.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,10 @@ public class AppleSignInCommandHandler(
         if (tenant is null)
             return AuthResult.Fail(AuthFailure.OrganisationNotFound);
 
-        var bundleId = config["Apple:BundleId"] ?? "com.dgit.childcare";
+        // Apple Sign-In is Parent-only (AuthMethodPolicy.AppleAllowedFor) — the fallback must be
+        // parent-mobile's own bundle id, not mobile/'s (com.dgit.childcare), which never uses
+        // Apple Sign-In at all (feature 008a removed expo-apple-authentication from mobile/).
+        var bundleId = config["Apple:BundleId"] ?? "com.dgit.childcareparent";
         var identity = await appleValidator.ValidateAsync(request.IdentityToken, bundleId);
         if (identity is null)
             return AuthResult.Fail(AuthFailure.InvalidCredentials);
@@ -54,6 +58,11 @@ public class AppleSignInCommandHandler(
 
         if (user.AppleId is null) user.AppleId = identity.Sub;
         if (!user.EmailVerified) user.EmailVerified = true; // Apple has already verified this email
+
+        // FR-000b: a Parent-role user completing registration via Apple sign-in (rather than
+        // the password accept-invitation flow) still needs their Contact linked and existing
+        // threads backfilled — see ParentAccountLinker's doc comment for the bug this fixes.
+        await ParentAccountLinker.LinkIfUnlinkedParentAsync(db, user, cancellationToken);
 
         var refreshToken = RefreshTokenFactory.AddRefreshToken(db, user, tokenIssuer);
         await db.SaveChangesAsync(cancellationToken);

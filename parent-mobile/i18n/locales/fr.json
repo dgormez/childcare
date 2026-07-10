@@ -1,0 +1,142 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "send": "Envoyer",
+    "loading": "Chargement…",
+    "retry": "Réessayer",
+    "save": "Enregistrer",
+    "ok": "OK",
+    "pullToRefresh": "Tirez vers le bas pour actualiser"
+  },
+  "login": {
+    "title": "Connexion",
+    "organisationSlug": "Organisation",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "showPassword": "Afficher",
+    "hidePassword": "Masquer",
+    "submit": "Se connecter",
+    "offlineFirstLogin": "Impossible de se connecter sans connexion réseau.",
+    "orDivider": "ou",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithApple": "Continuer avec Apple"
+  },
+  "parentInvitation": {
+    "title": "Créez votre compte",
+    "subtitle": "Définissez un mot de passe pour finaliser votre compte parent.",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmez le mot de passe",
+    "submit": "Créer le compte",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "success": "Votre compte est prêt. Vous pouvez maintenant vous connecter.",
+    "goToLogin": "Aller à la connexion",
+    "invalidLink": "Ce lien d'invitation n'est pas valide."
+  },
+  "home": {
+    "title": "Aujourd'hui",
+    "noUpdatesYet": "Aucune actualité pour l'instant aujourd'hui.",
+    "naps": "Siestes",
+    "bottles": "Biberons",
+    "diaperChanges": "Changes",
+    "mood": "Humeur",
+    "temperature": "Température",
+    "medication": "Médicaments",
+    "medicationGiven": "Médicament administré",
+    "activities": "Activités",
+    "loadFailed": "Impossible de charger le résumé du jour."
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "Aucune conversation pour l'instant.",
+    "newThread": "Nouveau message",
+    "subject": "Sujet",
+    "subjectPlaceholder": "De quoi s'agit-il ?",
+    "aboutChild": "À propos de quel enfant ?",
+    "noChild": "Question générale (pas liée à un enfant en particulier)",
+    "messagePlaceholder": "Écrivez un message…",
+    "firstMessagePlaceholder": "Comment pouvons-nous vous aider ?",
+    "send": "Envoyer",
+    "unread": "Non lu",
+    "startConversation": "Démarrer une conversation",
+    "loadFailed": "Impossible de charger vos messages.",
+    "sendFailed": "Impossible d'envoyer votre message. Veuillez réessayer."
+  },
+  "announcements": {
+    "title": "Annonce",
+    "readOnly": "Ceci est une annonce à sens unique — les réponses ne sont pas prises en charge.",
+    "loadFailed": "Impossible de charger cette annonce."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Vous êtes à jour.",
+    "loadFailed": "Impossible de charger vos notifications.",
+    "types": {
+      "newmessage": "Nouveau message",
+      "announcement": "Annonce",
+      "temperaturealert": "Alerte température"
+    }
+  },
+  "parent": {
+    "notifications": {
+      "new_message": {
+        "title": "Nouveau message",
+        "body": "Vous avez reçu un nouveau message de la crèche."
+      },
+      "announcement": {
+        "title": "Nouvelle annonce",
+        "body": "Une nouvelle annonce a été publiée."
+      },
+      "temperature_alert": {
+        "title": "Alerte température",
+        "body": "Une température de {{celsius}}°C a été enregistrée."
+      }
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "signedInAs": "Connecté en tant que {{email}}",
+    "signOut": "Se déconnecter",
+    "confirmSignOutTitle": "Se déconnecter",
+    "confirmSignOutMessage": "Voulez-vous vraiment vous déconnecter ?"
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "E-mail, mot de passe ou organisation incorrect.",
+      "organisation_not_found": "Cette organisation n'existe pas.",
+      "organisation_slug_required": "L'organisation est requise.",
+      "email_required": "L'adresse e-mail est requise.",
+      "password_required": "Le mot de passe est requis.",
+      "method_not_allowed_for_role": "Ce mode de connexion n'est pas disponible pour votre compte.",
+      "token_invalid_or_expired": "Ce lien de connexion a expiré.",
+      "apple_email_required_first_signin": "Veuillez autoriser l'accès à votre e-mail pour terminer la connexion avec Apple."
+    },
+    "network": "Aucune connexion réseau. Veuillez réessayer.",
+    "validation": "Certaines informations ne sont pas valides. Veuillez vérifier et réessayer.",
+    "invitation": {
+      "not_found": "Ce lien d'invitation est invalide ou a expiré."
+    },
+    "parent_invitation": {
+      "not_eligible": "Ce contact n'est pas éligible à un compte parent.",
+      "already_has_account": "Ce contact possède déjà un compte parent."
+    },
+    "parent": {
+      "not_a_contact": "Vous n'avez pas accès aux informations de cet enfant."
+    },
+    "message_thread": {
+      "not_participant": "Vous n'avez pas accès à cette conversation.",
+      "not_found": "Cette conversation est introuvable.",
+      "body_required": "Veuillez écrire un message avant d'envoyer.",
+      "body_too_long": "Ce message est trop long."
+    },
+    "announcement": {
+      "not_recipient": "Vous n'avez pas accès à cette annonce.",
+      "not_found": "Cette annonce est introuvable."
+    },
+    "notification": {
+      "not_found": "Cette notification est introuvable."
+    },
+    "children": {
+      "not_found": "Cet enfant est introuvable."
+    }
+  }
+}

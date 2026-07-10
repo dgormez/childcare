@@ -177,6 +177,10 @@ builder.Services.AddScoped<ClosureNotificationService>();
 builder.Services.AddScoped<ClosureAttendanceService>();
 builder.Services.AddScoped<IClosureCalendarReader, ClosureCalendarReader>();
 
+// ── Parent communication (feature 013) ──────────────────────────────────────
+// Reuses IExpoPushSender (009) unchanged (research.md R3) — no new push registration needed.
+builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactResolver>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -611,6 +615,11 @@ app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
 app.MapWaitingListEndpoints();
+app.MapParentInvitationEndpoints();
+app.MapMessageThreadEndpoints();
+app.MapAnnouncementEndpoints();
+app.MapNotificationEndpoints();
+app.MapParentEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

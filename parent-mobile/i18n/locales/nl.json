@@ -1,0 +1,142 @@
+{
+  "common": {
+    "cancel": "Annuleren",
+    "send": "Versturen",
+    "loading": "Laden…",
+    "retry": "Opnieuw proberen",
+    "save": "Opslaan",
+    "ok": "OK",
+    "pullToRefresh": "Trek naar beneden om te vernieuwen"
+  },
+  "login": {
+    "title": "Inloggen",
+    "organisationSlug": "Organisatie",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "showPassword": "Tonen",
+    "hidePassword": "Verbergen",
+    "submit": "Inloggen",
+    "offlineFirstLogin": "Inloggen zonder netwerkverbinding is niet mogelijk.",
+    "orDivider": "of",
+    "continueWithGoogle": "Doorgaan met Google",
+    "continueWithApple": "Doorgaan met Apple"
+  },
+  "parentInvitation": {
+    "title": "Maak je account aan",
+    "subtitle": "Stel een wachtwoord in om je ouderaccount af te ronden.",
+    "password": "Wachtwoord",
+    "confirmPassword": "Bevestig wachtwoord",
+    "submit": "Account aanmaken",
+    "passwordMismatch": "De wachtwoorden komen niet overeen.",
+    "success": "Je account is klaar. Je kunt nu inloggen.",
+    "goToLogin": "Naar inloggen",
+    "invalidLink": "Deze uitnodigingslink is niet geldig."
+  },
+  "home": {
+    "title": "Vandaag",
+    "noUpdatesYet": "Nog geen updates vandaag.",
+    "naps": "Slaapjes",
+    "bottles": "Flesjes",
+    "diaperChanges": "Luierwissels",
+    "mood": "Stemming",
+    "temperature": "Temperatuur",
+    "medication": "Medicatie",
+    "medicationGiven": "Medicatie toegediend",
+    "activities": "Activiteiten",
+    "loadFailed": "Kon het dagoverzicht niet laden."
+  },
+  "messages": {
+    "title": "Berichten",
+    "empty": "Nog geen gesprekken.",
+    "newThread": "Nieuw bericht",
+    "subject": "Onderwerp",
+    "subjectPlaceholder": "Waar gaat dit over?",
+    "aboutChild": "Over welk kind?",
+    "noChild": "Algemene vraag (niet over een specifiek kind)",
+    "messagePlaceholder": "Schrijf een bericht…",
+    "firstMessagePlaceholder": "Waarmee kunnen we helpen?",
+    "send": "Versturen",
+    "unread": "Ongelezen",
+    "startConversation": "Start een gesprek",
+    "loadFailed": "Kon je berichten niet laden.",
+    "sendFailed": "Kon je bericht niet versturen. Probeer het opnieuw."
+  },
+  "announcements": {
+    "title": "Mededeling",
+    "readOnly": "Dit is een eenrichtingsmededeling — reageren is niet mogelijk.",
+    "loadFailed": "Kon deze mededeling niet laden."
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "empty": "Je bent helemaal bij.",
+    "loadFailed": "Kon je meldingen niet laden.",
+    "types": {
+      "newmessage": "Nieuw bericht",
+      "announcement": "Mededeling",
+      "temperaturealert": "Temperatuurmelding"
+    }
+  },
+  "parent": {
+    "notifications": {
+      "new_message": {
+        "title": "Nieuw bericht",
+        "body": "Je hebt een nieuw bericht van de opvang ontvangen."
+      },
+      "announcement": {
+        "title": "Nieuwe mededeling",
+        "body": "Er is een nieuwe mededeling geplaatst."
+      },
+      "temperature_alert": {
+        "title": "Temperatuurmelding",
+        "body": "Er werd een temperatuur van {{celsius}}°C gemeten."
+      }
+    }
+  },
+  "settings": {
+    "title": "Instellingen",
+    "signedInAs": "Ingelogd als {{email}}",
+    "signOut": "Uitloggen",
+    "confirmSignOutTitle": "Uitloggen",
+    "confirmSignOutMessage": "Weet je zeker dat je wilt uitloggen?"
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Onjuist e-mailadres, wachtwoord of organisatie.",
+      "organisation_not_found": "Deze organisatie bestaat niet.",
+      "organisation_slug_required": "Organisatie is verplicht.",
+      "email_required": "E-mailadres is verplicht.",
+      "password_required": "Wachtwoord is verplicht.",
+      "method_not_allowed_for_role": "Deze inlogmethode is niet beschikbaar voor jouw account.",
+      "token_invalid_or_expired": "Deze inloglink is verlopen.",
+      "apple_email_required_first_signin": "Geef toegang tot je e-mailadres om het inloggen met Apple te voltooien."
+    },
+    "network": "Geen netwerkverbinding. Probeer het opnieuw.",
+    "validation": "Sommige gegevens zijn niet geldig. Controleer en probeer opnieuw.",
+    "invitation": {
+      "not_found": "Deze uitnodigingslink is ongeldig of verlopen."
+    },
+    "parent_invitation": {
+      "not_eligible": "Dit contact komt niet in aanmerking voor een ouderaccount.",
+      "already_has_account": "Dit contact heeft al een ouderaccount."
+    },
+    "parent": {
+      "not_a_contact": "Je hebt geen toegang tot de gegevens van dit kind."
+    },
+    "message_thread": {
+      "not_participant": "Je hebt geen toegang tot dit gesprek.",
+      "not_found": "Dit gesprek kon niet worden gevonden.",
+      "body_required": "Schrijf een bericht voordat je verstuurt.",
+      "body_too_long": "Dit bericht is te lang."
+    },
+    "announcement": {
+      "not_recipient": "Je hebt geen toegang tot deze mededeling.",
+      "not_found": "Deze mededeling kon niet worden gevonden."
+    },
+    "notification": {
+      "not_found": "Deze melding kon niet worden gevonden."
+    },
+    "children": {
+      "not_found": "Dit kind kon niet worden gevonden."
+    }
+  }
+}

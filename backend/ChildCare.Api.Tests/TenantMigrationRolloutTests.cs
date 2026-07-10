@@ -88,7 +88,14 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// 012's "AddStaffSchedules" migration repeats the pattern once more — staff_schedules has
     /// FKs to staff_profiles/locations/groups, so it's dropped before all three. Feature
     /// 012a's "AddWaitingListEntries" migration repeats it again — waiting_list_entries has
-    /// FKs to both children and locations, so it's dropped before either.
+    /// FKs to both children and locations, so it's dropped before either. Feature 013's
+    /// "AddParentCommunication" migration repeats the pattern once more — message_threads gains
+    /// a new TenantUserId FK on contacts (dropped along with contacts itself, same as
+    /// AddContactPushToken's column needing no separate step), plus six new tables:
+    /// message_thread_participants/messages depend on message_threads and users;
+    /// announcement_recipients depends on announcements and contacts; announcements depends on
+    /// groups/locations/users; notifications depends on users; parent_invitations depends on
+    /// contacts — all seven are dropped before contacts/groups/children/users are touched.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -109,6 +116,13 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."child_contacts";
             DROP TABLE "{schemaName}"."child_group_assignments";
             DROP TABLE "{schemaName}"."vaccination_records";
+            DROP TABLE "{schemaName}"."message_thread_participants";
+            DROP TABLE "{schemaName}"."messages";
+            DROP TABLE "{schemaName}"."message_threads";
+            DROP TABLE "{schemaName}"."announcement_recipients";
+            DROP TABLE "{schemaName}"."announcements";
+            DROP TABLE "{schemaName}"."notifications";
+            DROP TABLE "{schemaName}"."parent_invitations";
             DROP TABLE "{schemaName}"."groups";
             DROP TABLE "{schemaName}"."children";
             DROP TABLE "{schemaName}"."contacts";
@@ -127,7 +141,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication';
             """);
     }
 

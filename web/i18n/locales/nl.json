@@ -30,7 +30,9 @@
     "expand": "Uitklappen",
     "notYetAvailable": "Dit onderdeel is nog niet beschikbaar.",
     "scheduling": "Planning",
-    "waitingList": "Wachtlijst"
+    "waitingList": "Wachtlijst",
+    "messages": "Berichten",
+    "announcements": "Mededelingen"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -293,5 +295,51 @@
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
     "viewOccupancy": "Bezetting bekijken"
+  },
+  "messages": {
+    "title": "Berichten",
+    "invite": "Ouder uitnodigen",
+    "emptyState": "Nog geen berichten.",
+    "loadError": "Berichten konden niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "genericError": "Kon dit niet verzenden. Probeer het opnieuw.",
+    "columnFamily": "Gezin",
+    "columnSubject": "Onderwerp",
+    "columnLastActivity": "Laatste activiteit",
+    "unread": "Ongelezen",
+    "generalThread": "Algemeen",
+    "backToList": "Terug naar berichten",
+    "replyPlaceholder": "Schrijf een antwoord…",
+    "send": "Verzenden",
+    "sending": "Verzenden…",
+    "noMessages": "Nog geen berichten in dit gesprek.",
+    "inviteDialogTitle": "Ouder uitnodigen voor de app",
+    "inviteDialogDescription": "Zoek een contactpersoon en stuur een uitnodiging voor de ouder-app.",
+    "inviteSearchPlaceholder": "Zoek op naam of e-mail…",
+    "inviteNoEmail": "Geen e-mailadres bekend",
+    "inviteSend": "Uitnodiging versturen",
+    "inviteSent": "Uitnodiging verzonden.",
+    "inviteErrorNotEligible": "Deze contactpersoon komt nog niet in aanmerking — er is ophaaltoestemming nodig voor minstens één kind.",
+    "inviteErrorAlreadyHasAccount": "Deze contactpersoon heeft al een ouderaccount.",
+    "inviteErrorGeneric": "Kon de uitnodiging niet versturen. Probeer het opnieuw."
+  },
+  "announcements": {
+    "title": "Mededelingen",
+    "compose": "Nieuwe mededeling",
+    "emptyState": "Nog geen mededelingen verstuurd.",
+    "loadError": "Mededelingen konden niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "genericError": "Kon deze mededeling niet versturen. Probeer het opnieuw.",
+    "locationLabel": "Locatie",
+    "groupLabel": "Groep (optioneel)",
+    "groupAllOption": "Hele locatie",
+    "subjectLabel": "Onderwerp",
+    "bodyLabel": "Bericht",
+    "send": "Mededeling versturen",
+    "sending": "Verzenden…",
+    "columnSubject": "Onderwerp",
+    "columnScope": "Bereik",
+    "columnSentAt": "Verzonden",
+    "columnRecipients": "Ontvangers"
   }
 }
