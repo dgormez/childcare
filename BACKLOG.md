@@ -32,7 +32,7 @@
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
-| 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | 🔲 Not started |
+| 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | ✅ Done |
 | 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | 🔲 Not started |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009 | 🔲 Not started |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
@@ -1382,6 +1382,54 @@ Out of scope:
 - Staff HR dossier (Phase 2).
 - Payroll / Humanwave export (Phase 4).
 ```
+
+**Shipped 2026-07-10** — `specs/012-caregiver-scheduling/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 58/58 tasks, 32 new backend tests + 5 new web
+component tests, 359/359 backend + 34/34 web passing). Scope deltas worth knowing before
+starting a dependent feature:
+
+- **BACKLOG's own premise for this feature was wrong, and the plan-phase research caught
+  it before implementation**: the prompt above says "the live BKR count in feature 010 uses
+  staff_schedules to know who is on duty right now" — but `staff_schedules` didn't exist
+  until this feature, and reading feature 010's actual shipped `GetBkrRatioQuery` shows it's
+  sourced from `RoomShifts` (feature 008a's real-time PIN check-in/out log), not any
+  schedule — which is, if anything, the more correct signal (a scheduled-but-absent
+  caregiver was already excluded, since they never check in). This feature does **not** wire
+  `staff_schedules` into feature 010's live computation. Instead it ships a separate,
+  planning-only "projected on-duty count" for the rota builder itself, with a dedicated
+  regression test (`BkrDecouplingTests`) proving the two stay decoupled. **Flag for any
+  future feature touching BKR or staff scheduling**: these are two intentionally separate
+  concerns — planned (rota) vs. actual (room shift) — don't merge them.
+- **Caregiver-facing schedule UI is deliberately out of scope** — resolved via an explicit
+  scope decision before specification (not a default guess): feature 008a's shared kiosk
+  tablet has no personal session to host a personal "my schedule" view, and feature 027
+  (Staff App) is already scoped in this backlog for exactly that. This feature ships the
+  data model, the director-web rota builder, and a personal-account-scoped
+  `GET /api/staff-schedules/me` read endpoint so feature 027 can consume it directly without
+  building the read path itself.
+- **`/speckit-converge` found a real integrity gap the original spec missed**: nothing
+  stopped a director from planning a shift for a staff member at a location they have no
+  `StaffLocationEligibility` row for, even though `VerifyPinCommand`/`CheckInCommand`
+  (feature 008a) already reject exactly that case at actual check-in time. Fixed by adding
+  the same eligibility check to `CreateStaffScheduleCommand`/`UpdateStaffScheduleCommand`
+  (`403 errors.staff_schedules.not_eligible`), and by filtering the web grid's staff rows to
+  eligible-for-this-location staff using `StaffResponse.eligibleLocationIds` (feature 005),
+  already returned — no new endpoint needed.
+- **A live browser verification pass (not just mocked component tests) caught a real
+  date-handling bug** before it shipped: the week grid's date math used
+  `Date.toISOString().slice(0,10)`, which round-trips through UTC and shifts every date
+  backward by one day in any positive-UTC-offset local timezone — the grid was showing
+  Sunday as the first column of a Monday-start week. Fixed by building the date string from
+  local `Date` component getters instead. Worth remembering generally: mocked API tests
+  don't exercise real `Date`/timezone conversion against a real day boundary — a feature
+  whose correctness depends on date math benefits from at least one real end-to-end run.
+- Overlap rejection (FR-003) covers same-location double-booking as well as cross-location —
+  broadened from BACKLOG's original "two different locations" wording during the
+  requirements-quality checklist pass, since a staff member can't be in two groups at the
+  same location simultaneously either.
+- Rota-copy (FR-016) rejects a target week that isn't strictly after the source week, or
+  that's already (fully or partially) passed — copy is a forward-planning operation only,
+  consistent with FR-004's past-date immutability.
 
 ---
 

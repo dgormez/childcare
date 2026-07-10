@@ -285,3 +285,21 @@ use the static code review instead.
   a group/location type flag exists. Finish pass fixed a real director-web gap (correction dialog
   originally edited only times and kept stale form state; now handles status/absence fields with
   tests) and a CI-only PostgreSQL timestamp precision assertion (`.4072354Z` vs `.4072350Z`).
+- 012 (`012-caregiver-scheduling`): ✅ Done, merged 2026-07-10 (PR #16, squash-merged after
+  green CI — 359/359 backend + 34/34 web passing). Weekly staff rota (`staff_schedules`):
+  director-web week-grid builder, overlap/past-date rules, absence marking, copy-week
+  (skipping closure days/existing entries, never overwriting), and a personal-account-scoped
+  own-schedule read for feature 027 to consume later — no caregiver-facing UI ships here
+  (008a's kiosk tablet has no personal session; explicit scope decision confirmed with the
+  user before specifying). Biggest deviation from BACKLOG's own prompt: research during
+  planning found the prompt's premise ("BKR uses staff_schedules") false against what
+  feature 010 actually shipped — `GetBkrRatioQuery` reads real-time `RoomShift` check-in
+  presence, not any schedule, and this feature deliberately does not change that; it ships a
+  separate "projected on-duty count" instead, with a dedicated regression test proving the
+  two stay decoupled. `/speckit-converge` found a genuine integrity gap the spec missed
+  (nothing enforced `StaffLocationEligibility` on schedule create/update, even though
+  check-in already does) — fixed, not deferred, same standing rule as every prior feature.
+  Worth remembering generally: a live browser verification pass (not just mocked component
+  tests) caught a real bug mocked tests couldn't have — `Date.toISOString()` round-tripping
+  through UTC shifted the week grid's dates backward by a day in positive-UTC-offset
+  timezones.
