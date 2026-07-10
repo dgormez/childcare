@@ -41,7 +41,7 @@ export function ThemedModal({ config, onDismiss }: Props) {
           style={{ maxWidth: 400 }}
         >
           {/* Content */}
-          <View className="px-5 pt-5 pb-4">
+          <View className="px-4 pt-4 pb-4">
             <Text className="text-text dark:text-text-dark text-lg font-bold mb-2">{config.title}</Text>
             {!!config.message && (
               <Text className="text-text-soft dark:text-text-soft-dark text-sm leading-5">{config.message}</Text>
@@ -56,7 +56,7 @@ export function ThemedModal({ config, onDismiss }: Props) {
             <React.Fragment key={btn.label}>
               <TouchableOpacity
                 onPress={btn.onPress}
-                className="px-5 py-4 items-center active:opacity-60"
+                className="px-4 py-4 items-center active:opacity-60"
               >
                 <Text className={`text-base ${BUTTON_STYLES[btn.style]}`}>{btn.label}</Text>
               </TouchableOpacity>

@@ -128,9 +128,9 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 px-6 justify-center pb-10" style={isWide ? { alignSelf: "center", width: "100%", maxWidth: 480 } : undefined}>
+        <View className="flex-1 px-6 justify-center pb-8" style={isWide ? { alignSelf: "center", width: "100%", maxWidth: 480 } : undefined}>
 
-          <Text className="text-text dark:text-text-dark text-3xl font-bold text-center mb-10">
+          <Text className="text-text dark:text-text-dark text-3xl font-bold text-center mb-8">
             {t("login.title")}
           </Text>
 
@@ -191,7 +191,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={handleLogin}
             disabled={!canSubmit}
-            className={`rounded-lg py-5 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
+            className={`rounded-lg py-4 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
           >
             {loading
               ? <ActivityIndicator color="#fff" />

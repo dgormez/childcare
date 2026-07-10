@@ -91,7 +91,7 @@ export default function NewMessageThreadScreen() {
       <TouchableOpacity
         onPress={handleSubmit}
         disabled={!canSubmit}
-        className={`rounded-lg py-5 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
+        className={`rounded-lg py-4 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
       >
         {sending ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-lg font-bold">{t("messages.send")}</Text>}
       </TouchableOpacity>

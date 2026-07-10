@@ -87,7 +87,7 @@ export default function ParentInvitationScreen() {
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1 bg-background dark:bg-background-dark">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View className="flex-1 px-6 justify-center pb-10">
+        <View className="flex-1 px-6 justify-center pb-8">
           <Text className="text-text dark:text-text-dark text-2xl font-bold text-center mb-2">
             {t("parentInvitation.title")}
           </Text>
@@ -130,7 +130,7 @@ export default function ParentInvitationScreen() {
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={!canSubmit}
-            className={`rounded-lg py-5 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
+            className={`rounded-lg py-4 items-center ${canSubmit ? "bg-primary dark:bg-primary-dark" : "bg-border dark:bg-border-dark"}`}
           >
             {loading
               ? <ActivityIndicator color="#fff" />

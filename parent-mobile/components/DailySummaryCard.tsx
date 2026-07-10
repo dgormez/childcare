@@ -108,7 +108,7 @@ export function DailySummaryCard({ child, summary }: Props) {
                 <Text className="text-text dark:text-text-dark text-base ml-2 font-medium">{t("home.activities")}</Text>
               </View>
               {summary.activities.map((activity, i) => (
-                <Text key={i} className="text-text-soft dark:text-text-soft-dark text-sm" style={{ marginLeft: 40, paddingVertical: 4 }}>
+                <Text key={i} className="text-text-soft dark:text-text-soft-dark text-sm" style={{ marginLeft: 32, paddingVertical: 4 }}>
                   • {activity}
                 </Text>
               ))}
