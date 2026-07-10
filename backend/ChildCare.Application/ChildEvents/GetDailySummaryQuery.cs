@@ -37,13 +37,23 @@ public class GetDailySummaryQueryHandler(ITenantDbContext db) : IRequestHandler<
         // has a confirmed AdministeredBy attribution.
         var medicationAdministered = events.Any(e => e.EventType == ChildEventType.Medication);
 
+        // Feature 013 (specs/013-parent-communication/research.md R5): oldest-first activity
+        // descriptions. Photos are explicitly out of scope — see that feature's spec.md.
+        var activities = events
+            .Where(e => e.EventType == ChildEventType.Activity)
+            .Select(e => ExtractString(e.Payload, "description"))
+            .Where(description => description is not null)
+            .Select(description => description!)
+            .ToList();
+
         return new DailySummaryResponse(
             napsCount,
             bottlesCount,
             diaperChangesCount,
             latestMood is null ? null : ExtractString(latestMood.Payload, "value"),
             latestTemperature is null ? null : ExtractDecimal(latestTemperature.Payload, "celsius"),
-            medicationAdministered);
+            medicationAdministered,
+            activities);
     }
 
     private static string? ExtractString(string json, string field)

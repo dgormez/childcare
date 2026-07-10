@@ -23,4 +23,10 @@ public interface IEmailSender
     /// email-templating/i18n rework, not this feature.
     /// </summary>
     Task SendWaitingListOfferedAsync(string toEmail, string contactName, string childName, string locationName);
+
+    /// <summary>
+    /// Feature 013-parent-communication. Body content is intentionally English-only raw HTML,
+    /// following the same precedent as SendStaffInvitationAsync above.
+    /// </summary>
+    Task SendParentInvitationAsync(string toEmail, string inviteLink);
 }

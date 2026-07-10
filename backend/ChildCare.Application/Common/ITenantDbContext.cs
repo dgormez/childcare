@@ -40,6 +40,13 @@ public interface ITenantDbContext
     DbSet<ParentClosureMessage> ParentClosureMessages { get; }
     DbSet<StaffSchedule> StaffSchedules { get; }
     DbSet<WaitingListEntry> WaitingListEntries { get; }
+    DbSet<ParentInvitation> ParentInvitations { get; }
+    DbSet<MessageThread> MessageThreads { get; }
+    DbSet<MessageThreadParticipant> MessageThreadParticipants { get; }
+    DbSet<Message> Messages { get; }
+    DbSet<Announcement> Announcements { get; }
+    DbSet<AnnouncementRecipient> AnnouncementRecipients { get; }
+    DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

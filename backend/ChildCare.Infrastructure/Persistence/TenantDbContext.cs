@@ -66,6 +66,20 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<WaitingListEntry> WaitingListEntries => Set<WaitingListEntry>();
 
+    public DbSet<ParentInvitation> ParentInvitations => Set<ParentInvitation>();
+
+    public DbSet<MessageThread> MessageThreads => Set<MessageThread>();
+
+    public DbSet<MessageThreadParticipant> MessageThreadParticipants => Set<MessageThreadParticipant>();
+
+    public DbSet<Message> Messages => Set<Message>();
+
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+
+    public DbSet<AnnouncementRecipient> AnnouncementRecipients => Set<AnnouncementRecipient>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -261,6 +275,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.Email).HasMaxLength(254);
             c.Property(x => x.Locale).IsRequired().HasMaxLength(5);
             c.Property(x => x.PushToken).HasMaxLength(200);
+            c.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.TenantUserId);
+            // Postgres treats NULLs as distinct in a unique index, so this allows any number of
+            // not-yet-invited contacts (TenantUserId = null) while still enforcing at most one
+            // Contact per parent account (feature 013, research.md R1).
+            c.HasIndex(x => x.TenantUserId).IsUnique();
         });
 
         modelBuilder.Entity<ChildContact>(cc =>
@@ -494,6 +513,86 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // List/sort/filter query per location, filtered by status, ordered by priority
             // (data-model.md, plan.md Performance considerations).
             w.HasIndex(x => new { x.LocationId, x.Status, x.Priority });
+        });
+
+        modelBuilder.Entity<ParentInvitation>(pi =>
+        {
+            pi.ToTable("parent_invitations");
+            pi.HasKey(x => x.Id);
+            pi.Property(x => x.Email).IsRequired().HasMaxLength(254);
+            pi.Property(x => x.TokenHash).IsRequired();
+            pi.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+            pi.HasIndex(x => x.TokenHash).IsUnique();
+        });
+
+        modelBuilder.Entity<MessageThread>(mt =>
+        {
+            mt.ToTable("message_threads");
+            mt.HasKey(x => x.Id);
+            mt.Property(x => x.Subject).IsRequired().HasMaxLength(200);
+            mt.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            // Director/staff "most recently active first" list ordering (spec.md User Story 2).
+            mt.HasIndex(x => x.LastActivityAt);
+        });
+
+        modelBuilder.Entity<MessageThreadParticipant>(mtp =>
+        {
+            mtp.ToTable("message_thread_participants");
+            mtp.HasKey(x => new { x.ThreadId, x.TenantUserId });
+            mtp.HasOne<MessageThread>().WithMany().HasForeignKey(x => x.ThreadId);
+            mtp.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.TenantUserId);
+            // Parent thread-list lookup: "every thread this TenantUserId participates in."
+            mtp.HasIndex(x => x.TenantUserId);
+        });
+
+        modelBuilder.Entity<Message>(m =>
+        {
+            m.ToTable("messages");
+            m.HasKey(x => x.Id);
+            m.Property(x => x.Body).IsRequired().HasMaxLength(5000);
+            m.HasOne<MessageThread>().WithMany().HasForeignKey(x => x.ThreadId);
+            m.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.SenderId);
+            m.HasIndex(x => new { x.ThreadId, x.SentAt });
+        });
+
+        modelBuilder.Entity<Announcement>(a =>
+        {
+            a.ToTable("announcements");
+            a.HasKey(x => x.Id);
+            a.Property(x => x.Subject).IsRequired().HasMaxLength(200);
+            a.Property(x => x.Body).IsRequired().HasMaxLength(5000);
+            a.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            a.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            a.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.SentByTenantUserId);
+            a.HasIndex(x => x.SentAt);
+        });
+
+        modelBuilder.Entity<AnnouncementRecipient>(ar =>
+        {
+            ar.ToTable("announcement_recipients");
+            ar.HasKey(x => x.Id);
+            ar.HasOne<Announcement>().WithMany().HasForeignKey(x => x.AnnouncementId);
+            ar.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+            // A contact appears at most once per announcement; also the parent-facing
+            // "am I a recipient of this announcement" authorization lookup.
+            ar.HasIndex(x => new { x.AnnouncementId, x.ContactId }).IsUnique();
+        });
+
+        modelBuilder.Entity<Notification>(n =>
+        {
+            n.ToTable("notifications");
+            n.HasKey(x => x.Id);
+            n.Property(x => x.Type)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (NotificationType)Enum.Parse(typeof(NotificationType), v, ignoreCase: true))
+              .HasMaxLength(30)
+              .IsRequired();
+            n.Property(x => x.TitleKey).IsRequired().HasMaxLength(200);
+            n.Property(x => x.BodyKey).IsRequired().HasMaxLength(200);
+            n.Property(x => x.ArgumentsJson).IsRequired().HasColumnType("jsonb");
+            n.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.TenantUserId);
+            // SourceId is intentionally NOT an FK (polymorphic across three tables — data-model.md).
+            // Notification-centre list query: most-recent-first per recipient.
+            n.HasIndex(x => new { x.TenantUserId, x.CreatedAt });
         });
     }
 }

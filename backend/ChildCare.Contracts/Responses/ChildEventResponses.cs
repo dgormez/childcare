@@ -26,4 +26,8 @@ public record DailySummaryResponse(
     int DiaperChangesCount,
     string? LatestMood,
     decimal? LatestTemperatureCelsius,
-    bool MedicationAdministered);
+    bool MedicationAdministered,
+    // Feature 013: today's Activity-type event descriptions, oldest first. Photos are
+    // explicitly out of scope (specs/013-parent-communication/spec.md Clarifications) — no
+    // photo-attachment mechanism exists in the domain yet.
+    IReadOnlyList<string> Activities);

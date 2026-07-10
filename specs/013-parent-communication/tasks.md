@@ -12,13 +12,13 @@
 
 **Purpose**: Contracts, i18n scaffolding, route registration, and the new `parent-mobile` Expo project skeleton shared across all stories.
 
-- [ ] T001 [P] Add `ParentInvitationRequests`/`ParentInvitationResponses` DTOs in `backend/ChildCare.Contracts/Requests/ParentInvitationRequests.cs` and `backend/ChildCare.Contracts/Responses/ParentInvitationResponses.cs`
-- [ ] T002 [P] Add `MessageThreadRequests`/`MessageThreadResponses` DTOs in `backend/ChildCare.Contracts/Requests/MessageThreadRequests.cs` and `backend/ChildCare.Contracts/Responses/MessageThreadResponses.cs`
-- [ ] T003 [P] Add `AnnouncementRequests`/`AnnouncementResponses` DTOs in `backend/ChildCare.Contracts/Requests/AnnouncementRequests.cs` and `backend/ChildCare.Contracts/Responses/AnnouncementResponses.cs`
-- [ ] T004 [P] Add `NotificationResponses`/`ParentResponses` (daily summary, children list, push-token) DTOs in `backend/ChildCare.Contracts/Responses/NotificationResponses.cs` and `backend/ChildCare.Contracts/Responses/ParentResponses.cs`
+- [X] T001 [P] Add `ParentInvitationRequests`/`ParentInvitationResponses` DTOs in `backend/ChildCare.Contracts/Requests/ParentInvitationRequests.cs` and `backend/ChildCare.Contracts/Responses/ParentInvitationResponses.cs`
+- [X] T002 [P] Add `MessageThreadRequests`/`MessageThreadResponses` DTOs in `backend/ChildCare.Contracts/Requests/MessageThreadRequests.cs` and `backend/ChildCare.Contracts/Responses/MessageThreadResponses.cs`
+- [X] T003 [P] Add `AnnouncementRequests`/`AnnouncementResponses` DTOs in `backend/ChildCare.Contracts/Requests/AnnouncementRequests.cs` and `backend/ChildCare.Contracts/Responses/AnnouncementResponses.cs`
+- [X] T004 [P] Add `NotificationResponses`/`ParentResponses` (daily summary, children list, push-token) DTOs in `backend/ChildCare.Contracts/Responses/NotificationResponses.cs` and `backend/ChildCare.Contracts/Responses/ParentResponses.cs`
 - [ ] T005 [P] Add `parentCommunication.*` i18n keys (invite action, invitation errors, thread/message UI, announcement UI, notification centre, push errors) to `web/i18n/locales/en.json`, `fr.json`, `nl.json`
 - [ ] T006 Register director web "Messages" and "Announcements" nav entries in `web/components/Sidebar.tsx`
-- [ ] T007 Register `MapParentInvitationEndpoints()`, `MapMessageThreadEndpoints()`, `MapAnnouncementEndpoints()`, `MapNotificationEndpoints()`, `MapParentEndpoints()` in `backend/ChildCare.Api/Program.cs`
+- [X] T007 Register `MapParentInvitationEndpoints()`, `MapMessageThreadEndpoints()`, `MapAnnouncementEndpoints()`, `MapNotificationEndpoints()`, `MapParentEndpoints()` in `backend/ChildCare.Api/Program.cs`
 - [ ] T008 Scaffold the `parent-mobile/` Expo project (package.json as `childcare-parent`, `app.config.js` with `orientation: "portrait"` and its own bundle id `com.dgit.childcareparent`, TypeScript, NativeWind/Tailwind config) mirroring `mobile/`'s feature-008 scaffold shape
 - [ ] T009 [P] Copy `mobile/theme/colors.js` to `parent-mobile/theme/colors.js` (design-decisions.md's established per-platform-copy convention)
 - [ ] T010 [P] Wire i18n in `parent-mobile/` (`expo-localization` + `react-i18next`, NL/FR/EN locale files) mirroring `mobile/i18n/`
@@ -33,18 +33,18 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T013 [P] Add `TenantUserId` (nullable) to `Contact` in `backend/ChildCare.Domain/Entities/Contact.cs`
-- [ ] T014 [P] Create `ParentInvitation` entity in `backend/ChildCare.Domain/Entities/ParentInvitation.cs` (structural copy of `StaffInvitation`, per research.md R1)
-- [ ] T015 [P] Create `MessageThread`, `MessageThreadParticipant`, `Message` entities in `backend/ChildCare.Domain/Entities/MessageThread.cs`, `MessageThreadParticipant.cs`, `Message.cs`
-- [ ] T016 [P] Create `Announcement`, `AnnouncementRecipient` entities in `backend/ChildCare.Domain/Entities/Announcement.cs`, `AnnouncementRecipient.cs`
-- [ ] T017 [P] Create `NotificationType` enum and `Notification` entity in `backend/ChildCare.Domain/Enums/NotificationType.cs` and `backend/ChildCare.Domain/Entities/Notification.cs`
-- [ ] T018 Add all new DbSets, composite-key configuration (`MessageThreadParticipant`), and indexes (`Notification(TenantUserId, CreatedAt)`, `Message(ThreadId, SentAt)`) to `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
-- [ ] T019 Add tenant migration for `contacts.tenant_user_id`, `parent_invitations`, `message_threads`, `message_thread_participants`, `messages`, `announcements`, `announcement_recipients`, `notifications` in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`
-- [ ] T020 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new tables' FKs (to `contacts`, `children`, `locations`, `groups`) in `backend/ChildCare.Api.Tests/` per every prior migration-adding feature's standing requirement
-- [ ] T021 Add all new DbSets to `backend/ChildCare.Application/Common/ITenantDbContext.cs`
-- [ ] T022 [P] Create `ParentInvitationResult`/`ParentInvitationFailure`, `MessagingResult`/`MessagingFailure`, `AnnouncementResult`/`AnnouncementFailure` result types + response mappers in `backend/ChildCare.Application/ParentInvitations/ParentInvitationResult.cs`, `backend/ChildCare.Application/Messaging/MessagingResult.cs`, `backend/ChildCare.Application/Announcements/AnnouncementResult.cs`
-- [ ] T023 Create `ICurrentParentContactResolver` (resolves the authenticated `ParentOnly` caller's `Contact` via `TenantUserId`, 403s if none linked) in `backend/ChildCare.Application/Common/ICurrentParentContactResolver.cs` and its implementation — the shared authorization primitive every `ParentOnly` handler in US1–US5 uses (FR-006, FR-017)
-- [ ] T024 Create empty `ParentInvitationEndpoints`, `MessageThreadEndpoints`, `AnnouncementEndpoints`, `NotificationEndpoints`, `ParentEndpoints` route-group files (policies per contracts/api.md) in `backend/ChildCare.Api/Endpoints/`
+- [X] T013 [P] Add `TenantUserId` (nullable) to `Contact` in `backend/ChildCare.Domain/Entities/Contact.cs`
+- [X] T014 [P] Create `ParentInvitation` entity in `backend/ChildCare.Domain/Entities/ParentInvitation.cs` (structural copy of `StaffInvitation`, per research.md R1)
+- [X] T015 [P] Create `MessageThread`, `MessageThreadParticipant`, `Message` entities in `backend/ChildCare.Domain/Entities/MessageThread.cs`, `MessageThreadParticipant.cs`, `Message.cs`
+- [X] T016 [P] Create `Announcement`, `AnnouncementRecipient` entities in `backend/ChildCare.Domain/Entities/Announcement.cs`, `AnnouncementRecipient.cs`
+- [X] T017 [P] Create `NotificationType` enum and `Notification` entity in `backend/ChildCare.Domain/Enums/NotificationType.cs` and `backend/ChildCare.Domain/Entities/Notification.cs`
+- [X] T018 Add all new DbSets, composite-key configuration (`MessageThreadParticipant`), and indexes (`Notification(TenantUserId, CreatedAt)`, `Message(ThreadId, SentAt)`) to `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
+- [X] T019 Add tenant migration for `contacts.tenant_user_id`, `parent_invitations`, `message_threads`, `message_thread_participants`, `messages`, `announcements`, `announcement_recipients`, `notifications` in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`
+- [X] T020 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new tables' FKs (to `contacts`, `children`, `locations`, `groups`) in `backend/ChildCare.Api.Tests/` per every prior migration-adding feature's standing requirement
+- [X] T021 Add all new DbSets to `backend/ChildCare.Application/Common/ITenantDbContext.cs`
+- [X] T022 [P] Create `ParentInvitationResult`/`ParentInvitationFailure`, `MessagingResult`/`MessagingFailure`, `AnnouncementResult`/`AnnouncementFailure` result types + response mappers in `backend/ChildCare.Application/ParentInvitations/ParentInvitationResult.cs`, `backend/ChildCare.Application/Messaging/MessagingResult.cs`, `backend/ChildCare.Application/Announcements/AnnouncementResult.cs`
+- [X] T023 Create `ICurrentParentContactResolver` (resolves the authenticated `ParentOnly` caller's `Contact` via `TenantUserId`, 403s if none linked) in `backend/ChildCare.Application/Common/ICurrentParentContactResolver.cs` and its implementation — the shared authorization primitive every `ParentOnly` handler in US1–US5 uses (FR-006, FR-017)
+- [X] T024 Create empty `ParentInvitationEndpoints`, `MessageThreadEndpoints`, `AnnouncementEndpoints`, `NotificationEndpoints`, `ParentEndpoints` route-group files (policies per contracts/api.md) in `backend/ChildCare.Api/Endpoints/`
 - [ ] T025 Scaffold `parent-mobile/` navigation: `app/(auth)/_layout.tsx` (login + accept-invitation), `app/(app)/_layout.tsx` (tab bar: Home, Messages, Notifications), portrait-first per platform-rules.md
 - [ ] T026 Implement `parent-mobile/` auth infra: SecureStore token storage, per-device refresh rotation, 401-intercept auto-refresh, logout — mirrors `mobile/`'s feature-008 auth module, reusing the same backend auth endpoints (feature 003) under `ParentOnly`/`Parent` role
 - [ ] T027 Implement `parent-mobile/` login screen (`app/(auth)/login.tsx`) — email/password + Google/Apple sign-in per constitution's parent-app auth stack
@@ -61,20 +61,20 @@
 
 ### Tests for User Story 0
 
-- [ ] T028 [P] [US0] Integration test: director invites an eligible contact, invitation created with correct `ExpiresAt`/`TokenHash` in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T029 [P] [US0] Integration test: invite rejected (`errors.parent_invitation.not_eligible`) for a contact with no email or `CanPickup=false` in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T030 [P] [US0] Integration test: invite rejected (`errors.parent_invitation.already_has_account`) when `Contact.TenantUserId` already set in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T031 [P] [US0] Integration test: accept flow sets `TenantUser.PasswordHash` and `Contact.TenantUserId`, login succeeds afterward in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T032 [P] [US0] Integration test: expired token and already-used token both return generic `404 errors.invitation.not_found` (non-enumerable, feature 001 precedent) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T033 [P] [US0] Integration test: accepting an invitation backfills the contact as a participant on every existing `MessageThread` for their linked children, with full prior history visible (FR-006a) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T028 [P] [US0] Integration test: director invites an eligible contact, invitation created with correct `ExpiresAt`/`TokenHash` in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T029 [P] [US0] Integration test: invite rejected (`errors.parent_invitation.not_eligible`) for a contact with no email or `CanPickup=false` in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T030 [P] [US0] Integration test: invite rejected (`errors.parent_invitation.already_has_account`) when `Contact.TenantUserId` already set in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T031 [P] [US0] Integration test: accept flow sets `TenantUser.PasswordHash` and `Contact.TenantUserId`, login succeeds afterward in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T032 [P] [US0] Integration test: expired token and already-used token both return generic `404 errors.invitation.not_found` (non-enumerable, feature 001 precedent) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
+- [X] T033 [P] [US0] Integration test: accepting an invitation backfills the contact as a participant on every existing `MessageThread` for their linked children, with full prior history visible (FR-006a) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
 - [ ] T034 [P] [US0] Web component test: "Invite to parent app" action visible for an eligible contact, disabled for one with no email in `web/__tests__/parentInvitations.test.tsx`
 
 ### Implementation for User Story 0
 
-- [ ] T035 [US0] Implement `CreateParentInvitationCommand`+Validator+Handler (creates `TenantUser(Role=Parent, PasswordHash="")` + `ParentInvitation`, mirrors `CreateInvitationCommandHandler`/staff pattern) in `backend/ChildCare.Application/ParentInvitations/CreateParentInvitationCommand.cs`
-- [ ] T036 [US0] Implement `AcceptParentInvitationCommand`+Validator+Handler (anonymous/tenant-exempt, organisation slug in body, sets password + `Contact.TenantUserId`, backfills thread participants per FR-006a) in `backend/ChildCare.Application/ParentInvitations/AcceptParentInvitationCommand.cs`
-- [ ] T037 [US0] Implement `IEmailSender.SendParentInvitationAsync` + `EmailService` implementation, mirroring `SendStaffInvitationAsync`'s English-only raw-HTML precedent, in `backend/ChildCare.Application/Common/IEmailSender.cs` / `backend/ChildCare.Api/Services/EmailService.cs`
-- [ ] T038 [US0] Map `POST /api/parent-invitations` (DirectorOnly) and `POST /api/parent-invitations/accept` (anonymous, tenant-exempt) in `backend/ChildCare.Api/Endpoints/ParentInvitationEndpoints.cs`
+- [X] T035 [US0] Implement `CreateParentInvitationCommand`+Validator+Handler (creates `TenantUser(Role=Parent, PasswordHash="")` + `ParentInvitation`, mirrors `CreateInvitationCommandHandler`/staff pattern) in `backend/ChildCare.Application/ParentInvitations/CreateParentInvitationCommand.cs`
+- [X] T036 [US0] Implement `AcceptParentInvitationCommand`+Validator+Handler (anonymous/tenant-exempt, organisation slug in body, sets password + `Contact.TenantUserId`, backfills thread participants per FR-006a) in `backend/ChildCare.Application/ParentInvitations/AcceptParentInvitationCommand.cs`
+- [X] T037 [US0] Implement `IEmailSender.SendParentInvitationAsync` + `EmailService` implementation, mirroring `SendStaffInvitationAsync`'s English-only raw-HTML precedent, in `backend/ChildCare.Application/Common/IEmailSender.cs` / `backend/ChildCare.Api/Services/EmailService.cs`
+- [X] T038 [US0] Map `POST /api/parent-invitations` (DirectorOnly) and `POST /api/parent-invitations/accept` (anonymous, tenant-exempt) in `backend/ChildCare.Api/Endpoints/ParentInvitationEndpoints.cs`
 - [ ] T039 [US0] Regenerate OpenAPI types for parent-invitation endpoints in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
 - [ ] T040 [US0] Add "Invite to parent app" row action to the existing child Contacts UI in `web/app/(app)/children/[id]/` (enabled only when `CanPickup=true` and email present)
 - [ ] T041 [US0] Implement `parent-mobile/app/(auth)/accept-invitation.tsx` (deep-link token capture, password form, calls accept endpoint, redirects to login)
