@@ -28,7 +28,8 @@
     "signOut": "Afmelden",
     "collapse": "Inklappen",
     "expand": "Uitklappen",
-    "notYetAvailable": "Dit onderdeel is nog niet beschikbaar."
+    "notYetAvailable": "Dit onderdeel is nog niet beschikbaar.",
+    "scheduling": "Planning"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -180,6 +181,48 @@
       "published": "Gepubliceerd",
       "cancelled": "Geannuleerd"
     }
+  },
+  "scheduling": {
+    "title": "Planning",
+    "weekLabel": "Week van {date}",
+    "locationLabel": "Locatie",
+    "emptyState": "Nog geen diensten ingepland voor deze week.",
+    "addShift": "Dienst toevoegen",
+    "editShift": "Dienst bewerken",
+    "groupLabel": "Groep",
+    "unassignedGroup": "Niet toegewezen",
+    "startTimeLabel": "Begintijd",
+    "endTimeLabel": "Eindtijd",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "markAbsent": "Markeer als afwezig",
+    "unmarkAbsent": "Afwezigheid verwijderen",
+    "absenceReasonLabel": "Reden",
+    "absenceReason": {
+      "sick": "Ziek",
+      "leave": "Verlof",
+      "holiday": "Vakantie"
+    },
+    "absentBadge": "Afwezig",
+    "copyWeek": "Kopieer naar volgende week",
+    "copyWeekTitle": "Week kopiëren",
+    "copyWeekDescription": "Kopieer het rooster van deze week naar de doelweek.",
+    "copyWeekConfirm": "Kopiëren",
+    "copySkippedSummary": "{count} dienst(en) overgeslagen",
+    "copySkippedClosure": "Locatie is die dag gesloten",
+    "copySkippedExisting": "Er bestaat al een dienst op dat moment",
+    "projectedOnDuty": "Verwacht aanwezig: {count}",
+    "overlapError": "Dit teamlid is al ingepland op een overlappend tijdstip.",
+    "pastDateError": "Diensten in het verleden kunnen niet worden gewijzigd.",
+    "genericError": "Deze dienst kon niet worden opgeslagen. Probeer het opnieuw.",
+    "loadError": "Het rooster kon niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "weekNav": {
+      "previous": "Vorige week",
+      "next": "Volgende week"
+    },
+    "notEligibleError": "Dit teamlid is niet toegewezen aan deze locatie. Wijs ze eerst toe via het personeelsscherm."
   },
   "errorBoundary": {
     "title": "Er is iets misgegaan",

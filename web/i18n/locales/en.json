@@ -28,7 +28,8 @@
     "signOut": "Sign out",
     "collapse": "Collapse",
     "expand": "Expand",
-    "notYetAvailable": "This section isn't available yet."
+    "notYetAvailable": "This section isn't available yet.",
+    "scheduling": "Scheduling"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -180,6 +181,48 @@
       "published": "Published",
       "cancelled": "Cancelled"
     }
+  },
+  "scheduling": {
+    "title": "Scheduling",
+    "weekLabel": "Week of {date}",
+    "locationLabel": "Location",
+    "emptyState": "No shifts scheduled yet for this week.",
+    "addShift": "Add shift",
+    "editShift": "Edit shift",
+    "groupLabel": "Group",
+    "unassignedGroup": "Unassigned",
+    "startTimeLabel": "Start time",
+    "endTimeLabel": "End time",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "markAbsent": "Mark absent",
+    "unmarkAbsent": "Remove absence",
+    "absenceReasonLabel": "Reason",
+    "absenceReason": {
+      "sick": "Sick",
+      "leave": "Leave",
+      "holiday": "Holiday"
+    },
+    "absentBadge": "Absent",
+    "copyWeek": "Copy to next week",
+    "copyWeekTitle": "Copy week",
+    "copyWeekDescription": "Copy this week's schedule to the target week.",
+    "copyWeekConfirm": "Copy",
+    "copySkippedSummary": "{count} shift(s) skipped",
+    "copySkippedClosure": "Location closed that day",
+    "copySkippedExisting": "A shift already exists in that slot",
+    "projectedOnDuty": "Projected on duty: {count}",
+    "overlapError": "This staff member is already scheduled at an overlapping time.",
+    "pastDateError": "Past shifts can't be changed.",
+    "genericError": "Couldn't save this shift. Please try again.",
+    "loadError": "Couldn't load the schedule. Please try again.",
+    "retry": "Retry",
+    "weekNav": {
+      "previous": "Previous week",
+      "next": "Next week"
+    },
+    "notEligibleError": "This staff member isn't assigned to this location. Assign them from the Staff screen first."
   },
   "errorBoundary": {
     "title": "Something went wrong",

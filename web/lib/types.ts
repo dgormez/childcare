@@ -143,3 +143,42 @@ export interface CancelClosureDayResponse {
   attendanceRecordsPreserved: number;
   notificationSummary: ClosureNotificationSummaryResponse;
 }
+
+export interface GroupResponse {
+  id: string;
+  name: string;
+  locationId: string;
+}
+
+// ── Staff scheduling (feature 012) ──────────────────────────────────────────────
+export type AbsenceReason = "sick" | "leave" | "holiday";
+
+export interface StaffScheduleResponse {
+  id: string;
+  staffProfileId: string;
+  locationId: string;
+  groupId: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isAbsent: boolean;
+  absenceReason: AbsenceReason | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CopyWeekSkippedEntryResponse {
+  date: string;
+  staffProfileId: string;
+  reason: "closure_day" | "existing_entry";
+}
+
+export interface CopyWeekResponse {
+  copiedCount: number;
+  skipped: CopyWeekSkippedEntryResponse[];
+}
+
+export interface ProjectedOnDutyResponse {
+  projectedOnDutyCount: number;
+  staffProfileIds: string[];
+}

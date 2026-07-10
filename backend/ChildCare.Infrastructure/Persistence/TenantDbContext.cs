@@ -62,6 +62,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<ParentClosureMessage> ParentClosureMessages => Set<ParentClosureMessage>();
 
+    public DbSet<StaffSchedule> StaffSchedules => Set<StaffSchedule>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -448,6 +450,27 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             m.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
             m.HasOne<KdvClosureDay>().WithMany().HasForeignKey(x => x.ClosureDayId);
             m.HasIndex(x => new { x.ClosureDayId, x.ContactId, x.Kind }).IsUnique();
+        });
+
+        modelBuilder.Entity<StaffSchedule>(ss =>
+        {
+            ss.ToTable("staff_schedules");
+            ss.HasKey(x => x.Id);
+            ss.Property(x => x.AbsenceReason)
+              .HasConversion(
+                  v => v == null ? null : v.ToString()!.ToLowerInvariant(),
+                  v => v == null ? null : (AbsenceReason?)Enum.Parse(typeof(AbsenceReason), v, ignoreCase: true))
+              .HasMaxLength(20);
+            ss.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            ss.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            ss.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            // BACKLOG.md's original UNIQUE(staff_id, date, start_time) — prevents exact-duplicate
+            // entries; range-overlap is a validator concern (IAdvisoryLockService), not
+            // expressible as a unique index (data-model.md).
+            ss.HasIndex(x => new { x.StaffProfileId, x.Date, x.StartTime }).IsUnique();
+            // Rota-builder week view and feature 010-adjacent projected on-duty lookups
+            // (data-model.md, spec.md Technical Requirements).
+            ss.HasIndex(x => new { x.LocationId, x.Date });
         });
     }
 }
