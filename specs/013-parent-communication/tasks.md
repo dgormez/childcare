@@ -16,8 +16,8 @@
 - [X] T002 [P] Add `MessageThreadRequests`/`MessageThreadResponses` DTOs in `backend/ChildCare.Contracts/Requests/MessageThreadRequests.cs` and `backend/ChildCare.Contracts/Responses/MessageThreadResponses.cs`
 - [X] T003 [P] Add `AnnouncementRequests`/`AnnouncementResponses` DTOs in `backend/ChildCare.Contracts/Requests/AnnouncementRequests.cs` and `backend/ChildCare.Contracts/Responses/AnnouncementResponses.cs`
 - [X] T004 [P] Add `NotificationResponses`/`ParentResponses` (daily summary, children list, push-token) DTOs in `backend/ChildCare.Contracts/Responses/NotificationResponses.cs` and `backend/ChildCare.Contracts/Responses/ParentResponses.cs`
-- [ ] T005 [P] Add `parentCommunication.*` i18n keys (invite action, invitation errors, thread/message UI, announcement UI, notification centre, push errors) to `web/i18n/locales/en.json`, `fr.json`, `nl.json`
-- [ ] T006 Register director web "Messages" and "Announcements" nav entries in `web/components/Sidebar.tsx`
+- [X] T005 [P] Add `parentCommunication.*` i18n keys (invite action, invitation errors, thread/message UI, announcement UI, notification centre, push errors) to `web/i18n/locales/en.json`, `fr.json`, `nl.json`
+- [X] T006 Register director web "Messages" and "Announcements" nav entries in `web/components/Sidebar.tsx`
 - [X] T007 Register `MapParentInvitationEndpoints()`, `MapMessageThreadEndpoints()`, `MapAnnouncementEndpoints()`, `MapNotificationEndpoints()`, `MapParentEndpoints()` in `backend/ChildCare.Api/Program.cs`
 - [ ] T008 Scaffold the `parent-mobile/` Expo project (package.json as `childcare-parent`, `app.config.js` with `orientation: "portrait"` and its own bundle id `com.dgit.childcareparent`, TypeScript, NativeWind/Tailwind config) mirroring `mobile/`'s feature-008 scaffold shape
 - [ ] T009 [P] Copy `mobile/theme/colors.js` to `parent-mobile/theme/colors.js` (design-decisions.md's established per-platform-copy convention)
@@ -67,7 +67,7 @@
 - [X] T031 [P] [US0] Integration test: accept flow sets `TenantUser.PasswordHash` and `Contact.TenantUserId`, login succeeds afterward in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
 - [X] T032 [P] [US0] Integration test: expired token and already-used token both return generic `404 errors.invitation.not_found` (non-enumerable, feature 001 precedent) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
 - [X] T033 [P] [US0] Integration test: accepting an invitation backfills the contact as a participant on every existing `MessageThread` for their linked children, with full prior history visible (FR-006a) in `backend/ChildCare.Api.Tests/ParentInvitations/ParentInvitationEndpointsTests.cs`
-- [ ] T034 [P] [US0] Web component test: "Invite to parent app" action visible for an eligible contact, disabled for one with no email in `web/__tests__/parentInvitations.test.tsx`
+- [X] T034 [P] [US0] Web component test: "Invite to parent app" action visible for an eligible contact, disabled for one with no email in `web/__tests__/parentInvitations.test.tsx`
 
 ### Implementation for User Story 0
 
@@ -75,8 +75,8 @@
 - [X] T036 [US0] Implement `AcceptParentInvitationCommand`+Validator+Handler (anonymous/tenant-exempt, organisation slug in body, sets password + `Contact.TenantUserId`, backfills thread participants per FR-006a) in `backend/ChildCare.Application/ParentInvitations/AcceptParentInvitationCommand.cs`
 - [X] T037 [US0] Implement `IEmailSender.SendParentInvitationAsync` + `EmailService` implementation, mirroring `SendStaffInvitationAsync`'s English-only raw-HTML precedent, in `backend/ChildCare.Application/Common/IEmailSender.cs` / `backend/ChildCare.Api/Services/EmailService.cs`
 - [X] T038 [US0] Map `POST /api/parent-invitations` (DirectorOnly) and `POST /api/parent-invitations/accept` (anonymous, tenant-exempt) in `backend/ChildCare.Api/Endpoints/ParentInvitationEndpoints.cs`
-- [ ] T039 [US0] Regenerate OpenAPI types for parent-invitation endpoints in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
-- [ ] T040 [US0] Add "Invite to parent app" row action to the existing child Contacts UI in `web/app/(app)/children/[id]/` (enabled only when `CanPickup=true` and email present)
+- [X] T039 [US0] Regenerate OpenAPI types for parent-invitation endpoints in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
+- [X] T040 [US0] Add "Invite to parent app" row action to the existing child Contacts UI in `web/app/(app)/children/[id]/` (enabled only when `CanPickup=true` and email present)
 - [ ] T041 [US0] Implement `parent-mobile/app/(auth)/accept-invitation.tsx` (deep-link token capture, password form, calls accept endpoint, redirects to login)
 
 **Checkpoint**: A director can provision a parent account end-to-end; every later story can now assume an authenticated parent exists.
@@ -128,7 +128,7 @@
 - [X] T058a [P] [US2] Integration test: a general (non-child-specific) thread is visible and replyable by any director/staff member org-wide, the same as a child-scoped thread (FR-004) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [X] T059 [P] [US2] Integration test: thread list ordered by most-recently-active first, with an unread indicator in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 - [X] T059a [P] [US2] Integration test: a director/staff caller from tenant A cannot view or reply to a thread belonging to tenant B, even with a structurally valid thread id (FR-018) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T060 [P] [US2] Web component test: director thread list and reply flow in `web/__tests__/messages.test.tsx`
+- [X] T060 [P] [US2] Web component test: director thread list and reply flow in `web/__tests__/messages.test.tsx`
 - [ ] T061 [P] [US2] Mobile test: parent thread list, thread detail, and compose flow in `parent-mobile/__tests__/messages.test.tsx`
 
 ### Implementation for User Story 2
@@ -139,8 +139,8 @@
 - [X] T065 [P] [US2] Implement `ListOrgThreadsQuery` (director/staff-scoped, includes unread-from-parent count per FR-013) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
 - [X] T066 [US2] Wire `SendMessageCommand` to create a `Notification(Type=NewMessage)` for every other participant (parent recipients only — staff/director awareness is the unread-count query, research.md R4/R7) and dispatch a push via `IExpoPushSender` (research.md R3)
 - [X] T067 [US2] Map parent routes (`POST/GET /api/parent/message-threads`, `GET /api/parent/message-threads/{id}`, `POST /api/parent/message-threads/{id}/messages`) and director/staff routes (`GET /api/message-threads`, `GET /api/message-threads/{id}`, `POST /api/message-threads/{id}/messages`) in `backend/ChildCare.Api/Endpoints/MessageThreadEndpoints.cs`
-- [ ] T068 [US2] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
-- [ ] T069 [P] [US2] Implement `web/app/(app)/messages/page.tsx` (thread list, high-density table per platform-rules.md) and `web/app/(app)/messages/[id]/page.tsx` (thread detail + reply)
+- [X] T068 [US2] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
+- [X] T069 [P] [US2] Implement `web/app/(app)/messages/page.tsx` (thread list, high-density table per platform-rules.md) and `web/app/(app)/messages/[id]/page.tsx` (thread detail + reply)
 - [ ] T070 [P] [US2] Implement `parent-mobile/app/(app)/messages/index.tsx` (thread list) and `parent-mobile/app/(app)/messages/[id].tsx` (thread detail + compose), warm/timeline styling per platform-rules.md Parent Mobile section
 - [ ] T071 [US2] Implement `parent-mobile/app/(app)/messages/new.tsx` (start a new thread, optional child selector)
 
@@ -164,15 +164,15 @@
 - [X] T075 [P] [US3] Integration test: no endpoint allows a parent to reply to an announcement in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [X] T076 [P] [US3] Integration test: a parent can only view an announcement they are a recipient of — 403/404 otherwise in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
 - [X] T076a [P] [US3] Integration test: a director from tenant A cannot target a location/group belonging to tenant B when composing an announcement, and a parent from tenant A cannot view an announcement belonging to tenant B (FR-018) in `backend/ChildCare.Api.Tests/Announcements/AnnouncementEndpointsTests.cs`
-- [ ] T077 [P] [US3] Web component test: announcement compose flow (location/group scope picker, subject/body) in `web/__tests__/announcements.test.tsx`
+- [X] T077 [P] [US3] Web component test: announcement compose flow (location/group scope picker, subject/body) in `web/__tests__/announcements.test.tsx`
 
 ### Implementation for User Story 3
 
 - [X] T078 [US3] Implement `SendAnnouncementCommand`+Validator+Handler (resolves recipients = eligible contacts in scope per research.md R8, creates `AnnouncementRecipient` + `Notification(Type=Announcement)` rows, dispatches pushes) in `backend/ChildCare.Application/Announcements/SendAnnouncementCommand.cs`
 - [X] T079 [P] [US3] Implement `ListAnnouncementsQuery` (director sent history) and `GetParentAnnouncementQuery` (parent read, marks `AnnouncementRecipient.ReadAt`) in `backend/ChildCare.Application/Announcements/ListAnnouncementsQuery.cs` and `GetParentAnnouncementQuery.cs`
 - [X] T080 [US3] Map `POST/GET /api/announcements` (DirectorOnly) and `GET /api/parent/announcements/{id}` (ParentOnly) in `backend/ChildCare.Api/Endpoints/AnnouncementEndpoints.cs`
-- [ ] T081 [US3] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
-- [ ] T082 [US3] Implement `web/app/(app)/announcements/page.tsx` (compose form with location/group scope picker, sent history list)
+- [X] T081 [US3] Regenerate OpenAPI types in `web/lib/generated/api-types.ts` and `parent-mobile/services/generated/api-types.ts`
+- [X] T082 [US3] Implement `web/app/(app)/announcements/page.tsx` (compose form with location/group scope picker, sent history list)
 - [ ] T083 [US3] Implement `parent-mobile/app/(app)/announcements/[id].tsx` (read-only announcement view, no reply UI)
 
 **Checkpoint**: Directors can broadcast to families without messaging each one individually.
@@ -214,16 +214,16 @@
 
 ### Tests for User Story 5
 
-- [ ] T094 [P] [US5] Integration test: `PUT /api/parent/push-token` overwrites `Contact.PushToken`, replacing any prior value (FR-014) in `backend/ChildCare.Api.Tests/Parent/PushTokenTests.cs`
-- [ ] T095 [P] [US5] Integration test: a new message to a parent with a valid token triggers `IExpoPushSender.SendAsync` (via a test double/spy) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T096 [P] [US5] Integration test: a push send failure is logged, does not throw/block the triggering write, and the in-app `Notification` row still exists (FR-015) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
-- [ ] T097 [P] [US5] Integration test: `GET /api/message-threads` (director) surfaces an unread-from-parent indicator without requiring a separate poll endpoint (FR-013) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T094 [P] [US5] Integration test: `PUT /api/parent/push-token` overwrites `Contact.PushToken`, replacing any prior value (FR-014) in `backend/ChildCare.Api.Tests/Parent/PushTokenTests.cs`
+- [X] T095 [P] [US5] Integration test: a new message to a parent with a valid token triggers `IExpoPushSender.SendAsync` (via a test double/spy) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T096 [P] [US5] Integration test: a push send failure is logged, does not throw/block the triggering write, and the in-app `Notification` row still exists (FR-015) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
+- [X] T097 [P] [US5] Integration test: `GET /api/message-threads` (director) surfaces an unread-from-parent indicator without requiring a separate poll endpoint (FR-013) in `backend/ChildCare.Api.Tests/Messaging/MessageThreadEndpointsTests.cs`
 
 ### Implementation for User Story 5
 
 - [X] T098 [US5] Implement `RegisterPushTokenCommand`+Validator+Handler (resolves caller's `Contact` via `ICurrentParentContactResolver`, overwrites `PushToken`) in `backend/ChildCare.Application/Parent/RegisterPushTokenCommand.cs`
 - [X] T099 [US5] Map `PUT /api/parent/push-token` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
-- [ ] T100 [US5] Add unread-from-parent count to `ListOrgThreadsQuery`'s response (if not already covered by T065 — verify and close any gap) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
+- [X] T100 [US5] Add unread-from-parent count to `ListOrgThreadsQuery`'s response (if not already covered by T065 — verify and close any gap) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
 - [ ] T101 [US5] Add an unread-count badge to the web `/messages` nav entry in `web/components/Sidebar.tsx` and thread list in `web/app/(app)/messages/page.tsx`
 - [ ] T102 [US5] Implement `parent-mobile/` push-token registration on login/launch using `expo-notifications`, calling `PUT /api/parent/push-token` in `parent-mobile/services/pushToken.ts`, wired into the auth flow from T026
 

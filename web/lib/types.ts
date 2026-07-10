@@ -217,3 +217,63 @@ export interface ChildResponse {
   dateOfBirth: string;
   deactivatedAt: string | null;
 }
+
+// Feature 013 — parent communication.
+
+export interface ContactResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  locale: string;
+}
+
+export interface MessageResponse {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
+}
+
+export interface MessageThreadResponse {
+  id: string;
+  subject: string;
+  childId: string | null;
+  childName: string | null;
+  createdAt: string;
+  lastActivityAt: string;
+  hasUnread: boolean;
+  messages: MessageResponse[];
+}
+
+export interface MessageThreadSummaryResponse {
+  id: string;
+  subject: string;
+  childId: string | null;
+  childName: string | null;
+  lastActivityAt: string;
+  hasUnread: boolean;
+  unreadFromParentCount: number;
+}
+
+export interface AnnouncementResponse {
+  id: string;
+  locationId: string;
+  groupId: string | null;
+  subject: string;
+  body: string;
+  sentByTenantUserId: string;
+  sentAt: string;
+  recipientCount: number;
+}
+
+export interface ParentInvitationResponse {
+  invitationId: string;
+  contactId: string;
+  email: string;
+  expiresAt: string;
+}

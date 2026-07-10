@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { Session } from "../lib/auth";
 
@@ -14,6 +14,8 @@ const REAL_NAV = [
   { href: "/closures", labelKey: "closures", icon: CalendarX },
   { href: "/scheduling", labelKey: "scheduling", icon: CalendarDays },
   { href: "/waiting-list", labelKey: "waitingList", icon: ListPlus },
+  { href: "/messages", labelKey: "messages", icon: MessageSquare },
+  { href: "/announcements", labelKey: "announcements", icon: Megaphone },
 ] as const;
 
 // FR-006: inert placeholders for sections later features will build — never real links, so a

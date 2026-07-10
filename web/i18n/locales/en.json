@@ -30,7 +30,9 @@
     "expand": "Expand",
     "notYetAvailable": "This section isn't available yet.",
     "scheduling": "Scheduling",
-    "waitingList": "Waiting List"
+    "waitingList": "Waiting List",
+    "messages": "Messages",
+    "announcements": "Announcements"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -293,5 +295,51 @@
     "occupancyFrom": "From",
     "occupancyTo": "To",
     "viewOccupancy": "View occupancy"
+  },
+  "messages": {
+    "title": "Messages",
+    "invite": "Invite parent",
+    "emptyState": "No messages yet.",
+    "loadError": "Couldn't load messages. Please try again.",
+    "retry": "Retry",
+    "genericError": "Couldn't send that. Please try again.",
+    "columnFamily": "Family",
+    "columnSubject": "Subject",
+    "columnLastActivity": "Last activity",
+    "unread": "Unread",
+    "generalThread": "General",
+    "backToList": "Back to messages",
+    "replyPlaceholder": "Write a reply…",
+    "send": "Send",
+    "sending": "Sending…",
+    "noMessages": "No messages in this thread yet.",
+    "inviteDialogTitle": "Invite a parent to the app",
+    "inviteDialogDescription": "Search for a contact and send them an invitation to the parent app.",
+    "inviteSearchPlaceholder": "Search by name or email…",
+    "inviteNoEmail": "No email on file",
+    "inviteSend": "Send invite",
+    "inviteSent": "Invitation sent.",
+    "inviteErrorNotEligible": "This contact isn't eligible yet — they need pickup permission for at least one child.",
+    "inviteErrorAlreadyHasAccount": "This contact already has a parent account.",
+    "inviteErrorGeneric": "Couldn't send the invitation. Please try again."
+  },
+  "announcements": {
+    "title": "Announcements",
+    "compose": "New announcement",
+    "emptyState": "No announcements sent yet.",
+    "loadError": "Couldn't load announcements. Please try again.",
+    "retry": "Retry",
+    "genericError": "Couldn't send this announcement. Please try again.",
+    "locationLabel": "Location",
+    "groupLabel": "Group (optional)",
+    "groupAllOption": "Whole location",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Message",
+    "send": "Send announcement",
+    "sending": "Sending…",
+    "columnSubject": "Subject",
+    "columnScope": "Scope",
+    "columnSentAt": "Sent",
+    "columnRecipients": "Recipients"
   }
 }
