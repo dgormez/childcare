@@ -30,7 +30,6 @@ public class SendMessageCommandValidator : AbstractValidator<SendMessageCommand>
 
 public class SendMessageCommandHandler(
     ITenantDbContext db,
-    ICurrentParentContactResolver contactResolver,
     IExpoPushSender pushSender,
     ILogger<SendMessageCommandHandler> logger) : IRequestHandler<SendMessageCommand, SendMessageResult>
 {

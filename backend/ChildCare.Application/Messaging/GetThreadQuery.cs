@@ -14,7 +14,7 @@ namespace ChildCare.Application.Messaging;
 /// </summary>
 public record GetThreadQuery(Guid TenantUserId, Guid ThreadId, bool IsStaffOrDirector) : IRequest<MessageThreadResult>;
 
-public class GetThreadQueryHandler(ITenantDbContext db, ICurrentParentContactResolver contactResolver)
+public class GetThreadQueryHandler(ITenantDbContext db)
     : IRequestHandler<GetThreadQuery, MessageThreadResult>
 {
     public async Task<MessageThreadResult> Handle(GetThreadQuery request, CancellationToken cancellationToken)
