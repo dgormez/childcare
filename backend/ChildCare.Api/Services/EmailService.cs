@@ -108,6 +108,31 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger) :
         await SendAsync(message);
     }
 
+    public async Task SendWaitingListOfferedAsync(string toEmail, string contactName, string childName, string locationName)
+    {
+        if (!TryBuildMessage(toEmail, "A place is available at ChildCare", out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Waiting-list offer for {Email} ({Child} at {Location})", toEmail, childName, locationName);
+            return;
+        }
+
+        message!.Body = new TextPart("html")
+        {
+            Text = $"""
+                <!DOCTYPE html>
+                <html>
+                <body style="font-family:sans-serif;max-width:480px;margin:40px auto;color:#111">
+                  <h2>A place is available</h2>
+                  <p>Dear {contactName},</p>
+                  <p>We're happy to let you know a place is available for {childName} at {locationName}. We'll be in touch shortly to discuss next steps.</p>
+                </body>
+                </html>
+                """,
+        };
+
+        await SendAsync(message);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// <summary>Returns false (and null message) when SMTP is not configured — caller should log and return early.</summary>

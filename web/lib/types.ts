@@ -182,3 +182,38 @@ export interface ProjectedOnDutyResponse {
   projectedOnDutyCount: number;
   staffProfileIds: string[];
 }
+
+export type WaitingListStatus = "waiting" | "offered" | "enrolled" | "withdrawn";
+
+export interface WaitingListEntryResponse {
+  id: string;
+  childFirstName: string;
+  childLastName: string;
+  dateOfBirth: string;
+  contactName: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  locationId: string;
+  requestedStartDate: string | null;
+  priority: number;
+  status: WaitingListStatus;
+  notes: string | null;
+  childId: string | null;
+  isDuplicate: boolean;
+  registeredAt: string;
+  updatedAt: string | null;
+}
+
+export interface OccupancyDayResponse {
+  date: string;
+  freeCapacity: number | null;
+  closed: boolean;
+}
+
+export interface ChildResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  deactivatedAt: string | null;
+}

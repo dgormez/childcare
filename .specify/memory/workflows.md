@@ -51,7 +51,8 @@ rather than stubbing all of them out up front.
 
 ## Child Lifecycle
 
-No detail file yet.
+Detail: `Workflows/child-lifecycle.md` (feature 012a — pre-enrollment waiting list; room
+assignment/transfers/departure content is still unwritten, added when a feature needs it).
 
 Manages the relationship between a child and the childcare organization.
 

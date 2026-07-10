@@ -39,6 +39,7 @@ public interface ITenantDbContext
     DbSet<ClosureNotificationDelivery> ClosureNotificationDeliveries { get; }
     DbSet<ParentClosureMessage> ParentClosureMessages { get; }
     DbSet<StaffSchedule> StaffSchedules { get; }
+    DbSet<WaitingListEntry> WaitingListEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

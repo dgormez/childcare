@@ -29,7 +29,8 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "notYetAvailable": "This section isn't available yet.",
-    "scheduling": "Scheduling"
+    "scheduling": "Scheduling",
+    "waitingList": "Waiting List"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -229,5 +230,68 @@
     "body": "An unexpected error occurred. Try refreshing the page or click below to retry.",
     "appBody": "This page hit an error. Your data is safe.",
     "retry": "Try again"
+  },
+  "waitingList": {
+    "title": "Waiting List",
+    "locationLabel": "Location",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "waiting": "Waiting",
+      "all": "All statuses",
+      "offered": "Offered",
+      "enrolled": "Enrolled",
+      "withdrawn": "Withdrawn"
+    },
+    "status": {
+      "waiting": "Waiting",
+      "offered": "Offered",
+      "enrolled": "Enrolled",
+      "withdrawn": "Withdrawn"
+    },
+    "add": "Add to waiting list",
+    "addTitle": "Add to waiting list",
+    "editTitle": "Edit waiting list entry",
+    "dialogDescription": "Register a family interested in a place at this location.",
+    "childFirstNameLabel": "Child's first name",
+    "childLastNameLabel": "Child's last name",
+    "dateOfBirthLabel": "Date of birth",
+    "contactNameLabel": "Contact name",
+    "contactEmailLabel": "Contact email",
+    "contactPhoneLabel": "Contact phone",
+    "requestedStartDateLabel": "Requested start date",
+    "notesLabel": "Notes",
+    "save": "Save",
+    "cancel": "Cancel",
+    "duplicateBadge": "Possible duplicate",
+    "emptyState": "No families on the waiting list yet.",
+    "loadError": "Couldn't load the waiting list. Please try again.",
+    "retry": "Retry",
+    "genericError": "Couldn't save this entry. Please try again.",
+    "columnChild": "Child",
+    "columnContact": "Contact",
+    "columnRequestedStart": "Requested start",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "offer": "Offer a place",
+    "enroll": "Enroll",
+    "withdraw": "Withdraw",
+    "revertToWaiting": "Revert to waiting",
+    "linkChild": "Link child record",
+    "linkChildTitle": "Link child record",
+    "linkChildDescription": "Link this entry to an existing child, or create a new record.",
+    "linkExisting": "Link to an existing child",
+    "createNew": "Create a new child record",
+    "childSelectLabel": "Child",
+    "confirmLink": "Link",
+    "invalidStatusTransition": "That status change isn't allowed.",
+    "notReorderable": "This entry can no longer be reordered.",
+    "occupancy": "Projected occupancy",
+    "occupancyClosed": "Closed",
+    "occupancyFreeCapacity": "{count} free",
+    "occupancyFrom": "From",
+    "occupancyTo": "To",
+    "viewOccupancy": "View occupancy"
   }
 }

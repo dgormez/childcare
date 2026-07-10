@@ -16,4 +16,11 @@ public interface IEmailSender
     /// feature's i18n requirement — feature 019 owns the templating/i18n rework).
     /// </summary>
     Task SendStaffInvitationAsync(string toEmail, string inviteLink);
+
+    /// <summary>
+    /// Feature 012a-waiting-list, FR-008. Body content is intentionally English-only raw HTML,
+    /// following the same precedent as SendStaffInvitationAsync above — feature 019 owns the
+    /// email-templating/i18n rework, not this feature.
+    /// </summary>
+    Task SendWaitingListOfferedAsync(string toEmail, string contactName, string childName, string locationName);
 }

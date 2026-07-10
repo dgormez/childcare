@@ -610,6 +610,7 @@ app.MapChildEventEndpoints();
 app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
+app.MapWaitingListEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

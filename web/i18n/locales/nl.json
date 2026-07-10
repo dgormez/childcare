@@ -29,7 +29,8 @@
     "collapse": "Inklappen",
     "expand": "Uitklappen",
     "notYetAvailable": "Dit onderdeel is nog niet beschikbaar.",
-    "scheduling": "Planning"
+    "scheduling": "Planning",
+    "waitingList": "Wachtlijst"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -229,5 +230,68 @@
     "body": "Er is een onverwachte fout opgetreden. Vernieuw de pagina of probeer het hieronder opnieuw.",
     "appBody": "Deze pagina liep tegen een fout aan. Je gegevens zijn veilig.",
     "retry": "Opnieuw proberen"
+  },
+  "waitingList": {
+    "title": "Wachtlijst",
+    "locationLabel": "Locatie",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "waiting": "Wachtend",
+      "all": "Alle statussen",
+      "offered": "Plaats aangeboden",
+      "enrolled": "Ingeschreven",
+      "withdrawn": "Ingetrokken"
+    },
+    "status": {
+      "waiting": "Wachtend",
+      "offered": "Plaats aangeboden",
+      "enrolled": "Ingeschreven",
+      "withdrawn": "Ingetrokken"
+    },
+    "add": "Toevoegen aan wachtlijst",
+    "addTitle": "Toevoegen aan wachtlijst",
+    "editTitle": "Wachtlijstitem bewerken",
+    "dialogDescription": "Registreer een gezin dat interesse heeft in een plaats bij deze locatie.",
+    "childFirstNameLabel": "Voornaam kind",
+    "childLastNameLabel": "Achternaam kind",
+    "dateOfBirthLabel": "Geboortedatum",
+    "contactNameLabel": "Naam contactpersoon",
+    "contactEmailLabel": "E-mail contactpersoon",
+    "contactPhoneLabel": "Telefoon contactpersoon",
+    "requestedStartDateLabel": "Gewenste startdatum",
+    "notesLabel": "Notities",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "duplicateBadge": "Mogelijke dubbele inschrijving",
+    "emptyState": "Nog geen gezinnen op de wachtlijst.",
+    "loadError": "Kan de wachtlijst niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "genericError": "Kan dit item niet opslaan. Probeer het opnieuw.",
+    "columnChild": "Kind",
+    "columnContact": "Contact",
+    "columnRequestedStart": "Gewenste start",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "moveUp": "Omhoog verplaatsen",
+    "moveDown": "Omlaag verplaatsen",
+    "offer": "Plaats aanbieden",
+    "enroll": "Inschrijven",
+    "withdraw": "Intrekken",
+    "revertToWaiting": "Terug naar wachtend",
+    "linkChild": "Kinddossier koppelen",
+    "linkChildTitle": "Kinddossier koppelen",
+    "linkChildDescription": "Koppel dit item aan een bestaand kind, of maak een nieuw dossier aan.",
+    "linkExisting": "Koppelen aan bestaand kind",
+    "createNew": "Nieuw kinddossier aanmaken",
+    "childSelectLabel": "Kind",
+    "confirmLink": "Koppelen",
+    "invalidStatusTransition": "Deze statuswijziging is niet toegestaan.",
+    "notReorderable": "Dit item kan niet meer opnieuw geordend worden.",
+    "occupancy": "Verwachte bezetting",
+    "occupancyClosed": "Gesloten",
+    "occupancyFreeCapacity": "{count} vrij",
+    "occupancyFrom": "Van",
+    "occupancyTo": "Tot",
+    "viewOccupancy": "Bezetting bekijken"
   }
 }
