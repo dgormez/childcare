@@ -1,0 +1,142 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "send": "Send",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "save": "Save",
+    "ok": "OK",
+    "pullToRefresh": "Pull down to refresh"
+  },
+  "login": {
+    "title": "Sign In",
+    "organisationSlug": "Organisation",
+    "email": "Email address",
+    "password": "Password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "submit": "Sign in",
+    "offlineFirstLogin": "Can't sign in without a network connection.",
+    "orDivider": "or",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple"
+  },
+  "parentInvitation": {
+    "title": "Create your account",
+    "subtitle": "Set a password to finish setting up your parent account.",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Create account",
+    "passwordMismatch": "Passwords don't match.",
+    "success": "Your account is ready. You can now sign in.",
+    "goToLogin": "Go to sign in",
+    "invalidLink": "This invitation link isn't valid."
+  },
+  "home": {
+    "title": "Today",
+    "noUpdatesYet": "No updates yet today.",
+    "naps": "Naps",
+    "bottles": "Bottles",
+    "diaperChanges": "Diaper changes",
+    "mood": "Mood",
+    "temperature": "Temperature",
+    "medication": "Medication",
+    "medicationGiven": "Medication given",
+    "activities": "Activities",
+    "loadFailed": "Could not load today's summary."
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No conversations yet.",
+    "newThread": "New message",
+    "subject": "Subject",
+    "subjectPlaceholder": "What's this about?",
+    "aboutChild": "About which child?",
+    "noChild": "General question (not about a specific child)",
+    "messagePlaceholder": "Write a message…",
+    "firstMessagePlaceholder": "How can we help?",
+    "send": "Send",
+    "unread": "Unread",
+    "startConversation": "Start a conversation",
+    "loadFailed": "Could not load your messages.",
+    "sendFailed": "Could not send your message. Please try again."
+  },
+  "announcements": {
+    "title": "Announcement",
+    "readOnly": "This is a one-way announcement — replies aren't supported.",
+    "loadFailed": "Could not load this announcement."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You're all caught up.",
+    "loadFailed": "Could not load your notifications.",
+    "types": {
+      "newmessage": "New message",
+      "announcement": "Announcement",
+      "temperaturealert": "Temperature alert"
+    }
+  },
+  "parent": {
+    "notifications": {
+      "new_message": {
+        "title": "New message",
+        "body": "You've received a new message from the KDV."
+      },
+      "announcement": {
+        "title": "New announcement",
+        "body": "A new announcement was posted."
+      },
+      "temperature_alert": {
+        "title": "Temperature alert",
+        "body": "A temperature of {{celsius}}°C was recorded."
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "signedInAs": "Signed in as {{email}}",
+    "signOut": "Sign out",
+    "confirmSignOutTitle": "Sign out",
+    "confirmSignOutMessage": "Are you sure you want to sign out?"
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Incorrect email, password, or organisation.",
+      "organisation_not_found": "This organisation doesn't exist.",
+      "organisation_slug_required": "Organisation is required.",
+      "email_required": "Email address is required.",
+      "password_required": "Password is required.",
+      "method_not_allowed_for_role": "This sign-in method isn't available for your account.",
+      "token_invalid_or_expired": "This sign-in link has expired.",
+      "apple_email_required_first_signin": "Please allow access to your email to finish signing in with Apple."
+    },
+    "network": "No network connection. Please try again.",
+    "validation": "Some information isn't valid. Please check and try again.",
+    "invitation": {
+      "not_found": "This invitation link is invalid or has expired."
+    },
+    "parent_invitation": {
+      "not_eligible": "This contact isn't eligible for a parent account.",
+      "already_has_account": "This contact already has a parent account."
+    },
+    "parent": {
+      "not_a_contact": "You don't have access to this child's information."
+    },
+    "message_thread": {
+      "not_participant": "You don't have access to this conversation.",
+      "not_found": "This conversation could not be found.",
+      "body_required": "Please write a message before sending.",
+      "body_too_long": "This message is too long."
+    },
+    "announcement": {
+      "not_recipient": "You don't have access to this announcement.",
+      "not_found": "This announcement could not be found."
+    },
+    "notification": {
+      "not_found": "This notification could not be found."
+    },
+    "children": {
+      "not_found": "This child could not be found."
+    }
+  }
+}
