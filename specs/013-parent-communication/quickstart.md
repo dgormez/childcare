@@ -10,7 +10,7 @@ Validates the feature end-to-end against a local dev stack (`docker-compose.yml`
 
 ## Scenario 1 — Provision a parent account (User Story 0)
 
-1. In web admin, open the child's Contacts tab. Confirm the "Invite to parent app" action is visible for the `CanPickup=true` contact with an email, and disabled/absent for a contact with no email.
+1. In web admin, open `/messages` and click "Invite parent" (no per-child Contacts management screen exists in `web/` yet — `children/page.tsx` is still a placeholder — so the invite dialog searches the tenant-wide contact list instead, per `web/components/InviteParentDialog.tsx`'s own doc comment). Confirm the send action is disabled for a contact with no email on file.
 2. Send the invite. Confirm `POST /api/parent-invitations` returns 201 and (in dev) the invitation link is retrievable from logs/dev inbox.
 3. Open the invite link in `parent-mobile/`, complete registration with a password.
 4. Confirm login succeeds afterward with those credentials.

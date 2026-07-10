@@ -224,7 +224,7 @@
 - [X] T098 [US5] Implement `RegisterPushTokenCommand`+Validator+Handler (resolves caller's `Contact` via `ICurrentParentContactResolver`, overwrites `PushToken`) in `backend/ChildCare.Application/Parent/RegisterPushTokenCommand.cs`
 - [X] T099 [US5] Map `PUT /api/parent/push-token` (ParentOnly) in `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs`
 - [X] T100 [US5] Add unread-from-parent count to `ListOrgThreadsQuery`'s response (if not already covered by T065 — verify and close any gap) in `backend/ChildCare.Application/Messaging/ListOrgThreadsQuery.cs`
-- [ ] T101 [US5] Add an unread-count badge to the web `/messages` nav entry in `web/components/Sidebar.tsx` and thread list in `web/app/(app)/messages/page.tsx`
+- [X] T101 [US5] Add an unread-count badge to the web `/messages` nav entry in `web/components/Sidebar.tsx` and thread list in `web/app/(app)/messages/page.tsx`
 - [ ] T102 [US5] Implement `parent-mobile/` push-token registration on login/launch using `expo-notifications`, calling `PUT /api/parent/push-token` in `parent-mobile/services/pushToken.ts`, wired into the auth flow from T026
 
 **Checkpoint**: The feature is timely, not just functional — all five user stories are independently verifiable end-to-end.
