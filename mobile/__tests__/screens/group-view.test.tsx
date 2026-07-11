@@ -37,6 +37,15 @@ jest.mock("../../services/syncEngine", () => {
   };
 });
 
+// Feature 009c: recordChildEventBatch is registered by childEvents.ts at module load time
+// (registerSyncHandler("child_event_batch", ...)) — the mock only needs to satisfy that.
+jest.mock("../../services/childEvents", () => ({
+  recordChildEventBatch: jest.fn(),
+}));
+
+const mockToastShow = jest.fn();
+jest.mock("react-native-toast-message", () => ({ show: (...args: unknown[]) => mockToastShow(...args) }));
+
 const { useRouter } = require("expo-router");
 const readCacheMock = jest.requireMock("../../services/readCache") as { __mockCacheStore: Map<string, unknown> };
 const getMock = (jest.requireMock("../../services/apiClient") as { __mockGet: jest.Mock }).__mockGet;
@@ -68,6 +77,13 @@ beforeEach(() => {
   readCacheMock.__mockCacheStore.clear();
   useRouter.mockReturnValue({ push: jest.fn(), replace: jest.fn(), back: jest.fn() });
 });
+
+function presentAttendance(childId: string) {
+  return { id: `a-${childId}`, childId, locationId: "loc1", date: "2026-07-11", status: "present", checkInAt: "2026-07-11T08:00:00Z", checkOutAt: null, plannedDurationMinutes: null, absenceJustified: null, absenceReason: null, recordedBy: [], createdAt: "2026-07-11T08:00:00Z", updatedAt: "2026-07-11T08:00:00Z" };
+}
+function absentAttendance(childId: string) {
+  return { ...presentAttendance(childId), status: "absent", checkInAt: null };
+}
 
 it("loads and renders children from the group view, with an allergy icon and an inactive fever slot (FR-007, FR-008)", async () => {
   getMock.mockImplementation((path: string) => {
@@ -165,4 +181,54 @@ it("shows a clear empty state when the caregiver has zero assigned children (FR-
 
   const { findByText } = await render(<GroupViewScreen />);
   expect(await findByText("groupView.empty")).toBeTruthy();
+});
+
+// Feature 009c (T014/T020): multi-select mode on the room roster — present children become
+// selectable, absent children stay non-interactive for selection purposes.
+
+const childB: ChildResponse = { ...child, id: "c2", firstName: "Amy", lastName: "Ainsworth" };
+const childC: ChildResponse = { ...child, id: "c3", firstName: "Ben", lastName: "Baker", allergiesDescription: null };
+
+it("entering multi-select mode makes present children selectable and leaves absent children non-selectable (T014)", async () => {
+  getMock.mockImplementation((path: string) => {
+    if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
+    if (path === "/api/children") return Promise.resolve(jsonResponse(200, [child, childB]));
+    if (path === "/api/attendance/today") return Promise.resolve(jsonResponse(200, [presentAttendance("c1"), absentAttendance("c2")]));
+    return Promise.resolve(jsonResponse(404, {}));
+  });
+
+  const { findByText, getByLabelText, getByText, queryByText } = await render(<GroupViewScreen />);
+  await findByText("Timmy Tester");
+
+  await act(async () => fireEvent.press(getByLabelText("groupView.multiSelect.enter")));
+  expect(queryByText("groupView.multiSelect.selectedCount")).toBeTruthy();
+
+  const presentCard = await findByText("Timmy Tester");
+  await act(async () => fireEvent.press(presentCard));
+  expect(getByText("groupView.multiSelect.logEvent (1)")).toBeTruthy();
+
+  const absentCard = await findByText("Amy Ainsworth");
+  await act(async () => fireEvent.press(absentCard));
+  // Still only 1 selected — the absent child's card is disabled, the tap has no effect.
+  expect(getByText("groupView.multiSelect.logEvent (1)")).toBeTruthy();
+});
+
+it("'Alles selecteren' selects every present child up to the 30-child cap, and further taps beyond the cap are blocked with an explanation (T014/T020, SC-005)", async () => {
+  const manyChildren = Array.from({ length: 31 }, (_, i) => ({ ...child, id: `c${i}`, firstName: `Child${i}` }));
+  const manyAttendance = manyChildren.map((c) => presentAttendance(c.id));
+  getMock.mockImplementation((path: string) => {
+    if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
+    if (path === "/api/children") return Promise.resolve(jsonResponse(200, manyChildren));
+    if (path === "/api/attendance/today") return Promise.resolve(jsonResponse(200, manyAttendance));
+    return Promise.resolve(jsonResponse(404, {}));
+  });
+
+  const { findByText, getByLabelText, getByText } = await render(<GroupViewScreen />);
+  await findByText("Child0 Tester");
+
+  await act(async () => fireEvent.press(getByLabelText("groupView.multiSelect.enter")));
+  await act(async () => fireEvent.press(await findByText("groupView.multiSelect.selectAll")));
+
+  expect(getByText("groupView.multiSelect.logEvent (30)")).toBeTruthy();
+  expect(mockToastShow).toHaveBeenCalledWith(expect.objectContaining({ text1: "groupView.multiSelect.maxReached" }));
 });

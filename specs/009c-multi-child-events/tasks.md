@@ -53,8 +53,8 @@ present children, and verify 8 `ChildEvent` rows exist sharing the same `eventTy
 - [X] T011 [P] [US1] Integration test: batch with > 30 `childIds` is rejected `422 errors.child_events.batch_too_large` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [X] T012 [P] [US1] Integration test: batch containing a `childId` that doesn't exist in this tenant reports that child under `errors` with `reason: "child_not_found"`, other children still succeed in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [X] T013 [P] [US1] Integration test: `GET /api/children` and `GET /api/groups` succeed with a device token (regression test for T004-T006's R2 fix) in `backend/ChildCare.Api.Tests/CaregiverReadScopingTests.cs`
-- [ ] T014 [P] [US1] Mobile component test: room roster header shows a multi-select entry point; entering multi-select mode makes present children's cards selectable and absent children non-selectable; selecting a 31st present child is blocked with an explanatory message (T020's 30-cap) in `mobile/__tests__/groupView.test.tsx`
-- [ ] T015 [P] [US1] Mobile component test: "Alles selecteren" selects every present child; submitting via the batch-mode `QuickActionSheet` calls `recordChildEventBatch` with all selected `childIds` and shows a success toast naming the count in `mobile/__tests__/quickActionSheet.test.tsx`
+- [X] T014 [P] [US1] Mobile component test: room roster header shows a multi-select entry point; entering multi-select mode makes present children's cards selectable and absent children non-selectable; selecting a 31st present child is blocked with an explanatory message (T020's 30-cap) in `mobile/__tests__/screens/group-view.test.tsx`
+- [X] T015 [P] [US1] Mobile component test: "Alles selecteren" selects every present child; submitting via the batch-mode `QuickActionSheet` calls `recordChildEventBatch` with all selected `childIds` and shows a success toast naming the count in `mobile/__tests__/components/QuickActionSheet.test.tsx`
 
 ### Implementation for User Story 1
 
@@ -84,7 +84,7 @@ resubmits only the failed child.
 
 - [X] T023 [P] [US2] Integration test: a child with no present `AttendanceRecord` today (or `CheckOutAt` already set) fails with `reason: "not_present"` while the other selected children in the same batch still succeed, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [X] T024 [P] [US2] Integration test: a batch where every child fails returns `200` with `created: []` and every child under `errors` — never a whole-batch error response, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T025 [P] [US2] Mobile component test: a partial-failure batch response renders the failed children with their reasons, and tapping retry calls `recordChildEventBatch` again with only the previously-failed `childIds` in `mobile/__tests__/quickActionSheet.test.tsx`
+- [X] T025 [P] [US2] Mobile component test: a partial-failure batch response renders the failed children with their reasons, and tapping retry calls `recordChildEventBatch` again with only the previously-failed `childIds` in `mobile/__tests__/components/QuickActionSheet.test.tsx`
 
 ### Implementation for User Story 2
 
@@ -106,8 +106,8 @@ including correctly surfacing a partial-failure result discovered only at sync t
 
 ### Tests for User Story 3
 
-- [ ] T028 [P] [US3] Mobile test: submitting a multi-select batch while offline creates exactly one `offline_queue` row with `entity_type = 'child_event_batch'`, `endpoint = '/api/child-events/batch'`, and a payload containing all selected `childIds` in `mobile/__tests__/childEvents.test.ts`
-- [ ] T029 [P] [US3] Mobile test: `syncPendingQueue()` replaying a `child_event_batch` row whose response is `2xx` with a non-empty `errors` array marks the row via `markSyncError` with a `"partial: "`-prefixed message (counted as failed, not synced); an `errors: []` response marks it synced normally in `mobile/__tests__/syncEngine.test.ts`
+- [X] T028 [P] [US3] Mobile test: submitting a multi-select batch while offline creates exactly one `offline_queue` row with `entity_type = 'child_event_batch'`, `endpoint = '/api/child-events/batch'`, and a payload containing all selected `childIds` in `mobile/__tests__/services/childEvents.test.ts`
+- [X] T029 [P] [US3] Mobile test: `syncPendingQueue()` replaying a `child_event_batch` row whose response is `2xx` with a non-empty `errors` array marks the row via `markSyncError` with a `"partial: "`-prefixed message (counted as failed, not synced); an `errors: []` response marks it synced normally in `mobile/__tests__/services/syncEngine.test.ts`
 
 ### Implementation for User Story 3
 
