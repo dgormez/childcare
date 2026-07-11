@@ -34,7 +34,7 @@ function generateId(): string {
  * the reliable source here — the in-memory store is checked first only because it's already
  * live (no config-table read) whenever a session *is* active.
  */
-function currentTenantId(): string | null {
+export function currentTenantId(): string | null {
   return useStore.getState().auth?.organisationSlug ?? getConfigValue("organisationSlug");
 }
 

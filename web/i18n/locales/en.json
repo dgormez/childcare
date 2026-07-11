@@ -32,7 +32,8 @@
     "scheduling": "Scheduling",
     "waitingList": "Waiting List",
     "messages": "Messages",
-    "announcements": "Announcements"
+    "announcements": "Announcements",
+    "groups": "Groups"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -341,5 +342,32 @@
     "columnScope": "Scope",
     "columnSentAt": "Sent",
     "columnRecipients": "Recipients"
+  },
+  "groups": {
+    "title": "Group timeline",
+    "locationLabel": "Location",
+    "groupLabel": "Group",
+    "dateLabel": "Date",
+    "loadError": "Could not load the timeline.",
+    "retry": "Retry",
+    "emptyState": "No events or activities yet for this group and date.",
+    "actionDelete": "Delete",
+    "deleteDialogTitle": "Delete activity?",
+    "deleteDialogDescription": "\"{title}\" will be removed from the timeline, the parent daily report, and the gallery. This cannot be undone.",
+    "deleteDialogCancel": "Cancel",
+    "eventTypes": {
+      "sleep": "Sleep",
+      "temperature": "Temperature",
+      "medication": "Medication",
+      "feeding_bottle": "Bottle feeding",
+      "feeding_solid": "Solid food",
+      "diaper": "Diaper",
+      "mood": "Mood",
+      "activity": "Activity",
+      "note": "Note",
+      "weight": "Weight",
+      "growth_check": "Growth check",
+      "custom": "Custom"
+    }
   }
 }

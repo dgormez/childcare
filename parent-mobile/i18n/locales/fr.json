@@ -43,7 +43,10 @@
     "medication": "Médicaments",
     "medicationGiven": "Médicament administré",
     "activities": "Activités",
-    "loadFailed": "Impossible de charger le résumé du jour."
+    "loadFailed": "Impossible de charger le résumé du jour.",
+    "groupActivities": {
+      "title": "Moments de groupe"
+    }
   },
   "messages": {
     "title": "Messages",
@@ -138,5 +141,11 @@
     "children": {
       "not_found": "Cet enfant est introuvable."
     }
+  },
+  "gallery": {
+    "title": "Galerie",
+    "empty": "Aucune photo ce mois-ci.",
+    "noConsent": "Aucune photo à afficher pour le moment. Demandez à la crèche le consentement photo pour les voir ici.",
+    "loadFailed": "Impossible de charger la galerie."
   }
 }

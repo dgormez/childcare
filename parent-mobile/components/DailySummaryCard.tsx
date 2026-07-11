@@ -1,9 +1,21 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Image, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Moon, Milk, Droplets, Smile, Thermometer, Pill, Activity as ActivityIcon } from "lucide-react-native";
+import {
+  Moon, Milk, Droplets, Smile, Thermometer, Pill, Activity as ActivityIcon,
+  Trees, Palette, Music, BookOpen, PartyPopper, Ellipsis,
+} from "lucide-react-native";
 import { useColors } from "../hooks/useColors";
-import type { DailySummaryResponse, ParentChildResponse } from "../types";
+import type { DailySummaryResponse, GroupActivityType, ParentChildResponse } from "../types";
+
+const GROUP_ACTIVITY_ICONS: Record<GroupActivityType, typeof Trees> = {
+  outdoor: Trees,
+  creative: Palette,
+  music: Music,
+  story: BookOpen,
+  celebration: PartyPopper,
+  other: Ellipsis,
+};
 
 interface Props {
   child:   ParentChildResponse;
@@ -35,7 +47,8 @@ export function DailySummaryCard({ child, summary }: Props) {
     !!summary.latestMood ||
     summary.latestTemperatureCelsius !== null ||
     summary.medicationAdministered ||
-    summary.activities.length > 0
+    summary.activities.length > 0 ||
+    summary.groupActivities.length > 0
   );
 
   return (
@@ -112,6 +125,43 @@ export function DailySummaryCard({ child, summary }: Props) {
                   • {activity}
                 </Text>
               ))}
+            </View>
+          )}
+          {summary.groupActivities.length > 0 && (
+            <View style={{ paddingVertical: 8 }} testID={`group-activities-section-${child.id}`}>
+              <Text className="text-text dark:text-text-dark text-base font-medium mb-2">{t("home.groupActivities.title")}</Text>
+              {summary.groupActivities.map((activity) => {
+                const Icon = GROUP_ACTIVITY_ICONS[activity.activityType];
+                return (
+                  <View key={activity.id} className="bg-surface-soft dark:bg-surface-soft-dark rounded-xl p-3 mb-2">
+                    <View className="flex-row items-start" style={{ gap: 8 }}>
+                      <View style={{ width: 28, height: 28 }} className="items-center justify-center rounded-full bg-primary-soft dark:bg-primary-soft-dark">
+                        <Icon size={14} strokeWidth={2} color={colors.primaryHover} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text className="text-text dark:text-text-dark font-semibold">{activity.title}</Text>
+                        {!!activity.description && (
+                          <Text className="text-text-soft dark:text-text-soft-dark text-sm mt-1">{activity.description}</Text>
+                        )}
+                      </View>
+                    </View>
+                    {activity.photos.length > 0 && (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+                        <View className="flex-row" style={{ gap: 8 }}>
+                          {activity.photos.map((photo) => (
+                            <Image
+                              key={photo.id}
+                              accessibilityLabel={activity.title}
+                              source={{ uri: photo.downloadUrl ?? undefined }}
+                              style={{ width: 72, height: 72, borderRadius: 8, backgroundColor: colors.border }}
+                            />
+                          ))}
+                        </View>
+                      </ScrollView>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           )}
         </View>

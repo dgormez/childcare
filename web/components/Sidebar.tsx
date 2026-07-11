@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles } from "lucide-react";
 import { cn } from "../lib/cn";
 import { apiClient } from "../lib/apiClient";
 import type { Session } from "../lib/auth";
@@ -13,6 +13,7 @@ const REAL_NAV = [
   { href: "/staff", labelKey: "staff", icon: Users },
   { href: "/devices", labelKey: "devices", icon: Tablet },
   { href: "/attendance", labelKey: "attendance", icon: CalendarClock },
+  { href: "/groups", labelKey: "groups", icon: Sparkles },
   { href: "/closures", labelKey: "closures", icon: CalendarX },
   { href: "/scheduling", labelKey: "scheduling", icon: CalendarDays },
   { href: "/waiting-list", labelKey: "waitingList", icon: ListPlus },

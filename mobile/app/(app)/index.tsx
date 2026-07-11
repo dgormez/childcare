@@ -2,17 +2,21 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Thermometer, ChevronRight } from "lucide-react-native";
+import { AlertTriangle, Thermometer, ChevronRight, Plus } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getCached, setCached } from "../../services/readCache";
 import { syncPendingQueue } from "../../services/syncEngine";
 import { checkIn, checkOut, getBkrRatio, getTodayAttendanceByChildId, todayDateString } from "../../services/attendance";
+import { getGroupTimeline } from "../../services/groupActivities";
+import { getPendingPhotoCountForActivity } from "../../services/photoUploadQueue";
 import { useColors } from "../../hooks/useColors";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useStore } from "../../store/useStore";
 import { BkrIndicator } from "../../components/BkrIndicator";
 import { AbsenceDialog } from "../../components/AbsenceDialog";
-import type { AttendanceRecordResponse, BkrRatioResponse, ChildResponse, GroupResponse } from "../../types";
+import { AddGroupActivitySheet } from "../../components/AddGroupActivitySheet";
+import { GroupTimeline } from "../../components/GroupTimeline";
+import type { AttendanceRecordResponse, BkrRatioResponse, ChildResponse, GroupResponse, GroupTimelineEntryResponse } from "../../types";
 
 const BKR_POLL_INTERVAL_MS = 15_000; // FR-008a: refresh at least every 15 seconds
 
@@ -71,6 +75,21 @@ export default function GroupViewScreen() {
   const [attendanceByChildId, setAttendanceByChildId] = useState<Record<string, AttendanceRecordResponse>>({});
   const [bkr, setBkr] = useState<BkrRatioResponse | null>(null);
   const [absenceTarget, setAbsenceTarget] = useState<ChildResponse | null>(null);
+  const [tab, setTab] = useState<"children" | "timeline">("children");
+  const [timelineEntries, setTimelineEntries] = useState<GroupTimelineEntryResponse[]>([]);
+  const [addActivityVisible, setAddActivityVisible] = useState(false);
+
+  const loadTimeline = useCallback(async () => {
+    if (!device) return;
+    try {
+      const result = await getGroupTimeline(device.groupId);
+      setTimelineEntries(result.entries);
+    } catch {
+      // Feature 009b: the timeline is a secondary tab on this screen — a failed fetch just
+      // leaves the previously-shown entries in place, same degrade-gracefully approach as
+      // the child roster/attendance fetches above.
+    }
+  }, [device]);
 
   const refreshBkr = useCallback(async () => {
     if (!device) return;
@@ -104,7 +123,8 @@ export default function GroupViewScreen() {
       // present/absent state until the next successful load.
     }
     await refreshBkr();
-  }, [refreshBkr]);
+    await loadTimeline();
+  }, [refreshBkr, loadTimeline]);
 
   useEffect(() => {
     load();
@@ -163,6 +183,34 @@ export default function GroupViewScreen() {
           <BkrIndicator bkr={bkr} />
         </View>
       )}
+      <View className="flex-row" style={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
+        {(["children", "timeline"] as const).map((value) => (
+          <TouchableOpacity
+            key={value}
+            onPress={() => setTab(value)}
+            style={{ minHeight: 48, flex: 1 }}
+            className={`items-center justify-center rounded-lg ${tab === value ? "bg-primary-soft dark:bg-primary-soft-dark" : "bg-surface-soft dark:bg-surface-soft-dark"}`}
+          >
+            <Text className="text-text dark:text-text-dark font-medium">
+              {t(value === "children" ? "groupView.tabChildren" : "groupActivities.tabTimeline")}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {tab === "timeline" && (
+        <FlatList
+          testID="group-timeline-list"
+          style={{ backgroundColor: colors.background }}
+          data={[{ key: "timeline" }]}
+          keyExtractor={(i) => i.key}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
+          contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+          renderItem={() => (
+            <GroupTimeline entries={timelineEntries} getPendingPhotoCount={getPendingPhotoCountForActivity} />
+          )}
+        />
+      )}
+      {tab === "children" && (
       <FlatList
         testID="group-view-list"
         style={{ backgroundColor: colors.background }}
@@ -243,11 +291,31 @@ export default function GroupViewScreen() {
           );
         }}
       />
+      )}
+      <TouchableOpacity
+        onPress={() => setAddActivityVisible(true)}
+        accessibilityLabel={t("groupActivities.addTitle")}
+        style={{ position: "absolute", right: 16, bottom: 16, minWidth: 56, minHeight: 56 }}
+        className="items-center justify-center rounded-full bg-primary dark:bg-primary-dark active:opacity-80"
+      >
+        <Plus size={24} strokeWidth={2.5} color="white" />
+      </TouchableOpacity>
       <AbsenceDialog
         child={absenceTarget}
         isConnected={isConnected}
         onClose={() => setAbsenceTarget(null)}
         onSaved={handleAbsenceSaved}
+      />
+      <AddGroupActivitySheet
+        visible={addActivityVisible}
+        onClose={() => setAddActivityVisible(false)}
+        onActivityRecorded={(activity) => {
+          setTimelineEntries((prev) => [
+            ...prev,
+            { kind: "group_activity", occurredAt: activity.occurredAt, childEvent: null, groupActivity: activity },
+          ]);
+          setTab("timeline");
+        }}
       />
     </View>
   );

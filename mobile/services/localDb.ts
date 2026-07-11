@@ -50,6 +50,19 @@ export function initDb() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_read_cache_tenant ON read_cache(tenant_id);
+
+    CREATE TABLE IF NOT EXISTS photo_upload_queue (
+      id           TEXT PRIMARY KEY,
+      tenant_id    TEXT NOT NULL,
+      activity_id  TEXT NOT NULL,
+      local_uri    TEXT NOT NULL,
+      caption      TEXT,
+      created_at   TEXT NOT NULL,
+      uploaded_at  TEXT,
+      upload_error TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_photo_upload_queue_tenant_created ON photo_upload_queue(tenant_id, created_at ASC);
   `);
 }
 
@@ -167,9 +180,53 @@ export function deleteLocalTenantData(tenantId: string) {
   if (Platform.OS === "web") return;
   db.runSync("DELETE FROM offline_queue WHERE tenant_id = ?", [tenantId]);
   db.runSync("DELETE FROM read_cache WHERE tenant_id = ?", [tenantId]);
+  db.runSync("DELETE FROM photo_upload_queue WHERE tenant_id = ?", [tenantId]);
   deleteConfigValue("userId");
   deleteConfigValue("userEmail");
   deleteConfigValue("userRole");
   deleteConfigValue("organisationSlug");
   deleteConfigValue("lastSyncAt");
+}
+
+// ── Photo upload queue (feature 009b, FR-012) ────────────────────────────────
+// Separate from offline_queue: a group-activity photo upload is a multipart/form-data request
+// carrying binary image bytes, which syncEngine.ts's JSON-body replay() cannot express — so
+// this queue is replayed by photoUploadQueue.ts's own uploader, not syncEngine.ts.
+
+export interface PhotoUploadQueueRow {
+  id:           string;
+  tenant_id:    string;
+  activity_id:  string;
+  local_uri:    string;
+  caption:      string | null;
+  created_at:   string;
+  uploaded_at:  string | null;
+  upload_error: string | null;
+}
+
+export function insertPhotoUploadQueueRow(row: Omit<PhotoUploadQueueRow, "uploaded_at" | "upload_error">) {
+  if (Platform.OS === "web") return;
+  db.runSync(
+    `INSERT INTO photo_upload_queue (id, tenant_id, activity_id, local_uri, caption, created_at, uploaded_at, upload_error)
+     VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)`,
+    [row.id, row.tenant_id, row.activity_id, row.local_uri, row.caption, row.created_at]
+  );
+}
+
+export function getPendingPhotoUploadQueueRows(tenantId: string): PhotoUploadQueueRow[] {
+  if (Platform.OS === "web") return [];
+  return db.getAllSync<PhotoUploadQueueRow>(
+    "SELECT * FROM photo_upload_queue WHERE tenant_id = ? AND uploaded_at IS NULL ORDER BY created_at ASC",
+    [tenantId]
+  );
+}
+
+export function markPhotoUploadQueueRowUploaded(id: string) {
+  if (Platform.OS === "web") return;
+  db.runSync("UPDATE photo_upload_queue SET uploaded_at = ?, upload_error = NULL WHERE id = ?", [new Date().toISOString(), id]);
+}
+
+export function markPhotoUploadQueueRowError(id: string, error: string) {
+  if (Platform.OS === "web") return;
+  db.runSync("UPDATE photo_upload_queue SET upload_error = ? WHERE id = ?", [error, id]);
 }

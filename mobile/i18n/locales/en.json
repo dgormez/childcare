@@ -34,6 +34,13 @@
       "closure_status_immutable": "Closure days can't be set manually.",
       "mark_absent_failed": "Could not mark this child absent. Please try again.",
       "bkr_failed": "Could not load the current ratio."
+    },
+    "group_activities": {
+      "invalid_activity_type": "This activity type is not valid.",
+      "not_found": "This activity could not be found.",
+      "photo_limit_reached": "This activity already has 10 photos.",
+      "photo_too_large": "This photo is too large (max 10MB).",
+      "timeline_failed": "Could not load the timeline."
     }
   },
   "session": {
@@ -57,7 +64,8 @@
     "title": "Today",
     "empty": "No children are currently assigned to you.",
     "pullToRefresh": "Pull down to refresh",
-    "viewDetail": "View details"
+    "viewDetail": "View details",
+    "tabChildren": "Children"
   },
   "child": {
     "allergyAlert": "Allergy",
@@ -206,5 +214,29 @@
       "cancel": "Cancel",
       "confirm": "Confirm"
     }
+  },
+  "groupActivities": {
+    "tabTimeline": "Timeline",
+    "addTitle": "Add activity",
+    "timelineEmpty": "No activities yet today.",
+    "types": {
+      "outdoor": "Outdoor",
+      "creative": "Creative",
+      "music": "Music",
+      "story": "Story",
+      "celebration": "Celebration",
+      "other": "Other"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description (optional)"
+    },
+    "photoCamera": "Camera",
+    "photoGallery": "Gallery",
+    "photoReminder": "Photos may only show children who are present",
+    "photoLimitTitle": "Maximum 10 photos",
+    "photoLimitMessage": "You can add a maximum of 10 photos to one activity.",
+    "photosUploading": "Uploading photos…",
+    "save": "Save"
   }
 }

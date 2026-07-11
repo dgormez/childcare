@@ -142,3 +142,37 @@ export interface BkrRatioResponse {
   threshold:           number;
   status:              "green" | "amber" | "red";
 }
+
+// ── Group activities (feature 009b) ──────────────────────────────────────────────
+export type GroupActivityType = "outdoor" | "creative" | "music" | "story" | "celebration" | "other";
+
+export interface GroupActivityPhotoResponse {
+  id:                    string;
+  downloadUrl:           string | null;
+  thumbnailDownloadUrl:  string | null;
+  caption:               string | null;
+  uploadedAt:            string;
+}
+
+export interface GroupActivityResponse {
+  id:          string;
+  groupId:     string;
+  activityType: GroupActivityType;
+  title:       string;
+  description: string | null;
+  occurredAt:  string;
+  recordedBy:  string[];
+  photos:      GroupActivityPhotoResponse[];
+  createdAt:   string;
+}
+
+export interface GroupTimelineEntryResponse {
+  kind:          "child_event" | "group_activity";
+  occurredAt:    string;
+  childEvent:    ChildEventResponse | null;
+  groupActivity: GroupActivityResponse | null;
+}
+
+export interface GroupTimelineResponse {
+  entries: GroupTimelineEntryResponse[];
+}

@@ -50,6 +50,14 @@ module.exports = {
       "expo-sqlite",
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          photosPermission: "Sta $(PRODUCT_NAME) toe om foto's toe te voegen aan een groepsactiviteit.",
+          cameraPermission: "Sta $(PRODUCT_NAME) toe om foto's te maken voor een groepsactiviteit.",
+          microphonePermission: false,
+        },
+      ],
+      [
         "expo-notifications",
         {
           icon: "./assets/images/icon.png",

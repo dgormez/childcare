@@ -9,7 +9,7 @@ module.exports = {
     "node_modules/(?!(" +
       "expo|expo-router|expo-modules-core|expo-localization|" +
       "expo-notifications|expo-updates|" +
-      "expo-secure-store|expo-sqlite|expo-constants|expo-linking|expo-status-bar|" +
+      "expo-secure-store|expo-sqlite|expo-constants|expo-linking|expo-status-bar|expo-image-picker|" +
       "@expo|react-native|@react-native|nativewind|react-native-reanimated|" +
       "react-native-screens|react-native-safe-area-context|react-native-toast-message|" +
       "react-native-svg|lucide-react-native|" +

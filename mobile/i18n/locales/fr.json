@@ -34,6 +34,13 @@
       "closure_status_immutable": "Les jours de fermeture ne peuvent pas être définis manuellement.",
       "mark_absent_failed": "Impossible de marquer cet enfant absent. Veuillez réessayer.",
       "bkr_failed": "Impossible de charger le ratio actuel."
+    },
+    "group_activities": {
+      "invalid_activity_type": "Ce type d'activité n'est pas valide.",
+      "not_found": "Cette activité est introuvable.",
+      "photo_limit_reached": "Cette activité a déjà 10 photos.",
+      "photo_too_large": "Cette photo est trop volumineuse (max. 10 Mo).",
+      "timeline_failed": "Impossible de charger la chronologie."
     }
   },
   "session": {
@@ -57,7 +64,8 @@
     "title": "Aujourd'hui",
     "empty": "Aucun enfant ne vous est actuellement assigné.",
     "pullToRefresh": "Tirez vers le bas pour actualiser",
-    "viewDetail": "Voir les détails"
+    "viewDetail": "Voir les détails",
+    "tabChildren": "Enfants"
   },
   "child": {
     "allergyAlert": "Allergie",
@@ -206,5 +214,29 @@
       "cancel": "Annuler",
       "confirm": "Confirmer"
     }
+  },
+  "groupActivities": {
+    "tabTimeline": "Chronologie",
+    "addTitle": "Ajouter une activité",
+    "timelineEmpty": "Aucune activité aujourd'hui.",
+    "types": {
+      "outdoor": "Extérieur",
+      "creative": "Créatif",
+      "music": "Musique",
+      "story": "Histoire",
+      "celebration": "Fête",
+      "other": "Autre"
+    },
+    "fields": {
+      "title": "Titre",
+      "description": "Description (facultative)"
+    },
+    "photoCamera": "Appareil photo",
+    "photoGallery": "Galerie",
+    "photoReminder": "Les photos ne doivent montrer que les enfants présents",
+    "photoLimitTitle": "Maximum 10 photos",
+    "photoLimitMessage": "Vous pouvez ajouter un maximum de 10 photos à une activité.",
+    "photosUploading": "Téléchargement des photos…",
+    "save": "Enregistrer"
   }
 }

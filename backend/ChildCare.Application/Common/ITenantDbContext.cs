@@ -47,6 +47,8 @@ public interface ITenantDbContext
     DbSet<Announcement> Announcements { get; }
     DbSet<AnnouncementRecipient> AnnouncementRecipients { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<GroupActivity> GroupActivities { get; }
+    DbSet<GroupActivityPhoto> GroupActivityPhotos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

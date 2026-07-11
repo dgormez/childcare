@@ -32,7 +32,8 @@
     "scheduling": "Planning",
     "waitingList": "Liste d'attente",
     "messages": "Messages",
-    "announcements": "Annonces"
+    "announcements": "Annonces",
+    "groups": "Groupes"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -341,5 +342,32 @@
     "columnScope": "Portée",
     "columnSentAt": "Envoyé",
     "columnRecipients": "Destinataires"
+  },
+  "groups": {
+    "title": "Chronologie du groupe",
+    "locationLabel": "Emplacement",
+    "groupLabel": "Groupe",
+    "dateLabel": "Date",
+    "loadError": "Impossible de charger la chronologie.",
+    "retry": "Réessayer",
+    "emptyState": "Aucun événement ou activité pour ce groupe et cette date.",
+    "actionDelete": "Supprimer",
+    "deleteDialogTitle": "Supprimer l'activité ?",
+    "deleteDialogDescription": "« {title} » sera supprimé de la chronologie, du rapport quotidien des parents et de la galerie. Cette action est irréversible.",
+    "deleteDialogCancel": "Annuler",
+    "eventTypes": {
+      "sleep": "Sommeil",
+      "temperature": "Température",
+      "medication": "Médicament",
+      "feeding_bottle": "Biberon",
+      "feeding_solid": "Repas solide",
+      "diaper": "Couche",
+      "mood": "Humeur",
+      "activity": "Activité",
+      "note": "Note",
+      "weight": "Poids",
+      "growth_check": "Contrôle de croissance",
+      "custom": "Personnalisé"
+    }
   }
 }

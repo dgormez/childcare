@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using ChildCare.Application.Common;
+using ChildCare.Application.GroupActivities;
 using ChildCare.Application.Parent;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -37,6 +39,19 @@ public static class ParentEndpoints
             var succeeded = await mediator.Send(new RegisterPushTokenCommand(tenantUserId, req.PushToken));
             return succeeded
                 ? Results.Ok()
+                : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
+        });
+
+        // Feature 009b — contracts/group-activities-api.md. Defaults to the current
+        // Europe/Brussels calendar month (spec.md Assumptions: no historical browsing).
+        group.MapGet("/group-activities/gallery", async (int? year, int? month, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = TenantUserIdOf(ctx);
+            var today = BelgianCalendarDay.Today();
+            var result = await mediator.Send(new GetParentGroupActivityGalleryQuery(
+                tenantUserId, year ?? today.Year, month ?? today.Month));
+            return result.Authorized
+                ? Results.Ok(result.Response)
                 : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
         });
     }

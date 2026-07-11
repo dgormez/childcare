@@ -30,4 +30,8 @@ public record DailySummaryResponse(
     // Feature 013: today's Activity-type event descriptions, oldest first. Photos are
     // explicitly out of scope (specs/013-parent-communication/spec.md Clarifications) — no
     // photo-attachment mechanism exists in the domain yet.
-    IReadOnlyList<string> Activities);
+    IReadOnlyList<string> Activities,
+    // Feature 009b (research.md R5): today's GroupActivity entries for the child's group,
+    // consent-filtered photos (research.md R6). Named distinctly from `Activities` above — that
+    // field is an unrelated, already-shipped per-child concept.
+    IReadOnlyList<GroupActivitySummaryItem> GroupActivities);

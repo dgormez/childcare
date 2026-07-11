@@ -43,7 +43,10 @@
     "medication": "Medicatie",
     "medicationGiven": "Medicatie toegediend",
     "activities": "Activiteiten",
-    "loadFailed": "Kon het dagoverzicht niet laden."
+    "loadFailed": "Kon het dagoverzicht niet laden.",
+    "groupActivities": {
+      "title": "Groepsmomenten"
+    }
   },
   "messages": {
     "title": "Berichten",
@@ -138,5 +141,11 @@
     "children": {
       "not_found": "Dit kind kon niet worden gevonden."
     }
+  },
+  "gallery": {
+    "title": "Galerij",
+    "empty": "Nog geen foto's deze maand.",
+    "noConsent": "Er zijn nog geen foto's te zien. Vraag de opvang naar de toestemming voor foto's om ze hier te bekijken.",
+    "loadFailed": "Kon de galerij niet laden."
   }
 }

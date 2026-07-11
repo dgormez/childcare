@@ -7,6 +7,7 @@ import { useSyncStatus } from "../../hooks/useSyncStatus";
 import { useColors } from "../../hooks/useColors";
 import { logout } from "../../services/auth";
 import { syncPendingQueue } from "../../services/syncEngine";
+import { uploadPendingPhotos } from "../../services/photoUploadQueue";
 import { ThemedModal } from "../../components/ThemedModal";
 
 export default function AppLayout() {
@@ -36,13 +37,17 @@ export default function AppLayout() {
   useEffect(() => {
     if (!wasConnected.current && isConnected) {
       syncPendingQueue();
+      uploadPendingPhotos();
     }
     wasConnected.current = isConnected;
   }, [isConnected]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") syncPendingQueue();
+      if (state === "active") {
+        syncPendingQueue();
+        uploadPendingPhotos();
+      }
     });
     return () => subscription.remove();
   }, []);

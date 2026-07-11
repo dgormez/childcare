@@ -106,6 +106,9 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             services.AddSingleton<FakeProfilePhotoStorage>();
             services.AddSingleton<IProfilePhotoStorage>(sp => sp.GetRequiredService<FakeProfilePhotoStorage>());
 
+            services.AddSingleton<FakeGroupActivityPhotoStorage>();
+            services.AddSingleton<IGroupActivityPhotoStorage>(sp => sp.GetRequiredService<FakeGroupActivityPhotoStorage>());
+
             // Wraps a real EmailService (manually constructed with Singleton-safe dependencies
             // — IConfiguration/ILogger, no per-request state) so tests get real dev-mode
             // log-and-return behavior by default, but can flip ThrowOnStaffInvitation to prove a
