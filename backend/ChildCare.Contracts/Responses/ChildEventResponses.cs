@@ -20,6 +20,16 @@ public record PagedChildEventsResponse(
     // Opaque cursor for the next page (research.md R6); null = no more pages.
     string? NextCursor);
 
+// Feature 009c — contracts/child-events-batch-api.md. Always `200`, whether every child
+// succeeded or some failed (never 207) — a `child_id` never appears in both arrays.
+public record ChildEventBatchResponse(
+    IReadOnlyList<ChildEventBatchCreatedItem> Created,
+    IReadOnlyList<ChildEventBatchErrorItem> Errors);
+
+public record ChildEventBatchCreatedItem(Guid ChildId, Guid EventId);
+
+public record ChildEventBatchErrorItem(Guid ChildId, string Reason);
+
 public record DailySummaryResponse(
     int NapsCount,
     int BottlesCount,

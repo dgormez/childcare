@@ -99,4 +99,26 @@ internal static class ChildEventTestSupport
 
     public static Task<HttpResponseMessage> GetDailySummaryAsync(HttpClient client, string deviceToken, Guid childId, DateOnly date) =>
         client.SendAsync(DeviceRequest(HttpMethod.Get, $"/api/child-events/daily-summary?childId={childId}&date={date:yyyy-MM-dd}", deviceToken));
+
+    // Feature 009c — contracts/child-events-batch-api.md. `childIds` is a test-convenience
+    // shorthand; each gets a fresh client-generated `id` unless the caller supplies its own
+    // (childId, id) pairs via the `items` overload, used by the idempotent-retry test.
+    public static Task<HttpResponseMessage> PostChildEventBatchAsync(
+        HttpClient client, string deviceToken, IEnumerable<Guid> childIds, string eventType, DateTime occurredAt,
+        object payload, DateTime? endedAt = null, bool visibleToParent = true) =>
+        PostChildEventBatchAsync(
+            client, deviceToken, childIds.Select(id => (id, Guid.NewGuid())), eventType, occurredAt, payload, endedAt, visibleToParent);
+
+    public static Task<HttpResponseMessage> PostChildEventBatchAsync(
+        HttpClient client, string deviceToken, IEnumerable<(Guid ChildId, Guid Id)> items, string eventType, DateTime occurredAt,
+        object payload, DateTime? endedAt = null, bool visibleToParent = true) =>
+        client.SendAsync(DeviceRequest(HttpMethod.Post, "/api/child-events/batch", deviceToken, new
+        {
+            items = items.Select(i => new { childId = i.ChildId, id = i.Id }),
+            eventType,
+            occurredAt,
+            endedAt,
+            payload,
+            visibleToParent,
+        }));
 }

@@ -65,9 +65,12 @@ mobile client's `response.ok` handling uniform, research.md R6):
 
 - `created`: one entry per successfully created (or, on an idempotent-retry match, already-existing)
   `ChildEvent`, in the same order as the request's `items` (skipping failures).
-- `errors`: one entry per failed `child_id`, `reason` one of `child_not_found`, `not_present`,
-  `validation_failed` (data-model.md's `ChildEventBatchFailureReason`, snake_cased for the wire
-  the same way `ChildEventTypeExtensions` already snake_cases multi-word event types).
+- `errors`: one entry per failed `child_id`, `reason` one of `child_not_found`, `not_present`
+  (data-model.md's `ChildEventBatchFailureReason`, snake_cased for the wire the same way
+  `ChildEventTypeExtensions` already snake_cases multi-word event types). A shared-payload
+  validation failure is not a per-child reason — it rejects the whole batch with `422` before any
+  child is processed (data-model.md's "Correction made while implementing"), the same as
+  `batch_too_large`/`batch_type_not_supported` above.
 - A `child_id` never appears in both arrays.
 - Every succeeding child's `ChildEvent` is committed independently (research.md R5) — a failure
   anywhere in the batch never rolls back an earlier success.

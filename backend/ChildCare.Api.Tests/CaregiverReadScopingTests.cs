@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using Xunit;
+using static ChildCare.Api.Tests.KioskModeTestSupport;
 
 namespace ChildCare.Api.Tests;
 
@@ -12,7 +13,8 @@ namespace ChildCare.Api.Tests;
 /// User Story 2 (feature 008, research.md R6): a caregiver's reads of `GET /api/children`,
 /// `GET /api/children/{id}`, and `GET /api/groups` are scoped to the location(s) they're
 /// eligible for, while a director's view of the same endpoints remains fully unfiltered
-/// (feature 006 behavior unchanged).
+/// (feature 006 behavior unchanged). Feature 009c (research.md R2, T013) adds coverage for a
+/// third caller type these two routes didn't originally support: a kiosk tablet's device token.
 /// </summary>
 public class CaregiverReadScopingTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -252,5 +254,43 @@ public class CaregiverReadScopingTests(OrganisationOnboardingWebAppFactory facto
         Assert.Equal(HttpStatusCode.NotFound, childBAsA.StatusCode);
         var childAAsB = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{childA.Id}", caregiverBToken));
         Assert.Equal(HttpStatusCode.NotFound, childAAsB.StatusCode);
+    }
+
+    // ── T013 (feature 009c, research.md R2): a paired kiosk tablet's device token — which carries
+    // no role claim at all — must also be able to read these two routes, not just a staff/director
+    // JWT. Regression test for the DeviceOrStaffOrDirector policy fix.
+
+    [Fact]
+    public async Task GetGroups_AsDeviceToken_Succeeds()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Device Read Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, location.Id, "Group A");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+
+        var response = await client.SendAsync(DeviceRequest(HttpMethod.Get, "/api/groups", deviceToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var groups = (await response.Content.ReadFromJsonAsync<List<GroupResponse>>())!;
+        Assert.Contains(groups, g => g.Id == group.Id);
+    }
+
+    [Fact]
+    public async Task GetChildren_AsDeviceToken_Succeeds()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Device Read Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, location.Id, "Group A");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        await AssignChildToGroupAsync(client, org.AccessToken, child.Id, group.Id);
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+
+        var response = await client.SendAsync(DeviceRequest(HttpMethod.Get, $"/api/children?groupId={group.Id}", deviceToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var children = (await response.Content.ReadFromJsonAsync<List<ChildResponse>>())!;
+        Assert.Contains(children, c => c.Id == child.Id);
     }
 }

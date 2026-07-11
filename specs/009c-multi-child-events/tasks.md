@@ -14,9 +14,9 @@ testing.
 
 **Purpose**: Contracts, i18n scaffolding, and route registration shared across all stories.
 
-- [ ] T001 [P] Add `RecordChildEventBatchRequest` DTO (an `Items: IReadOnlyList<ChildEventBatchItem>` of `{ ChildId, Id }` pairs, per contracts/child-events-batch-api.md — `Id` is client-generated for per-child idempotency, research.md R5) in `backend/ChildCare.Contracts/Requests/ChildEventRequests.cs`
-- [ ] T002 [P] Add `ChildEventBatchResponse`/`ChildEventBatchCreatedItem`/`ChildEventBatchErrorItem` DTOs in `backend/ChildCare.Contracts/Responses/ChildEventResponses.cs`
-- [ ] T003 [P] Add `childEvents.batch.*` and `groupView.multiSelect.*` i18n keys (toggle label, select-all, action bar count, success toast, partial-failure list, retry button, per-reason messages) to `mobile/i18n/locales/en.json`, `mobile/i18n/locales/nl.json`, `mobile/i18n/locales/fr.json`
+- [X] T001 [P] Add `RecordChildEventBatchRequest` DTO (an `Items: IReadOnlyList<ChildEventBatchItem>` of `{ ChildId, Id }` pairs, per contracts/child-events-batch-api.md — `Id` is client-generated for per-child idempotency, research.md R5) in `backend/ChildCare.Contracts/Requests/ChildEventRequests.cs`
+- [X] T002 [P] Add `ChildEventBatchResponse`/`ChildEventBatchCreatedItem`/`ChildEventBatchErrorItem` DTOs in `backend/ChildCare.Contracts/Responses/ChildEventResponses.cs`
+- [X] T003 [P] Add `childEvents.batch.*` and `groupView.multiSelect.*` i18n keys (toggle label, select-all, action bar count, success toast, partial-failure list, retry button, per-reason messages) to `mobile/i18n/locales/en.json`, `mobile/i18n/locales/nl.json`, `mobile/i18n/locales/fr.json`
 
 ---
 
@@ -27,11 +27,11 @@ at all), shared result/failure types, and the batch endpoint's route registratio
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Add a `DeviceOrStaffOrDirector`-equivalent composite authorization policy accepting both the `DeviceToken` scheme and the default user-JWT scheme with `RequireRole("staff", "director")` in `backend/ChildCare.Api/Program.cs` (research.md R2, mirrors the existing `DeviceOrDirector` policy)
-- [ ] T005 Apply the new policy to `GET /api/children` and `GET /api/children/{id}` in `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs`, replacing `StaffOrDirector` on the `reads` group only (write routes unchanged)
-- [ ] T006 Apply the new policy to `GET /api/groups` in `backend/ChildCare.Api/Endpoints/GroupsEndpoints.cs`, replacing `StaffOrDirector` on the `groupReads` group only (write routes unchanged)
-- [ ] T007 [P] Add `ChildEventBatchFailureReason` enum (`ChildNotFound`, `NotPresent`, `ValidationFailed`) and `ChildEventBatchResult` in `backend/ChildCare.Application/ChildEvents/ChildEventResult.cs` (data-model.md)
-- [ ] T008 Map `POST /api/child-events/batch` (device-token authenticated, same `deviceGroup` as the existing `POST /api/child-events`) returning `200` always, in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs` (contracts/child-events-batch-api.md) — wired to a not-yet-implemented `RecordChildEventBatchCommand` (stub returning empty result) so routing/auth can be tested before US1's handler logic lands
+- [X] T004 Add a `DeviceOrStaffOrDirector`-equivalent composite authorization policy accepting both the `DeviceToken` scheme and the default user-JWT scheme with `RequireRole("staff", "director")` in `backend/ChildCare.Api/Program.cs` (research.md R2, mirrors the existing `DeviceOrDirector` policy)
+- [X] T005 Apply the new policy to `GET /api/children` and `GET /api/children/{id}` in `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs`, replacing `StaffOrDirector` on the `reads` group only (write routes unchanged)
+- [X] T006 Apply the new policy to `GET /api/groups` in `backend/ChildCare.Api/Endpoints/GroupsEndpoints.cs`, replacing `StaffOrDirector` on the `groupReads` group only (write routes unchanged)
+- [X] T007 [P] Add `ChildEventBatchFailureReason` enum (`ChildNotFound`, `NotPresent` — no `ValidationFailed`, a shared-payload failure rejects the whole batch via the FluentValidation pipeline instead, data-model.md's "Correction made while implementing") and `ChildEventBatchResult` in `backend/ChildCare.Application/ChildEvents/ChildEventResult.cs`
+- [X] T008 Map `POST /api/child-events/batch` (device-token authenticated, same `deviceGroup` as the existing `POST /api/child-events`) returning `200` always, in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs` (contracts/child-events-batch-api.md) — wired to a not-yet-implemented `RecordChildEventBatchCommand` (stub returning empty result) so routing/auth can be tested before US1's handler logic lands
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -48,18 +48,18 @@ present children, and verify 8 `ChildEvent` rows exist sharing the same `eventTy
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Integration test: `POST /api/child-events/batch` with 8 valid `childIds` returns `200` with 8 `created` entries and empty `errors`, and 8 `ChildEvent` rows exist with matching `eventType`/`occurredAt`/`payload` in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T010 [P] [US1] Integration test: batch with an individual-only `eventType` (`temperature`) is rejected `422 errors.child_events.batch_type_not_supported` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T011 [P] [US1] Integration test: batch with > 30 `childIds` is rejected `422 errors.child_events.batch_too_large` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T012 [P] [US1] Integration test: batch containing a `childId` that doesn't exist in this tenant reports that child under `errors` with `reason: "child_not_found"`, other children still succeed in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T013 [P] [US1] Integration test: `GET /api/children` and `GET /api/groups` succeed with a device token (regression test for T004-T006's R2 fix) in `backend/ChildCare.Api.Tests/CaregiverReadScopingTests.cs`
+- [X] T009 [P] [US1] Integration test: `POST /api/child-events/batch` with 8 valid `childIds` returns `200` with 8 `created` entries and empty `errors`, and 8 `ChildEvent` rows exist with matching `eventType`/`occurredAt`/`payload` in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T010 [P] [US1] Integration test: batch with an individual-only `eventType` (`temperature`) is rejected `422 errors.child_events.batch_type_not_supported` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T011 [P] [US1] Integration test: batch with > 30 `childIds` is rejected `422 errors.child_events.batch_too_large` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T012 [P] [US1] Integration test: batch containing a `childId` that doesn't exist in this tenant reports that child under `errors` with `reason: "child_not_found"`, other children still succeed in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T013 [P] [US1] Integration test: `GET /api/children` and `GET /api/groups` succeed with a device token (regression test for T004-T006's R2 fix) in `backend/ChildCare.Api.Tests/CaregiverReadScopingTests.cs`
 - [ ] T014 [P] [US1] Mobile component test: room roster header shows a multi-select entry point; entering multi-select mode makes present children's cards selectable and absent children non-selectable; selecting a 31st present child is blocked with an explanatory message (T020's 30-cap) in `mobile/__tests__/groupView.test.tsx`
 - [ ] T015 [P] [US1] Mobile component test: "Alles selecteren" selects every present child; submitting via the batch-mode `QuickActionSheet` calls `recordChildEventBatch` with all selected `childIds` and shows a success toast naming the count in `mobile/__tests__/quickActionSheet.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Implement `RecordChildEventBatchCommand`/validator/handler: dedupe `items` by `childId`, cap at 30, reject unsupported `eventType` types before the loop, then loop per item calling `RecordChildEventCommand`'s existing validation/creation logic including its idempotency-by-`id` check (reused, not duplicated per plan.md/research.md R5), one `SaveChangesAsync` per child, collecting `created`/`errors` in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
-- [ ] T017 [US1] Replace T008's stub wiring with the real `RecordChildEventBatchCommand` call in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs`
+- [X] T016 [US1] Implement `RecordChildEventBatchCommand`/validator/handler: dedupe `items` by `childId`, cap at 30, reject unsupported `eventType` types before the loop, then loop per item calling `RecordChildEventCommand`'s existing validation/creation logic including its idempotency-by-`id` check (reused, not duplicated per plan.md/research.md R5), one `SaveChangesAsync` per child, collecting `created`/`errors` in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
+- [X] T017 [US1] Replace T008's stub wiring with the real `RecordChildEventBatchCommand` call in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs`
 - [ ] T018 [P] [US1] Regenerate OpenAPI types for the batch endpoint in `mobile/services/generated/api-types.ts`
 - [ ] T019 [P] [US1] Add `recordChildEventBatch()` (generates a client-side `id` per selected child via the existing `generateId()` helper, builds the `items` array, online path only for this story — offline queuing is US3) in `mobile/services/childEvents.ts`
 - [ ] T020 [US1] Add multi-select mode state, header entry-point button, per-card selected state, and "Alles selecteren" to the "children" tab in `mobile/app/(app)/index.tsx` (research.md R7) — long-press remains bound to absence-marking, unaffected. Caps selection at 30 (spec.md Edge Cases/SC-005): once 30 are selected, remaining unselected cards become non-selectable with a brief explanatory message rather than silently ignoring further taps
@@ -82,13 +82,13 @@ resubmits only the failed child.
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Integration test: a child with no present `AttendanceRecord` today (or `CheckOutAt` already set) fails with `reason: "not_present"` while the other selected children in the same batch still succeed, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
-- [ ] T024 [P] [US2] Integration test: a batch where every child fails returns `200` with `created: []` and every child under `errors` — never a whole-batch error response, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T023 [P] [US2] Integration test: a child with no present `AttendanceRecord` today (or `CheckOutAt` already set) fails with `reason: "not_present"` while the other selected children in the same batch still succeed, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
+- [X] T024 [P] [US2] Integration test: a batch where every child fails returns `200` with `created: []` and every child under `errors` — never a whole-batch error response, in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [ ] T025 [P] [US2] Mobile component test: a partial-failure batch response renders the failed children with their reasons, and tapping retry calls `recordChildEventBatch` again with only the previously-failed `childIds` in `mobile/__tests__/quickActionSheet.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Add the presence check (`AttendanceRecord` for today, device's `LocationId`, `Status = Present`, `CheckOutAt == null`) per child inside `RecordChildEventBatchCommand`'s loop, reported as `ChildEventBatchFailureReason.NotPresent` (research.md R4) in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
+- [X] T026 [US2] Add the presence check (`AttendanceRecord` for today, device's `LocationId`, `Status = Present`, `CheckOutAt == null`) per child inside `RecordChildEventBatchCommand`'s loop, reported as `ChildEventBatchFailureReason.NotPresent` (research.md R4) in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
 - [ ] T027 [US2] Render the partial/full-failure result in `QuickActionSheet` (list of failed children + plain-language reason per `childEvents.batch.*` i18n keys, paired icon per design-system.md — never color alone) and a retry action that resubmits only failed `childIds` in `mobile/components/QuickActionSheet.tsx`
 
 **Checkpoint**: User Stories 1 and 2 both fully functional online.

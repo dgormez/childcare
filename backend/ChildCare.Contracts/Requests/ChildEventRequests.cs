@@ -21,3 +21,16 @@ public record UpdateChildEventRequest(
     JsonElement? Payload,
     bool? VisibleToParent,
     Guid? AdministeredByStaffId);
+
+// Feature 009c — contracts/child-events-batch-api.md. `Items` carries a client-generated `Id`
+// per child (research.md R5) so a retried offline-queue replay is idempotent per child, mirroring
+// RecordChildEventRequest's own `Id` field/behavior rather than inventing a new mechanism.
+public record RecordChildEventBatchRequest(
+    IReadOnlyList<ChildEventBatchItemRequest> Items,
+    string EventType,
+    DateTime OccurredAt,
+    DateTime? EndedAt,
+    JsonElement Payload,
+    bool VisibleToParent);
+
+public record ChildEventBatchItemRequest(Guid ChildId, Guid Id);
