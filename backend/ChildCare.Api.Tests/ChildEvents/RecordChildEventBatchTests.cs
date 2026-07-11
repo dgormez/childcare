@@ -57,7 +57,10 @@ public class RecordChildEventBatchTests(OrganisationOnboardingWebAppFactory fact
         {
             var events = await GetChildEventsAsync(client, deviceToken, child.Id);
             var page = (await events.Content.ReadFromJsonAsync<PagedChildEventsResponse>())!;
-            Assert.Single(page.Items, e => e.EventType == "diaper" && e.OccurredAt == occurredAt);
+            // Tolerant, not exact, equality on OccurredAt — PostgreSQL's timestamp round-trip
+            // precision can differ by a few ticks from the in-memory DateTime.UtcNow value
+            // (feature 010 hit this same CI-only flake: ".4072354Z vs .4072350Z").
+            Assert.Single(page.Items, e => e.EventType == "diaper" && (e.OccurredAt - occurredAt).Duration() < TimeSpan.FromSeconds(1));
         }
     }
 
