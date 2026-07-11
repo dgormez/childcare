@@ -36,7 +36,7 @@
 | 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | ✅ Done |
 | 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | ✅ Done |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
-| 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
+| 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | ✅ Done |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
@@ -2320,6 +2320,57 @@ Out of scope:
 - Automatic slot-availability check at submission time (show warning but
   do not hard-block; director makes the final capacity decision).
 ```
+
+**Shipped 2026-07-11** — `specs/013a-day-reservations/` (spec → clarify → plan → tasks → checklist
+→ analyze → implement → design-compliance → converge, 62/62 tasks, 20 new backend integration
+tests + 6 new web tests + 6 new parent-mobile tests, 478 backend + 59 web + 53 parent-mobile
+passing). New `day_reservations` tenant table; parent-mobile gets three entry points sharing one
+form component plus an own-request-history/cancel screen; director web gets a "Verzoeken" queue.
+Worth knowing before starting a dependent feature:
+
+- **`DayReservation` deliberately has no `LocationId`** — a parent reporting illness doesn't pick
+  a location. Absence approval resolves it at approval time from the child's active `Contract`
+  matching the requested date's weekday (a child can hold contracts at two different locations
+  under feature 007's split-location rule), failing cleanly with a new `NoContractedLocation`
+  result rather than guessing — found and fixed during implementation, not anticipated in the
+  original plan (research.md R7). Any future feature resolving "which location does this
+  child-level action apply to" without an explicit location on the request itself should follow
+  this same weekday-match-against-active-contracts pattern rather than inventing a new one.
+- **Absence approval reuses `MarkAbsentCommand` (feature 010) via `IMediator.Send`, not a second
+  attendance-write implementation** — inherits its closure-day guard and unique-constraint race
+  handling for free. Extra/exchange approvals only transition the reservation's own status; no
+  `AttendanceRecord` is written, since 010's existing check-in flow already handles an unplanned
+  day with no matching contracted day (`PlannedDurationMinutes = null`).
+- **Every approve/reject/cancel decision runs inside `IAdvisoryLockService.RunExclusiveAsync`
+  keyed on the reservation's own id** (feature 007's precedent for serializing concurrent
+  requests against the same aggregate) rather than an optimistic-concurrency/`ExecuteUpdateAsync`
+  guard — chosen specifically because the naive guarded-update approach has a real lost-update
+  window here: absence approval does a side effect (writing `AttendanceRecord`) *before* the
+  status flip, and a losing concurrent call could otherwise leave the attendance record written
+  even though the reservation itself ends up rejected by the other caller. The lock closes that
+  window entirely rather than accepting the risk.
+- **Capacity warnings for `extra`-type requests reuse feature 012a's occupancy computation**
+  (active contracts vs. `Location.MaxCapacity`), never attendance — attendance doesn't exist for
+  future dates, same reasoning 012a already established. Shown as a `warning` (amber) badge, not
+  `danger` — the spec explicitly calls this advisory, not blocking.
+- **`Badge`'s `warning` variant was added to `web/components/ui/badge.tsx`** — design-system.md
+  locks four semantic colors (danger/warning/success/info) but the shared `Badge` component only
+  implemented three before this feature. Any future web feature needing an amber/advisory badge
+  should reuse this variant rather than adding a fourth copy.
+- **A pre-existing test maintenance trap recurred and was fixed**: `TenantMigrationRolloutTests`'
+  schema-revert helper needs every new migration's own history-row deleted, or EF's pending-
+  migration detection silently stops finding earlier gaps once a newer migration's row is left in
+  place — this exact failure mode is already documented in that test file's own comments across
+  eight prior features, and this feature initially missed it too (caught by running the full
+  backend suite, not the filtered feature-scoped tests, before opening the PR). **Any future
+  feature adding a tenant-schema migration must add its migration name to that DELETE list** —
+  worth checking this specific test file first, same standing advice 012a's shipped-notes already
+  gave for a different part of the same test.
+- Design-compliance pass (static review, no simulator) found and fixed three real deviations
+  before merge: a parent-mobile cancel-action touch target at 32pt (below the 48pt floor), Home
+  quick-action icons at an off-scale 18px (no precedent anywhere in the app; fixed to the
+  established 20px), and the capacity-warning badge using `danger` instead of `warning` (see
+  above).
 
 ---
 
