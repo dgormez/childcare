@@ -422,7 +422,7 @@ export default function GroupViewScreen() {
             className="flex-row items-center justify-center rounded-xl bg-primary dark:bg-primary-dark active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
-              {t("groupView.multiSelect.logEvent")} ({selectedChildIds.size})
+              {t("groupView.multiSelect.logEvent", { count: selectedChildIds.size })}
             </Text>
           </TouchableOpacity>
         )

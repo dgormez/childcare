@@ -71,7 +71,7 @@
       "cancel": "Annuler",
       "selectedCount": "{{count}} sélectionné(s)",
       "selectAll": "Tout sélectionner",
-      "logEvent": "Enregistrer un événement",
+      "logEvent": "Enregistrer un événement ({{count}})",
       "maxReached": "Vous pouvez sélectionner jusqu'à 30 enfants à la fois."
     }
   },

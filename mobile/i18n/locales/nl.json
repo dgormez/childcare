@@ -71,7 +71,7 @@
       "cancel": "Annuleren",
       "selectedCount": "{{count}} geselecteerd",
       "selectAll": "Alles selecteren",
-      "logEvent": "Gebeurtenis registreren",
+      "logEvent": "Gebeurtenis registreren ({{count}})",
       "maxReached": "Je kan maximaal 30 kinderen tegelijk selecteren."
     }
   },

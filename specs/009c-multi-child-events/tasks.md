@@ -121,9 +121,9 @@ including correctly surfacing a partial-failure result discovered only at sync t
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T033 [P] Run `quickstart.md` end-to-end (curl steps + on-device steps) and fix anything it surfaces
-- [ ] T034 [P] Verify spacing/touch-target/motion compliance of the new roster multi-select UI and `QuickActionSheet` batch mode against `design-system.md`/`platform-rules.md` (48pt targets, no color-only state, spacing scale)
-- [ ] T035 Update `specs/009c-multi-child-events/data-model.md`/`contracts/child-events-batch-api.md` if implementation diverged from the plan
+- [X] T033 [P] Run `quickstart.md` end-to-end (curl steps + on-device steps) and fix anything it surfaces
+- [X] T034 [P] Verify spacing/touch-target/motion compliance of the new roster multi-select UI and `QuickActionSheet` batch mode against `design-system.md`/`platform-rules.md` (48pt targets, no color-only state, spacing scale)
+- [X] T035 Update `specs/009c-multi-child-events/data-model.md`/`contracts/child-events-batch-api.md` if implementation diverged from the plan
 
 ---
 

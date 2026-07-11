@@ -71,7 +71,7 @@
       "cancel": "Cancel",
       "selectedCount": "{{count}} selected",
       "selectAll": "Select all",
-      "logEvent": "Log event",
+      "logEvent": "Log event ({{count}})",
       "maxReached": "You can select up to 30 children at once."
     }
   },

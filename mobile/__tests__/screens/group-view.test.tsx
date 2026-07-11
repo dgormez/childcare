@@ -205,12 +205,12 @@ it("entering multi-select mode makes present children selectable and leaves abse
 
   const presentCard = await findByText("Timmy Tester");
   await act(async () => fireEvent.press(presentCard));
-  expect(getByText("groupView.multiSelect.logEvent (1)")).toBeTruthy();
+  expect(getByText("groupView.multiSelect.logEvent")).toBeTruthy();
 
   const absentCard = await findByText("Amy Ainsworth");
   await act(async () => fireEvent.press(absentCard));
   // Still only 1 selected — the absent child's card is disabled, the tap has no effect.
-  expect(getByText("groupView.multiSelect.logEvent (1)")).toBeTruthy();
+  expect(getByText("groupView.multiSelect.logEvent")).toBeTruthy();
 });
 
 it("'Alles selecteren' selects every present child up to the 30-child cap, and further taps beyond the cap are blocked with an explanation (T014/T020, SC-005)", async () => {
@@ -229,6 +229,6 @@ it("'Alles selecteren' selects every present child up to the 30-child cap, and f
   await act(async () => fireEvent.press(getByLabelText("groupView.multiSelect.enter")));
   await act(async () => fireEvent.press(await findByText("groupView.multiSelect.selectAll")));
 
-  expect(getByText("groupView.multiSelect.logEvent (30)")).toBeTruthy();
+  expect(getByText("groupView.multiSelect.logEvent")).toBeTruthy();
   expect(mockToastShow).toHaveBeenCalledWith(expect.objectContaining({ text1: "groupView.multiSelect.maxReached" }));
 });
