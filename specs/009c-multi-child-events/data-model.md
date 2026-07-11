@@ -20,4 +20,7 @@ in `ChildEventBatchResult` (Application layer) and the API response shape.
 ## Request/response shapes
 
 See `contracts/child-events-batch-api.md` for the full `POST /api/child-events/batch` contract.
-No changes to any existing `ChildEvent`-related contract, endpoint, or entity.
+No changes to any existing `ChildEvent`-related contract, endpoint, or entity. Each batch item
+carries a client-generated `id` (mirrors `ChildEvent.Id`'s existing client-generated-on-create
+convention, feature 009) so a retried offline-queue replay is idempotent per child, not just
+per batch — see contracts/child-events-batch-api.md's `items` field.

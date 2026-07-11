@@ -18,7 +18,11 @@ behavior for staff/director callers.
 Request:
 ```json
 {
-  "childIds": ["guid", "guid", "guid"],
+  "items": [
+    { "childId": "guid", "id": "guid" },
+    { "childId": "guid", "id": "guid" },
+    { "childId": "guid", "id": "guid" }
+  ],
   "eventType": "sleep",
   "occurredAt": "2026-07-11T13:00:00Z",
   "endedAt": null,
@@ -27,8 +31,16 @@ Request:
 }
 ```
 
-- `childIds`: 1–30 entries, deduplicated server-side. `> 30` → `422
-  { errorKey: "errors.child_events.batch_too_large" }` before any child is processed.
+- `items`: 1–30 entries, deduplicated by `childId` server-side. `> 30` → `422
+  { errorKey: "errors.child_events.batch_too_large" }` before any child is processed. Each
+  entry's `id` is a client-generated id for that child's future `ChildEvent` row — mirrors
+  `POST /api/child-events`'s existing `id` field and its idempotency-by-id behavior
+  (FR-013a, feature 009): if a retried replay (e.g. an ambiguous network failure after the
+  server already committed a child's row but before the client received the response) resends
+  the same `id` for a child that already succeeded, that child is reported as `created` again
+  (using the existing row) rather than creating a duplicate `ChildEvent`. This is what makes
+  the offline-queue replay in research.md R6 safe to retry as a whole after a partial or
+  ambiguous failure, without a separate per-batch idempotency mechanism.
 - `eventType`: MUST be one of the eight multi-select-eligible types (`sleep`, `diaper`,
   `feeding_bottle`, `feeding_solid`, `mood`, `activity`, `note`, `custom`). Any other value
   (including `temperature`, `medication`, `weight`, `growth_check`) → `422
@@ -37,10 +49,6 @@ Request:
   since the PIN-confirmation flow they require doesn't fit a batch.
 - `payload`/`endedAt`/`visibleToParent`: same shape and validation rules as
   `POST /api/child-events` (feature 009), applied once and shared across every child in the batch.
-- No client-generated `id` — each per-child `ChildEvent` gets a fresh server-generated id (unlike
-  the single-child endpoint, a batch has no single id for offline idempotency to key off; replay
-  idempotency for the batch as a whole is handled by the offline queue layer, research.md R6, not
-  by this endpoint).
 
 Response `200` (always 200, whether every child succeeded or some failed — never 207, to keep the
 mobile client's `response.ok` handling uniform, research.md R6):
@@ -55,8 +63,8 @@ mobile client's `response.ok` handling uniform, research.md R6):
 }
 ```
 
-- `created`: one entry per successfully created `ChildEvent`, in the same order as the request's
-  `childIds` (skipping failures).
+- `created`: one entry per successfully created (or, on an idempotent-retry match, already-existing)
+  `ChildEvent`, in the same order as the request's `items` (skipping failures).
 - `errors`: one entry per failed `child_id`, `reason` one of `child_not_found`, `not_present`,
   `validation_failed` (data-model.md's `ChildEventBatchFailureReason`, snake_cased for the wire
   the same way `ChildEventTypeExtensions` already snake_cases multi-word event types).

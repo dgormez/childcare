@@ -14,7 +14,7 @@ testing.
 
 **Purpose**: Contracts, i18n scaffolding, and route registration shared across all stories.
 
-- [ ] T001 [P] Add `RecordChildEventBatchRequest` DTO in `backend/ChildCare.Contracts/Requests/ChildEventRequests.cs`
+- [ ] T001 [P] Add `RecordChildEventBatchRequest` DTO (an `Items: IReadOnlyList<ChildEventBatchItem>` of `{ ChildId, Id }` pairs, per contracts/child-events-batch-api.md — `Id` is client-generated for per-child idempotency, research.md R5) in `backend/ChildCare.Contracts/Requests/ChildEventRequests.cs`
 - [ ] T002 [P] Add `ChildEventBatchResponse`/`ChildEventBatchCreatedItem`/`ChildEventBatchErrorItem` DTOs in `backend/ChildCare.Contracts/Responses/ChildEventResponses.cs`
 - [ ] T003 [P] Add `childEvents.batch.*` and `groupView.multiSelect.*` i18n keys (toggle label, select-all, action bar count, success toast, partial-failure list, retry button, per-reason messages) to `mobile/i18n/locales/en.json`, `mobile/i18n/locales/nl.json`, `mobile/i18n/locales/fr.json`
 
@@ -58,10 +58,10 @@ present children, and verify 8 `ChildEvent` rows exist sharing the same `eventTy
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Implement `RecordChildEventBatchCommand`/validator/handler: dedupe `childIds`, cap at 30, reject unsupported `eventType` types before the loop, then loop per child calling `RecordChildEventCommand`'s existing validation/creation logic (reused, not duplicated per plan.md), one `SaveChangesAsync` per child (research.md R5), collecting `created`/`errors` in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
+- [ ] T016 [US1] Implement `RecordChildEventBatchCommand`/validator/handler: dedupe `items` by `childId`, cap at 30, reject unsupported `eventType` types before the loop, then loop per item calling `RecordChildEventCommand`'s existing validation/creation logic including its idempotency-by-`id` check (reused, not duplicated per plan.md/research.md R5), one `SaveChangesAsync` per child, collecting `created`/`errors` in `backend/ChildCare.Application/ChildEvents/RecordChildEventBatchCommand.cs`
 - [ ] T017 [US1] Replace T008's stub wiring with the real `RecordChildEventBatchCommand` call in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs`
 - [ ] T018 [P] [US1] Regenerate OpenAPI types for the batch endpoint in `mobile/services/generated/api-types.ts`
-- [ ] T019 [P] [US1] Add `recordChildEventBatch()` (online path only for this story — offline queuing is US3) in `mobile/services/childEvents.ts`
+- [ ] T019 [P] [US1] Add `recordChildEventBatch()` (generates a client-side `id` per selected child via the existing `generateId()` helper, builds the `items` array, online path only for this story — offline queuing is US3) in `mobile/services/childEvents.ts`
 - [ ] T020 [US1] Add multi-select mode state, header entry-point button, per-card selected state, and "Alles selecteren" to the "children" tab in `mobile/app/(app)/index.tsx` (research.md R7) — long-press remains bound to absence-marking, unaffected
 - [ ] T021 [US1] Add a bottom action bar (selected count + "Log event" button) shown when ≥1 child is selected, in `mobile/app/(app)/index.tsx`
 - [ ] T022 [US1] Extend `QuickActionSheet` to accept `childIds: string[]` in addition to the existing single `childId`, filter `EVENT_TYPES` to the 8 batch-eligible types when in batch mode, and call `recordChildEventBatch` (not `recordChildEvent`) on submit, showing a success toast with the created count in `mobile/components/QuickActionSheet.tsx`

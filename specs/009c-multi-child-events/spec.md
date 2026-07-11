@@ -58,7 +58,7 @@ Error state: On partial failure, list which children failed and why (plain-langu
 
 Accessibility: 48pt minimum touch targets on child selection cards; selected/failed state is never conveyed by color alone — paired with a check icon (selected) or alert icon (failed), per `design-system.md`.
 
-Offline behavior: The batch is queued as a single `offline_queue` entry and replayed as one batch call on sync — never exploded into N individual calls.
+Offline behavior: The batch is queued as a single `offline_queue` entry and replayed as one batch call on sync — never exploded into N individual calls. If that replay produces a partial-failure result (discovered only at sync time, with the caregiver no longer present to review it), it surfaces through the same "needs review" indicator the caregiver app already uses for a rejected queued item (feature 009), rather than silently counting as fully synced — the caregiver reviews and resolves it later, the same way they already handle any other queued item needing review.
 
 ### Technical Requirements
 

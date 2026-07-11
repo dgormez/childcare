@@ -93,13 +93,25 @@ cases, User Story 2) explicitly calls for this behavior. `AttendanceRecord` (not
 the correct source of truth for presence, since it's the entity feature 010 built specifically to
 own that concept.
 
-## R5 — Per-child transactional isolation
+## R5 — Per-child transactional isolation and idempotency
 
-**Decision**: The batch handler iterates the (already deduplicated, capped-at-30) `child_ids` in a
-loop, calling `db.SaveChangesAsync()` after each individual child's checks/write, inside a
+**Decision**: The batch handler iterates the (already deduplicated, capped-at-30) request items in
+a loop, calling `db.SaveChangesAsync()` after each individual child's checks/write, inside a
 try/catch per iteration. A failure on one child's iteration is caught, recorded as that child's
 failure reason, and the loop continues to the next child — it does not roll back or abort
-previously-succeeded children.
+previously-succeeded children. Each item carries a client-generated `id`
+(`contracts/child-events-batch-api.md`); before creating a child's row, the handler checks whether
+that `id` already exists (reusing `RecordChildEventCommandHandler`'s existing idempotency-by-id
+check, FR-013a) and, if so, reports that child as `created` using the existing row instead of
+inserting a duplicate.
+
+**Idempotency rationale (checklist finding CHK017)**: without a per-child id, a batch retried after
+an ambiguous failure (e.g. the server commits several children's rows, then the connection drops
+before the client receives the response) would have no way to distinguish "this child already
+succeeded" from "this child was never attempted" on the next replay attempt — a naive retry would
+double-create events for the children that already succeeded. A per-child client-generated id,
+mirroring the single-child endpoint's own established idempotency mechanism, closes this without
+inventing a new pattern.
 
 **Rationale**: EF Core's `SaveChangesAsync()` wraps only the currently-tracked pending changes in
 one transaction; calling it once per child after that child's `Add` (rather than once at the end
@@ -132,6 +144,12 @@ offline-replayed result to match the online one — this small, precedented exte
 narrowest way to satisfy that without building a new review surface. The caregiver app's existing
 "needs review" UI convention (`EventTimeline` reading a `"rejected: "` prefix) is reused for a
 `"partial: "` prefix rather than duplicated.
+
+**Retry is manual, not automatic (checklist findings CHK015/CHK016)**: a sync-time partial failure
+is not auto-retried on the next sync cycle — it surfaces as a "needs review" item exactly like a
+`"rejected: "` one already does, and the caregiver resolves it the same way they already resolve
+any other item in that state (open the child's timeline, see the flagged event, decide what to
+do), rather than this feature inventing a second, batch-specific review flow.
 
 ## R7 — Client UI shape
 
