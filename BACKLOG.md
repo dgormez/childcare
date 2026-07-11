@@ -37,6 +37,8 @@
 | 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | ✅ Done |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | ✅ Done |
+| 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | 🔲 Not started |
+| 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | 🔲 Not started |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
@@ -2371,6 +2373,145 @@ Worth knowing before starting a dependent feature:
   quick-action icons at an off-scale 18px (no precedent anywhere in the app; fixed to the
   established 20px), and the capacity-warning badge using `danger` instead of `warning` (see
   above).
+
+---
+
+### 009c — Multi-Child Events
+
+```
+Allow caregivers to select multiple children before logging an event,
+so one submission creates one child_event record per selected child.
+
+Context: today a caregiver logging nap time for 8 babies must tap each
+child individually — 8 separate submissions of the same event with the
+same start time. For group moments (everyone goes down for a nap at 13:00,
+everyone gets a diaper change at 11:00), this is pure friction.
+
+What to build:
+- In the caregiver app, when starting a new child event, add a
+  "Meerdere kinderen" toggle before the child picker.
+- When toggled on: replace the single-child selector with a multi-select
+  list showing all children currently in the room (present today, same group).
+  Each child appears as a selectable card (photo + name). Tap to select/deselect.
+  A "Alles selecteren" shortcut selects all present children.
+- The event form below is identical to the single-child flow (event type,
+  fields, timestamp). On submit: the API receives one request with
+  child_ids: UUID[] plus the event payload.
+- API: POST /child-events/batch
+    { child_ids: UUID[], event_type: ..., occurred_at: ..., payload: {...} }
+  Server loops internally and creates one child_event row per child_id.
+  Response: { created: UUID[], errors: [{child_id, reason}] } — partial
+  success is allowed (e.g. if one child has a conflicting record).
+- After submission: a summary toast "Opgeslagen voor 8 kinderen ✓."
+  If any child failed, show which ones with the reason.
+
+Supported event types for multi-select (the ones that make sense as
+group events):
+  sleep (nap start/end), diaper, feeding_bottle, feeding_solid, mood,
+  activity, note, custom.
+NOT supported for multi-select (inherently individual):
+  temperature, medication, weight/growth_check — these require
+  per-child values and must remain single-child.
+
+Key constraints:
+- The batch endpoint must be transactional per child — failure for one
+  child does not roll back the others.
+- Maximum 30 children per batch (guards against accidental "select all"
+  for a large location).
+- The existing single-child flow is unchanged — multi-select is opt-in
+  per event logging session.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- A child in the multi-select list gets checked out mid-flow (another
+  caregiver scans them out). The server validates presence at occurred_at
+  and returns an error for that child in the batch response.
+- Caregiver accidentally selects a child from a different group (shouldn't
+  happen with the group filter, but if it does): server rejects with
+  403 if the device token's group scope doesn't match.
+- Offline: the batch is stored as a single offline_queue entry. On sync,
+  it is replayed as one batch call — not exploded into N individual calls.
+
+Out of scope:
+- Bulk editing past events (retroactive multi-update) — not needed.
+- Multi-select for group activities (009b already handles the group-level
+  concept; this is for per-child records that happen to be identical).
+```
+
+---
+
+### 013f — Reservation Settings
+
+```
+Add per-location configuration for the day reservation feature (013a).
+Some KDVs do not allow parents to request day swaps or have strict
+policies on absences. Directors need control over which request types
+are active and how they behave.
+
+Context: 013a ships with a fixed approval-queue model. This feature adds
+a settings layer so directors can customise behaviour without code changes.
+
+What to build:
+- Add to location settings (004 location record or a linked
+  location_settings JSONB/table):
+    reservation_absences_mode   TEXT CHECK (reservation_absences_mode IN (
+                                  'disabled',       -- parents cannot submit absences via app
+                                  'informational',  -- parent submits, director notified, no approval needed; auto-approved
+                                  'approval'        -- default: director must approve/reject
+                                )) DEFAULT 'approval',
+    reservation_extras_mode     TEXT CHECK (reservation_extras_mode IN (
+                                  'disabled',
+                                  'informational',
+                                  'approval'
+                                )) DEFAULT 'approval',
+    reservation_swaps_mode      TEXT CHECK (reservation_swaps_mode IN (
+                                  'disabled',
+                                  'informational',
+                                  'approval'
+                                )) DEFAULT 'disabled',  -- many KDVs disallow swaps by default
+    reservation_notice_hours    INT DEFAULT 0  -- minimum hours in advance a request must be submitted
+                                               -- (e.g. 24 = parent must submit at least 24h before the day)
+
+- Behaviour by mode:
+    disabled:      The request type does not appear in the parent app for
+                   this location. If a parent somehow POSTs it, the API
+                   returns 403 with "Dit type aanvraag is niet beschikbaar."
+    informational: Parent submits; the request is immediately auto-approved
+                   (status → 'approved', decided_at = NOW(), decided_by = system).
+                   Director receives a push notification ("Melding: [Name] afwezig
+                   op [date]") but no action is required.
+    approval:      Existing 013a flow — director approves/reject in queue.
+
+- Parent app: hides request types that are 'disabled' for this location.
+  No confusing "not available" screen — the button simply doesn't exist.
+
+- Director web admin: "Reserveringsinstellingen" tab in the location settings
+  screen (004). Three dropdowns (one per type) + minimum notice hours field.
+  A short explanation per option.
+
+Key constraints:
+- Mode changes take effect immediately for new requests. In-flight pending
+  requests are not retroactively affected.
+- reservation_notice_hours: if set to 24, a request for tomorrow before
+  the same time yesterday is rejected at submission. Validate at the API
+  on POST /day-reservations.
+- All user-facing strings use i18n keys (NL/FR/EN).
+
+Edge cases:
+- Director switches a type from 'approval' to 'informational' mid-month.
+  Existing pending requests in the queue stay pending — director must
+  manually close them. Show a warning when switching modes if open
+  requests exist for this type.
+- Director sets notice_hours = 48 but a caregiver (via the director's
+  web admin) submits a retroactive absence for a past date. The notice
+  check is bypassed for web-admin submissions — only enforced for parent
+  app submissions.
+
+Out of scope:
+- Per-child overrides (e.g. "swaps allowed for this family"). All settings
+  are per-location.
+- Time-window restrictions (e.g. "only submit before 8am") — Phase 3.
+```
 
 ---
 
