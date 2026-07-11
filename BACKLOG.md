@@ -34,7 +34,7 @@
 | 011 | `011-closure-calendar` | KDV holiday/closure schedule, parent notification | 004 | ✅ Done |
 | 012 | `012-caregiver-scheduling` | Shift planning, multi-location day assignment | 005, 010 | ✅ Done |
 | 012a | `012a-waiting-list` | Waiting list management — entries, priority ordering, status tracking, occupancy view | 004, 006 | ✅ Done |
-| 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | 🔲 Not started |
+| 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | ✅ Done |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | 🔲 Not started |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
@@ -1251,6 +1251,39 @@ Out of scope:
 - Video upload (photo only for MVP; video storage costs are high).
 - Parent commenting on activities — Phase 2.
 ```
+
+**Shipped 2026-07-11** — `specs/009b-group-activities/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 71/71 tasks, PR #19 squash-merged after green CI —
+458/458 backend + 114/114 mobile + 47/47 parent-mobile + 53/53 web tests passing). Two new tenant
+tables (`group_activities`/`group_activity_photos`), a device-authenticated create/photo-upload/
+timeline surface mirroring `ChildEventEndpoints.cs`, a merged group-timeline query, a
+consent-filtered parent daily-summary extension + monthly gallery, and a director-only delete.
+This run resumed a prior session's backend work that was implemented but never committed and had
+zero test coverage exercised against a live process — picked up from `tasks.md` rather than
+re-running specify/plan/tasks, and found three real bugs only visible once the backend was
+actually run rather than just read:
+
+- The photo-upload endpoint 500'd on every call: minimal APIs require antiforgery middleware for
+  any `IFormFile`-bound route, and this device-token-only API (no cookie/browser session to
+  protect) never registers one — fixed with `.DisableAntiforgery()` on that one endpoint. Worth
+  remembering for any future minimal-API file-upload endpoint in this codebase.
+- No `FakeGroupActivityPhotoStorage` test double existed, so every photo-upload test was silently
+  hitting real GCS with no local credentials and 500ing — added it (mirrors
+  `FakeProfilePhotoStorage`'s existing role) and registered it in
+  `OrganisationOnboardingWebAppFactory`.
+- `TenantMigrationRolloutTests`' schema-revert helper dropped the two new tables but never added
+  `AddGroupActivities` to its `__EFMigrationsHistory` cleanup — the same class of gap every
+  migration-adding feature since 003 has hit (see 012a's shipped-note); fixed, and the standing
+  "extend this test's revert helper" reminder applies to the next migration-adding feature too.
+- A stray always-failing debug test (`DebugPhotoTest.cs`) from that earlier debugging session was
+  found and deleted.
+
+`quickstart.md` itself had a real bug (its own Scenario 1 example omitted the required
+`occurredAt` field) — found by running the scenarios against a live local backend and fixed in
+the doc. Implemented from scratch in this pass: all mobile/parent-mobile/web UI and NL/EN/FR
+i18n, plus mobile's `photoUploadQueue.ts` — a dedicated local queue distinct from the existing
+offline-write queue, since a photo upload is `multipart/form-data` and can't ride the JSON-body
+`syncEngine.ts` replay path. `/speckit-converge` found no gaps against spec/plan/tasks.
 
 ---
 
