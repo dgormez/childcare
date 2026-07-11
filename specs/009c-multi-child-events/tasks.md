@@ -53,7 +53,7 @@ present children, and verify 8 `ChildEvent` rows exist sharing the same `eventTy
 - [ ] T011 [P] [US1] Integration test: batch with > 30 `childIds` is rejected `422 errors.child_events.batch_too_large` before any row is created in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [ ] T012 [P] [US1] Integration test: batch containing a `childId` that doesn't exist in this tenant reports that child under `errors` with `reason: "child_not_found"`, other children still succeed in `backend/ChildCare.Api.Tests/ChildEvents/RecordChildEventBatchTests.cs`
 - [ ] T013 [P] [US1] Integration test: `GET /api/children` and `GET /api/groups` succeed with a device token (regression test for T004-T006's R2 fix) in `backend/ChildCare.Api.Tests/CaregiverReadScopingTests.cs`
-- [ ] T014 [P] [US1] Mobile component test: room roster header shows a multi-select entry point; entering multi-select mode makes present children's cards selectable and absent children non-selectable in `mobile/__tests__/groupView.test.tsx`
+- [ ] T014 [P] [US1] Mobile component test: room roster header shows a multi-select entry point; entering multi-select mode makes present children's cards selectable and absent children non-selectable; selecting a 31st present child is blocked with an explanatory message (T020's 30-cap) in `mobile/__tests__/groupView.test.tsx`
 - [ ] T015 [P] [US1] Mobile component test: "Alles selecteren" selects every present child; submitting via the batch-mode `QuickActionSheet` calls `recordChildEventBatch` with all selected `childIds` and shows a success toast naming the count in `mobile/__tests__/quickActionSheet.test.tsx`
 
 ### Implementation for User Story 1
@@ -62,7 +62,7 @@ present children, and verify 8 `ChildEvent` rows exist sharing the same `eventTy
 - [ ] T017 [US1] Replace T008's stub wiring with the real `RecordChildEventBatchCommand` call in `backend/ChildCare.Api/Endpoints/ChildEventEndpoints.cs`
 - [ ] T018 [P] [US1] Regenerate OpenAPI types for the batch endpoint in `mobile/services/generated/api-types.ts`
 - [ ] T019 [P] [US1] Add `recordChildEventBatch()` (generates a client-side `id` per selected child via the existing `generateId()` helper, builds the `items` array, online path only for this story — offline queuing is US3) in `mobile/services/childEvents.ts`
-- [ ] T020 [US1] Add multi-select mode state, header entry-point button, per-card selected state, and "Alles selecteren" to the "children" tab in `mobile/app/(app)/index.tsx` (research.md R7) — long-press remains bound to absence-marking, unaffected
+- [ ] T020 [US1] Add multi-select mode state, header entry-point button, per-card selected state, and "Alles selecteren" to the "children" tab in `mobile/app/(app)/index.tsx` (research.md R7) — long-press remains bound to absence-marking, unaffected. Caps selection at 30 (spec.md Edge Cases/SC-005): once 30 are selected, remaining unselected cards become non-selectable with a brief explanatory message rather than silently ignoring further taps
 - [ ] T021 [US1] Add a bottom action bar (selected count + "Log event" button) shown when ≥1 child is selected, in `mobile/app/(app)/index.tsx`
 - [ ] T022 [US1] Extend `QuickActionSheet` to accept `childIds: string[]` in addition to the existing single `childId`, filter `EVENT_TYPES` to the 8 batch-eligible types when in batch mode, and call `recordChildEventBatch` (not `recordChildEvent`) on submit, showing a success toast with the created count in `mobile/components/QuickActionSheet.tsx`
 

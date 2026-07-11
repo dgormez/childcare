@@ -70,7 +70,7 @@ Security considerations: Every `child_event` row created by the batch is scoped 
 
 Performance considerations: Batch insert should avoid N sequential round-trips where reasonably avoidable, but per-child transactional isolation and partial-success correctness take priority over raw throughput at this scale (a room tops out around 30 children).
 
-Testing requirements: Happy path (all children succeed); partial failure (one child checked out mid-flow); scope violation (child outside the device token's group); max-batch-size enforcement; offline-queue single-entry replay.
+Testing requirements: Happy path (all children succeed); partial failure (one child checked out mid-flow, reported as `not_present`); a child outside the device token's room (reported the same way, `not_present`, since there is no separate per-child scope check — see Security considerations above); max-batch-size enforcement (client and server); offline-queue single-entry replay.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -122,7 +122,7 @@ The tablet loses connectivity mid-shift. The caregiver still needs to log a grou
 ### Edge Cases
 
 - What happens when a caregiver selects a child who is then checked out by another caregiver before the batch is submitted? The server checks the child's attendance record (feature 010) at submission time and returns a per-child error for that child; the rest of the batch still succeeds.
-- What happens when a `child_id` in the batch does not belong to the submitting device token's own room? This is not reachable through the UI, since the selectable grid is built only from the device's own room roster (same source as the existing single-child flow); a direct API call with a foreign `child_id` fails that child as not found in this room, without affecting the rest of the batch.
+- What happens when a `child_id` in the batch does not belong to the submitting device token's own room? This is not reachable through the UI, since the selectable grid is built only from the device's own room roster (same source as the existing single-child flow); a direct API call with a foreign `child_id` fails that child with the same `not_present` reason an absent child gets (there is no separate per-child scope check — see Technical Requirements' Security considerations), without affecting the rest of the batch.
 - What happens when a caregiver selects more than 30 children? The client caps selection at 30 and disables further selection with a brief explanation; the server independently rejects any batch exceeding 30 `child_ids`.
 - What happens when a caregiver tries to use multi-select for an individual-only event type (temperature, medication, weight/growth_check)? Multi-select mode does not offer those event types — the caregiver only ever sees the existing single-child flow for them.
 - What happens when the room has only one child present? Multi-select mode still works — the grid shows that single selectable child, with no dead end.
