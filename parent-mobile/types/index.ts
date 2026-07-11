@@ -117,7 +117,7 @@ export interface ParentAnnouncementResponse {
   readAt:  string | null;
 }
 
-export type NotificationType = "newmessage" | "announcement" | "temperaturealert";
+export type NotificationType = "newmessage" | "announcement" | "temperaturealert" | "dayreservationdecided";
 
 export interface NotificationResponse {
   id:            string;
@@ -132,4 +132,27 @@ export interface NotificationResponse {
 
 export interface ParentInvitationErrorResponse {
   errorKey: string;
+}
+
+// ── Day reservations (feature 013a) ──────────────────────────────────────────────
+export type DayReservationType = "absence" | "extra" | "exchange";
+export type DayReservationStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface DayReservationResponse {
+  id:                string;
+  childId:           string;
+  childDisplayName:  string;
+  type:              DayReservationType;
+  requestedDate:     string;
+  exchangeForDate:   string | null;
+  reason:            string | null;
+  absenceJustified:  boolean | null;
+  status:            DayReservationStatus;
+  requestedBy:       string;
+  decidedBy:         string | null;
+  decidedAt:         string | null;
+  directorNotes:     string | null;
+  capacityWarning:   boolean | null;
+  createdAt:         string;
+  updatedAt:         string | null;
 }

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
+import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { useColors } from "../../hooks/useColors";
 import { ScreenContainer } from "../../components/ScreenContainer";
@@ -10,6 +12,7 @@ import type { DailySummaryResponse, ParentChildResponse } from "../../types";
 export default function HomeScreen() {
   const { t } = useTranslation();
   const colors = useColors();
+  const router = useRouter();
 
   const [children,  setChildren]  = useState<ParentChildResponse[]>([]);
   const [summaries, setSummaries] = useState<Record<string, DailySummaryResponse | null>>({});
@@ -75,6 +78,44 @@ export default function HomeScreen() {
         {children.map((child) => (
           <DailySummaryCard key={child.id} child={child} summary={summaries[child.id] ?? null} />
         ))}
+
+        <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mt-2 mb-2">
+          {t("home.quickActions.title")}
+        </Text>
+        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/requests/absence")}
+            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+            style={{ minHeight: 48 }}
+          >
+            <CalendarOff color={colors.text} size={20} strokeWidth={2} />
+            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.reportSick")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/requests/extra")}
+            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+            style={{ minHeight: 48 }}
+          >
+            <CalendarPlus color={colors.text} size={20} strokeWidth={2} />
+            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExtra")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/requests/exchange")}
+            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+            style={{ minHeight: 48 }}
+          >
+            <ArrowLeftRight color={colors.text} size={20} strokeWidth={2} />
+            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExchange")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/requests")}
+            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+            style={{ minHeight: 48 }}
+          >
+            <ListChecks color={colors.text} size={20} strokeWidth={2} />
+            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.myRequests")}</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </ScreenContainer>
   );

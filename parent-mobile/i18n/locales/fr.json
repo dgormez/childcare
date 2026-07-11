@@ -46,6 +46,13 @@
     "loadFailed": "Impossible de charger le résumé du jour.",
     "groupActivities": {
       "title": "Moments de groupe"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "reportSick": "Mon enfant est malade",
+      "requestExtra": "Demander un jour supplémentaire",
+      "requestExchange": "Demander un échange de jour",
+      "myRequests": "Mes demandes"
     }
   },
   "messages": {
@@ -92,6 +99,13 @@
       "temperature_alert": {
         "title": "Alerte température",
         "body": "Une température de {{celsius}}°C a été enregistrée."
+      },
+      "day_reservation_decided": {
+        "approved_title": "Demande approuvée",
+        "approved_body": "Votre demande a été approuvée.",
+        "rejected_title": "Demande refusée",
+        "rejected_body": "Votre demande a été refusée.",
+        "rejected_body_with_note": "Votre demande a été refusée : {{directorNotes}}"
       }
     }
   },
@@ -140,6 +154,15 @@
     },
     "children": {
       "not_found": "Cet enfant est introuvable."
+    },
+    "day_reservations": {
+      "child_not_linked": "Vous n'avez pas accès aux informations de cet enfant.",
+      "not_contracted_day": "Ce n'est pas un jour contractuel de votre enfant.",
+      "closure_day": "Cette date est un jour de fermeture.",
+      "not_pending": "Cette demande a déjà été traitée.",
+      "missing_justified_flag": "Veuillez indiquer si cette absence est justifiée.",
+      "no_contracted_location": "Impossible de déterminer à quelle antenne cela s'applique.",
+      "not_found": "Cette demande est introuvable."
     }
   },
   "gallery": {
@@ -147,5 +170,42 @@
     "empty": "Aucune photo ce mois-ci.",
     "noConsent": "Aucune photo à afficher pour le moment. Demandez à la crèche le consentement photo pour les voir ici.",
     "loadFailed": "Impossible de charger la galerie."
+  },
+  "dayReservations": {
+    "absenceTitle": "Mon enfant est malade",
+    "extraTitle": "Demander un jour supplémentaire",
+    "exchangeTitle": "Demander un échange de jour",
+    "childLabel": "Enfant",
+    "dateLabel": "Date",
+    "exchangeForDateLabel": "Jour cédé",
+    "reasonLabel": "Motif (facultatif)",
+    "reasonPlaceholder": "Facultatif — informez la crèche",
+    "submit": "Envoyer la demande",
+    "submitting": "Envoi…",
+    "submitFailed": "Impossible d'envoyer cette demande. Veuillez réessayer.",
+    "pastDate": "Cette date est trop éloignée dans le passé.",
+    "todayLabel": "Aujourd'hui",
+    "tomorrowLabel": "Demain",
+    "chooseDate": "Choisir une date",
+    "myRequestsTitle": "Mes demandes",
+    "noRequests": "Vous n'avez soumis aucune demande pour le moment.",
+    "loadFailed": "Impossible de charger vos demandes. Veuillez réessayer.",
+    "cancel": "Annuler la demande",
+    "cancelConfirmTitle": "Annuler cette demande ?",
+    "cancelConfirmBody": "Cette demande sera retirée et la crèche n'y donnera plus suite.",
+    "cancelConfirm": "Annuler la demande",
+    "cancelDismiss": "Conserver la demande",
+    "cancelFailed": "Impossible d'annuler cette demande. Veuillez réessayer.",
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Refusée",
+      "cancelled": "Annulée"
+    },
+    "type": {
+      "absence": "Absence",
+      "extra": "Jour supplémentaire",
+      "exchange": "Échange de jour"
+    }
   }
 }

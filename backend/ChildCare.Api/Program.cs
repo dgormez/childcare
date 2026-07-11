@@ -185,6 +185,11 @@ builder.Services.AddScoped<IClosureCalendarReader, ClosureCalendarReader>();
 // Reuses IExpoPushSender (009) unchanged (research.md R3) — no new push registration needed.
 builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactResolver>();
 
+// ── Day reservations (feature 013a) ──────────────────────────────────────────
+// Reuses IExpoPushSender/ICurrentParentContactResolver/IAdvisoryLockService/IClosureCalendarReader
+// unchanged — no new ports needed (research.md).
+builder.Services.AddScoped<ChildCare.Application.DayReservations.DayReservationNotificationService>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -625,6 +630,7 @@ app.MapMessageThreadEndpoints();
 app.MapAnnouncementEndpoints();
 app.MapNotificationEndpoints();
 app.MapParentEndpoints();
+app.MapDayReservationEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

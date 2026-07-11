@@ -33,7 +33,8 @@
     "waitingList": "Liste d'attente",
     "messages": "Messages",
     "announcements": "Annonces",
-    "groups": "Groupes"
+    "groups": "Groupes",
+    "dayReservations": "Demandes"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -296,6 +297,53 @@
     "occupancyFrom": "Du",
     "occupancyTo": "Au",
     "viewOccupancy": "Voir l'occupation"
+  },
+  "dayReservations": {
+    "title": "Demandes",
+    "cancel": "Annuler",
+    "statusLabel": "Statut",
+    "statusFilter": {
+      "pending": "En attente",
+      "all": "Tous les statuts",
+      "approved": "Approuvée",
+      "rejected": "Refusée",
+      "cancelled": "Annulée"
+    },
+    "type": {
+      "absence": "Absence",
+      "extra": "Jour supplémentaire",
+      "exchange": "Échange de jour"
+    },
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Refusée",
+      "cancelled": "Annulée"
+    },
+    "emptyState": "Aucune demande en attente.",
+    "loadError": "Impossible de charger les demandes. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "genericError": "Impossible de traiter cette demande. Veuillez réessayer.",
+    "columnChild": "Enfant",
+    "columnType": "Type",
+    "columnDate": "Date",
+    "columnReason": "Motif",
+    "columnActions": "Actions",
+    "exchangeFor": "Échange {date}",
+    "capacityWarning": "Cette antenne pourrait être à ou au-dessus de sa capacité à cette date.",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "approveTitle": "Approuver la demande",
+    "rejectTitle": "Refuser la demande",
+    "justifiedLabel": "Justifiée (sans frais)",
+    "justifiedYes": "Justifiée",
+    "justifiedNo": "Non justifiée",
+    "directorNotesLabel": "Note (facultatif)",
+    "confirmApprove": "Confirmer l'approbation",
+    "confirmReject": "Confirmer le refus",
+    "notPending": "Cette demande a déjà été traitée.",
+    "closureDayConflict": "Cette date est devenue un jour de fermeture — cette absence ne peut pas être approuvée.",
+    "noContractedLocation": "Impossible de déterminer à quelle antenne cette absence se rapporte."
   },
   "messages": {
     "title": "Messages",

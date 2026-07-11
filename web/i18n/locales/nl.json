@@ -33,7 +33,8 @@
     "waitingList": "Wachtlijst",
     "messages": "Berichten",
     "announcements": "Mededelingen",
-    "groups": "Groepen"
+    "groups": "Groepen",
+    "dayReservations": "Verzoeken"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -296,6 +297,53 @@
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
     "viewOccupancy": "Bezetting bekijken"
+  },
+  "dayReservations": {
+    "title": "Verzoeken",
+    "cancel": "Annuleren",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "pending": "In afwachting",
+      "all": "Alle statussen",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "cancelled": "Geannuleerd"
+    },
+    "type": {
+      "absence": "Afwezigheid",
+      "extra": "Extra dag",
+      "exchange": "Dagwissel"
+    },
+    "status": {
+      "pending": "In afwachting",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "cancelled": "Geannuleerd"
+    },
+    "emptyState": "Geen openstaande verzoeken.",
+    "loadError": "Kan de verzoeken niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "genericError": "Kan dit verzoek niet verwerken. Probeer het opnieuw.",
+    "columnChild": "Kind",
+    "columnType": "Type",
+    "columnDate": "Datum",
+    "columnReason": "Reden",
+    "columnActions": "Acties",
+    "exchangeFor": "Ruilt {date}",
+    "capacityWarning": "Deze locatie kan vol of overbezet zijn op deze datum.",
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "approveTitle": "Verzoek goedkeuren",
+    "rejectTitle": "Verzoek afwijzen",
+    "justifiedLabel": "Gerechtvaardigd (geen kosten)",
+    "justifiedYes": "Gerechtvaardigd",
+    "justifiedNo": "Niet gerechtvaardigd",
+    "directorNotesLabel": "Notitie (optioneel)",
+    "confirmApprove": "Goedkeuring bevestigen",
+    "confirmReject": "Afwijzing bevestigen",
+    "notPending": "Dit verzoek is al beslist.",
+    "closureDayConflict": "Deze datum is een sluitingsdag geworden — deze afwezigheid kan niet worden goedgekeurd.",
+    "noContractedLocation": "Kon niet bepalen op welke locatie deze afwezigheid van toepassing is."
   },
   "messages": {
     "title": "Berichten",

@@ -33,7 +33,8 @@
     "waitingList": "Waiting List",
     "messages": "Messages",
     "announcements": "Announcements",
-    "groups": "Groups"
+    "groups": "Groups",
+    "dayReservations": "Requests"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -296,6 +297,53 @@
     "occupancyFrom": "From",
     "occupancyTo": "To",
     "viewOccupancy": "View occupancy"
+  },
+  "dayReservations": {
+    "title": "Requests",
+    "cancel": "Cancel",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "pending": "Pending",
+      "all": "All statuses",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "absence": "Absence",
+      "extra": "Extra day",
+      "exchange": "Day exchange"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "emptyState": "No pending requests.",
+    "loadError": "Couldn't load requests. Please try again.",
+    "retry": "Retry",
+    "genericError": "Couldn't process this request. Please try again.",
+    "columnChild": "Child",
+    "columnType": "Type",
+    "columnDate": "Date",
+    "columnReason": "Reason",
+    "columnActions": "Actions",
+    "exchangeFor": "Swaps {date}",
+    "capacityWarning": "This location may be at or over capacity on this date.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveTitle": "Approve request",
+    "rejectTitle": "Reject request",
+    "justifiedLabel": "Justified (no charge)",
+    "justifiedYes": "Justified",
+    "justifiedNo": "Unjustified",
+    "directorNotesLabel": "Note (optional)",
+    "confirmApprove": "Confirm approval",
+    "confirmReject": "Confirm rejection",
+    "notPending": "This request has already been decided.",
+    "closureDayConflict": "This date has become a closure day — this absence can't be approved.",
+    "noContractedLocation": "Couldn't determine which location this absence applies to."
   },
   "messages": {
     "title": "Messages",
