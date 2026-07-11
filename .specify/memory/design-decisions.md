@@ -33,13 +33,17 @@ A running log of cross-feature UX decisions, so features don't each re-litigate 
   this entry kept the shipped `#2563EB` blue and argued against a retrofit for warmth alone.
   That held only until an actual warm palette was proposed and reviewed; genuine warmth in the
   neutral scale plus a repainted primary was judged worth it.)*
-- Color tokens live in exactly one file per platform — `mobile/theme/colors.js` and
-  `web/theme/colors.ts` — each imported by that platform's consumers, never a hardcoded value
-  scattered across screens. *(2026-07-07 — replaced a setup where the palette was defined
-  twice within `mobile/` alone, a hardcoded object in `useColors.ts` plus raw Tailwind
-  classNames on every screen. Updated 2026-07-08 when `web/` shipped: the original version of
-  this entry hoped `web/` would consume the same values via a shared Tailwind preset or CSS
-  custom properties rather than a second hardcoded copy — in practice `web/theme/colors.ts` is
-  a second hand-maintained copy, kept in sync with `mobile/theme/colors.js` by hand, with
-  nothing enforcing the two don't drift. Revisit once a shared-package setup exists across
-  `mobile/`/`web/`; until then, any color-token change must be applied to both files.)*
+- Color tokens live in exactly one file per platform — `mobile/theme/colors.js`,
+  `parent-mobile/theme/colors.js`, and `web/theme/colors.ts` — each imported by that platform's
+  consumers, never a hardcoded value scattered across screens. *(2026-07-07 — replaced a setup
+  where the palette was defined twice within `mobile/` alone, a hardcoded object in
+  `useColors.ts` plus raw Tailwind classNames on every screen. Updated 2026-07-08 when `web/`
+  shipped: the original version of this entry hoped `web/` would consume the same values via a
+  shared Tailwind preset or CSS custom properties rather than a second hardcoded copy — in
+  practice `web/theme/colors.ts` is a second hand-maintained copy, kept in sync with
+  `mobile/theme/colors.js` by hand, with nothing enforcing the two don't drift. Corrected
+  2026-07-10 (feature 009b planning): `parent-mobile/` is a third, previously undocumented
+  hand-maintained copy (it's a separate Expo project from `mobile/`, not a consumer of it) — this
+  entry previously named only two files. Revisit once a shared-package setup exists across
+  `mobile/`/`parent-mobile/`/`web/`; until then, any color-token change must be applied to all
+  three files.)*

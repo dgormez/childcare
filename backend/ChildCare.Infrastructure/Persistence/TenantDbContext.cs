@@ -80,6 +80,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    public DbSet<GroupActivity> GroupActivities => Set<GroupActivity>();
+
+    public DbSet<GroupActivityPhoto> GroupActivityPhotos => Set<GroupActivityPhoto>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -144,6 +148,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         ChildEventTypeExtensions.TryParseWireString(value, out var parsed)
             ? parsed
             : throw new FormatException($"Unknown ChildEventType: {value}");
+
+    private static GroupActivityType ParseGroupActivityType(string value) =>
+        GroupActivityTypeExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown GroupActivityType: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -388,6 +397,39 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Primary timeline access pattern (data-model.md).
             ce.HasIndex(x => new { x.ChildId, x.OccurredAt });
             ce.HasIndex(x => new { x.ChildId, x.EventType, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<GroupActivity>(ga =>
+        {
+            ga.ToTable("group_activities");
+            ga.HasKey(x => x.Id);
+            ga.Property(x => x.ActivityType)
+              .HasConversion(
+                  v => v.ToWireString(),
+                  v => ParseGroupActivityType(v))
+              .HasMaxLength(20)
+              .IsRequired();
+            ga.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            ga.Property(x => x.Description).HasMaxLength(2000);
+            // Native Npgsql array mapping (uuid[]) — same pattern as ChildEvent.RecordedBy
+            // (research.md R1).
+            ga.Property(x => x.RecordedBy).HasColumnType("uuid[]");
+            ga.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            ga.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            ga.HasOne<DevicePairing>().WithMany().HasForeignKey(x => x.RecordedByDeviceId);
+            // Group timeline access pattern (research.md R4).
+            ga.HasIndex(x => new { x.GroupId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<GroupActivityPhoto>(gap =>
+        {
+            gap.ToTable("group_activity_photos");
+            gap.HasKey(x => x.Id);
+            gap.Property(x => x.ObjectPath).IsRequired();
+            gap.Property(x => x.ThumbnailObjectPath).IsRequired();
+            gap.Property(x => x.Caption).HasMaxLength(500);
+            gap.HasOne<GroupActivity>().WithMany().HasForeignKey(x => x.GroupActivityId).OnDelete(DeleteBehavior.Cascade);
+            gap.HasIndex(x => x.GroupActivityId);
         });
 
         modelBuilder.Entity<AttendanceRecord>(ar =>

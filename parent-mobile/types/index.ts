@@ -34,6 +34,38 @@ export interface ParentChildResponse {
   dateOfBirth:      string;
 }
 
+// ── Group activities (feature 009b) ──────────────────────────────────────────────
+export type GroupActivityType = "outdoor" | "creative" | "music" | "story" | "celebration" | "other";
+
+export interface GroupActivityPhotoResponse {
+  id:                   string;
+  downloadUrl:          string | null;
+  thumbnailDownloadUrl: string | null;
+  caption:              string | null;
+  uploadedAt:           string;
+}
+
+export interface GroupActivitySummaryItem {
+  id:           string;
+  activityType: GroupActivityType;
+  title:        string;
+  description:  string | null;
+  occurredAt:   string;
+  photos:       GroupActivityPhotoResponse[];
+}
+
+export interface GalleryItemResponse {
+  activityId: string;
+  groupId:    string;
+  photo:      GroupActivityPhotoResponse;
+  occurredAt: string;
+}
+
+export interface GalleryResponse {
+  items:       GalleryItemResponse[];
+  hasConsent:  boolean;
+}
+
 export interface DailySummaryResponse {
   napsCount:                 number;
   bottlesCount:              number;
@@ -42,6 +74,9 @@ export interface DailySummaryResponse {
   latestTemperatureCelsius:  number | null;
   medicationAdministered:    boolean;
   activities:                string[];
+  // Feature 009b: distinct from `activities` above (feature 013's per-child descriptions) —
+  // group-level moments, consent-filtered photos (research.md R5/R6).
+  groupActivities:           GroupActivitySummaryItem[];
 }
 
 export interface MessageResponse {

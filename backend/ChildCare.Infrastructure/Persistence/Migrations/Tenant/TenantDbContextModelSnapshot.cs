@@ -594,6 +594,87 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("groups", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.GroupActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<Guid>>("RecordedBy")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<Guid>("RecordedByDeviceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("RecordedByDeviceId");
+
+                    b.HasIndex("GroupId", "OccurredAt");
+
+                    b.ToTable("group_activities", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.GroupActivityPhoto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("GroupActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ObjectPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThumbnailObjectPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupActivityId");
+
+                    b.ToTable("group_activity_photos", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.KdvClosureDay", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1582,6 +1663,36 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.Location", null)
                         .WithMany()
                         .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.GroupActivity", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.DevicePairing", null)
+                        .WithMany()
+                        .HasForeignKey("RecordedByDeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.GroupActivityPhoto", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.GroupActivity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupActivityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

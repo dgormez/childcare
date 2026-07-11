@@ -43,7 +43,10 @@
     "medication": "Medication",
     "medicationGiven": "Medication given",
     "activities": "Activities",
-    "loadFailed": "Could not load today's summary."
+    "loadFailed": "Could not load today's summary.",
+    "groupActivities": {
+      "title": "Group moments"
+    }
   },
   "messages": {
     "title": "Messages",
@@ -138,5 +141,11 @@
     "children": {
       "not_found": "This child could not be found."
     }
+  },
+  "gallery": {
+    "title": "Gallery",
+    "empty": "No photos yet this month.",
+    "noConsent": "No photos to show yet. Ask the childcare center about photo consent to see them here.",
+    "loadFailed": "Could not load the gallery."
   }
 }

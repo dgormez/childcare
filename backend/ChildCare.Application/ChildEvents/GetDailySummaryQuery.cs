@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Application.GroupActivities;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Enums;
 using MediatR;
@@ -8,7 +9,7 @@ namespace ChildCare.Application.ChildEvents;
 
 public record GetDailySummaryQuery(Guid ChildId, DateOnly Date) : IRequest<DailySummaryResponse>;
 
-public class GetDailySummaryQueryHandler(ITenantDbContext db) : IRequestHandler<GetDailySummaryQuery, DailySummaryResponse>
+public class GetDailySummaryQueryHandler(ITenantDbContext db, GroupActivityMapper groupActivityMapper) : IRequestHandler<GetDailySummaryQuery, DailySummaryResponse>
 {
     public async Task<DailySummaryResponse> Handle(GetDailySummaryQuery request, CancellationToken cancellationToken)
     {
@@ -46,6 +47,8 @@ public class GetDailySummaryQueryHandler(ITenantDbContext db) : IRequestHandler<
             .Select(description => description!)
             .ToList();
 
+        var groupActivities = await ResolveGroupActivitiesAsync(request.ChildId, request.Date, startUtc, endUtc, cancellationToken);
+
         return new DailySummaryResponse(
             napsCount,
             bottlesCount,
@@ -53,7 +56,69 @@ public class GetDailySummaryQueryHandler(ITenantDbContext db) : IRequestHandler<
             latestMood is null ? null : ExtractString(latestMood.Payload, "value"),
             latestTemperature is null ? null : ExtractDecimal(latestTemperature.Payload, "celsius"),
             medicationAdministered,
-            activities);
+            activities,
+            groupActivities);
+    }
+
+    // research.md R5/R6: resolves the child's group(s) as of the requested date (a child may
+    // have more than one active ChildGroupAssignment — feature 007's split-location contracts
+    // mean a child can be enrolled at two locations, each with its own group, on the same day),
+    // fetches that group's activities for the date, and gates each activity's photos on the
+    // active contract *at that activity's own location* — consent is set per contract/location
+    // (feature 007), not globally per child.
+    private async Task<IReadOnlyList<GroupActivitySummaryItem>> ResolveGroupActivitiesAsync(
+        Guid childId, DateOnly date, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken)
+    {
+        var groupIds = await db.ChildGroupAssignments
+            .Where(a => a.ChildId == childId && a.StartDate <= date && (a.EndDate == null || a.EndDate >= date))
+            .Select(a => a.GroupId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (groupIds.Count == 0)
+            return [];
+
+        var groupActivities = await db.GroupActivities
+            .Where(a => groupIds.Contains(a.GroupId) && a.OccurredAt >= startUtc && a.OccurredAt < endUtc)
+            .OrderBy(a => a.OccurredAt)
+            .ToListAsync(cancellationToken);
+
+        if (groupActivities.Count == 0)
+            return [];
+
+        var activeContracts = await db.Contracts
+            .Where(c => c.ChildId == childId
+                && c.Status == ContractStatus.Active
+                && c.StartDate <= date && (c.EndDate == null || c.EndDate >= date))
+            .ToListAsync(cancellationToken);
+
+        var groupActivityIds = groupActivities.Select(a => a.Id).ToList();
+        var photosByActivity = await db.GroupActivityPhotos
+            .Where(p => groupActivityIds.Contains(p.GroupActivityId))
+            .GroupBy(p => p.GroupActivityId)
+            .ToDictionaryAsync(g => g.Key, g => g.ToList(), cancellationToken);
+
+        var result = new List<GroupActivitySummaryItem>(groupActivities.Count);
+        foreach (var activity in groupActivities)
+        {
+            // FR-009: photos only when the child has an active contract, at this activity's own
+            // location, with photos_internal = true — absent or false, title/description still
+            // return but photos is [].
+            var hasConsent = activeContracts.Any(c => c.LocationId == activity.LocationId && c.Consent.PhotosInternal);
+            IReadOnlyList<GroupActivityPhotoResponse> photos = hasConsent && photosByActivity.TryGetValue(activity.Id, out var list)
+                ? await Task.WhenAll(list.Select(p => groupActivityMapper.ToPhotoResponseAsync(p, cancellationToken)))
+                : [];
+
+            result.Add(new GroupActivitySummaryItem(
+                activity.Id,
+                activity.ActivityType.ToWireString(),
+                activity.Title,
+                activity.Description,
+                activity.OccurredAt,
+                photos));
+        }
+
+        return result;
     }
 
     private static string? ExtractString(string json, string field)

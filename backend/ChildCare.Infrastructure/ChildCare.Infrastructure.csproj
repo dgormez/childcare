@@ -16,6 +16,11 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="QuestPDF" Version="2026.7.0" />
+    <!-- Pinned to 3.1.x (Six Labors Split License, free under the revenue threshold this
+         project currently qualifies for) — 4.0.0 requires a paid license key even to build,
+         a harder blocker than research.md R2's licensing note anticipated; revisit together
+         with that note if this project ever crosses the revenue threshold. -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
   <ItemGroup>

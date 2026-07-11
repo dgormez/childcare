@@ -30,4 +30,18 @@ public static class BelgianCalendarDay
         var endUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal.AddDays(1), Brussels);
         return (startUtc, endUtc);
     }
+
+    /// <summary>
+    /// The UTC instant range [start, end) covering a given Europe/Brussels calendar month
+    /// (feature 009b's Galerij gallery, spec.md Assumptions — same timezone anchor as
+    /// <see cref="UtcRangeFor"/>, extended to a month boundary rather than a day one).
+    /// </summary>
+    public static (DateTime StartUtc, DateTime EndUtc) UtcRangeForMonth(int year, int month)
+    {
+        var firstDayOfMonth = new DateOnly(year, month, 1);
+        var firstDayOfNextMonth = firstDayOfMonth.AddMonths(1);
+        var (startUtc, _) = UtcRangeFor(firstDayOfMonth);
+        var (endUtc, _) = UtcRangeFor(firstDayOfNextMonth);
+        return (startUtc, endUtc);
+    }
 }

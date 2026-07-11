@@ -140,6 +140,10 @@ builder.Services.AddHttpClient();
 // empty until features 009/011 each register their own (research.md R4).
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
 
+// ── Group activities (feature 009b) ─────────────────────────────────────────
+builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
+builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
+
 // ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
 // Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a
 // distinct signing key from the user-session JWT (research.md R1).
@@ -611,6 +615,7 @@ app.MapContractsEndpoints();
 app.MapDevicePairingEndpoints();
 app.MapRoomShiftEndpoints();
 app.MapChildEventEndpoints();
+app.MapGroupActivityEndpoints();
 app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();

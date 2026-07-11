@@ -32,7 +32,8 @@
     "scheduling": "Planning",
     "waitingList": "Wachtlijst",
     "messages": "Berichten",
-    "announcements": "Mededelingen"
+    "announcements": "Mededelingen",
+    "groups": "Groepen"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -341,5 +342,32 @@
     "columnScope": "Bereik",
     "columnSentAt": "Verzonden",
     "columnRecipients": "Ontvangers"
+  },
+  "groups": {
+    "title": "Groepstijdlijn",
+    "locationLabel": "Locatie",
+    "groupLabel": "Groep",
+    "dateLabel": "Datum",
+    "loadError": "Kon de tijdlijn niet laden.",
+    "retry": "Opnieuw proberen",
+    "emptyState": "Nog geen gebeurtenissen of activiteiten voor deze groep en datum.",
+    "actionDelete": "Verwijderen",
+    "deleteDialogTitle": "Activiteit verwijderen?",
+    "deleteDialogDescription": "\"{title}\" wordt verwijderd van de tijdlijn, het dagoverzicht van ouders en de galerij. Dit kan niet ongedaan worden gemaakt.",
+    "deleteDialogCancel": "Annuleren",
+    "eventTypes": {
+      "sleep": "Slaap",
+      "temperature": "Temperatuur",
+      "medication": "Medicatie",
+      "feeding_bottle": "Flesvoeding",
+      "feeding_solid": "Vast voedsel",
+      "diaper": "Luier",
+      "mood": "Stemming",
+      "activity": "Activiteit",
+      "note": "Notitie",
+      "weight": "Gewicht",
+      "growth_check": "Groeicontrole",
+      "custom": "Aangepast"
+    }
   }
 }
