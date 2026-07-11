@@ -65,6 +65,60 @@ export async function recordChildEvent(input: RecordChildEventInput, isConnected
   return { ...body, recordedBy: [], administeredBy: body.administeredByStaffId, createdAt: now, updatedAt: now };
 }
 
+export interface RecordChildEventBatchInput {
+  childIds: string[];
+  eventType: import("../types").BatchEligibleChildEventType;
+  occurredAt: string;
+  endedAt?: string | null;
+  payload: Record<string, unknown>;
+  visibleToParent?: boolean;
+}
+
+/**
+ * Feature 009c — contracts/child-events-batch-api.md. Each child gets its own client-generated
+ * `id` (research.md R5) so a retried offline replay is idempotent per child, mirroring
+ * recordChildEvent()'s existing single-`id` idempotency convention above.
+ *
+ * Offline: queued as exactly one offline_queue entry regardless of how many children are
+ * selected (research.md R6, spec.md FR-014) — never exploded into N per-child entries. The
+ * optimistic return value assumes every child succeeds; a real partial-failure result (if any)
+ * is only known once the batch actually reaches the server (online) or is replayed (offline,
+ * research.md R6/syncEngine.ts's "partial: " handling).
+ */
+export async function recordChildEventBatch(
+  input: RecordChildEventBatchInput, isConnected: boolean,
+): Promise<{ response: import("../types").ChildEventBatchResponse; itemIds: { childId: string; id: string }[] }> {
+  const items = input.childIds.map((childId) => ({ childId, id: generateId() }));
+  const body = {
+    items,
+    eventType: input.eventType,
+    occurredAt: input.occurredAt,
+    endedAt: input.endedAt ?? null,
+    payload: input.payload,
+    visibleToParent: input.visibleToParent ?? true,
+  };
+
+  if (isConnected) {
+    const result = await apiClient.POST("/api/child-events/batch", { body });
+    if (result.response.ok) return { response: result.data as unknown as import("../types").ChildEventBatchResponse, itemIds: items };
+    const errorBody = result.error as ErrorBody | undefined;
+    throw new Error(errorBody?.errorKey ?? "errors.network");
+  }
+
+  await enqueue({
+    entityType: "child_event_batch",
+    operation: "create",
+    payload: body,
+    endpoint: "/api/child-events/batch",
+    httpMethod: "POST",
+  });
+
+  return {
+    response: { created: items.map((i) => ({ childId: i.childId, eventId: i.id })), errors: [] },
+    itemIds: items,
+  };
+}
+
 /**
  * FR-013/research.md R3: if the sleep event's original create is still queued (unsynced), the
  * end is merged directly into that row's payload rather than queuing a separate PATCH. If the
@@ -180,5 +234,13 @@ export async function getDailySummary(childId: string, date: string): Promise<Da
 // so onConflict exists only to satisfy the SyncHandler interface shape (contracts/
 // child-events-api.md).
 registerSyncHandler("child_event", {
+  onConflict: () => "discard",
+});
+
+// Feature 009c (research.md R6) — batches are append-only creates (like single child_events)
+// with no update/delete path, so onConflict exists only to satisfy the SyncHandler interface
+// shape; the meaningful handling (partial-failure results surviving replay) lives in
+// syncEngine.ts's response.ok branch, not here.
+registerSyncHandler("child_event_batch", {
   onConflict: () => "discard",
 });

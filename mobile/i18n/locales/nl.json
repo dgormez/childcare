@@ -65,7 +65,15 @@
     "empty": "Er zijn momenteel geen kinderen aan jou toegewezen.",
     "pullToRefresh": "Trek omlaag om te vernieuwen",
     "viewDetail": "Details bekijken",
-    "tabChildren": "Kinderen"
+    "tabChildren": "Kinderen",
+    "multiSelect": {
+      "enter": "Meerdere selecteren",
+      "cancel": "Annuleren",
+      "selectedCount": "{{count}} geselecteerd",
+      "selectAll": "Alles selecteren",
+      "logEvent": "Gebeurtenis registreren",
+      "maxReached": "Je kan maximaal 30 kinderen tegelijk selecteren."
+    }
   },
   "child": {
     "allergyAlert": "Allergie",
@@ -116,6 +124,16 @@
     "cancel": "Annuleren",
     "endNap": "Slaapje beëindigen",
     "inProgress": "Bezig",
+    "batch": {
+      "success": "Opgeslagen voor {{count}} kinderen",
+      "partialTitle": "Niet voor alle kinderen opgeslagen",
+      "retryFailed": "Mislukte opnieuw proberen",
+      "reasons": {
+        "child_not_found": "Kind niet gevonden",
+        "not_present": "Al uitgecheckt",
+        "validation_failed": "Kon deze gebeurtenis niet opslaan"
+      }
+    },
     "types": {
       "sleep": "Slaap",
       "temperature": "Temperatuur",

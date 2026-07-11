@@ -65,7 +65,15 @@
     "empty": "No children are currently assigned to you.",
     "pullToRefresh": "Pull down to refresh",
     "viewDetail": "View details",
-    "tabChildren": "Children"
+    "tabChildren": "Children",
+    "multiSelect": {
+      "enter": "Select multiple",
+      "cancel": "Cancel",
+      "selectedCount": "{{count}} selected",
+      "selectAll": "Select all",
+      "logEvent": "Log event",
+      "maxReached": "You can select up to 30 children at once."
+    }
   },
   "child": {
     "allergyAlert": "Allergy",
@@ -116,6 +124,16 @@
     "cancel": "Cancel",
     "endNap": "End nap",
     "inProgress": "In progress",
+    "batch": {
+      "success": "Saved for {{count}} children",
+      "partialTitle": "Some children weren't saved",
+      "retryFailed": "Retry failed",
+      "reasons": {
+        "child_not_found": "Child not found",
+        "not_present": "Already checked out",
+        "validation_failed": "Couldn't save this event"
+      }
+    },
     "types": {
       "sleep": "Sleep",
       "temperature": "Temperature",

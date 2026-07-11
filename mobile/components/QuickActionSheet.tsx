@@ -4,13 +4,19 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
   Moon, Thermometer, Pill, Milk, UtensilsCrossed, Droplets, Smile, Activity as ActivityIcon,
-  StickyNote, Scale, Ruler, Tag, X,
+  StickyNote, Scale, Ruler, Tag, X, AlertTriangle,
 } from "lucide-react-native";
 import { useColors } from "../hooks/useColors";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
-import { recordChildEvent, endSleepEvent } from "../services/childEvents";
+import { recordChildEvent, recordChildEventBatch, endSleepEvent } from "../services/childEvents";
 import { AdministratorConfirmation } from "./AdministratorConfirmation";
-import type { ChildEventResponse, ChildEventType } from "../types";
+import type { BatchEligibleChildEventType, ChildEventBatchErrorItem, ChildEventResponse, ChildEventType } from "../types";
+
+interface BatchChild {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
 
 interface Props {
   visible: boolean;
@@ -20,6 +26,10 @@ interface Props {
   inProgressSleepEventId: string | null;
   onClose: () => void;
   onEventRecorded: (event: ChildEventResponse) => void;
+  /** Feature 009c — when non-empty, the sheet operates in batch mode: one event type/form for
+   * all of these children at once (research.md R7), instead of the single `childId` above. */
+  batchChildren?: BatchChild[];
+  onBatchRecorded?: (result: { createdCount: number; failedCount: number }) => void;
 }
 
 const EVENT_TYPES: { type: ChildEventType; Icon: typeof Moon }[] = [
@@ -37,6 +47,11 @@ const EVENT_TYPES: { type: ChildEventType; Icon: typeof Moon }[] = [
   { type: "custom", Icon: Tag },
 ];
 
+// spec.md FR-001/FR-002 — the eight types that make sense as a shared group event.
+const BATCH_EVENT_TYPES = EVENT_TYPES.filter(
+  ({ type }) => !["temperature", "medication", "weight", "growth_check"].includes(type)
+);
+
 // FR-016/User Story 2: medication and temperature route through the select-then-PIN
 // administrator-confirmation step (reused from feature 008a) before the event is submitted.
 const NEEDS_ADMIN_CONFIRMATION: ChildEventType[] = ["medication", "temperature"];
@@ -53,10 +68,13 @@ const FREE_TEXT_FIELD: Partial<Record<ChildEventType, string>> = {
  * field is intentionally not exposed here — surfacing it would cost every diaper entry a third
  * tap; a director can add it later via a correction if ever needed.
  */
-export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onClose, onEventRecorded }: Props) {
+export function QuickActionSheet({
+  visible, childId, inProgressSleepEventId, onClose, onEventRecorded, batchChildren, onBatchRecorded,
+}: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const { isConnected } = useNetworkStatus();
+  const isBatch = !!batchChildren && batchChildren.length > 0;
 
   const [selectedType, setSelectedType] = useState<ChildEventType | null>(null);
   const [freeText, setFreeText] = useState("");
@@ -64,11 +82,22 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
   const [pendingSubmit, setPendingSubmit] = useState<{ eventType: ChildEventType; payload: Record<string, unknown> } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Feature 009c: once a batch submission has any failures, the sheet shows a failure-review
+  // screen (research.md, FR-012) instead of closing — createdCount accumulates across retries.
+  const [batchFailures, setBatchFailures] = useState<ChildEventBatchErrorItem[] | null>(null);
+  const [batchCreatedCount, setBatchCreatedCount] = useState(0);
+  const [lastBatchSubmission, setLastBatchSubmission] = useState<{
+    eventType: BatchEligibleChildEventType; payload: Record<string, unknown>; occurredAt: string;
+  } | null>(null);
+
   const reset = () => {
     setSelectedType(null);
     setFreeText("");
     setNumericFields({});
     setPendingSubmit(null);
+    setBatchFailures(null);
+    setBatchCreatedCount(0);
+    setLastBatchSubmission(null);
   };
 
   const close = () => {
@@ -79,6 +108,10 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
   const submit = async (eventType: ChildEventType, payload: Record<string, unknown>, administeredByStaffId?: string | null) => {
     setSubmitting(true);
     try {
+      if (isBatch) {
+        await submitBatch(eventType as BatchEligibleChildEventType, payload, batchChildren!.map((c) => c.id));
+        return;
+      }
       const event = await recordChildEvent(
         { childId, eventType, occurredAt: new Date().toISOString(), payload, administeredByStaffId },
         isConnected,
@@ -90,7 +123,47 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
     }
   };
 
+  const submitBatch = async (eventType: BatchEligibleChildEventType, payload: Record<string, unknown>, childIds: string[]) => {
+    const occurredAt = lastBatchSubmission?.occurredAt ?? new Date().toISOString();
+    const { response } = await recordChildEventBatch({ childIds, eventType, occurredAt, payload }, isConnected);
+    setLastBatchSubmission({ eventType, payload, occurredAt });
+    const totalCreated = batchCreatedCount + response.created.length;
+    setBatchCreatedCount(totalCreated);
+
+    if (response.errors.length === 0) {
+      onBatchRecorded?.({ createdCount: totalCreated, failedCount: 0 });
+      close();
+      return;
+    }
+    setBatchFailures(response.errors);
+  };
+
+  const retryFailed = async () => {
+    if (!batchFailures || !lastBatchSubmission) return;
+    setSubmitting(true);
+    try {
+      await submitBatch(lastBatchSubmission.eventType, lastBatchSubmission.payload, batchFailures.map((e) => e.childId));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const acceptBatchResult = () => {
+    onBatchRecorded?.({ createdCount: batchCreatedCount, failedCount: batchFailures?.length ?? 0 });
+    close();
+  };
+
   const handleSelectType = (type: ChildEventType) => {
+    if (isBatch) {
+      // No per-child in-progress-sleep concept for a batch (research.md R7) — sleep always
+      // starts fresh, same as the single-child flow's own no-fields-needed start.
+      if (type === "sleep") {
+        submit("sleep", {});
+        return;
+      }
+      setSelectedType(type);
+      return;
+    }
     if (type === "sleep" && inProgressSleepEventId) {
       setSelectedType("sleep");
       return;
@@ -133,6 +206,51 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
     );
   }
 
+  // Feature 009c (FR-012/SC-003): a partial or full batch failure is shown here instead of
+  // closing the sheet, so the caregiver can retry just the failed children without redoing the
+  // ones that already succeeded.
+  if (batchFailures) {
+    const namesById = new Map(batchChildren!.map((c) => [c.id, `${c.firstName} ${c.lastName}`]));
+    return (
+      <Modal transparent visible animationType="slide" onRequestClose={acceptBatchResult}>
+        <Pressable className="flex-1 justify-end bg-black/50" onPress={acceptBatchResult}>
+          <Pressable onPress={(e) => e.stopPropagation()} className="bg-surface dark:bg-surface-dark rounded-t-xl" style={{ maxHeight: "80%" }}>
+            <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
+              <Text className="text-text dark:text-text-dark text-lg font-bold">{t("childEvents.batch.partialTitle")}</Text>
+              <TouchableOpacity onPress={acceptBatchResult} style={{ minWidth: 48, minHeight: 48 }} className="items-center justify-center">
+                <X size={24} strokeWidth={2} color={colors.textSoft} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
+              {submitting ? (
+                <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 24 }} />
+              ) : (
+                <>
+                  {batchFailures.map((failure) => (
+                    <View key={failure.childId} className="flex-row items-center mb-3" style={{ gap: 8 }}>
+                      <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
+                      <View style={{ flex: 1 }}>
+                        <Text className="text-text dark:text-text-dark font-medium">{namesById.get(failure.childId)}</Text>
+                        <Text style={{ color: colors.textSoft }}>{t(`childEvents.batch.reasons.${failure.reason}`)}</Text>
+                      </View>
+                    </View>
+                  ))}
+                  <TouchableOpacity
+                    onPress={retryFailed}
+                    style={{ minHeight: 48, marginTop: 12 }}
+                    className="items-center justify-center rounded-lg bg-primary dark:bg-primary-dark active:opacity-60"
+                  >
+                    <Text className="text-white font-semibold">{t("childEvents.batch.retryFailed")}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    );
+  }
+
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={close}>
       <Pressable className="flex-1 justify-end bg-black/50" onPress={close}>
@@ -157,7 +275,7 @@ export function QuickActionSheet({ visible, childId, inProgressSleepEventId, onC
               <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 24 }} />
             ) : selectedType === null ? (
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-                {EVENT_TYPES.map(({ type, Icon }) => (
+                {(isBatch ? BATCH_EVENT_TYPES : EVENT_TYPES).map(({ type, Icon }) => (
                   <TouchableOpacity
                     key={type}
                     onPress={() => handleSelectType(type)}

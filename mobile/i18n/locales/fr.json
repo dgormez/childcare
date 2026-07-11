@@ -65,7 +65,15 @@
     "empty": "Aucun enfant ne vous est actuellement assigné.",
     "pullToRefresh": "Tirez vers le bas pour actualiser",
     "viewDetail": "Voir les détails",
-    "tabChildren": "Enfants"
+    "tabChildren": "Enfants",
+    "multiSelect": {
+      "enter": "Sélectionner plusieurs",
+      "cancel": "Annuler",
+      "selectedCount": "{{count}} sélectionné(s)",
+      "selectAll": "Tout sélectionner",
+      "logEvent": "Enregistrer un événement",
+      "maxReached": "Vous pouvez sélectionner jusqu'à 30 enfants à la fois."
+    }
   },
   "child": {
     "allergyAlert": "Allergie",
@@ -116,6 +124,16 @@
     "cancel": "Annuler",
     "endNap": "Terminer la sieste",
     "inProgress": "En cours",
+    "batch": {
+      "success": "Enregistré pour {{count}} enfants",
+      "partialTitle": "Certains enfants n'ont pas été enregistrés",
+      "retryFailed": "Réessayer les échecs",
+      "reasons": {
+        "child_not_found": "Enfant introuvable",
+        "not_present": "Déjà parti(e)",
+        "validation_failed": "Impossible d'enregistrer cet événement"
+      }
+    },
     "types": {
       "sleep": "Sommeil",
       "temperature": "Température",
