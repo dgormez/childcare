@@ -130,8 +130,7 @@
       "retryFailed": "Mislukte opnieuw proberen",
       "reasons": {
         "child_not_found": "Kind niet gevonden",
-        "not_present": "Al uitgecheckt",
-        "validation_failed": "Kon deze gebeurtenis niet opslaan"
+        "not_present": "Al uitgecheckt"
       }
     },
     "types": {

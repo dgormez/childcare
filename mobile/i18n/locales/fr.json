@@ -130,8 +130,7 @@
       "retryFailed": "Réessayer les échecs",
       "reasons": {
         "child_not_found": "Enfant introuvable",
-        "not_present": "Déjà parti(e)",
-        "validation_failed": "Impossible d'enregistrer cet événement"
+        "not_present": "Déjà parti(e)"
       }
     },
     "types": {

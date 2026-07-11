@@ -130,8 +130,7 @@
       "retryFailed": "Retry failed",
       "reasons": {
         "child_not_found": "Child not found",
-        "not_present": "Already checked out",
-        "validation_failed": "Couldn't save this event"
+        "not_present": "Already checked out"
       }
     },
     "types": {

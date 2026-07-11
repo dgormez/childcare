@@ -34,11 +34,13 @@
    rows exist and no row exists for the checked-out child.
 
 4. Submit an oversized batch (31 distinct `childIds`, can be repeated/fake guids for this check).
-   Expect `422 { errorKey: "errors.child_events.batch_too_large" }` and no `ChildEvent` rows
-   created at all.
+   Expect `422 { errorKey: "errors.validation", fieldErrors: { "Items.Count":
+   "errors.child_events.batch_too_large" } }` (the standard `ValidationBehavior` shape, contracts/
+   child-events-batch-api.md) and no `ChildEvent` rows created at all.
 
 5. Submit a batch with an individual-only event type (`"eventType": "temperature"`).
-   Expect `422 { errorKey: "errors.child_events.batch_type_not_supported" }`.
+   Expect the same `errors.validation` shape, with `fieldErrors.EventType =
+   "errors.child_events.batch_type_not_supported"`.
 
 ## Mobile validation (Expo, kiosk-paired tablet)
 

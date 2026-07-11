@@ -32,7 +32,12 @@ Request:
 ```
 
 - `items`: 1–30 entries, deduplicated by `childId` server-side. `> 30` → `422
-  { errorKey: "errors.child_events.batch_too_large" }` before any child is processed. Each
+  { errorKey: "errors.validation", fieldErrors: { "Items.Count": "errors.child_events.batch_too_large" } }`
+  before any child is processed — the standard `ValidationBehavior` pipeline response feature 009's
+  own contract already established (`contracts/child-events-api.md`: "not a bespoke shape"), not a
+  top-level `errorKey` of its own (**correction made during `/speckit-converge`**: an earlier draft
+  of this doc claimed the latter, which doesn't match `Program.cs`'s `ValidationException` handler).
+  Each
   entry's `id` is a client-generated id for that child's future `ChildEvent` row — mirrors
   `POST /api/child-events`'s existing `id` field and its idempotency-by-id behavior
   (FR-013a, feature 009): if a retried replay (e.g. an ambiguous network failure after the
@@ -43,8 +48,9 @@ Request:
   ambiguous failure, without a separate per-batch idempotency mechanism.
 - `eventType`: MUST be one of the eight multi-select-eligible types (`sleep`, `diaper`,
   `feeding_bottle`, `feeding_solid`, `mood`, `activity`, `note`, `custom`). Any other value
-  (including `temperature`, `medication`, `weight`, `growth_check`) → `422
-  { errorKey: "errors.child_events.batch_type_not_supported" }` before any child is processed —
+  (including `temperature`, `medication`, `weight`, `growth_check`) → the same standard
+  `errors.validation`/`fieldErrors` shape as above (`fieldErrors.EventType =
+  "errors.child_events.batch_type_not_supported"`) before any child is processed —
   these individual-only types have no `administeredByStaffId` field in this request shape at all,
   since the PIN-confirmation flow they require doesn't fit a batch.
 - `payload`/`endedAt`/`visibleToParent`: same shape and validation rules as

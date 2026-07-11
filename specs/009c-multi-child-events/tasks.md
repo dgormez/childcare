@@ -127,6 +127,13 @@ including correctly surfacing a partial-failure result discovered only at sync t
 
 ---
 
+## Phase 7: Convergence
+
+- [X] T036 Correct `contracts/child-events-batch-api.md` and `quickstart.md` to describe the actual `422 { errorKey: "errors.validation", fieldErrors: {...} }` shape `batch_too_large`/`batch_type_not_supported` really return (verified against `Program.cs`'s `ValidationException` handler), instead of the bespoke top-level `errorKey` shape currently documented (contradicts)
+- [X] T037 Remove the orphaned `childEvents.batch.reasons.validation_failed` i18n key from `mobile/i18n/locales/en.json`, `nl.json`, `fr.json` — unreachable since `ChildEventBatchFailureReason` was narrowed to two values during implementation (unrequested)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
