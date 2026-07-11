@@ -66,6 +66,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<WaitingListEntry> WaitingListEntries => Set<WaitingListEntry>();
 
+    public DbSet<DayReservation> DayReservations => Set<DayReservation>();
+
     public DbSet<ParentInvitation> ParentInvitations => Set<ParentInvitation>();
 
     public DbSet<MessageThread> MessageThreads => Set<MessageThread>();
@@ -555,6 +557,29 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // List/sort/filter query per location, filtered by status, ordered by priority
             // (data-model.md, plan.md Performance considerations).
             w.HasIndex(x => new { x.LocationId, x.Status, x.Priority });
+        });
+
+        modelBuilder.Entity<DayReservation>(dr =>
+        {
+            dr.ToTable("day_reservations");
+            dr.HasKey(x => x.Id);
+            dr.Property(x => x.Type)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (DayReservationType)Enum.Parse(typeof(DayReservationType), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            dr.Property(x => x.Status)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (DayReservationStatus)Enum.Parse(typeof(DayReservationStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            dr.Property(x => x.Reason).HasMaxLength(2000);
+            dr.Property(x => x.DirectorNotes).HasMaxLength(2000);
+            dr.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            dr.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.RequestedBy).OnDelete(DeleteBehavior.Restrict);
+            dr.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.DecidedBy).OnDelete(DeleteBehavior.Restrict);
+            // Director queue's primary read pattern: newest-first, filtered to pending (FR-006).
+            dr.HasIndex(x => new { x.Status, x.CreatedAt });
+            // Parent's own-request-history read pattern (FR-019).
+            dr.HasIndex(x => new { x.ChildId, x.CreatedAt });
         });
 
         modelBuilder.Entity<ParentInvitation>(pi =>

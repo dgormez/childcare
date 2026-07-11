@@ -46,6 +46,13 @@
     "loadFailed": "Could not load today's summary.",
     "groupActivities": {
       "title": "Group moments"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "reportSick": "My child is sick",
+      "requestExtra": "Request an extra day",
+      "requestExchange": "Request a day exchange",
+      "myRequests": "My requests"
     }
   },
   "messages": {
@@ -92,6 +99,13 @@
       "temperature_alert": {
         "title": "Temperature alert",
         "body": "A temperature of {{celsius}}°C was recorded."
+      },
+      "day_reservation_decided": {
+        "approved_title": "Request approved",
+        "approved_body": "Your request has been approved.",
+        "rejected_title": "Request rejected",
+        "rejected_body": "Your request has been rejected.",
+        "rejected_body_with_note": "Your request has been rejected: {{directorNotes}}"
       }
     }
   },
@@ -140,6 +154,15 @@
     },
     "children": {
       "not_found": "This child could not be found."
+    },
+    "day_reservations": {
+      "child_not_linked": "You don't have access to this child's information.",
+      "not_contracted_day": "This isn't one of your child's contracted days.",
+      "closure_day": "This date is a closure day.",
+      "not_pending": "This request has already been decided.",
+      "missing_justified_flag": "Please choose whether this absence is justified.",
+      "no_contracted_location": "Couldn't determine which location this applies to.",
+      "not_found": "This request could not be found."
     }
   },
   "gallery": {
@@ -147,5 +170,42 @@
     "empty": "No photos yet this month.",
     "noConsent": "No photos to show yet. Ask the childcare center about photo consent to see them here.",
     "loadFailed": "Could not load the gallery."
+  },
+  "dayReservations": {
+    "absenceTitle": "My child is sick",
+    "extraTitle": "Request an extra day",
+    "exchangeTitle": "Request a day exchange",
+    "childLabel": "Child",
+    "dateLabel": "Date",
+    "exchangeForDateLabel": "Day being given up",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "Optional — let the KDV know more",
+    "submit": "Submit request",
+    "submitting": "Submitting…",
+    "submitFailed": "Couldn't submit this request. Please try again.",
+    "pastDate": "This date is too far in the past.",
+    "todayLabel": "Today",
+    "tomorrowLabel": "Tomorrow",
+    "chooseDate": "Choose a date",
+    "myRequestsTitle": "My requests",
+    "noRequests": "You haven't submitted any requests yet.",
+    "loadFailed": "Couldn't load your requests. Please try again.",
+    "cancel": "Cancel request",
+    "cancelConfirmTitle": "Cancel this request?",
+    "cancelConfirmBody": "This request will be withdrawn and the KDV will no longer act on it.",
+    "cancelConfirm": "Cancel request",
+    "cancelDismiss": "Keep request",
+    "cancelFailed": "Couldn't cancel this request. Please try again.",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "absence": "Absence",
+      "extra": "Extra day",
+      "exchange": "Day exchange"
+    }
   }
 }

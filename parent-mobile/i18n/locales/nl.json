@@ -46,6 +46,13 @@
     "loadFailed": "Kon het dagoverzicht niet laden.",
     "groupActivities": {
       "title": "Groepsmomenten"
+    },
+    "quickActions": {
+      "title": "Snelle acties",
+      "reportSick": "Mijn kind is ziek",
+      "requestExtra": "Extra dag aanvragen",
+      "requestExchange": "Dagwissel aanvragen",
+      "myRequests": "Mijn aanvragen"
     }
   },
   "messages": {
@@ -92,6 +99,13 @@
       "temperature_alert": {
         "title": "Temperatuurmelding",
         "body": "Er werd een temperatuur van {{celsius}}°C gemeten."
+      },
+      "day_reservation_decided": {
+        "approved_title": "Aanvraag goedgekeurd",
+        "approved_body": "Je aanvraag is goedgekeurd.",
+        "rejected_title": "Aanvraag afgewezen",
+        "rejected_body": "Je aanvraag is afgewezen.",
+        "rejected_body_with_note": "Je aanvraag is afgewezen: {{directorNotes}}"
       }
     }
   },
@@ -140,6 +154,15 @@
     },
     "children": {
       "not_found": "Dit kind kon niet worden gevonden."
+    },
+    "day_reservations": {
+      "child_not_linked": "Je hebt geen toegang tot de gegevens van dit kind.",
+      "not_contracted_day": "Dit is geen contractdag van je kind.",
+      "closure_day": "Deze datum is een sluitingsdag.",
+      "not_pending": "Dit verzoek is al beslist.",
+      "missing_justified_flag": "Kies of deze afwezigheid gerechtvaardigd is.",
+      "no_contracted_location": "Kon niet bepalen op welke locatie dit van toepassing is.",
+      "not_found": "Dit verzoek kon niet worden gevonden."
     }
   },
   "gallery": {
@@ -147,5 +170,42 @@
     "empty": "Nog geen foto's deze maand.",
     "noConsent": "Er zijn nog geen foto's te zien. Vraag de opvang naar de toestemming voor foto's om ze hier te bekijken.",
     "loadFailed": "Kon de galerij niet laden."
+  },
+  "dayReservations": {
+    "absenceTitle": "Mijn kind is ziek",
+    "extraTitle": "Extra dag aanvragen",
+    "exchangeTitle": "Dagwissel aanvragen",
+    "childLabel": "Kind",
+    "dateLabel": "Datum",
+    "exchangeForDateLabel": "Op te geven dag",
+    "reasonLabel": "Reden (optioneel)",
+    "reasonPlaceholder": "Optioneel — laat de KDV meer weten",
+    "submit": "Verzoek versturen",
+    "submitting": "Versturen…",
+    "submitFailed": "Kan dit verzoek niet versturen. Probeer het opnieuw.",
+    "pastDate": "Deze datum ligt te ver in het verleden.",
+    "todayLabel": "Vandaag",
+    "tomorrowLabel": "Morgen",
+    "chooseDate": "Kies een datum",
+    "myRequestsTitle": "Mijn aanvragen",
+    "noRequests": "Je hebt nog geen aanvragen ingediend.",
+    "loadFailed": "Kan je aanvragen niet laden. Probeer het opnieuw.",
+    "cancel": "Verzoek annuleren",
+    "cancelConfirmTitle": "Dit verzoek annuleren?",
+    "cancelConfirmBody": "Dit verzoek wordt ingetrokken en de KDV zal er niet meer op reageren.",
+    "cancelConfirm": "Verzoek annuleren",
+    "cancelDismiss": "Verzoek behouden",
+    "cancelFailed": "Kan dit verzoek niet annuleren. Probeer het opnieuw.",
+    "status": {
+      "pending": "In afwachting",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "cancelled": "Geannuleerd"
+    },
+    "type": {
+      "absence": "Afwezigheid",
+      "extra": "Extra dag",
+      "exchange": "Dagwissel"
+    }
   }
 }

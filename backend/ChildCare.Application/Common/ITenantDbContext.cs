@@ -40,6 +40,7 @@ public interface ITenantDbContext
     DbSet<ParentClosureMessage> ParentClosureMessages { get; }
     DbSet<StaffSchedule> StaffSchedules { get; }
     DbSet<WaitingListEntry> WaitingListEntries { get; }
+    DbSet<DayReservation> DayReservations { get; }
     DbSet<ParentInvitation> ParentInvitations { get; }
     DbSet<MessageThread> MessageThreads { get; }
     DbSet<MessageThreadParticipant> MessageThreadParticipants { get; }

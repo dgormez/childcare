@@ -10,6 +10,11 @@ const badgeVariants = cva("inline-flex items-center rounded-full px-2 py-1 text-
       neutral: "bg-surface-soft text-text-soft dark:bg-surface-soft-dark dark:text-text-soft-dark",
       success: "bg-success-bg text-success dark:bg-success-bg-dark dark:text-success-dark",
       danger: "bg-danger-bg text-danger dark:bg-danger-bg-dark dark:text-danger-dark",
+      // No soft tint token exists for warning (design-system.md: "solid banner fill, no
+      // separate tint") — the solid fill/fixed-text pair used elsewhere (mobile's
+      // BkrIndicator/EventTimeline) works equally well at pill size. text-warning-fg has no
+      // dark-mode override — it's the same fixed dark text on the amber fill in both themes.
+      warning: "bg-warning text-warning-fg dark:bg-warning-dark",
     },
   },
   defaultVariants: { variant: "neutral" },

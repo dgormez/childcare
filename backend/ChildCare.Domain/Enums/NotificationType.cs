@@ -5,4 +5,5 @@ public enum NotificationType
     NewMessage,
     Announcement,
     TemperatureAlert,
+    DayReservationDecided,
 }

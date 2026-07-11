@@ -210,6 +210,28 @@ export interface OccupancyDayResponse {
   closed: boolean;
 }
 
+export type DayReservationType = "absence" | "extra" | "exchange";
+export type DayReservationStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface DayReservationResponse {
+  id: string;
+  childId: string;
+  childDisplayName: string;
+  type: DayReservationType;
+  requestedDate: string;
+  exchangeForDate: string | null;
+  reason: string | null;
+  absenceJustified: boolean | null;
+  status: DayReservationStatus;
+  requestedBy: string;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  directorNotes: string | null;
+  capacityWarning: boolean | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface ChildResponse {
   id: string;
   firstName: string;
