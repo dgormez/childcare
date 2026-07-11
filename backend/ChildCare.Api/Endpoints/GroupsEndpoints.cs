@@ -14,9 +14,11 @@ public static class GroupsEndpoints
 {
     public static void MapGroupsEndpoints(this WebApplication app)
     {
+        // Feature 009c (research.md R2): DeviceOrStaffOrDirector rather than StaffOrDirector —
+        // see ChildrenEndpoints.cs's matching comment for the full reasoning.
         var groupReads = app.MapGroup("/api/groups")
             .WithTags("Groups")
-            .RequireAuthorization("StaffOrDirector");
+            .RequireAuthorization("DeviceOrStaffOrDirector");
 
         groupReads.MapGet("/", async (HttpContext ctx, IMediator mediator, Guid? locationId) =>
         {

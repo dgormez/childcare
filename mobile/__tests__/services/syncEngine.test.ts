@@ -208,3 +208,34 @@ it("marks a 422 with a distinguishable 'rejected:' prefix rather than retrying i
   expect(offlineQueueMock.__mockMarkSynced).not.toHaveBeenCalled();
   expect(offlineQueueMock.__mockMarkSyncError).toHaveBeenCalledWith("r1", "rejected: errors.validation");
 });
+
+// ── Feature 009c (T029, research.md R6): a batch's 2xx can still carry per-child failures ──
+
+it("a child_event_batch 2xx response with a non-empty errors array is marked 'partial:' and counted as failed, not synced", async () => {
+  offlineQueueMock.__mockGetPending.mockResolvedValue([row({ id: "r1", entity_type: "child_event_batch" })]);
+  (global.fetch as jest.Mock).mockResolvedValue(
+    fetchResponse(200, { created: [{ childId: "c1", eventId: "e1" }], errors: [{ childId: "c2", reason: "not_present" }] })
+  );
+
+  const result = await syncPendingQueue();
+
+  expect(result).toEqual({ succeeded: 0, failed: 1, conflicted: 0 });
+  expect(offlineQueueMock.__mockMarkSynced).not.toHaveBeenCalled();
+  expect(offlineQueueMock.__mockMarkSyncError).toHaveBeenCalledWith(
+    "r1",
+    expect.stringContaining("partial:")
+  );
+});
+
+it("a child_event_batch 2xx response with an empty errors array is marked synced normally", async () => {
+  offlineQueueMock.__mockGetPending.mockResolvedValue([row({ id: "r1", entity_type: "child_event_batch" })]);
+  (global.fetch as jest.Mock).mockResolvedValue(
+    fetchResponse(200, { created: [{ childId: "c1", eventId: "e1" }], errors: [] })
+  );
+
+  const result = await syncPendingQueue();
+
+  expect(result).toEqual({ succeeded: 1, failed: 0, conflicted: 0 });
+  expect(offlineQueueMock.__mockMarkSynced).toHaveBeenCalledWith("r1");
+  expect(offlineQueueMock.__mockMarkSyncError).not.toHaveBeenCalled();
+});

@@ -98,6 +98,20 @@ export async function syncPendingQueue(): Promise<SyncResult> {
       }
 
       if (response.ok) {
+        // Feature 009c (research.md R6): a batch can be a 2xx with a non-empty `errors` array —
+        // still response.ok, but not a clean "fully synced" the way every other entity type's
+        // 2xx response is. Discovered only at sync time (the caregiver isn't watching), so it's
+        // surfaced via the same "needs review" convention feature 009's "rejected: " prefix
+        // established, rather than silently counting as succeeded.
+        if (row.entity_type === "child_event_batch") {
+          const body = await response.json().catch(() => null) as { errors?: unknown[] } | null;
+          if (body?.errors && body.errors.length > 0) {
+            await markSyncError(row.id, `partial: ${JSON.stringify(body.errors)}`);
+            failed += 1;
+            continue;
+          }
+        }
+
         await markSynced(row.id);
         succeeded += 1;
         continue;

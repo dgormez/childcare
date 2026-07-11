@@ -101,6 +101,29 @@ export interface PagedChildEventsResponse {
   nextCursor: string | null;
 }
 
+// ── Multi-child events (feature 009c) ───────────────────────────────────────────────────────
+// The eight event types that make sense as a shared group event (spec.md FR-001/FR-002) —
+// temperature/medication/weight/growth_check need per-child values and stay single-child.
+export type BatchEligibleChildEventType =
+  | "sleep" | "diaper" | "feeding_bottle" | "feeding_solid" | "mood" | "activity" | "note" | "custom";
+
+export type ChildEventBatchFailureReason = "child_not_found" | "not_present";
+
+export interface ChildEventBatchCreatedItem {
+  childId: string;
+  eventId: string;
+}
+
+export interface ChildEventBatchErrorItem {
+  childId: string;
+  reason:  ChildEventBatchFailureReason;
+}
+
+export interface ChildEventBatchResponse {
+  created: ChildEventBatchCreatedItem[];
+  errors:  ChildEventBatchErrorItem[];
+}
+
 export interface DailySummaryResponse {
   napsCount:                number;
   bottlesCount:              number;

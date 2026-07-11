@@ -9,13 +9,17 @@ jest.mock("react-i18next", () => ({
 
 jest.mock("../../services/childEvents", () => ({
   recordChildEvent: jest.fn(),
+  recordChildEventBatch: jest.fn(),
   endSleepEvent: jest.fn(),
 }));
 
 const mockUseNetworkStatus = jest.fn();
 jest.mock("../../hooks/useNetworkStatus", () => ({ useNetworkStatus: () => mockUseNetworkStatus() }));
 
-const { recordChildEvent } = jest.requireMock("../../services/childEvents") as { recordChildEvent: jest.Mock };
+const { recordChildEvent, recordChildEventBatch } = jest.requireMock("../../services/childEvents") as {
+  recordChildEvent: jest.Mock;
+  recordChildEventBatch: jest.Mock;
+};
 
 const fakeEvent = { id: "e1", childId: "child-1" } as ChildEventResponse;
 
@@ -125,4 +129,84 @@ it("records a custom event with a label only", async () => {
       true
     )
   );
+});
+
+// Feature 009c — User Stories 1 and 2: batch mode reuses this same sheet for multiple children
+// at once (batchChildren prop), restricted to the eight multi-select-eligible event types.
+
+const batchChildren = [
+  { id: "c1", firstName: "Timmy", lastName: "Tester" },
+  { id: "c2", firstName: "Amy", lastName: "Ainsworth" },
+];
+
+it("batch mode does not offer individual-only event types (temperature, medication, weight, growth_check)", async () => {
+  const { queryByText } = await render(
+    <QuickActionSheet
+      visible childId="" batchChildren={batchChildren} inProgressSleepEventId={null}
+      onClose={jest.fn()} onEventRecorded={jest.fn()}
+    />
+  );
+
+  expect(queryByText("childEvents.types.temperature")).toBeNull();
+  expect(queryByText("childEvents.types.medication")).toBeNull();
+  expect(queryByText("childEvents.types.weight")).toBeNull();
+  expect(queryByText("childEvents.types.growth_check")).toBeNull();
+});
+
+it("submitting a batch diaper event calls recordChildEventBatch with every selected child and shows a success toast via onBatchRecorded", async () => {
+  recordChildEventBatch.mockResolvedValue({
+    response: { created: [{ childId: "c1", eventId: "e1" }, { childId: "c2", eventId: "e2" }], errors: [] },
+    itemIds: [],
+  });
+  const onBatchRecorded = jest.fn();
+  const { getByText } = await render(
+    <QuickActionSheet
+      visible childId="" batchChildren={batchChildren} inProgressSleepEventId={null}
+      onClose={jest.fn()} onEventRecorded={jest.fn()} onBatchRecorded={onBatchRecorded}
+    />
+  );
+
+  fireEvent.press(getByText("childEvents.types.diaper"));
+  await waitFor(() => expect(getByText("childEvents.diaper.wet")).toBeTruthy());
+  await act(async () => fireEvent.press(getByText("childEvents.diaper.wet")));
+
+  await waitFor(() =>
+    expect(recordChildEventBatch).toHaveBeenCalledWith(
+      expect.objectContaining({ childIds: ["c1", "c2"], eventType: "diaper", payload: { type: "wet" } }),
+      true
+    )
+  );
+  await waitFor(() => expect(onBatchRecorded).toHaveBeenCalledWith({ createdCount: 2, failedCount: 0 }));
+});
+
+it("a partial batch failure shows the failed child's name and reason, and 'retry failed' resubmits only that child", async () => {
+  recordChildEventBatch
+    .mockResolvedValueOnce({
+      response: { created: [{ childId: "c1", eventId: "e1" }], errors: [{ childId: "c2", reason: "not_present" }] },
+      itemIds: [],
+    })
+    .mockResolvedValueOnce({ response: { created: [{ childId: "c2", eventId: "e2" }], errors: [] }, itemIds: [] });
+  const onBatchRecorded = jest.fn();
+  const { getByText } = await render(
+    <QuickActionSheet
+      visible childId="" batchChildren={batchChildren} inProgressSleepEventId={null}
+      onClose={jest.fn()} onEventRecorded={jest.fn()} onBatchRecorded={onBatchRecorded}
+    />
+  );
+
+  fireEvent.press(getByText("childEvents.types.note"));
+  await waitFor(() => expect(getByText("childEvents.save")).toBeTruthy());
+  await act(async () => fireEvent.press(getByText("childEvents.save")));
+
+  await waitFor(() => expect(getByText("Amy Ainsworth")).toBeTruthy());
+  expect(getByText("childEvents.batch.reasons.not_present")).toBeTruthy();
+
+  await act(async () => fireEvent.press(getByText("childEvents.batch.retryFailed")));
+
+  expect(recordChildEventBatch).toHaveBeenCalledTimes(2);
+  expect(recordChildEventBatch).toHaveBeenLastCalledWith(
+    expect.objectContaining({ childIds: ["c2"], eventType: "note" }),
+    true
+  );
+  await waitFor(() => expect(onBatchRecorded).toHaveBeenCalledWith({ createdCount: 2, failedCount: 0 }));
 });

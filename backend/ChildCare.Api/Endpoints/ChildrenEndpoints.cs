@@ -20,9 +20,13 @@ public static class ChildrenEndpoints
 {
     public static void MapChildrenEndpoints(this WebApplication app)
     {
+        // Feature 009c (research.md R2): DeviceOrStaffOrDirector rather than StaffOrDirector —
+        // a kiosk-paired tablet's device token has no role claim, but the caregiver room
+        // roster (this feature's multi-select grid, and the pre-existing single-child flow)
+        // needs to read this route under a pure device-token session.
         var reads = app.MapGroup("/api/children")
             .WithTags("Children")
-            .RequireAuthorization("StaffOrDirector");
+            .RequireAuthorization("DeviceOrStaffOrDirector");
 
         reads.MapGet("/", async (HttpContext ctx, IMediator mediator, bool includeDeactivated = false, Guid? groupId = null) =>
         {

@@ -372,6 +372,20 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("DeviceOrDirector", policy => policy
         .AddAuthenticationSchemes("DeviceToken", JwtBearerDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser());
+
+    // Feature 009c (research.md R2) — GET /api/children and GET /api/groups predate 008a's
+    // kiosk/device-token model (they were built StaffOrDirector-only in feature 008) and a
+    // paired kiosk tablet's device token carries no role claim, so a plain RequireRole would
+    // reject it. A device token grants access on its own (no role needed, mirrors
+    // DeviceAuthenticated above); a user JWT still needs the staff/director role (mirrors
+    // StaffOrDirector above) — RequireAssertion rather than RequireRole since the two accepted
+    // schemes need different rules, not one rule ANDed across both.
+    options.AddPolicy("DeviceOrStaffOrDirector", policy => policy
+        .AddAuthenticationSchemes("DeviceToken", JwtBearerDefaults.AuthenticationScheme)
+        .RequireAssertion(context =>
+            context.User.HasClaim(c => c.Type == DeviceTokenClaims.DeviceId) ||
+            context.User.IsInRole("staff") ||
+            context.User.IsInRole("director")));
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

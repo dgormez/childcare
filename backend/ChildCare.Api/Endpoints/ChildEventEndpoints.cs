@@ -31,6 +31,25 @@ public static class ChildEventEndpoints
             return MapResult(result, onSuccess: r => Results.Created($"/api/child-events/{r.Id}", r));
         });
 
+        // Feature 009c — contracts/child-events-batch-api.md.
+        deviceGroup.MapPost("/batch", async (RecordChildEventBatchRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var (deviceId, locationId, groupId) = DeviceClaimsOf(ctx);
+            var eventType = ParseEventType(req.EventType);
+            if (eventType is null)
+                return Results.Json(new { errorKey = "errors.child_events.invalid_event_type" }, statusCode: StatusCodes.Status400BadRequest);
+
+            var items = req.Items.Select(i => new ChildEventBatchItem(i.ChildId, i.Id)).ToList();
+            var result = await mediator.Send(new RecordChildEventBatchCommand(
+                items, locationId, groupId, deviceId, eventType.Value,
+                req.OccurredAt, req.EndedAt, req.Payload, req.VisibleToParent));
+
+            var response = new ChildEventBatchResponse(
+                result.Created.Select(c => new ChildEventBatchCreatedItem(c.ChildId, c.EventId)).ToList(),
+                result.Errors.Select(e => new ChildEventBatchErrorItem(e.ChildId, ToWireReason(e.Reason))).ToList());
+            return Results.Ok(response);
+        });
+
         deviceGroup.MapGet("/", async (Guid childId, string? before, int? limit, IMediator mediator) =>
         {
             var result = await mediator.Send(new ListChildEventsQuery(childId, before, limit ?? 20));
@@ -71,6 +90,13 @@ public static class ChildEventEndpoints
 
     private static ChildEventType? ParseEventType(string value) =>
         ChildEventTypeExtensions.TryParseWireString(value, out var parsed) ? parsed : null;
+
+    private static string ToWireReason(ChildEventBatchFailureReason reason) => reason switch
+    {
+        ChildEventBatchFailureReason.ChildNotFound => "child_not_found",
+        ChildEventBatchFailureReason.NotPresent => "not_present",
+        _ => throw new InvalidOperationException($"Unhandled {nameof(ChildEventBatchFailureReason)}: {reason}"),
+    };
 
     private static (Guid DeviceId, Guid LocationId, Guid GroupId) DeviceClaimsOf(HttpContext ctx) => (
         Guid.Parse(ctx.User.FindFirst(DeviceTokenClaims.DeviceId)!.Value),
