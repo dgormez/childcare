@@ -37,7 +37,7 @@
 | 009b | `009b-group-activities` | Group-level activity moments (garden, musician, drawing, ...) — caregiver adds description + optional photos; surfaced to parents in daily report and parent app | 009, 008a | ✅ Done |
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | ✅ Done |
-| 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | 🔲 Not started |
+| 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | ✅ Done |
 | 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | 🔲 Not started |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
@@ -2437,6 +2437,63 @@ Out of scope:
 - Multi-select for group activities (009b already handles the group-level
   concept; this is for per-child records that happen to be identical).
 ```
+
+**Shipped 2026-07-11** — `specs/009c-multi-child-events/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → design-compliance → converge, 37/37 tasks including 2
+convergence tasks, 7 new backend integration tests + 2 device-token auth-fix regression tests,
+487 backend + 124 mobile passing). Caregiver room-roster multi-select mode, a
+`POST /api/child-events/batch` endpoint with per-child partial-success semantics, and a
+`QuickActionSheet` batch mode with a partial-failure retry-only-failed screen.
+
+- **Two premise corrections made during `/speckit-clarify`/`/speckit-plan`, before any code was
+  written** (verified against the actual codebase, not assumed from this backlog prompt): (1) the
+  prompt's "toggle before the child picker" doesn't match the shipped caregiver UI — there is no
+  child-picker step anywhere; the flow is always child-first (room roster → child detail →
+  `QuickActionSheet`). Multi-select is a mode on the room roster screen instead. (2) The prompt's
+  "403 if the device token's group scope doesn't match" assumes a per-child scope check that
+  doesn't exist on the single-child endpoint either — `LocationId`/`GroupId` have always come
+  wholesale from the device token's own claims (never per-child), and the batch endpoint matches
+  that existing behavior rather than inventing stricter enforcement. See
+  `specs/009c-multi-child-events/research.md` R1/R3 for the full reasoning.
+- **A real, pre-existing gap in already-merged features (008a/009/009b/010/012) was found and
+  fixed as a confirmed prerequisite, not silently expanded scope**: `GET /api/children` and
+  `GET /api/groups` — the room roster's own data source, which this feature's multi-select grid
+  depends on — were `StaffOrDirector`-only since feature 008, predating 008a's kiosk/device-token
+  model. A paired kiosk tablet's device token carries no role claim, so a pure kiosk session would
+  403 on the exact screen this whole feature builds on. Confirmed with the user before including
+  the fix (research.md R2) rather than either guessing or silently building on top of a suspected-
+  broken foundation — the standing rule for a genuinely new, high-impact, no-precedent finding.
+  Fixed via a new `DeviceOrStaffOrDirector` composite policy (`RequireAssertion`, since the two
+  accepted schemes need different rules — a device token needs no role, a user JWT still needs
+  `staff`/`director` — not one rule ANDed across both the way `RequireRole` alone would apply it).
+- **`ChildEventBatchFailureReason` shipped with two values, not three**: an earlier plan-phase
+  draft included a per-child `ValidationFailed` reason, but writing the actual handler showed this
+  can never happen per-child — the batch's payload is shared across every selected child (one
+  `EventType`/`Payload` for the whole request), so a payload validation failure rejects the *whole*
+  batch via the standard `ValidationBehavior` pipeline (`422`) before any child is processed,
+  exactly like the `batch_too_large`/`batch_type_not_supported` checks — never as one child's
+  result alongside others that succeeded. Removed rather than kept as a reason that could never
+  actually be returned; `/speckit-converge` separately caught that `contracts/child-events-batch-
+  api.md`/`quickstart.md` still documented these two checks as returning a bespoke top-level
+  `errorKey` rather than the actual `{errorKey: "errors.validation", fieldErrors}` shape feature
+  009's own contract already established as the convention — corrected, not left as debt.
+- **Per-child idempotency via a client-generated id per batch item** (`items: [{childId, id}]`,
+  not a bare `childIds: string[]` array) — added after `/speckit-checklist` surfaced that a batch
+  retried after an ambiguous network failure (server commits several children, connection drops
+  before the response) had no way to distinguish "already succeeded" from "never attempted" on
+  replay, risking duplicate `ChildEvent` rows. Reuses `RecordChildEventCommand`'s existing
+  idempotency-by-id check (FR-013a, feature 009) per child rather than inventing a new mechanism.
+- **A sync-time-only partial failure (batch replayed offline, some children fail, caregiver isn't
+  watching) reuses feature 009's existing `"rejected: "` "needs review" convention** with a
+  distinct `"partial: "` prefix, rather than a new review surface — `syncEngine.ts`'s `response.ok`
+  branch now parses a `child_event_batch` row's body and routes a non-empty `errors` array to
+  `markSyncError` instead of `markSynced`. Retry is manual (the caregiver reviews later), not
+  automatic.
+- A CI-only flake (not caught locally): `Batch_AllChildrenPresent_CreatesOneEventPerChild`
+  asserted `OccurredAt` exact-equality after a Postgres round-trip — the same class of timestamp-
+  precision flake feature 010 hit before (`.4072354Z` vs `.4072350Z`). Fixed with a 1-second
+  tolerance; **any future test asserting an exact `DateTime` round-tripped through Postgres should
+  use a tolerance, not `==`**, per this and 010's prior instance of the same mistake.
 
 ---
 
