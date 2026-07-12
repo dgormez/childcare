@@ -104,6 +104,11 @@ public class IncidentReportImmutabilityTests(OrganisationOnboardingWebAppFactory
         var updateResponse = await UpdateIncidentReportAsDirectorAsync(client, org.AccessToken, filed.Id, new UpdateIncidentReportRequest(
             null, null, "corrected after review", null, null, null, null, null, null, null, null, null));
         var updated = (await updateResponse.Content.ReadFromJsonAsync<IncidentReportResponse>())!;
-        Assert.Equal(reviewed.ReviewedAt, updated.ReviewedAt);
+        // `reviewed` came from the same in-memory tracked entity GetIncidentReportQuery just
+        // saved (full .NET tick precision); `updated` is a fresh read from Postgres, which
+        // stores timestamptz at microsecond precision — an exact Assert.Equal is flaky against
+        // that sub-microsecond rounding (same class of issue as feature 010's precedent). What
+        // this test actually asserts is "unaffected by the edit," not bit-for-bit identity.
+        Assert.True(Math.Abs((reviewed.ReviewedAt!.Value - updated.ReviewedAt!.Value).TotalMilliseconds) < 1);
     }
 }

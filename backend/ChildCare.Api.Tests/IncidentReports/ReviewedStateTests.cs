@@ -33,6 +33,11 @@ public class ReviewedStateTests(OrganisationOnboardingWebAppFactory factory)
         await Task.Delay(50);
         var secondOpen = await GetIncidentReportAsDirectorAsync(client, org.AccessToken, filed.Id);
         var secondBody = (await secondOpen.Content.ReadFromJsonAsync<IncidentReportResponse>())!;
-        Assert.Equal(firstBody.ReviewedAt, secondBody.ReviewedAt);
+        // firstBody's ReviewedAt came from the in-memory tracked entity GetIncidentReportQuery
+        // just saved (full .NET tick precision); secondBody is a fresh read from Postgres,
+        // which stores timestamptz at microsecond precision — an exact Assert.Equal is flaky
+        // against that sub-microsecond rounding (same class of issue as feature 010's CI-only
+        // timestamp-precision precedent).
+        Assert.True(Math.Abs((firstBody.ReviewedAt!.Value - secondBody.ReviewedAt!.Value).TotalMilliseconds) < 1);
     }
 }
