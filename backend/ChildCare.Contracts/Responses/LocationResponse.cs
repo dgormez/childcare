@@ -14,4 +14,8 @@ public record LocationResponse(
     bool BoPermission,
     DateTime? DeactivatedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string ReservationAbsencesMode,
+    string ReservationExtrasMode,
+    string ReservationSwapsMode,
+    int ReservationNoticeHours);

@@ -86,6 +86,14 @@ public static class DayReservationEndpoints
         DayReservationFailure.ClosureDayConflict => Results.Json(
             new { errorKey = "errors.day_reservations.closure_day" }, statusCode: StatusCodes.Status409Conflict),
 
+        // Feature 013f FR-007: the resolved location(s)' mode is disabled for this type.
+        DayReservationFailure.RequestTypeDisabled => Results.Json(
+            new { errorKey = "errors.day_reservations.request_type_disabled" }, statusCode: StatusCodes.Status403Forbidden),
+
+        // Feature 013f FR-012: requested date falls inside the resolved notice-hours window.
+        DayReservationFailure.NoticePeriodRequired => Results.Json(
+            new { errorKey = "errors.day_reservations.notice_period_required" }, statusCode: StatusCodes.Status400BadRequest),
+
         _ => throw new InvalidOperationException($"Unhandled {nameof(DayReservationFailure)}: {failure}"),
     };
 }

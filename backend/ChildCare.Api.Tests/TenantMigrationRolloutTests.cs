@@ -102,7 +102,11 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// locations. Feature 013a's "AddDayReservations" migration repeats the pattern once more —
     /// day_reservations has FKs to children and users; users is never dropped here (only
     /// ALTERed), so day_reservations only needs to precede the children drop, same as
-    /// waiting_list_entries above it.
+    /// waiting_list_entries above it. Feature 013f's "AddLocationReservationSettings" adds four
+    /// columns to the existing locations table (no new table, no new FK) — it still needs its
+    /// own history-removal entry below, since dropping and recreating "locations" via a
+    /// reapplied "AddLocations" would otherwise leave those four columns permanently missing
+    /// while EF's migration history still claims the column-adding migration was applied.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -151,7 +155,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings';
             """);
     }
 

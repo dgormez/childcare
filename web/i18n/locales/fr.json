@@ -343,7 +343,8 @@
     "confirmReject": "Confirmer le refus",
     "notPending": "Cette demande a déjà été traitée.",
     "closureDayConflict": "Cette date est devenue un jour de fermeture — cette absence ne peut pas être approuvée.",
-    "noContractedLocation": "Impossible de déterminer à quelle antenne cette absence se rapporte."
+    "noContractedLocation": "Impossible de déterminer à quelle antenne cette absence se rapporte.",
+    "autoApproved": "Approuvée automatiquement"
   },
   "messages": {
     "title": "Messages",
@@ -416,6 +417,53 @@
       "weight": "Poids",
       "growth_check": "Contrôle de croissance",
       "custom": "Personnalisé"
+    }
+  },
+  "locations": {
+    "title": "Sites",
+    "columnName": "Nom",
+    "columnAddress": "Adresse",
+    "columnCapacity": "Capacité",
+    "columnStatus": "Statut",
+    "statusActive": "Actif",
+    "statusDeactivated": "Désactivé",
+    "emptyState": "Aucun site pour le moment.",
+    "loadError": "Impossible de charger les sites. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "backToList": "Retour aux sites",
+    "tabGeneral": "Général",
+    "tabReservationSettings": "Paramètres des demandes",
+    "general": {
+      "nameLabel": "Nom",
+      "addressLabel": "Adresse",
+      "phoneLabel": "Téléphone",
+      "emailLabel": "E-mail",
+      "capacityLabel": "Capacité max.",
+      "saveButton": "Enregistrer les modifications",
+      "saveSuccess": "Modifications enregistrées.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+    },
+    "reservationSettings": {
+      "description": "Définissez les types de demandes que les parents peuvent soumettre pour ce site, et comment elles sont traitées.",
+      "absencesLabel": "Signalements d'absence",
+      "extrasLabel": "Demandes de jour supplémentaire",
+      "swapsLabel": "Demandes d'échange de jour",
+      "modeDisabled": "Désactivé",
+      "modeDisabledHint": "Les parents ne peuvent pas soumettre ce type de demande.",
+      "modeInformational": "Informatif",
+      "modeInformationalHint": "Les parents soumettent ; approuvée automatiquement, vous êtes simplement notifié·e.",
+      "modeApproval": "Approbation requise",
+      "modeApprovalHint": "Vous examinez et approuvez ou refusez chaque demande.",
+      "noticeHoursLabel": "Préavis minimum (heures)",
+      "noticeHoursHint": "Les parents doivent soumettre au moins ce nombre d'heures avant le jour demandé. 0 = aucun minimum.",
+      "saveButton": "Enregistrer les modifications",
+      "saveSuccess": "Paramètres des demandes enregistrés.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+      "warningTitle": "Les demandes en attente ne seront pas affectées",
+      "warningBody": "Ce site a des demandes en attente que cette modification ne résoudra pas automatiquement — vous devrez les traiter manuellement depuis la file des demandes.",
+      "warningCounts": "{absence} absence, {extra} jour supplémentaire, {exchange} échange concerné(s).",
+      "warningConfirm": "Enregistrer quand même",
+      "warningCancel": "Annuler"
     }
   }
 }

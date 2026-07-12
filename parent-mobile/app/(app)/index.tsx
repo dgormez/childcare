@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
 import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
+import { getReservationAvailability } from "../../services/locations";
 import { useColors } from "../../hooks/useColors";
 import { ScreenContainer } from "../../components/ScreenContainer";
 import { DailySummaryCard } from "../../components/DailySummaryCard";
-import type { DailySummaryResponse, ParentChildResponse } from "../../types";
+import type { DailySummaryResponse, ParentChildResponse, ReservationAvailabilityResponse } from "../../types";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -19,6 +20,10 @@ export default function HomeScreen() {
   const [loading,   setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error,     setError]     = useState("");
+  // research.md R6: hide a quick action only when the type is disabled for every linked child —
+  // nothing to do there is genuinely nothing. Defaults to visible while availability loads, so
+  // a slow/failed availability fetch never hides a quick action that might actually work.
+  const [anyChildAllows, setAnyChildAllows] = useState({ absence: true, extra: true, exchange: true });
 
   const load = useCallback(async () => {
     setError("");
@@ -36,6 +41,17 @@ export default function HomeScreen() {
         return [child.id, summary] as const;
       }));
       setSummaries(Object.fromEntries(entries));
+
+      const availabilities = (await Promise.all(
+        fetchedChildren.map((child) => getReservationAvailability(child.id)),
+      )).filter((a): a is ReservationAvailabilityResponse => a !== null);
+      if (availabilities.length > 0) {
+        setAnyChildAllows({
+          absence: availabilities.some((a) => a.absence !== "disabled"),
+          extra: availabilities.some((a) => a.extra !== "disabled"),
+          exchange: availabilities.some((a) => a.exchange !== "disabled"),
+        });
+      }
     } catch {
       setError(t("home.loadFailed"));
     }
@@ -83,30 +99,36 @@ export default function HomeScreen() {
           {t("home.quickActions.title")}
         </Text>
         <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-          <TouchableOpacity
-            onPress={() => router.push("/(app)/requests/absence")}
-            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
-            style={{ minHeight: 48 }}
-          >
-            <CalendarOff color={colors.text} size={20} strokeWidth={2} />
-            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.reportSick")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/(app)/requests/extra")}
-            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
-            style={{ minHeight: 48 }}
-          >
-            <CalendarPlus color={colors.text} size={20} strokeWidth={2} />
-            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExtra")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/(app)/requests/exchange")}
-            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
-            style={{ minHeight: 48 }}
-          >
-            <ArrowLeftRight color={colors.text} size={20} strokeWidth={2} />
-            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExchange")}</Text>
-          </TouchableOpacity>
+          {anyChildAllows.absence && (
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/requests/absence")}
+              className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+              style={{ minHeight: 48 }}
+            >
+              <CalendarOff color={colors.text} size={20} strokeWidth={2} />
+              <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.reportSick")}</Text>
+            </TouchableOpacity>
+          )}
+          {anyChildAllows.extra && (
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/requests/extra")}
+              className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+              style={{ minHeight: 48 }}
+            >
+              <CalendarPlus color={colors.text} size={20} strokeWidth={2} />
+              <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExtra")}</Text>
+            </TouchableOpacity>
+          )}
+          {anyChildAllows.exchange && (
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/requests/exchange")}
+              className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+              style={{ minHeight: 48 }}
+            >
+              <ArrowLeftRight color={colors.text} size={20} strokeWidth={2} />
+              <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.requestExchange")}</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             onPress={() => router.push("/(app)/requests")}
             className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"

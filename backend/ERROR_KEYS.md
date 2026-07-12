@@ -203,6 +203,20 @@ a missing or inactive location. Feature 011 also changes feature 010's previousl
 `errors.attendance.closure_day` and `errors.attendance.closure_status_immutable` behavior from
 "future mechanism" to the closure calendar's persisted `closure` attendance state.
 
+## Reservation Settings (feature `013f-reservation-settings`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.location.reservation_settings.invalid_mode` | 422 | `PUT /api/locations/{id}/reservation-settings` — `absencesMode`/`extrasMode`/`swapsMode` is not one of `disabled`/`informational`/`approval`. |
+| `errors.location.reservation_settings.notice_hours_out_of_range` | 422 | `PUT /api/locations/{id}/reservation-settings` — `noticeHours` outside 0–8760 (FR-011). |
+| `errors.location.reservation_settings.pending_requests_warning` | 409 | `PUT /api/locations/{id}/reservation-settings` — a mode is changing away from `approval` for a type with existing `pending` requests at this location, and `confirmDespitePending` was not set (FR-014). Body includes a `pendingCounts` object. |
+| `errors.day_reservations.request_type_disabled` | 403 | `POST /api/day-reservations` — the resolved candidate location(s)' mode for this request's type is `disabled` (FR-007). |
+| `errors.day_reservations.notice_period_required` | 400 | `POST /api/day-reservations` — the requested date falls inside the resolved notice-hours window (FR-012). A flat errorKey, not `fieldErrors` — this codebase's convention reserves `ValidationBehavior`/`fieldErrors` for synchronous rules with no DB dependency; DB-dependent checks (this one, and 013a's own `not_contracted_day`/`closure_day`) are handler-level failures instead. |
+
+This feature also reuses `errors.location.not_found` (404, feature 004) for the new
+reservation-settings endpoint, and 013a's existing `errors.day_reservations.*` keys unchanged for
+every other submission-time failure mode.
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |

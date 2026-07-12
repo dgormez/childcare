@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { apiClient } from "../services/apiClient";
 import { submitDayReservation } from "../services/dayReservations";
+import { getReservationAvailability } from "../services/locations";
 import { useColors } from "../hooks/useColors";
 import { DateField } from "./DateField";
 import type { DayReservationType, ParentChildResponse } from "../types";
@@ -28,6 +29,10 @@ export function DayReservationForm({ type, titleKey }: DayReservationFormProps) 
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  // FR-006/research.md R6: the authoritative per-child check, once a child is selected — the
+  // home screen's hiding is only a heuristic across all children, this is the real gate. The
+  // server still re-enforces at submission regardless (FR-007) — this is a UX nicety only.
+  const [disabledForChild, setDisabledForChild] = useState(false);
 
   useEffect(() => {
     apiClient.GET("/api/parent/children").then((result) => {
@@ -39,7 +44,24 @@ export function DayReservationForm({ type, titleKey }: DayReservationFormProps) 
     }).catch(() => {});
   }, []);
 
-  const canSubmit = !!childId && requestedDate.length > 0 && (type !== "exchange" || exchangeForDate.length > 0) && !submitting;
+  useEffect(() => {
+    if (!childId) {
+      setDisabledForChild(false);
+      return;
+    }
+    let cancelled = false;
+    getReservationAvailability(childId).then((availability) => {
+      if (cancelled || !availability) return;
+      setDisabledForChild(availability[type] === "disabled");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [childId, type]);
+
+  const selectedChild = children.find((child) => child.id === childId) ?? null;
+
+  const canSubmit = !!childId && !disabledForChild && requestedDate.length > 0 && (type !== "exchange" || exchangeForDate.length > 0) && !submitting;
 
   const handleSubmit = async () => {
     if (!childId) return;
@@ -61,6 +83,12 @@ export function DayReservationForm({ type, titleKey }: DayReservationFormProps) 
       <Text className="text-text dark:text-text-dark text-xl font-bold mb-4">{t(titleKey)}</Text>
 
       {!!error && <Text className="text-danger dark:text-danger-dark text-sm mb-4">{error}</Text>}
+
+      {disabledForChild && selectedChild && (
+        <Text className="text-danger dark:text-danger-dark text-sm mb-4">
+          {t("dayReservations.notAvailableForChild", { childName: selectedChild.firstName })}
+        </Text>
+      )}
 
       <Text className="text-text-soft dark:text-text-soft-dark text-sm font-medium mb-1">{t("dayReservations.childLabel")}</Text>
       <View className="mb-4">

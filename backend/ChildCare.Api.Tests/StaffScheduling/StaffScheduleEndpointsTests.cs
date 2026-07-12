@@ -115,7 +115,7 @@ public class StaffScheduleEndpointsTests(OrganisationOnboardingWebAppFactory fac
 
         var entry = await CreateEntryAsync(client, org.AccessToken, staff.Id, location.Id, null, FutureDate, new TimeOnly(8, 0), new TimeOnly(16, 0));
 
-        var listResponse = await ListAsync(client, org.AccessToken, location.Id, FutureDate.AddDays(-(int)FutureDate.DayOfWeek + 1));
+        var listResponse = await ListAsync(client, org.AccessToken, location.Id, FutureDate.AddDays(-(((int)FutureDate.DayOfWeek + 6) % 7)));
         Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
         var entries = (await listResponse.Content.ReadFromJsonAsync<List<StaffScheduleResponse>>())!;
         Assert.Contains(entries, e => e.Id == entry.Id);
@@ -414,7 +414,7 @@ public class StaffScheduleEndpointsTests(OrganisationOnboardingWebAppFactory fac
         Assert.DoesNotContain(staff.Id, projected!.StaffProfileIds);
 
         // FR-009b: the entry itself is still visible in the rota, not deleted.
-        var listResponse = await ListAsync(client, org.AccessToken, location.Id, FutureDate.AddDays(-(int)FutureDate.DayOfWeek + 1));
+        var listResponse = await ListAsync(client, org.AccessToken, location.Id, FutureDate.AddDays(-(((int)FutureDate.DayOfWeek + 6) % 7)));
         var entries = (await listResponse.Content.ReadFromJsonAsync<List<StaffScheduleResponse>>())!;
         Assert.Contains(entries, e => e.StaffProfileId == staff.Id);
     }

@@ -343,7 +343,8 @@
     "confirmReject": "Confirm rejection",
     "notPending": "This request has already been decided.",
     "closureDayConflict": "This date has become a closure day — this absence can't be approved.",
-    "noContractedLocation": "Couldn't determine which location this absence applies to."
+    "noContractedLocation": "Couldn't determine which location this absence applies to.",
+    "autoApproved": "Auto-approved"
   },
   "messages": {
     "title": "Messages",
@@ -416,6 +417,53 @@
       "weight": "Weight",
       "growth_check": "Growth check",
       "custom": "Custom"
+    }
+  },
+  "locations": {
+    "title": "Locations",
+    "columnName": "Name",
+    "columnAddress": "Address",
+    "columnCapacity": "Capacity",
+    "columnStatus": "Status",
+    "statusActive": "Active",
+    "statusDeactivated": "Deactivated",
+    "emptyState": "No locations yet.",
+    "loadError": "Couldn't load locations. Please try again.",
+    "retry": "Retry",
+    "backToList": "Back to locations",
+    "tabGeneral": "General",
+    "tabReservationSettings": "Reservation Settings",
+    "general": {
+      "nameLabel": "Name",
+      "addressLabel": "Address",
+      "phoneLabel": "Phone",
+      "emailLabel": "Email",
+      "capacityLabel": "Max capacity",
+      "saveButton": "Save changes",
+      "saveSuccess": "Changes saved.",
+      "saveError": "Couldn't save changes. Please try again."
+    },
+    "reservationSettings": {
+      "description": "Configure which day-reservation requests parents can submit for this location, and how they're handled.",
+      "absencesLabel": "Absence reports",
+      "extrasLabel": "Extra day requests",
+      "swapsLabel": "Day exchange requests",
+      "modeDisabled": "Disabled",
+      "modeDisabledHint": "Parents can't submit this request type.",
+      "modeInformational": "Informational",
+      "modeInformationalHint": "Parents submit; it's automatically approved, you're just notified.",
+      "modeApproval": "Approval required",
+      "modeApprovalHint": "You review and approve or reject each request.",
+      "noticeHoursLabel": "Minimum notice (hours)",
+      "noticeHoursHint": "Parents must submit at least this many hours before the requested day. 0 means no minimum.",
+      "saveButton": "Save changes",
+      "saveSuccess": "Reservation settings saved.",
+      "saveError": "Couldn't save changes. Please try again.",
+      "warningTitle": "Pending requests won't be affected",
+      "warningBody": "This location has pending requests that this change won't automatically resolve — you'll need to handle them manually from the Requests queue.",
+      "warningCounts": "{absence} absence, {extra} extra day, {exchange} exchange request(s) affected.",
+      "warningConfirm": "Save anyway",
+      "warningCancel": "Cancel"
     }
   }
 }

@@ -88,6 +88,17 @@ public class DayReservationEndpointsTests(OrganisationOnboardingWebAppFactory fa
         return body.AccessToken;
     }
 
+    // Feature 013f: reservation_swaps_mode defaults to "disabled" (unlike absence/extra, which
+    // default to "approval") — every pre-existing exchange test in this file predates that
+    // setting and needs to explicitly opt in to exercise 013a's original exchange behavior.
+    private static async Task AllowExchangeRequestsAsync(HttpClient client, string directorToken, Guid locationId)
+    {
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{locationId}/reservation-settings", directorToken,
+            new UpdateLocationReservationSettingsRequest("approval", "approval", "approval", 0, false)));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     // ── US1: absence submit ──────────────────────────────────────────────────────────────────
 
     [Fact]
@@ -322,6 +333,7 @@ public class DayReservationEndpointsTests(OrganisationOnboardingWebAppFactory fa
         var (client, org, location) = await SetupAsync();
         var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
         await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, Monday.DayOfWeek);
+        await AllowExchangeRequestsAsync(client, org.AccessToken, location.Id);
 
         var reservation = await SubmitAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "exchange", Tuesday, Monday, "Ruildag"));
 
@@ -362,6 +374,7 @@ public class DayReservationEndpointsTests(OrganisationOnboardingWebAppFactory fa
         var (client, org, location) = await SetupAsync();
         var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
         await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, Monday.DayOfWeek);
+        await AllowExchangeRequestsAsync(client, org.AccessToken, location.Id);
         var reservation = await SubmitAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "exchange", Tuesday, Monday, null));
 
         var response = await ApproveRawAsync(client, org.AccessToken, reservation.Id);

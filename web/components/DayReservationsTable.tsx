@@ -66,16 +66,26 @@ export function DayReservationsTable({ reservations, onApprove, onReject }: DayR
               </TableCell>
               <TableCell className="max-w-xs truncate text-text-soft dark:text-text-soft-dark">
                 {reservation.reason ?? "—"}
+                {/* Feature 013f: a null decidedBy on an approved row means informational-mode
+                    auto-approval (research.md R1/R2) — distinguished from a director decision
+                    so it reads as informational, not actionable (FR-010). */}
+                {reservation.status === "approved" && reservation.decidedBy === null && (
+                  <Badge variant="neutral" className="ml-2 align-middle">
+                    {t("autoApproved")}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell className="text-right">
-                <div className="inline-flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => onApprove(reservation)}>
-                    {t("approve")}
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => onReject(reservation)}>
-                    {t("reject")}
-                  </Button>
-                </div>
+                {reservation.status === "pending" && (
+                  <div className="inline-flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onApprove(reservation)}>
+                      {t("approve")}
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => onReject(reservation)}>
+                      {t("reject")}
+                    </Button>
+                  </div>
+                )}
               </TableCell>
             </TableRow>
           );

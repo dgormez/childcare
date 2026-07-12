@@ -343,7 +343,8 @@
     "confirmReject": "Afwijzing bevestigen",
     "notPending": "Dit verzoek is al beslist.",
     "closureDayConflict": "Deze datum is een sluitingsdag geworden — deze afwezigheid kan niet worden goedgekeurd.",
-    "noContractedLocation": "Kon niet bepalen op welke locatie deze afwezigheid van toepassing is."
+    "noContractedLocation": "Kon niet bepalen op welke locatie deze afwezigheid van toepassing is.",
+    "autoApproved": "Automatisch goedgekeurd"
   },
   "messages": {
     "title": "Berichten",
@@ -416,6 +417,53 @@
       "weight": "Gewicht",
       "growth_check": "Groeicontrole",
       "custom": "Aangepast"
+    }
+  },
+  "locations": {
+    "title": "Locaties",
+    "columnName": "Naam",
+    "columnAddress": "Adres",
+    "columnCapacity": "Capaciteit",
+    "columnStatus": "Status",
+    "statusActive": "Actief",
+    "statusDeactivated": "Gedeactiveerd",
+    "emptyState": "Nog geen locaties.",
+    "loadError": "Kan de locaties niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "backToList": "Terug naar locaties",
+    "tabGeneral": "Algemeen",
+    "tabReservationSettings": "Reserveringsinstellingen",
+    "general": {
+      "nameLabel": "Naam",
+      "addressLabel": "Adres",
+      "phoneLabel": "Telefoon",
+      "emailLabel": "E-mail",
+      "capacityLabel": "Max. capaciteit",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Wijzigingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "reservationSettings": {
+      "description": "Bepaal welke soorten verzoeken ouders voor deze locatie kunnen indienen, en hoe die worden afgehandeld.",
+      "absencesLabel": "Afwezigheidsmeldingen",
+      "extrasLabel": "Verzoeken voor extra dag",
+      "swapsLabel": "Verzoeken voor dagwissel",
+      "modeDisabled": "Uitgeschakeld",
+      "modeDisabledHint": "Ouders kunnen dit type verzoek niet indienen.",
+      "modeInformational": "Informatief",
+      "modeInformationalHint": "Ouders dienen in; wordt automatisch goedgekeurd, jij ontvangt enkel een melding.",
+      "modeApproval": "Goedkeuring vereist",
+      "modeApprovalHint": "Je beoordeelt en keurt elk verzoek goed of af.",
+      "noticeHoursLabel": "Minimale opzegtermijn (uren)",
+      "noticeHoursHint": "Ouders moeten minstens dit aantal uren op voorhand indienen. 0 betekent geen minimum.",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Reserveringsinstellingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw.",
+      "warningTitle": "Openstaande verzoeken blijven ongewijzigd",
+      "warningBody": "Deze locatie heeft openstaande verzoeken die deze wijziging niet automatisch afhandelt — je moet ze zelf afhandelen via het overzicht Verzoeken.",
+      "warningCounts": "{absence} afwezigheid, {extra} extra dag, {exchange} dagwissel betrokken.",
+      "warningConfirm": "Toch opslaan",
+      "warningCancel": "Annuleren"
     }
   }
 }

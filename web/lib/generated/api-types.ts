@@ -1052,6 +1052,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/reservation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationReservationSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/deactivate": {
         parameters: {
             query?: never;
@@ -2559,6 +2598,43 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["RecordChildEventRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/child-events/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordChildEventBatchRequest"];
                 };
             };
             responses: {
@@ -4241,6 +4317,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/children/{childId}/reservation-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    childId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parent/group-activities/gallery": {
         parameters: {
             query?: never;
@@ -4543,6 +4654,12 @@ export interface components {
             staffId: string;
             pin: string;
         };
+        ChildEventBatchItemRequest: {
+            /** Format: uuid */
+            childId: string;
+            /** Format: uuid */
+            id: string;
+        };
         ConfirmAdministratorRequest: {
             /** Format: uuid */
             staffId: null | string;
@@ -4764,6 +4881,16 @@ export interface components {
         PublishClosureDayRequest: {
             confirmExistingAttendance: boolean;
         };
+        RecordChildEventBatchRequest: {
+            items: components["schemas"]["ChildEventBatchItemRequest"][];
+            eventType: string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: date-time */
+            endedAt: null | string;
+            payload: components["schemas"]["JsonElement"];
+            visibleToParent: boolean;
+        };
         RecordChildEventRequest: {
             /** Format: uuid */
             id: null | string;
@@ -4905,6 +5032,14 @@ export interface components {
             verantwoordelijke: null | string;
             flexPermission: boolean;
             boPermission: boolean;
+        };
+        UpdateLocationReservationSettingsRequest: {
+            absencesMode: string;
+            extrasMode: string;
+            swapsMode: string;
+            /** Format: int32 */
+            noticeHours: number | string;
+            confirmDespitePending: boolean;
         };
         UpdateStaffProfileRequest: {
             firstName: string;
