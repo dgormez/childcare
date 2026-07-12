@@ -326,3 +326,16 @@ use the static code review instead.
   `children` and `locations`) — every migration-adding feature since 003 has hit this same
   test and needed the identical fix; worth checking that test first when adding any new
   tenant-schema table with a foreign key.
+- 013b (`013b-incident-reports`): ✅ Done, merged 2026-07-12 (PR #23, squash-merged after green
+  CI — 533/533 backend + 133/133 mobile + 70/70 web tests passing). This run resumed mid-flight:
+  a prior session had already written spec/plan/tasks/data-model/contracts/checklists with zero
+  commits and 0/61 tasks implemented — this session picked up from tasks.md's checkboxes rather
+  than re-running specify/clarify/plan/tasks. Digital incident/accident report form (Besluit
+  Kwaliteit Kinderopvang legal requirement): caregiver-tablet filing with `reportedBy` resolved
+  server-side (mirrors feature 009's `child_events.recorded_by`, no PIN step so offline filing is
+  never blocked), a 24-hour immutability lock, and a director-web Incidents screen. See
+  BACKLOG.md's own shipped-note for the full list of corrected premises (no director push
+  channel, no child-file screen yet) and fixed CI-only issues (web lockfile out of sync under
+  Node 20, flaky Postgres timestamp-precision equality) — same two classes of bug 007a's and
+  010's shipped-notes already describe, worth checking for on every feature that touches
+  `web/package-lock.json` or compares a just-saved timestamp against a re-queried one.

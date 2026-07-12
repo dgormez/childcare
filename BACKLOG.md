@@ -39,7 +39,7 @@
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | ✅ Done |
 | 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | ✅ Done |
 | 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | ✅ Done |
-| 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
+| 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | ✅ Done |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
@@ -2660,6 +2660,47 @@ Out of scope:
 - Parent digital acknowledgment / e-signature on the incident report (Phase 2).
 - Zorginspectie reporting API integration (Phase 3).
 ```
+
+**Shipped 2026-07-12** — `specs/013b-incident-reports/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 62/62 tasks including one convergence task, 533/533
+backend + 133/133 mobile + 70/70 web tests passing, PR #23 squash-merged after green CI). Adds a
+new `incident_reports` tenant table: caregiver-tablet filing with `reportedBy` resolved
+server-side via feature 009's `IShiftAttributionService` (mirrors `child_events.recorded_by`
+exactly — no PIN-confirmation step, since one would block offline filing), a 24-hour
+immutability lock enforced server-side (only `follow_up` stays editable after), and a
+director-web Incidents screen (list/filter/paginate/PDF export/reviewed-indicator). Two premises
+in the original brief turned out false and were corrected during specification, per this
+project's standing precedent (012/012a/013f) of documenting a corrected premise rather than
+building it as literally specified: no director push-notification channel exists anywhere in
+this codebase (same conclusion 013f already reached for an analogous ask) — an in-app
+reviewed/unreviewed indicator substitutes; and no per-child "child file" screen exists yet in
+`web/` (`/children` is still a placeholder, 007a) — a dedicated Incidents screen with a child
+filter substitutes until one exists. `reported_by` is a `UUID[]` (zero, one, or more caregivers),
+not the single nullable `UUID` the original schema literally specified — the same
+singular-to-array correction feature 009 already made for `recorded_by`, for the identical
+reason (device-token writes carry no individual caregiver identity). Two contract-level
+deviations were corrected during implementation: `POST /api/incident-reports` is
+device-token-only (no director-facing filing screen ships in this feature, and there's no other
+source for `locationId`/`groupId`); and validation failures return `422`, not the contract's
+literal `400` — every FluentValidation failure in this codebase already returns `422` via the
+shared `ValidationBehavior` pipeline, and the contract's `400` was aspirational text, not a real
+per-feature exception to that convention. `/speckit-converge` found one real gap after
+implementation — the director list screen fetched a paginated response but exposed no way to
+reach page 2+, leaving anything past the first 25 reports unreachable (FR-009) — fixed with
+next/previous controls, not deferred. Extended `TenantMigrationRolloutTests`' schema-revert
+helper for the new table's FKs to `children`/`locations` — the same fix every migration-adding
+feature since 003 has needed. A full-suite run surfaced two CI-only issues neither caught
+locally: `web/package-lock.json` was missing a nested `@swc/helpers` resolution that only
+`npm ci` (not `npm install`) validates strictly, and only under CI's Node 20 (not this
+session's Node 22) — the same class of issue 007a's shipped-notes already describe, reproduced
+locally via a Node 20 container and fixed with a regenerated lockfile; and two new tests compared
+a just-saved in-memory `ReviewedAt` (full .NET tick precision) against a freshly re-queried one
+from Postgres (timestamptz's microsecond precision) with exact equality, flaky against
+sub-microsecond rounding — the same class of issue feature 010's shipped-notes already describe,
+fixed with a sub-millisecond tolerance. Also fixed a latent, unrelated gap found while running
+the full web suite: vitest's default include glob matches Playwright's own `e2e/*.spec.ts`
+files, so plain `npm test` tried to execute them as vitest tests and failed outright — excluded
+`e2e/` in `vitest.config.ts`.
 
 ---
 
