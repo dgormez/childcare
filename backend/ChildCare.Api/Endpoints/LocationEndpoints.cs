@@ -46,6 +46,13 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        group.MapPut("/{id:guid}/reservation-settings", async (Guid id, UpdateLocationReservationSettingsRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationReservationSettingsCommand(
+                id, req.AbsencesMode, req.ExtrasMode, req.SwapsMode, req.NoticeHours, req.ConfirmDespitePending));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateLocationCommand(id));
@@ -78,6 +85,10 @@ public static class LocationEndpoints
 
             LocationFailure.HasActiveDependents => Results.Json(
                 new { errorKey = "errors.location.has_active_dependents" },
+                statusCode: StatusCodes.Status409Conflict),
+
+            LocationFailure.PendingRequestsWarning => Results.Json(
+                new { errorKey = "errors.location.reservation_settings.pending_requests_warning", pendingCounts = result.PendingCounts },
                 statusCode: StatusCodes.Status409Conflict),
 
             _ => throw new InvalidOperationException($"Unhandled {nameof(LocationFailure)}: {result.Failure}"),

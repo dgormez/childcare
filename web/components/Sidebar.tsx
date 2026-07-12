@@ -12,6 +12,7 @@ import type { MessageThreadSummaryResponse } from "../lib/types";
 const REAL_NAV = [
   { href: "/staff", labelKey: "staff", icon: Users },
   { href: "/devices", labelKey: "devices", icon: Tablet },
+  { href: "/locations", labelKey: "locations", icon: MapPin },
   { href: "/attendance", labelKey: "attendance", icon: CalendarClock },
   { href: "/groups", labelKey: "groups", icon: Sparkles },
   { href: "/closures", labelKey: "closures", icon: CalendarX },
@@ -25,8 +26,8 @@ const REAL_NAV = [
 // FR-006: inert placeholders for sections later features will build — never real links, so a
 // director can't navigate to a half-built screen from the sidebar itself (direct URL entry is
 // still handled by each route's own not-yet-available page, per spec Edge Cases).
+// "locations" moved to REAL_NAV — feature 013f replaced its NotYetAvailable placeholder.
 const PLACEHOLDER_NAV = [
-  { labelKey: "locations", icon: MapPin },
   { labelKey: "contracts", icon: FileText },
   { labelKey: "children", icon: Baby },
 ] as const;

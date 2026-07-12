@@ -208,6 +208,22 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             l.Property(x => x.Verantwoordelijke).HasMaxLength(200);
             l.Property(x => x.FlexPermission).IsRequired();
             l.Property(x => x.BoPermission).IsRequired();
+            l.Property(x => x.ReservationAbsencesMode)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ReservationRequestMode)Enum.Parse(typeof(ReservationRequestMode), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(ReservationRequestMode.Approval)
+              .IsRequired();
+            l.Property(x => x.ReservationExtrasMode)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ReservationRequestMode)Enum.Parse(typeof(ReservationRequestMode), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(ReservationRequestMode.Approval)
+              .IsRequired();
+            l.Property(x => x.ReservationSwapsMode)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (ReservationRequestMode)Enum.Parse(typeof(ReservationRequestMode), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(ReservationRequestMode.Disabled)
+              .IsRequired();
+            l.Property(x => x.ReservationNoticeHours).HasDefaultValue(0).IsRequired();
             l.HasIndex(x => x.DeactivatedAt);
         });
 

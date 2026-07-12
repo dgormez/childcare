@@ -38,6 +38,8 @@ export interface StaffResponse {
   updatedAt: string;
 }
 
+export type ReservationRequestMode = "disabled" | "informational" | "approval";
+
 export interface LocationResponse {
   id: string;
   name: string;
@@ -53,6 +55,10 @@ export interface LocationResponse {
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  reservationAbsencesMode: ReservationRequestMode;
+  reservationExtrasMode: ReservationRequestMode;
+  reservationSwapsMode: ReservationRequestMode;
+  reservationNoticeHours: number;
 }
 
 export interface DeviceSummaryResponse {
@@ -70,6 +76,8 @@ export interface DeviceSummaryResponse {
 export interface ApiErrorBody {
   errorKey: string;
   fieldErrors?: Record<string, string>;
+  // Feature 013f FR-014 — present only on errors.location.reservation_settings.pending_requests_warning.
+  pendingCounts?: Partial<Record<"absence" | "extra" | "exchange", number>>;
 }
 
 // ── Attendance (feature 010) ─────────────────────────────────────────────────────

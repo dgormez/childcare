@@ -23,7 +23,9 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
   return {
     id: "loc-1", name: "Sunshine House", address: "1 Main St", phone: "+32 9 123 45 67",
     email: "loc@test.com", maxCapacity: 20, naamLocatie: null, dossiernummer: null,
-    verantwoordelijke: null, flexPermission: false, boPermission: false, deactivatedAt: null,
+    verantwoordelijke: null, flexPermission: false, boPermission: false,
+    reservationAbsencesMode: "approval", reservationExtrasMode: "approval",
+    reservationSwapsMode: "disabled", reservationNoticeHours: 0, deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };

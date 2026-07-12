@@ -34,6 +34,12 @@ public enum DayReservationFailure
     // same 400 ClosureDay uses at submission (contracts/day-reservations-api.md documents both
     // status codes separately; this is a genuinely different failure mode, not a duplicate).
     ClosureDayConflict,
+
+    // Feature 013f FR-007: the resolved candidate location(s)' mode for this type is disabled.
+    RequestTypeDisabled,
+
+    // Feature 013f FR-012: the requested date falls inside the resolved notice-hours window.
+    NoticePeriodRequired,
 }
 
 public class DayReservationResult

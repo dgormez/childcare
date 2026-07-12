@@ -14,14 +14,24 @@ public class LocationResult
     public LocationResponse? Response { get; private init; }
     public LocationFailure? Failure { get; private init; }
 
+    // Feature 013f FR-014 — only populated for PendingRequestsWarning, mirrors
+    // PublishClosureCalendarResult's CheckedInCount payload-carrying pattern (feature 011).
+    public IReadOnlyDictionary<string, int>? PendingCounts { get; private init; }
+
     public bool Succeeded => Failure is null;
 
     public static LocationResult Success(LocationResponse response) => new() { Response = response };
     public static LocationResult Fail(LocationFailure failure) => new() { Failure = failure };
+    public static LocationResult Fail(LocationFailure failure, IReadOnlyDictionary<string, int> pendingCounts) => new()
+    {
+        Failure = failure,
+        PendingCounts = pendingCounts,
+    };
 }
 
 public enum LocationFailure
 {
     NotFound,
     HasActiveDependents,
+    PendingRequestsWarning,
 }

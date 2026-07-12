@@ -206,6 +206,8 @@
       "absence": "Absence",
       "extra": "Extra day",
       "exchange": "Day exchange"
-    }
+    },
+    "notAvailableForChild": "This request type isn't available for {childName} right now.",
+    "loadAvailabilityFailed": "Couldn't check request availability. Please try again."
   }
 }

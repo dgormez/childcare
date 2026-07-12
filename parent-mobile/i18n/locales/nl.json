@@ -206,6 +206,8 @@
       "absence": "Afwezigheid",
       "extra": "Extra dag",
       "exchange": "Dagwissel"
-    }
+    },
+    "notAvailableForChild": "Dit type verzoek is momenteel niet beschikbaar voor {childName}.",
+    "loadAvailabilityFailed": "Kan de beschikbaarheid niet controleren. Probeer het opnieuw."
   }
 }

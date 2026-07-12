@@ -190,6 +190,9 @@ builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactRe
 // unchanged — no new ports needed (research.md).
 builder.Services.AddScoped<ChildCare.Application.DayReservations.DayReservationNotificationService>();
 
+// ── Reservation settings (feature 013f) ──────────────────────────────────────
+builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPolicyResolver>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 

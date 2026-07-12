@@ -136,4 +136,23 @@ describe("DayReservationsPage", () => {
 
     expect(await screen.findByText("This date has become a closure day — this absence can't be approved.")).toBeInTheDocument();
   });
+
+  // Feature 013f: a null decidedBy on an approved row is a system auto-approval (informational
+  // mode), distinguished from a director decision — and shouldn't offer approve/reject actions.
+  it("shows an auto-approved badge and no actions for a system-decided row, but not for a director-decided one", async () => {
+    mockGet({
+      "/api/day-reservations": [
+        makeReservation({ id: "auto", childDisplayName: "Emma Peeters", status: "approved", decidedBy: null, decidedAt: "2026-07-11T09:00:00Z" }),
+        makeReservation({ id: "manual", childDisplayName: "Liam Janssens", status: "approved", decidedBy: "director-1", decidedAt: "2026-07-11T09:00:00Z" }),
+      ],
+    });
+
+    renderPage();
+    await screen.findByText("Emma Peeters");
+    await screen.findByText("Liam Janssens");
+
+    expect(screen.getAllByText("Auto-approved")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
 });

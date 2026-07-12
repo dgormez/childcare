@@ -206,6 +206,8 @@
       "absence": "Absence",
       "extra": "Jour supplémentaire",
       "exchange": "Échange de jour"
-    }
+    },
+    "notAvailableForChild": "Ce type de demande n'est pas disponible pour {childName} pour le moment.",
+    "loadAvailabilityFailed": "Impossible de vérifier la disponibilité. Veuillez réessayer."
   }
 }

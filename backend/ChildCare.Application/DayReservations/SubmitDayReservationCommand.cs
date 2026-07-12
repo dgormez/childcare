@@ -1,3 +1,4 @@
+using ChildCare.Application.Attendance;
 using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
 using ChildCare.Domain.Enums;
@@ -42,7 +43,9 @@ public class SubmitDayReservationCommandValidator : AbstractValidator<SubmitDayR
 public class SubmitDayReservationCommandHandler(
     ITenantDbContext db,
     ICurrentParentContactResolver contactResolver,
-    IClosureCalendarReader closureCalendar) : IRequestHandler<SubmitDayReservationCommand, DayReservationResult>
+    IClosureCalendarReader closureCalendar,
+    ReservationPolicyResolver policyResolver,
+    IMediator mediator) : IRequestHandler<SubmitDayReservationCommand, DayReservationResult>
 {
     public async Task<DayReservationResult> Handle(SubmitDayReservationCommand request, CancellationToken cancellationToken)
     {
@@ -85,6 +88,20 @@ public class SubmitDayReservationCommandHandler(
             }
         }
 
+        // Feature 013f FR-007/FR-012/FR-017: resolve the effective per-location policy before
+        // ever creating the row — disabled types never reach the table at all, and the
+        // notice-hours window is enforced against the same candidate-location set.
+        var policy = await policyResolver.ResolveAsync(request.ChildId, type, request.RequestedDate, cancellationToken);
+        if (policy.Mode == ReservationRequestMode.Disabled)
+            return DayReservationResult.Fail(DayReservationFailure.RequestTypeDisabled);
+
+        if (policy.NoticeHours > 0)
+        {
+            var (requestedDateStartUtc, _) = BelgianCalendarDay.UtcRangeFor(request.RequestedDate);
+            if (requestedDateStartUtc - DateTime.UtcNow < TimeSpan.FromHours(policy.NoticeHours))
+                return DayReservationResult.Fail(DayReservationFailure.NoticePeriodRequired);
+        }
+
         var reservation = new DayReservation
         {
             ChildId = request.ChildId,
@@ -94,6 +111,46 @@ public class SubmitDayReservationCommandHandler(
             Reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim(),
             RequestedBy = request.TenantUserId,
         };
+
+        if (policy.Mode == ReservationRequestMode.Informational)
+        {
+            // FR-008/FR-009/Clarifications: auto-approval applies the identical downstream
+            // effect a director's approval would — for absence, that's the attendance
+            // pre-registration (via the same MarkAbsentCommand ApproveDayReservationCommand
+            // uses); a closure-day conflict here fails submission itself rather than silently
+            // auto-approving into an invalid state.
+            if (type == DayReservationType.Absence)
+            {
+                var locationId = await db.Contracts
+                    .Where(c => c.ChildId == request.ChildId && c.Status == ContractStatus.Active)
+                    .SelectMany(c => c.ContractedDays, (c, d) => new { c.LocationId, d.Weekday })
+                    .Where(x => x.Weekday == request.RequestedDate.DayOfWeek)
+                    .Select(x => (Guid?)x.LocationId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (locationId is null)
+                    return DayReservationResult.Fail(DayReservationFailure.NoContractedLocation);
+
+                // DirectorTenantUserId is null (not the parent's id) — a parent isn't "who
+                // recorded this," the same way a caregiver device-token absence-mark isn't
+                // director-attributed; RecordedBy falls through to shift attribution, same as
+                // that path (MarkAbsentCommandHandler).
+                var attendanceResult = await mediator.Send(
+                    new MarkAbsentCommand(request.ChildId, locationId.Value, null, request.RequestedDate, true, reservation.Reason, null),
+                    cancellationToken);
+                if (!attendanceResult.Succeeded)
+                {
+                    return DayReservationResult.Fail(attendanceResult.Failure == AttendanceFailure.ClosureDay
+                        ? DayReservationFailure.ClosureDay
+                        : DayReservationFailure.NoContractedLocation);
+                }
+
+                reservation.AbsenceJustified = true;
+            }
+
+            reservation.Status = DayReservationStatus.Approved;
+            reservation.DecidedBy = null; // research.md R1 — null DecidedBy signals a system decision.
+            reservation.DecidedAt = DateTime.UtcNow;
+        }
 
         db.DayReservations.Add(reservation);
         await db.SaveChangesAsync(cancellationToken);

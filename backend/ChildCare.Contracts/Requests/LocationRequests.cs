@@ -18,3 +18,10 @@ public record UpdateLocationRequest(
     string? Verantwoordelijke,
     bool FlexPermission,
     bool BoPermission);
+
+public record UpdateLocationReservationSettingsRequest(
+    string AbsencesMode,
+    string ExtrasMode,
+    string SwapsMode,
+    int NoticeHours,
+    bool ConfirmDespitePending);

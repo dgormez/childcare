@@ -1,3 +1,5 @@
+using ChildCare.Domain.Enums;
+
 namespace ChildCare.Domain.Entities;
 
 public class Location
@@ -15,6 +17,13 @@ public class Location
     public string? Verantwoordelijke { get; set; }
     public bool    FlexPermission    { get; set; } = false;
     public bool    BoPermission      { get; set; } = false;
+
+    // Feature 013f — per-location day-reservation (013a) policy. Defaults mirror 013a's
+    // original fixed behavior exactly, so a location that predates this feature is unaffected.
+    public ReservationRequestMode ReservationAbsencesMode { get; set; } = ReservationRequestMode.Approval;
+    public ReservationRequestMode ReservationExtrasMode { get; set; } = ReservationRequestMode.Approval;
+    public ReservationRequestMode ReservationSwapsMode { get; set; } = ReservationRequestMode.Disabled;
+    public int ReservationNoticeHours { get; set; } = 0;
 
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }

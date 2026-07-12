@@ -156,3 +156,13 @@ export interface DayReservationResponse {
   createdAt:         string;
   updatedAt:         string | null;
 }
+
+// ── Reservation settings (feature 013f) ──────────────────────────────────────────
+export type ReservationRequestMode = "disabled" | "informational" | "approval";
+
+export interface ReservationAvailabilityResponse {
+  absence:     ReservationRequestMode;
+  extra:       ReservationRequestMode;
+  exchange:    ReservationRequestMode;
+  noticeHours: number;
+}

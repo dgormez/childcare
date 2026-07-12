@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ChildCare.Application.Common;
+using ChildCare.Application.DayReservations;
 using ChildCare.Application.GroupActivities;
 using ChildCare.Application.Parent;
 using ChildCare.Contracts.Requests;
@@ -40,6 +41,16 @@ public static class ParentEndpoints
             return succeeded
                 ? Results.Ok()
                 : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
+        });
+
+        // Feature 013f — contracts/reservation-settings-api.md.
+        group.MapGet("/children/{childId:guid}/reservation-availability", async (Guid childId, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = TenantUserIdOf(ctx);
+            var result = await mediator.Send(new GetReservationAvailabilityQuery(tenantUserId, childId));
+            return result.Succeeded
+                ? Results.Ok(result.Response)
+                : Results.Json(new { errorKey = "errors.day_reservations.child_not_linked" }, statusCode: StatusCodes.Status403Forbidden);
         });
 
         // Feature 009b — contracts/group-activities-api.md. Defaults to the current
