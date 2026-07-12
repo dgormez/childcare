@@ -293,6 +293,30 @@ public class DayReservationEndpointsTests(OrganisationOnboardingWebAppFactory fa
         Assert.Empty(pending);
     }
 
+    // "all" is a distinct code path from an unparseable/absent status (which defaults to
+    // Pending) — this pins that "all" actually returns every status, not just Pending again.
+    [Fact]
+    public async Task ListPending_WithStatusAll_ReturnsEveryStatus()
+    {
+        var (client, org, location) = await SetupAsync();
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, Monday.DayOfWeek);
+
+        var approved = await SubmitAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "absence", Monday, null, null));
+        await ApproveRawAsync(client, org.AccessToken, approved.Id, justified: true);
+        var rejected = await SubmitAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "extra", Tuesday, null, null));
+        await RejectRawAsync(client, org.AccessToken, rejected.Id);
+        var stillPending = await SubmitAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "extra", Monday.AddDays(14), null, null));
+
+        var defaultView = await ListPendingAsync(client, org.AccessToken);
+        Assert.Equal([stillPending.Id], defaultView.Select(r => r.Id));
+
+        var allView = await ListPendingAsync(client, org.AccessToken, status: "all");
+        Assert.Equal(
+            new[] { approved.Id, rejected.Id, stillPending.Id }.OrderBy(id => id),
+            allView.Select(r => r.Id).OrderBy(id => id));
+    }
+
     // ── US3: extra day ───────────────────────────────────────────────────────────────────────
 
     [Fact]

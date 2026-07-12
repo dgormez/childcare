@@ -654,6 +654,11 @@ app.MapDayReservationEndpoints();
 if (app.Environment.IsEnvironment("Testing"))
     app.MapTestSupportEndpoints();
 
+// E2E seeding support (Playwright, web/e2e) — never mapped outside a local dev server; see
+// Endpoints/E2ESupportEndpoints.cs's doc comment for why this needs to exist at all.
+if (app.Environment.IsDevelopment())
+    app.MapE2ESupportEndpoints();
+
 app.Run();
 
 public partial class Program { }

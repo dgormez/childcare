@@ -19,7 +19,14 @@ public class ParentInvitationResult
     public ParentInvitationFailure? Failure { get; init; }
     public ParentInvitationResponse? Response { get; init; }
 
-    public static ParentInvitationResult Success(ParentInvitationResponse response) => new() { Succeeded = true, Response = response };
+    // Deliberately not part of ParentInvitationResponse (never serialized by the real
+    // POST /api/parent-invitations endpoint) — the plaintext token must only ever leave the
+    // process via the invitation email. Exists solely so Endpoints/E2ESupportEndpoints.cs
+    // (Development-only) can read it back for test seeding; see that file's doc comment.
+    public string? Token { get; init; }
+
+    public static ParentInvitationResult Success(ParentInvitationResponse response, string token) =>
+        new() { Succeeded = true, Response = response, Token = token };
     public static ParentInvitationResult Fail(ParentInvitationFailure failure) => new() { Failure = failure };
 }
 

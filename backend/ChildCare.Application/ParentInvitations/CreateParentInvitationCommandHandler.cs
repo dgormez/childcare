@@ -82,7 +82,7 @@ public class CreateParentInvitationCommandHandler(
             logger.LogError(ex, "Failed to send parent invitation email to {Email}", email);
         }
 
-        return ParentInvitationResult.Success(new ParentInvitationResponse(invitation.Id, contact.Id, email, expiresAt));
+        return ParentInvitationResult.Success(new ParentInvitationResponse(invitation.Id, contact.Id, email, expiresAt), token);
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)

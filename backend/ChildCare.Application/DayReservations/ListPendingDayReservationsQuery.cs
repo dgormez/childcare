@@ -13,11 +13,21 @@ public class ListPendingDayReservationsQueryHandler(ITenantDbContext db) : IRequ
 {
     public async Task<ListDayReservationsResult> Handle(ListPendingDayReservationsQuery request, CancellationToken cancellationToken)
     {
-        var status = DayReservationMapper.TryParseStatus(request.Status, out var parsed) ? parsed : DayReservationStatus.Pending;
+        // Mirrors ListWaitingListEntriesQuery's status-filter precedent: "all" is a distinct
+        // case from an unparseable/absent value, which still defaults to Pending (the queue's
+        // natural default view), rather than "all" silently falling through to Pending too.
+        IQueryable<Domain.Entities.DayReservation> query = db.DayReservations.AsNoTracking();
+        if (string.IsNullOrWhiteSpace(request.Status) || request.Status.Equals("pending", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(x => x.Status == DayReservationStatus.Pending);
+        }
+        else if (!request.Status.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            var status = DayReservationMapper.TryParseStatus(request.Status, out var parsed) ? parsed : DayReservationStatus.Pending;
+            query = query.Where(x => x.Status == status);
+        }
 
-        var reservations = await db.DayReservations
-            .AsNoTracking()
-            .Where(x => x.Status == status)
+        var reservations = await query
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
