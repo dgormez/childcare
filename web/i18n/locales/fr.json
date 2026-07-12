@@ -34,7 +34,8 @@
     "messages": "Messages",
     "announcements": "Annonces",
     "groups": "Groupes",
-    "dayReservations": "Demandes"
+    "dayReservations": "Demandes",
+    "incidents": "Incidents"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -465,5 +466,67 @@
       "warningConfirm": "Enregistrer quand même",
       "warningCancel": "Annuler"
     }
+  },
+  "incidents": {
+    "title": "Incidents",
+    "loadError": "Impossible de charger les rapports d'incident. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "emptyState": "Aucun rapport d'incident trouvé.",
+    "pageOf": "Page {page} sur {totalPages}",
+    "previousPage": "Précédent",
+    "nextPage": "Suivant",
+    "columnChild": "Enfant",
+    "columnLocation": "Lieu",
+    "columnOccurredAt": "Survenu",
+    "columnInjuryType": "Type de blessure",
+    "columnStatus": "Statut",
+    "reviewed": "Consulté",
+    "unreviewed": "Non consulté",
+    "filterChild": "Enfant",
+    "filterChildAll": "Tous les enfants",
+    "filterLocation": "Lieu",
+    "filterLocationAll": "Tous les lieux",
+    "filterFrom": "Du",
+    "filterTo": "Au",
+    "backToList": "Retour aux incidents",
+    "injuryTypes": {
+      "none": "Aucune",
+      "scrape": "Éraflure",
+      "bump": "Bosse",
+      "cut": "Coupure",
+      "fall": "Chute",
+      "bite": "Morsure",
+      "burn": "Brûlure",
+      "allergic_reaction": "Réaction allergique",
+      "other": "Autre"
+    },
+    "fieldOccurredAt": "Survenu le",
+    "fieldCreatedAt": "Enregistré le",
+    "fieldLocationDetail": "Emplacement",
+    "fieldDescription": "Description",
+    "fieldInjuryType": "Type de blessure",
+    "fieldFirstAidGiven": "Premiers secours donnés",
+    "fieldDoctorCalled": "Médecin contacté",
+    "fieldDoctorNotes": "Notes du médecin",
+    "fieldParentNotified": "Parent informé",
+    "fieldParentNotifiedAt": "Parent informé le",
+    "fieldParentNotifiedHow": "Moyen d'information",
+    "parentNotifiedHows": {
+      "phone": "Téléphone",
+      "app": "Application",
+      "in_person": "En personne"
+    },
+    "fieldWitnesses": "Témoins",
+    "fieldFollowUp": "Note de suivi",
+    "followUpPlaceholder": "Ajouter une note de suivi (p. ex. une visite médicale ultérieure)",
+    "followUpSave": "Enregistrer le suivi",
+    "followUpSaved": "Note de suivi enregistrée.",
+    "lockedNotice": "Ce rapport a plus de 24 heures — seule la note de suivi peut encore être modifiée.",
+    "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+    "exportPdf": "Exporter en PDF",
+    "exportPdfError": "Impossible de générer le PDF. Veuillez réessayer.",
+    "yes": "Oui",
+    "no": "Non",
+    "none": "Aucune"
   }
 }

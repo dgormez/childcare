@@ -175,6 +175,9 @@ builder.Services.AddScoped<IExpoPushSender, ExpoPushSender>();
 // handler — mirrors IShiftAttributionService/CloseStaleShiftsHelper's existing pattern.
 builder.Services.AddScoped<ChildCare.Application.Attendance.PlannedDurationCalculator>();
 
+// ── Incident reports (feature 013b) ─────────────────────────────────────────
+builder.Services.AddScoped<IIncidentReportPdfGenerator, QuestPdfIncidentReportGenerator>();
+
 // ── Closure calendar (feature 011) ─────────────────────────────────────────
 builder.Services.AddScoped<ClosureParentRecipientResolver>();
 builder.Services.AddScoped<ClosureNotificationService>();
@@ -648,6 +651,7 @@ app.MapAnnouncementEndpoints();
 app.MapNotificationEndpoints();
 app.MapParentEndpoints();
 app.MapDayReservationEndpoints();
+app.MapIncidentReportEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

@@ -739,6 +739,80 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("group_activity_photos", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.IncidentReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("DoctorCalled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DoctorNotes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstAidGiven")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FollowUp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InjuryType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("LocationDetail")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ParentNotified")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ParentNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ParentNotifiedHow")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.PrimitiveCollection<List<Guid>>("ReportedBy")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Witnesses")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId", "OccurredAt");
+
+                    b.HasIndex("LocationId", "OccurredAt");
+
+                    b.ToTable("incident_reports", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.KdvClosureDay", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1803,6 +1877,21 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.GroupActivity", null)
                         .WithMany()
                         .HasForeignKey("GroupActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.IncidentReport", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

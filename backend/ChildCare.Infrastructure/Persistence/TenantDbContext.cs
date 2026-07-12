@@ -86,6 +86,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<GroupActivityPhoto> GroupActivityPhotos => Set<GroupActivityPhoto>();
 
+    public DbSet<IncidentReport> IncidentReports => Set<IncidentReport>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -155,6 +157,16 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         GroupActivityTypeExtensions.TryParseWireString(value, out var parsed)
             ? parsed
             : throw new FormatException($"Unknown GroupActivityType: {value}");
+
+    private static IncidentInjuryType ParseIncidentInjuryType(string value) =>
+        IncidentInjuryTypeExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown IncidentInjuryType: {value}");
+
+    private static ParentNotifiedHow ParseParentNotifiedHow(string value) =>
+        ParentNotifiedHowExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown ParentNotifiedHow: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -415,6 +427,30 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Primary timeline access pattern (data-model.md).
             ce.HasIndex(x => new { x.ChildId, x.OccurredAt });
             ce.HasIndex(x => new { x.ChildId, x.EventType, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<IncidentReport>(ir =>
+        {
+            ir.ToTable("incident_reports");
+            ir.HasKey(x => x.Id);
+            ir.Property(x => x.Description).IsRequired();
+            ir.Property(x => x.InjuryType)
+              .HasConversion(v => v.ToWireString(), v => ParseIncidentInjuryType(v))
+              .HasMaxLength(30)
+              .IsRequired();
+            ir.Property(x => x.ParentNotifiedHow)
+              .HasConversion(
+                  v => v == null ? null : v.Value.ToWireString(),
+                  v => v == null ? null : ParseParentNotifiedHow(v))
+              .HasMaxLength(20);
+            // Native Npgsql array mapping (uuid[]) — same pattern as ChildEvent.RecordedBy
+            // (research.md R1, data-model.md).
+            ir.Property(x => x.ReportedBy).HasColumnType("uuid[]");
+            ir.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            ir.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            // FR-017: the cross-KDV inspection view's filter/index dimensions.
+            ir.HasIndex(x => new { x.LocationId, x.OccurredAt });
+            ir.HasIndex(x => new { x.ChildId, x.OccurredAt });
         });
 
         modelBuilder.Entity<GroupActivity>(ga =>

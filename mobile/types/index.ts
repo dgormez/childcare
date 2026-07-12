@@ -199,3 +199,31 @@ export interface GroupTimelineEntryResponse {
 export interface GroupTimelineResponse {
   entries: GroupTimelineEntryResponse[];
 }
+
+// ── Incident reports (feature 013b) ─────────────────────────────────────────────
+export type IncidentInjuryType =
+  | "none" | "scrape" | "bump" | "cut" | "fall" | "bite" | "burn" | "allergic_reaction" | "other";
+
+export type ParentNotifiedHow = "phone" | "app" | "in_person";
+
+export interface IncidentReportResponse {
+  id:                 string;
+  childId:            string;
+  locationId:         string;
+  occurredAt:         string;
+  locationDetail:     string | null;
+  description:        string;
+  injuryType:         string;
+  firstAidGiven:      string | null;
+  doctorCalled:       boolean;
+  doctorNotes:        string | null;
+  parentNotified:     boolean;
+  parentNotifiedAt:   string | null;
+  parentNotifiedHow:  string | null;
+  reportedBy:         string[];
+  witnesses:          string | null;
+  followUp:           string | null;
+  reviewedAt:         string | null;
+  createdAt:          string;
+  updatedAt:          string | null;
+}

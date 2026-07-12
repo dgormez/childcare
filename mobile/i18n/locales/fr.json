@@ -209,6 +209,53 @@
       "text": "Texte"
     }
   },
+  "incidentReports": {
+    "entryPoint": "Signaler un incident",
+    "title": "Rapport d'incident",
+    "description": "Que s'est-il passé",
+    "descriptionPlaceholder": "Décrivez ce qui s'est passé",
+    "injuryType": "Type de blessure",
+    "injuryTypes": {
+      "none": "Aucune",
+      "scrape": "Éraflure",
+      "bump": "Bosse",
+      "cut": "Coupure",
+      "fall": "Chute",
+      "bite": "Morsure",
+      "burn": "Brûlure",
+      "allergic_reaction": "Réaction allergique",
+      "other": "Autre"
+    },
+    "locationDetail": "Où",
+    "locationDetails": {
+      "indoor": "Intérieur",
+      "outdoor": "Extérieur",
+      "transit": "En déplacement"
+    },
+    "locationDetailPlaceholder": "Autre emplacement (optionnel)",
+    "firstAidGiven": "Premiers secours donnés",
+    "firstAidGivenPlaceholder": "Décrivez les premiers secours donnés (optionnel)",
+    "doctorCalled": "Médecin contacté",
+    "doctorNotes": "Notes du médecin",
+    "doctorNotesPlaceholder": "Notes sur l'avis du médecin (optionnel)",
+    "parentNotified": "Parent informé",
+    "parentNotifiedHow": "Comment le parent a été informé",
+    "parentNotifiedHows": {
+      "phone": "Téléphone",
+      "app": "Application",
+      "in_person": "En personne"
+    },
+    "witnesses": "Témoins",
+    "witnessesPlaceholder": "Autres accompagnants présents (optionnel)",
+    "submit": "Envoyer le rapport",
+    "cancel": "Annuler",
+    "pendingSync": "Synchronisation en attente",
+    "validation": {
+      "descriptionRequired": "Veuillez décrire ce qui s'est passé.",
+      "injuryTypeRequired": "Veuillez sélectionner un type de blessure."
+    },
+    "submitError": "Impossible d'envoyer le rapport. Veuillez réessayer."
+  },
   "attendance": {
     "status": {
       "absent": "Absent"
