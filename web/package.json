@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:cleanup": "node e2e/support/cleanup-test-orgs.js",
     "generate-api-client": "openapi-typescript ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000}/openapi/v1.json -o lib/generated/api-types.ts"
   },
   "dependencies": {
@@ -28,6 +31,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
