@@ -38,7 +38,7 @@
 | 013 | `013-parent-communication` | Messaging, daily reports to parents | 006, 009, 009b | ✅ Done |
 | 013a | `013a-day-reservations` | Parent online requests (sick day, extra day, exchange day) + director approval queue | 007, 013 | ✅ Done |
 | 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | ✅ Done |
-| 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | 🔲 Not started |
+| 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | ✅ Done |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | 🔲 Not started |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
@@ -2569,6 +2569,33 @@ Out of scope:
   are per-location.
 - Time-window restrictions (e.g. "only submit before 8am") — Phase 3.
 ```
+
+**Shipped 2026-07-12** — `specs/013f-reservation-settings/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 61/61 tasks, 513/513 backend + 63/63 web + 56/56
+parent-mobile tests passing, PR #22 squash-merged after green CI). Adds four settings to
+`Location` (`reservation_absences_mode`/`reservation_extras_mode`/`reservation_swaps_mode`/
+`reservation_notice_hours`) enforced by a new `ReservationPolicyResolver`, since `DayReservation`
+deliberately has no `LocationId` (013a research.md R7 — a child can hold contracts at multiple
+locations). When a request has more than one candidate location (a split-location child, or an
+`extra`-type request with no weekday to match against), the most restrictive setting wins —
+mirroring 013a's own exchange closure-day precedent (reject if any candidate location has a
+closure) rather than inventing a new rule. Two premises in the original brief turned out false
+and were corrected rather than built as specified: no director push-notification channel exists
+anywhere in this codebase (`TenantUser` has no push token, no browser-push infra, the one
+notification centre is `ParentOnly`) — auto-approved `informational` requests instead surface in
+the existing director "Verzoeken" queue, distinguished by a `decidedBy: null` badge; and no
+staff/director day-reservation submission path exists to exempt from the notice-hours check
+(013a's `POST /api/day-reservations` is `ParentOnly` only) — building one would have been a
+separate feature, not a side effect of a settings screen. Also ships the first real web
+`/locations` screen — 007a's `NotYetAvailable` placeholder replaced with a list + two-tab detail
+page (Algemeen / Reserveringsinstellingen), per 007a's own shipped-note that a referenced-but-
+unbuilt web screen is a hard dependency for the next feature that needs it. A full test-suite run
+surfaced two pre-existing bugs unrelated to this feature, fixed rather than left red:
+`TenantMigrationRolloutTests` needed the new migration added to its schema-revert helper's
+history-removal list (the same fix every migration-adding feature since 003 has needed — worth
+checking that test first for any new tenant-schema migration), and `StaffScheduleEndpointsTests`
+(feature 012) had a week-start date-math bug that only manifests when "14 days from today" lands
+on a Sunday.
 
 ---
 
