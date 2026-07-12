@@ -1052,6 +1052,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/reservation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationReservationSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/deactivate": {
         parameters: {
             query?: never;
@@ -4278,6 +4317,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/children/{childId}/reservation-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    childId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parent/group-activities/gallery": {
         parameters: {
             query?: never;
@@ -4500,6 +4574,199 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["RejectDayReservationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/incident-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    childId?: string;
+                    locationId?: string;
+                    from?: string;
+                    to?: string;
+                    page?: number | string;
+                    pageSize?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FileIncidentReportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/incident-reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateIncidentReportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/incident-reports/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    locale?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/e2e-support/parent-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateParentInvitationRequest"];
                 };
             };
             responses: {
@@ -4750,6 +5017,24 @@ export interface components {
         ExitRoomModeRequest: {
             directorOverridePin: string;
         };
+        FileIncidentReportRequest: {
+            /** Format: uuid */
+            childId: string;
+            /** Format: date-time */
+            occurredAt: null | string;
+            locationDetail: null | string;
+            description: string;
+            injuryType: string;
+            firstAidGiven: null | string;
+            doctorCalled: boolean;
+            doctorNotes: null | string;
+            parentNotified: boolean;
+            /** Format: date-time */
+            parentNotifiedAt: null | string;
+            parentNotifiedHow: null | string;
+            witnesses: null | string;
+            followUp: null | string;
+        };
         ForgotPasswordRequest: {
             organisationSlug: string;
             email: string;
@@ -4946,6 +5231,22 @@ export interface components {
             dailyRateCents: number | string;
             consent: null | components["schemas"]["ContractConsentRequest"];
         };
+        UpdateIncidentReportRequest: {
+            /** Format: date-time */
+            occurredAt: null | string;
+            locationDetail: null | string;
+            description: null | string;
+            injuryType: null | string;
+            firstAidGiven: null | string;
+            doctorCalled: null | boolean;
+            doctorNotes: null | string;
+            parentNotified: null | boolean;
+            /** Format: date-time */
+            parentNotifiedAt: null | string;
+            parentNotifiedHow: null | string;
+            witnesses: null | string;
+            followUp: null | string;
+        };
         UpdateLocationRequest: {
             name: string;
             address: string;
@@ -4958,6 +5259,14 @@ export interface components {
             verantwoordelijke: null | string;
             flexPermission: boolean;
             boPermission: boolean;
+        };
+        UpdateLocationReservationSettingsRequest: {
+            absencesMode: string;
+            extrasMode: string;
+            swapsMode: string;
+            /** Format: int32 */
+            noticeHours: number | string;
+            confirmDespitePending: boolean;
         };
         UpdateStaffProfileRequest: {
             firstName: string;

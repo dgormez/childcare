@@ -34,7 +34,8 @@
     "messages": "Messages",
     "announcements": "Announcements",
     "groups": "Groups",
-    "dayReservations": "Requests"
+    "dayReservations": "Requests",
+    "incidents": "Incidents"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -465,5 +466,67 @@
       "warningConfirm": "Save anyway",
       "warningCancel": "Cancel"
     }
+  },
+  "incidents": {
+    "title": "Incidents",
+    "loadError": "Couldn't load incident reports. Please try again.",
+    "retry": "Retry",
+    "emptyState": "No incident reports found.",
+    "pageOf": "Page {page} of {totalPages}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "columnChild": "Child",
+    "columnLocation": "Location",
+    "columnOccurredAt": "Occurred",
+    "columnInjuryType": "Injury type",
+    "columnStatus": "Status",
+    "reviewed": "Reviewed",
+    "unreviewed": "Unreviewed",
+    "filterChild": "Child",
+    "filterChildAll": "All children",
+    "filterLocation": "Location",
+    "filterLocationAll": "All locations",
+    "filterFrom": "From",
+    "filterTo": "To",
+    "backToList": "Back to incidents",
+    "injuryTypes": {
+      "none": "None",
+      "scrape": "Scrape",
+      "bump": "Bump",
+      "cut": "Cut",
+      "fall": "Fall",
+      "bite": "Bite",
+      "burn": "Burn",
+      "allergic_reaction": "Allergic reaction",
+      "other": "Other"
+    },
+    "fieldOccurredAt": "Occurred at",
+    "fieldCreatedAt": "Recorded at",
+    "fieldLocationDetail": "Location detail",
+    "fieldDescription": "Description",
+    "fieldInjuryType": "Injury type",
+    "fieldFirstAidGiven": "First aid given",
+    "fieldDoctorCalled": "Doctor called",
+    "fieldDoctorNotes": "Doctor notes",
+    "fieldParentNotified": "Parent notified",
+    "fieldParentNotifiedAt": "Parent notified at",
+    "fieldParentNotifiedHow": "Parent notified how",
+    "parentNotifiedHows": {
+      "phone": "Phone",
+      "app": "App",
+      "in_person": "In person"
+    },
+    "fieldWitnesses": "Witnesses",
+    "fieldFollowUp": "Follow-up note",
+    "followUpPlaceholder": "Add a follow-up note (e.g. a later doctor visit)",
+    "followUpSave": "Save follow-up",
+    "followUpSaved": "Follow-up note saved.",
+    "lockedNotice": "This report is more than 24 hours old — only the follow-up note can still be edited.",
+    "saveError": "Couldn't save changes. Please try again.",
+    "exportPdf": "Export PDF",
+    "exportPdfError": "Couldn't generate the PDF. Please try again.",
+    "yes": "Yes",
+    "no": "No",
+    "none": "None"
   }
 }

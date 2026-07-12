@@ -34,7 +34,8 @@
     "messages": "Berichten",
     "announcements": "Mededelingen",
     "groups": "Groepen",
-    "dayReservations": "Verzoeken"
+    "dayReservations": "Verzoeken",
+    "incidents": "Incidenten"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -465,5 +466,67 @@
       "warningConfirm": "Toch opslaan",
       "warningCancel": "Annuleren"
     }
+  },
+  "incidents": {
+    "title": "Incidenten",
+    "loadError": "Kan incidentmeldingen niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "emptyState": "Geen incidentmeldingen gevonden.",
+    "pageOf": "Pagina {page} van {totalPages}",
+    "previousPage": "Vorige",
+    "nextPage": "Volgende",
+    "columnChild": "Kind",
+    "columnLocation": "Locatie",
+    "columnOccurredAt": "Voorval",
+    "columnInjuryType": "Letseltype",
+    "columnStatus": "Status",
+    "reviewed": "Bekeken",
+    "unreviewed": "Niet bekeken",
+    "filterChild": "Kind",
+    "filterChildAll": "Alle kinderen",
+    "filterLocation": "Locatie",
+    "filterLocationAll": "Alle locaties",
+    "filterFrom": "Van",
+    "filterTo": "Tot",
+    "backToList": "Terug naar incidenten",
+    "injuryTypes": {
+      "none": "Geen",
+      "scrape": "Schaafwond",
+      "bump": "Buil",
+      "cut": "Snee",
+      "fall": "Val",
+      "bite": "Beet",
+      "burn": "Brandwond",
+      "allergic_reaction": "Allergische reactie",
+      "other": "Anders"
+    },
+    "fieldOccurredAt": "Voorval op",
+    "fieldCreatedAt": "Geregistreerd op",
+    "fieldLocationDetail": "Locatiedetail",
+    "fieldDescription": "Beschrijving",
+    "fieldInjuryType": "Letseltype",
+    "fieldFirstAidGiven": "Eerste hulp gegeven",
+    "fieldDoctorCalled": "Arts gebeld",
+    "fieldDoctorNotes": "Notities arts",
+    "fieldParentNotified": "Ouder geïnformeerd",
+    "fieldParentNotifiedAt": "Ouder geïnformeerd op",
+    "fieldParentNotifiedHow": "Wijze van informeren",
+    "parentNotifiedHows": {
+      "phone": "Telefonisch",
+      "app": "App",
+      "in_person": "Persoonlijk"
+    },
+    "fieldWitnesses": "Getuigen",
+    "fieldFollowUp": "Vervolgnotitie",
+    "followUpPlaceholder": "Voeg een vervolgnotitie toe (bijv. een latere doktersvisite)",
+    "followUpSave": "Vervolgnotitie opslaan",
+    "followUpSaved": "Vervolgnotitie opgeslagen.",
+    "lockedNotice": "Deze melding is meer dan 24 uur oud — alleen de vervolgnotitie kan nog worden bewerkt.",
+    "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw.",
+    "exportPdf": "PDF exporteren",
+    "exportPdfError": "Kan de PDF niet genereren. Probeer het opnieuw.",
+    "yes": "Ja",
+    "no": "Nee",
+    "none": "Geen"
   }
 }

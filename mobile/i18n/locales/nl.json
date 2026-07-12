@@ -209,6 +209,53 @@
       "text": "Tekst"
     }
   },
+  "incidentReports": {
+    "entryPoint": "Incident melden",
+    "title": "Incidentmelding",
+    "description": "Wat is er gebeurd",
+    "descriptionPlaceholder": "Beschrijf wat er is gebeurd",
+    "injuryType": "Letseltype",
+    "injuryTypes": {
+      "none": "Geen",
+      "scrape": "Schaafwond",
+      "bump": "Buil",
+      "cut": "Snee",
+      "fall": "Val",
+      "bite": "Beet",
+      "burn": "Brandwond",
+      "allergic_reaction": "Allergische reactie",
+      "other": "Anders"
+    },
+    "locationDetail": "Waar",
+    "locationDetails": {
+      "indoor": "Binnen",
+      "outdoor": "Buiten",
+      "transit": "Onderweg"
+    },
+    "locationDetailPlaceholder": "Andere locatie (optioneel)",
+    "firstAidGiven": "Eerste hulp gegeven",
+    "firstAidGivenPlaceholder": "Beschrijf de gegeven eerste hulp (optioneel)",
+    "doctorCalled": "Arts gebeld",
+    "doctorNotes": "Notities arts",
+    "doctorNotesPlaceholder": "Notities over het advies van de arts (optioneel)",
+    "parentNotified": "Ouder geïnformeerd",
+    "parentNotifiedHow": "Hoe is de ouder geïnformeerd",
+    "parentNotifiedHows": {
+      "phone": "Telefonisch",
+      "app": "App",
+      "in_person": "Persoonlijk"
+    },
+    "witnesses": "Getuigen",
+    "witnessesPlaceholder": "Andere aanwezige begeleiders (optioneel)",
+    "submit": "Melding versturen",
+    "cancel": "Annuleren",
+    "pendingSync": "Synchronisatie in behandeling",
+    "validation": {
+      "descriptionRequired": "Beschrijf wat er is gebeurd.",
+      "injuryTypeRequired": "Selecteer een letseltype."
+    },
+    "submitError": "De melding kon niet worden verstuurd. Probeer het opnieuw."
+  },
   "attendance": {
     "status": {
       "absent": "Afwezig"

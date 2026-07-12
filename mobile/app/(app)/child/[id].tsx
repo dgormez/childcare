@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react-native";
+import { Plus, AlertTriangle } from "lucide-react-native";
 import { getCached } from "../../../services/readCache";
 import { getPending } from "../../../services/offlineQueue";
 import { listChildEvents, deleteChildEvent, updateChildEvent } from "../../../services/childEvents";
@@ -11,7 +11,8 @@ import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
 import { QuickActionSheet } from "../../../components/QuickActionSheet";
 import { EventTimeline, type EventSyncStatus } from "../../../components/EventTimeline";
 import { EditEventModal } from "../../../components/EditEventModal";
-import type { ChildResponse, ChildEventResponse } from "../../../types";
+import { IncidentReportForm } from "../../../components/IncidentReportForm";
+import type { ChildResponse, ChildEventResponse, IncidentReportResponse } from "../../../types";
 import { CHILDREN_CACHE_KEY } from "../index";
 
 /** Reconstructs a queued (not-yet-synced) child_event `create` row into a displayable event —
@@ -47,6 +48,15 @@ export default function ChildDetailScreen() {
   const [syncStatusByEventId, setSyncStatusByEventId] = useState<Record<string, EventSyncStatus>>({});
   const [sheetVisible, setSheetVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ChildEventResponse | null>(null);
+
+  // No device-token-accessible "list incident reports for this child" endpoint exists
+  // (FR-018/contracts/incident-reports-api.md only exposes GET by id to a device) — this list
+  // is session-local: reports filed this session, plus whatever is still queued offline.
+  // Whether a synced report stays visible here after a screen reload isn't spec'd; a director's
+  // Incidents screen (013b) is the durable, queryable record (US4 Acceptance Scenario 2).
+  const [incidentReports, setIncidentReports] = useState<IncidentReportResponse[]>([]);
+  const [incidentPendingIds, setIncidentPendingIds] = useState<Set<string>>(new Set());
+  const [incidentFormVisible, setIncidentFormVisible] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -92,6 +102,23 @@ export default function ChildDetailScreen() {
     );
     setEvents(merged);
     setSyncStatusByEventId(statusMap);
+
+    // T058: a queued incident_report create clears from `pending` once synced — its badge just
+    // stops rendering rather than the report disappearing (it's already in `incidentReports`
+    // state from the optimistic add in handleIncidentSaved).
+    const stillPendingIds = new Set(
+      pending
+        .filter((row) => {
+          if (row.entity_type !== "incident_report" || row.operation !== "create") return false;
+          try {
+            return JSON.parse(row.payload).localId !== undefined;
+          } catch {
+            return false;
+          }
+        })
+        .map((row) => JSON.parse(row.payload).localId as string)
+    );
+    setIncidentPendingIds(stillPendingIds);
   }, [id]);
 
   useEffect(() => {
@@ -110,6 +137,12 @@ export default function ChildDetailScreen() {
 
   const handleDelete = async (event: ChildEventResponse) => {
     await deleteChildEvent(event.id, isConnected);
+    load();
+  };
+
+  const handleIncidentSaved = (report: IncidentReportResponse) => {
+    setIncidentReports((prev) => [report, ...prev]);
+    setIncidentFormVisible(false);
     load();
   };
 
@@ -149,6 +182,31 @@ export default function ChildDetailScreen() {
           </View>
         )}
 
+        <TouchableOpacity
+          onPress={() => setIncidentFormVisible(true)}
+          style={{ minHeight: 48 }}
+          className="flex-row items-center rounded-xl bg-danger-bg dark:bg-danger-bg-dark px-4 mb-3 active:opacity-60"
+        >
+          <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
+          <Text className="text-danger dark:text-danger-dark font-semibold ml-2">
+            {t("incidentReports.entryPoint")}
+          </Text>
+        </TouchableOpacity>
+
+        {incidentReports.map((report) => (
+          <View key={report.id} className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
+            <Text className="text-text dark:text-text-dark font-semibold mb-1">
+              {t(`incidentReports.injuryTypes.${report.injuryType}`)}
+            </Text>
+            <Text className="text-text-soft dark:text-text-soft-dark">{report.description}</Text>
+            {incidentPendingIds.has(report.id) && (
+              <View className="self-start rounded-full px-2 py-0.5 mt-2 bg-info dark:bg-info-dark">
+                <Text className="text-xs font-medium text-white">{t("incidentReports.pendingSync")}</Text>
+              </View>
+            )}
+          </View>
+        ))}
+
         <EventTimeline
           events={events}
           syncStatusByEventId={syncStatusByEventId}
@@ -156,6 +214,14 @@ export default function ChildDetailScreen() {
           onDelete={handleDelete}
         />
       </ScrollView>
+
+      <IncidentReportForm
+        visible={incidentFormVisible}
+        childId={child.id}
+        isConnected={isConnected}
+        onClose={() => setIncidentFormVisible(false)}
+        onSaved={handleIncidentSaved}
+      />
 
       <TouchableOpacity
         onPress={() => setSheetVisible(true)}

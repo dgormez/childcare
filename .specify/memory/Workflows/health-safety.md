@@ -57,14 +57,24 @@ medication event recording described below; the ongoing-profile flow (feature 00
 
 ### Flow — incident/event
 
-1. Caregiver records the incident.
-2. System timestamps and stores the record.
-3. Director reviews.
-4. Parent receives appropriate communication.
-5. Resolution is tracked.
+**Built as its own record type by feature `013b-incident-reports`** (2026-07-12) — superseding the
+`note`/`activity`-event placeholder this section previously described.
 
-*(Not yet built as its own event type — `note`/`activity` events serve this today; a dedicated
-incident-record concept, if ever needed beyond that, would be a future feature's decision.)*
+1. Caregiver opens the child's profile on the tablet and files an incident report: what happened,
+   injury type, first-aid/doctor/parent-notification details. `reported_by` is resolved server-side
+   from the room shift register (who was checked in at `occurred_at`) — the same mechanism feature
+   009 uses for `recorded_by` — rather than a PIN-confirmed single identity, so offline filing is
+   never blocked by an unreachable confirmation step.
+2. System timestamps (`occurred_at`, separately trackable from `created_at` for backdated reports)
+   and stores the record. Works offline via feature 008's offline-queue/sync mechanism.
+3. Director reviews via a dedicated Incidents screen (cross-location, filterable by date/location/
+   child); opening a report marks it reviewed — this in-app indicator is the mechanism a director
+   learns of a new incident (no director push-notification channel exists in this codebase; see
+   013b spec.md Assumptions).
+4. Parent receives communication out-of-band (phone/app/in-person) — the caregiver records how, but
+   no digital acknowledgment or in-app parent notification is sent by the system for this feature.
+5. Resolution is tracked via a `follow_up` note, addable at any time, including after the record's
+   24-hour immutability window locks every other field.
 
 ### Applications
 
@@ -72,12 +82,14 @@ Caregiver Tablet:
 
 - Medical quick-access (read-only) from a child's card.
 - Temperature/medication quick-entry with administrator confirmation.
-- Fast incident capture (via `note`/`activity` events today).
+- Incident report filing ("Incident melden" on the child's profile, feature 013b), works offline.
 
 Director Web:
 
 - Edit medical/emergency profile fields.
-- Review and reporting on incidents.
+- Dedicated Incidents screen (feature 013b): cross-location review, filtering, reviewed-state
+  tracking, PDF export for inspection. `/children` itself has no per-child detail screen yet
+  (007a) — 013b's child filter substitutes for a child-file incident tab until one exists.
 - A medication event's `administered_by` can be filled in retroactively via the API — no screen
   in this app exposes it yet (spec.md Assumptions, feature 009).
 
@@ -91,7 +103,10 @@ Parent Mobile:
 
 - Child medical profile: allergies, severity, medical conditions, dietary restrictions,
   medication, emergency contacts (feature 006, `Child` entity).
-- Incident record: child, caregiver, timestamp, description, resolution status.
+- Incident record (feature 013b, `incident_reports` tenant table): child, reporting caregiver
+  (nullable), `occurred_at`/`created_at`, description, injury type, first-aid/doctor/parent-
+  notification details, reviewed state, follow-up note. Immutable (aside from follow-up) 24 hours
+  after creation. Never cascade-deleted when its child is deactivated.
 - Temperature/medication events: `child_events` table (feature 009) — see `dailycare.md` for the
   shared event-recording mechanics; `Contact.PushToken` (feature 009, nullable, not yet
   populated by any client) is the alert-recipient field.

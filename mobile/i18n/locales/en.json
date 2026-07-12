@@ -209,6 +209,53 @@
       "text": "Text"
     }
   },
+  "incidentReports": {
+    "entryPoint": "Incident melden",
+    "title": "Incident report",
+    "description": "What happened",
+    "descriptionPlaceholder": "Describe what happened",
+    "injuryType": "Injury type",
+    "injuryTypes": {
+      "none": "None",
+      "scrape": "Scrape",
+      "bump": "Bump",
+      "cut": "Cut",
+      "fall": "Fall",
+      "bite": "Bite",
+      "burn": "Burn",
+      "allergic_reaction": "Allergic reaction",
+      "other": "Other"
+    },
+    "locationDetail": "Where",
+    "locationDetails": {
+      "indoor": "Indoor",
+      "outdoor": "Outdoor",
+      "transit": "In transit"
+    },
+    "locationDetailPlaceholder": "Other location (optional)",
+    "firstAidGiven": "First aid given",
+    "firstAidGivenPlaceholder": "Describe first aid given (optional)",
+    "doctorCalled": "Doctor called",
+    "doctorNotes": "Doctor notes",
+    "doctorNotesPlaceholder": "Notes about the doctor's advice (optional)",
+    "parentNotified": "Parent notified",
+    "parentNotifiedHow": "How was the parent notified",
+    "parentNotifiedHows": {
+      "phone": "Phone",
+      "app": "App",
+      "in_person": "In person"
+    },
+    "witnesses": "Witnesses",
+    "witnessesPlaceholder": "Other caregivers present (optional)",
+    "submit": "Submit report",
+    "cancel": "Cancel",
+    "pendingSync": "Pending sync",
+    "validation": {
+      "descriptionRequired": "Please describe what happened.",
+      "injuryTypeRequired": "Please select an injury type."
+    },
+    "submitError": "Couldn't submit the report. Please try again."
+  },
   "attendance": {
     "status": {
       "absent": "Absent"
