@@ -103,6 +103,42 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                             t.HasCheckConstraint("CK_tenants_provisioning_status", "\"ProvisioningStatus\" IN ('provisioning','ready','failed')");
                         });
                 });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.VaccineType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Category", "SortOrder");
+
+                    b.ToTable("vaccine_types", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

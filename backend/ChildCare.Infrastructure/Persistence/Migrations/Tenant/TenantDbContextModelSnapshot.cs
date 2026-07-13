@@ -1515,6 +1515,33 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("staff_schedules", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.TenantCustomVaccineEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("tenant_custom_vaccine_entries", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.TenantUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1615,11 +1642,17 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateOnly>("AdministeredOn")
                         .HasColumnType("date");
 
+                    b.Property<string>("AttachmentObjectPath")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("ChildId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CustomVaccineEntryId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1645,16 +1678,26 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("VaccineTypeId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChildId");
+
+                    b.HasIndex("CustomVaccineEntryId");
 
                     b.HasIndex("NextDueDate")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("RecordedBy");
 
-                    b.ToTable("vaccine_records", "tenant_template");
+                    b.HasIndex("VaccineTypeId");
+
+                    b.ToTable("vaccine_records", "tenant_template", t =>
+                        {
+                            t.HasCheckConstraint("CK_vaccine_records_vaccine_reference_exclusive", "\"VaccineTypeId\" IS NULL OR \"CustomVaccineEntryId\" IS NULL");
+                        });
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.WaitingListEntry", b =>
@@ -2258,6 +2301,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantCustomVaccineEntry", null)
+                        .WithMany()
+                        .HasForeignKey("CustomVaccineEntryId");
 
                     b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
                         .WithMany()

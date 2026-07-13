@@ -31,12 +31,14 @@ public class GcsHealthAttachmentStorage : IHealthAttachmentStorage
         });
     }
 
-    public async Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, CancellationToken cancellationToken = default)
+    public async Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, string category = "health-records", CancellationToken cancellationToken = default)
     {
-        // Deterministic per health record — a re-upload overwrites the same object rather than
+        // Deterministic per record — a re-upload overwrites the same object rather than
         // accumulating orphaned prior attachments (mirrors GcsProfilePhotoStorage's precedent).
+        // `category` distinguishes health-record vs. vaccine-record attachments within the same
+        // bucket (research.md R4, feature 013g) — no new bucket/Terraform change needed.
         var extension = ExtensionFor(contentType);
-        var objectPath = $"health-records/{healthRecordId}/attachment.{extension}";
+        var objectPath = $"{category}/{healthRecordId}/attachment.{extension}";
 
         var signer = await _urlSigner.Value;
         var uploadUrl = await signer.SignAsync(

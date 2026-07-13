@@ -9,6 +9,7 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
 {
     public DbSet<Tenant>     Tenants     => Set<Tenant>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<VaccineType> VaccineTypes => Set<VaccineType>();
 
     public void Detach(object entity) => Entry(entity).State = EntityState.Detached;
 
@@ -50,5 +51,24 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
             i.Property(x => x.TokenHash).IsRequired();
             i.Property(x => x.ExpiresAt).IsRequired();
         });
+
+        modelBuilder.Entity<VaccineType>(v =>
+        {
+            v.ToTable("vaccine_types");
+            v.HasKey(x => x.Id);
+            v.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            v.Property(x => x.Category)
+             .HasConversion(
+                 c => c == null ? null : c.Value.ToWireString(),
+                 c => c == null ? null : ParseVaccineCategory(c))
+             .HasMaxLength(30);
+            v.HasIndex(x => new { x.Category, x.SortOrder });
+            v.HasIndex(x => x.IsActive);
+        });
     }
+
+    private static VaccineCategory ParseVaccineCategory(string value) =>
+        VaccineCategoryExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown VaccineCategory: {value}");
 }

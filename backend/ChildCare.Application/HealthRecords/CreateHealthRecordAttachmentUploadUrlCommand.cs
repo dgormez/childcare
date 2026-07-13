@@ -36,7 +36,7 @@ public class CreateHealthRecordAttachmentUploadUrlCommandHandler(ITenantDbContex
         // FR-006: the attachment location is set the moment an upload URL is issued, not after
         // upload completion — a client-side upload that never finishes just leaves the record
         // pointing at an object that doesn't exist yet (spec.md Assumptions on partial-success).
-        var (objectPath, uploadUrl) = await storage.CreateUploadUrlAsync(record.Id, request.ContentType, cancellationToken);
+        var (objectPath, uploadUrl) = await storage.CreateUploadUrlAsync(record.Id, request.ContentType, cancellationToken: cancellationToken);
         record.AttachmentObjectPath = objectPath;
         record.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);

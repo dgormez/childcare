@@ -15,6 +15,13 @@ public class VaccineRecord
     public string? AdministeredBy { get; set; }
     public string? Notes { get; set; }
 
+    // Feature 013g — mutually exclusive (never both, DB-enforced via CHECK constraint,
+    // data-model.md). No DB FK on VaccineTypeId: VaccineType is soft-delete-only, so the one
+    // failure mode a FK guards against can't occur (research.md R2).
+    public Guid? VaccineTypeId { get; set; }
+    public Guid? CustomVaccineEntryId { get; set; }
+    public string? AttachmentObjectPath { get; set; }
+
     public Guid? RecordedBy { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

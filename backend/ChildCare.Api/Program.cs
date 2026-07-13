@@ -654,6 +654,7 @@ app.MapParentEndpoints();
 app.MapDayReservationEndpoints();
 app.MapIncidentReportEndpoints();
 app.MapVaccineRecordEndpoints();
+app.MapVaccineTypeEndpoints();
 app.MapHealthRecordEndpoints();
 app.MapMealListEndpoints();
 

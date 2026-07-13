@@ -44,6 +44,7 @@
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
 | 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | ✅ Done |
 | 013g | `013g-vaccine-catalog` | Shared, admin-maintained vaccine catalog (seeded from the Vlaamse basisvaccinatieschema) backing 013c's free-text vaccineName; adds attachment support on VaccineRecord so a director can attach a scan/photo of the child's vaccinatieboekje | 013c | 🔲 Not started |
+| 013h | `013h-platform-admin-vaccine-catalog` | Platform-admin role + management UI for the shared vaccine catalog 013g introduced (create/rename/reorder/deactivate catalog entries) — the catalog is currently seeded/maintained only via direct data changes, no in-app surface | 013g | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -3027,6 +3028,51 @@ Out of scope:
   attachment is a human-readable fallback only, not a structured data
   source.
 - Adult (staff) vaccination tracking — VaccineRecord is child-only.
+```
+
+---
+
+### 013h — Platform-Admin Vaccine Catalog
+
+**Added 2026-07-13, deferred out of feature 013g's own scope.** Feature 013g's spec.md
+Assumptions section explicitly commits to logging this as a separate backlog item: the shared,
+platform-wide `vaccine_types` catalog it introduced has no director-facing (or any in-app)
+management UI — it's seeded via an EF Core migration and, in production, would only be
+maintained today by the platform operator making direct data changes. This item is that
+deferred management surface, if/when it's actually needed.
+
+```
+Add a platform-admin role and management UI for the shared vaccine_types
+catalog feature 013g introduced (create, rename, reorder, deactivate entries).
+This is the first platform-level (cross-tenant) admin capability in this
+codebase — every existing role (Director/Staff/Parent, feature 003/005) is
+scoped to a single tenant; a platform-admin role is a genuinely new kind of
+actor that sits above tenant boundaries entirely.
+
+Context: feature 013g deliberately shipped the catalog as read-only from
+every tenant-facing endpoint (spec.md FR-009) precisely to avoid inventing
+this role speculatively before there was a real, current need for it. The
+catalog is currently maintained by the platform operator (the developer of
+this application) via direct data changes to the `public.vaccine_types`
+table — workable at today's scale, but not something a future non-technical
+platform operator (if the business ever brings one on) could do themselves.
+
+Open questions this feature must resolve before implementation (flag for
+/speckit-clarify, do not assume silently):
+- Where does a platform-admin authenticate? This is the first surface with
+  no natural tenant to scope a JWT to — a new auth path, a super-admin flag
+  on an existing account, or something else entirely needs deciding.
+- Is this a new screen in the existing Next.js web app (behind a
+  platform-admin-only route), or a genuinely separate internal tool? Given
+  Constitution Principle VII (monolith-first simplicity), default to "same
+  app, new gated route" unless a concrete reason argues otherwise.
+- Does deactivating a catalog entry need an audit trail (who deactivated
+  it, when), given feature 013g's existing precedent of never hard-deleting
+  catalog rows for exactly this kind of accountability reason?
+
+Out of scope: any change to feature 013g's existing tenant-facing read
+behavior (GET /api/vaccine-types stays exactly as-is); OCR or auto-population
+of the catalog from an external vaccine-schedule data source.
 ```
 
 ---

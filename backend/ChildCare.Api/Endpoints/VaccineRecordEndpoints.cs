@@ -9,6 +9,8 @@ namespace ChildCare.Api.Endpoints;
 /// <summary>Feature 013c — contracts/vaccine-health-records-api.md.</summary>
 public static class VaccineRecordEndpoints
 {
+    private const int UploadUrlExpiresInSeconds = 900;
+
     public static void MapVaccineRecordEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/children/{childId:guid}/vaccine-records")
@@ -18,7 +20,7 @@ public static class VaccineRecordEndpoints
         group.MapPost("/", async (Guid childId, CreateVaccineRecordRequest req, HttpContext ctx, IMediator mediator) =>
         {
             var result = await mediator.Send(new CreateVaccineRecordCommand(
-                childId, req.VaccineName, req.DoseNumber, req.AdministeredOn, req.NextDueDate,
+                childId, req.VaccineName, req.VaccineTypeId, req.DoseNumber, req.AdministeredOn, req.NextDueDate,
                 req.AdministeredBy, req.Notes, TenantUserIdOf(ctx)));
             return MapResult(result, onSuccess: r => Results.Created($"/api/children/{childId}/vaccine-records/{r.Id}", r));
         });
@@ -32,7 +34,7 @@ public static class VaccineRecordEndpoints
         group.MapPut("/{id:guid}", async (Guid childId, Guid id, UpdateVaccineRecordRequest req, IMediator mediator) =>
         {
             var result = await mediator.Send(new UpdateVaccineRecordCommand(
-                childId, id, req.VaccineName, req.DoseNumber, req.AdministeredOn, req.NextDueDate,
+                childId, id, req.VaccineName, req.VaccineTypeId, req.DoseNumber, req.AdministeredOn, req.NextDueDate,
                 req.AdministeredBy, req.Notes));
             return MapResult(result, onSuccess: Results.Ok);
         });
@@ -42,6 +44,14 @@ public static class VaccineRecordEndpoints
             var result = await mediator.Send(new DeleteVaccineRecordCommand(childId, id));
             return result.Succeeded
                 ? Results.NoContent()
+                : MapFailure(result.Failure!.Value);
+        });
+
+        group.MapPost("/{id:guid}/attachment-upload-url", async (Guid childId, Guid id, CreateVaccineRecordAttachmentUploadUrlRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new CreateVaccineRecordAttachmentUploadUrlCommand(childId, id, req.ContentType));
+            return result.Succeeded
+                ? Results.Ok(new CreateVaccineRecordAttachmentUploadUrlResponse(result.UploadUrl!, UploadUrlExpiresInSeconds))
                 : MapFailure(result.Failure!.Value);
         });
 
@@ -68,6 +78,12 @@ public static class VaccineRecordEndpoints
 
         VaccineRecordFailure.NotFound => Results.Json(
             new { errorKey = "errors.vaccine_records.not_found" }, statusCode: StatusCodes.Status404NotFound),
+
+        VaccineRecordFailure.VaccineTypeNotFound => Results.Json(
+            new { errorKey = "errors.vaccine_records.vaccine_type_not_found" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+
+        VaccineRecordFailure.InvalidContentType => Results.Json(
+            new { errorKey = "errors.vaccine_records.attachment_content_type_invalid" }, statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(VaccineRecordFailure)}: {failure}"),
     };

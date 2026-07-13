@@ -636,7 +636,15 @@
           "save": "Save"
         },
         "saveError": "Could not save this vaccination. Please try again.",
-        "deleteError": "Could not delete this vaccination. Please try again."
+        "deleteError": "Could not delete this vaccination. Please try again.",
+        "combobox": {
+          "catalogCategory": {
+            "basisvaccinatieschema": "Basisvaccinatieschema",
+            "aanbevolen_niet_gratis": "Recommended, not free"
+          },
+          "usedBeforeGroup": "Other (used before)",
+          "addCustom": "Use “{name}” (new entry, remembered for next time)"
+        }
       },
       "records": {
         "title": "Health Records",

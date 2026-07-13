@@ -36,4 +36,19 @@ public class VaccineRecordValidationTests(OrganisationOnboardingWebAppFactory fa
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateVaccineRecord_WithNonexistentVaccineTypeId_ReturnsUnprocessableEntity()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Vaccine Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken);
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/vaccine-records", org.AccessToken,
+            new CreateVaccineRecordRequest("Mystery Vaccine", null, new DateOnly(2026, 6, 1), null, null, null, Guid.NewGuid())));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("errors.vaccine_records.vaccine_type_not_found", body);
+    }
 }

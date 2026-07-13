@@ -11,7 +11,11 @@ public interface IHealthAttachmentStorage
 {
     /// <param name="contentType">One of "application/pdf", "image/jpeg", "image/png" — the
     /// caller validates this before calling (FR-006); this port trusts it.</param>
-    Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, CancellationToken cancellationToken = default);
+    /// <param name="category">Object-path prefix segment (research.md R4, feature 013g) —
+    /// defaults to "health-records" so every pre-existing call site is unaffected; vaccine
+    /// records pass "vaccine-records" to keep the two attachment kinds in distinct paths within
+    /// the same bucket.</param>
+    Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, string category = "health-records", CancellationToken cancellationToken = default);
 
     /// <summary>Returns null when objectPath is null (no attachment set) rather than signing a meaningless URL.</summary>
     Task<string?> CreateDownloadUrlAsync(string? objectPath, CancellationToken cancellationToken = default);

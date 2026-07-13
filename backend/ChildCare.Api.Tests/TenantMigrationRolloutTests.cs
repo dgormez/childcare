@@ -125,7 +125,13 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// class of gap as 013f's "AddLocationReservationSettings" — it only adds one column to the
     /// existing locations table (no new table), so it needs its own history-removal entry too;
     /// no separate DROP COLUMN step is needed since the DROP TABLE "locations" below already
-    /// removes the column along with the whole table.
+    /// removes the column along with the whole table. Feature 013g's
+    /// "AddVaccineCatalogAndAttachments" migration repeats the FK-dependency-order pattern once
+    /// more — tenant_custom_vaccine_entries has an FK from vaccine_records (not to it), so it
+    /// must be dropped before vaccine_records; the migration's own three new columns on
+    /// vaccine_records (VaccineTypeId, CustomVaccineEntryId, AttachmentObjectPath) need no
+    /// separate DROP COLUMN step since the DROP TABLE "vaccine_records" below already removes
+    /// them along with the whole table.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -149,6 +155,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."child_contacts";
             DROP TABLE "{schemaName}"."child_group_assignments";
             DROP TABLE "{schemaName}"."vaccine_records";
+            DROP TABLE "{schemaName}"."tenant_custom_vaccine_entries";
             DROP TABLE "{schemaName}"."health_records";
             DROP TABLE "{schemaName}"."message_thread_participants";
             DROP TABLE "{schemaName}"."messages";
@@ -177,7 +184,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments';
             """);
     }
 
