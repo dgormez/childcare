@@ -384,3 +384,33 @@ use the static code review instead.
   spec gaps (inclusive date-boundary handling for standing medication, single-icon-not-count for
   multiple medication records, among others) — all fixed in spec.md, not deferred, same standing
   rule as every prior feature.
+- 013g (`013g-vaccine-catalog`): ✅ Done, merged 2026-07-13 (PR #28, squash-merged after green CI
+  — 609/609 backend + 108/108 web passing). Shared, platform-wide vaccine catalog (`vaccine_types`,
+  seeded from the Vlaamse basisvaccinatieschema) backing 013c's free-text `vaccineName`, a
+  per-tenant "remembered custom entry" mechanism so a non-catalog name is only ever typed once per
+  KDV, and attachment support on `VaccineRecord` reusing 013c's signed-URL health-attachment
+  infrastructure under a distinct object-path prefix. `vaccine_types` lives in `PublicDbContext` —
+  the first table there that's shared reference data rather than a tenant-management record;
+  confirmed this doesn't weaken tenant isolation (Principle I) since it carries no tenant/personal
+  data. `VaccineRecord.VaccineTypeId` deliberately has no DB-level FK across the schema boundary
+  (the catalog is soft-delete-only, so the one failure mode a FK guards against can't occur) —
+  worth remembering as a general pattern for any future cross-schema reference to genuinely
+  immutable-by-deletion reference data. This feature's own prompt raised a real, no-precedent scope
+  question (who manages the shared catalog, given no platform-admin role exists anywhere in this
+  codebase) — resolved directly with the product owner before specifying rather than guessed:
+  platform-operator-managed only, no director write path, and a new BACKLOG item (`013h`) logged
+  for the deferred platform-admin management UI. `/speckit-checklist`'s safety/tenant-isolation/
+  data-integrity pass tightened several FRs for precision (mutual-exclusivity between a catalog and
+  custom-entry reference, diacritic-insensitive dedupe — the original BACKLOG example only
+  mentioned case/whitespace, missing that "Rabiës" vs "rabies" is actually an accent difference)
+  and added a DB `CHECK` constraint enforcing the mutual-exclusivity rule rather than leaving it
+  application-layer-only. `/speckit-analyze` found one real coverage gap (FR-014's caregiver-summary
+  decoupling had zero tasks) — fixed with a regression test, same standing rule as every prior
+  feature. Confirms the recurring `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests`
+  revert-helper pattern (012a, 013c, 006a, 013d) yet again — but this time a *new* variant of the
+  same mistake slipped through code review and was only caught by actually running the full test
+  suite: the two tables were dropped in the wrong order relative to their own FK (the referencing
+  table must drop before the table it references, not after) — worth double-checking FK direction,
+  not just presence, next time this pattern comes up. `/speckit-converge` found one real gap: the
+  spec's own Assumptions section promised logging the platform-admin follow-up as a new BACKLOG
+  item, which hadn't actually been done until the converge pass caught it.
