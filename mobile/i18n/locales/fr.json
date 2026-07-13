@@ -81,6 +81,8 @@
     "medicalQuickAccess": "Informations médicales",
     "medicalConditions": "Conditions médicales",
     "dietaryRestrictions": "Restrictions alimentaires",
+    "gpTitle": "Médecin traitant",
+    "pediatricianTitle": "Pédiatre",
     "healthSummary": {
       "empty": "Aucune information de santé connue.",
       "unavailable": "Impossible de charger les informations de santé — vérifiez votre connexion.",

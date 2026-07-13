@@ -23,6 +23,8 @@ public class Child
     public string?          DietaryRestrictions    { get; set; }
     public string?          GpName                 { get; set; }
     public string?          GpPhone                { get; set; }
+    public string?          PediatricianName       { get; set; }
+    public string?          PediatricianPhone      { get; set; }
     public string?          HealthInsuranceNumber  { get; set; }
 
     // Opgroeien child identifier (YYMMDD-NNN) — stored as entered, not format-validated in

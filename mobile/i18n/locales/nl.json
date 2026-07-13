@@ -81,6 +81,8 @@
     "medicalQuickAccess": "Medische gegevens",
     "medicalConditions": "Medische aandoeningen",
     "dietaryRestrictions": "Dieetbeperkingen",
+    "gpTitle": "Huisarts",
+    "pediatricianTitle": "Kinderarts",
     "healthSummary": {
       "empty": "Geen bekende gezondheidsinformatie.",
       "unavailable": "Kan gezondheidsinformatie niet laden — controleer je verbinding.",

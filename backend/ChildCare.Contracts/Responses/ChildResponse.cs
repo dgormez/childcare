@@ -14,6 +14,8 @@ public record ChildResponse(
     string? DietaryRestrictions,
     string? GpName,
     string? GpPhone,
+    string? PediatricianName,
+    string? PediatricianPhone,
     string? HealthInsuranceNumber,
     string? Kindcode,
     DateTime? DeactivatedAt,

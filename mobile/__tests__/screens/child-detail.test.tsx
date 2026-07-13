@@ -37,6 +37,7 @@ const child: ChildResponse = {
   dateOfBirth: "2022-01-01", photoDownloadUrl: null,
   allergiesDescription: "Peanuts", allergySeverity: "severe",
   medicalConditions: "Asthma", dietaryRestrictions: "Lactose-free",
+  gpName: null, gpPhone: null, pediatricianName: null, pediatricianPhone: null,
   deactivatedAt: null,
 };
 
@@ -68,6 +69,53 @@ it("omits sections for fields the child doesn't have", async () => {
   expect(getByText("child.medicalConditions")).toBeTruthy();
   expect(queryByText("child.allergyAlert")).toBeNull();
   expect(queryByText("child.dietaryRestrictions")).toBeNull();
+});
+
+describe("GP and pediatrician contact (006a US3)", () => {
+  it("shows both GP and pediatrician contact when both are set, visually distinct", async () => {
+    getCached.mockReturnValue([{ ...child, gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33", pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }]);
+
+    const { getByText } = await render(<ChildDetailScreen />);
+
+    expect(getByText("child.gpTitle")).toBeTruthy();
+    expect(getByText("Dr. Peeters")).toBeTruthy();
+    expect(getByText("+32 9 111 22 33")).toBeTruthy();
+    expect(getByText("child.pediatricianTitle")).toBeTruthy();
+    expect(getByText("Dr. Claes")).toBeTruthy();
+    expect(getByText("+32 9 444 55 66")).toBeTruthy();
+  });
+
+  it("shows only the pediatrician block when no GP is set, with no placeholder or error for the missing one", async () => {
+    getCached.mockReturnValue([{ ...child, pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }]);
+
+    const { getByText, queryByText } = await render(<ChildDetailScreen />);
+
+    expect(getByText("child.pediatricianTitle")).toBeTruthy();
+    expect(getByText("Dr. Claes")).toBeTruthy();
+    expect(queryByText("child.gpTitle")).toBeNull();
+  });
+
+  it("renders neither block when the child has no GP or pediatrician contact set", async () => {
+    getCached.mockReturnValue([child]);
+
+    const { queryByText } = await render(<ChildDetailScreen />);
+
+    expect(queryByText("child.gpTitle")).toBeNull();
+    expect(queryByText("child.pediatricianTitle")).toBeNull();
+  });
+
+  it("renders GP/pediatrician contact from the offline-cached child list (no live child endpoint call)", async () => {
+    // This screen never fetches the child record live — `children` always comes from
+    // CHILDREN_CACHE_KEY, populated by the group/list view (research.md R4). Reading from
+    // getCached IS the offline-fallback path; there is no separate online path to fall back
+    // from for this field set.
+    getCached.mockReturnValue([{ ...child, gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33" }]);
+
+    const { getByText } = await render(<ChildDetailScreen />);
+
+    expect(getByText("Dr. Peeters")).toBeTruthy();
+    expect(getByText("+32 9 111 22 33")).toBeTruthy();
+  });
 });
 
 it("shows an empty state when the child isn't found in the cache", async () => {

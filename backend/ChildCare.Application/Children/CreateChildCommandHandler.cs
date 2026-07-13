@@ -22,6 +22,8 @@ public class CreateChildCommandHandler(ITenantDbContext db, IProfilePhotoStorage
             DietaryRestrictions = request.DietaryRestrictions,
             GpName = request.GpName,
             GpPhone = request.GpPhone,
+            PediatricianName = request.PediatricianName,
+            PediatricianPhone = request.PediatricianPhone,
             HealthInsuranceNumber = request.HealthInsuranceNumber,
             Kindcode = request.Kindcode,
         };

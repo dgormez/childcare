@@ -19,6 +19,8 @@ internal static class ChildMapper
         c.DietaryRestrictions,
         c.GpName,
         c.GpPhone,
+        c.PediatricianName,
+        c.PediatricianPhone,
         c.HealthInsuranceNumber,
         c.Kindcode,
         c.DeactivatedAt,

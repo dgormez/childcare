@@ -81,6 +81,8 @@
     "medicalQuickAccess": "Medical information",
     "medicalConditions": "Medical conditions",
     "dietaryRestrictions": "Dietary restrictions",
+    "gpTitle": "GP (general practitioner)",
+    "pediatricianTitle": "Pediatrician",
     "healthSummary": {
       "empty": "No known health information.",
       "unavailable": "Can't load health information — check your connection.",

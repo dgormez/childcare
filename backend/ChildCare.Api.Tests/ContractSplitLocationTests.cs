@@ -58,7 +58,7 @@ public class ContractSplitLocationTests(OrganisationOnboardingWebAppFactory fact
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken) =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     private static List<ContractedDayRequest> Days(params DayOfWeek[] weekdays) =>

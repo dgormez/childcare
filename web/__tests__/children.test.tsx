@@ -31,7 +31,29 @@ function okResponse(data: unknown) {
 }
 
 function makeChild(overrides: Partial<ChildResponse> = {}): ChildResponse {
-  return { id: "child-1", firstName: "Emma", lastName: "Peeters", dateOfBirth: "2023-05-10", deactivatedAt: null, ...overrides };
+  return {
+    id: "child-1",
+    firstName: "Emma",
+    lastName: "Peeters",
+    dateOfBirth: "2023-05-10",
+    photoDownloadUrl: null,
+    gender: null,
+    nationality: null,
+    allergiesDescription: null,
+    allergySeverity: null,
+    medicalConditions: null,
+    dietaryRestrictions: null,
+    gpName: null,
+    gpPhone: null,
+    pediatricianName: null,
+    pediatricianPhone: null,
+    healthInsuranceNumber: null,
+    kindcode: null,
+    deactivatedAt: null,
+    createdAt: "2026-01-01T09:00:00Z",
+    updatedAt: "2026-01-01T09:00:00Z",
+    ...overrides,
+  };
 }
 
 function makeVaccine(overrides: Partial<VaccineRecordResponse> = {}): VaccineRecordResponse {
@@ -76,6 +98,12 @@ function mockGet(byPath: Record<string, unknown>) {
   });
 }
 
+/** The child-detail screen defaults to the "Profile" tab (006a FR-003) — Gezondheid content is
+ * only mounted once that tab is selected (Radix Tabs unmounts inactive content by default). */
+async function openHealthTab() {
+  await userEvent.click(await screen.findByRole("tab", { name: "Health" }));
+}
+
 beforeEach(() => {
   vi.mocked(apiClient.GET).mockReset();
   vi.mocked(apiClient.POST).mockReset();
@@ -99,6 +127,149 @@ describe("ChildrenPage", () => {
     renderComponent(<ChildrenPage />);
     expect(await screen.findByText("No children yet.")).toBeInTheDocument();
   });
+
+  it("creates a child with only required fields via the New child dialog", async () => {
+    mockGet({ "/api/children": [] });
+    vi.mocked(apiClient.POST).mockResolvedValue(okResponse(makeChild()) as never);
+
+    renderComponent(<ChildrenPage />);
+    await screen.findByText("No children yet.");
+
+    await userEvent.click(screen.getByRole("button", { name: "New child" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.type(within(dialog).getByLabelText("First name"), "Emma");
+    await userEvent.type(within(dialog).getByLabelText("Last name"), "Peeters");
+    await userEvent.type(within(dialog).getByLabelText("Date of birth"), "2023-05-10");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(apiClient.POST).toHaveBeenCalledWith(
+      "/api/children",
+      expect.objectContaining({
+        body: expect.objectContaining({ firstName: "Emma", lastName: "Peeters", dateOfBirth: "2023-05-10" }),
+      }),
+    );
+    expect(push).toHaveBeenCalledWith("/children/child-1");
+  });
+
+  it("does not submit the New child form when a required field is missing", async () => {
+    mockGet({ "/api/children": [] });
+    renderComponent(<ChildrenPage />);
+    await screen.findByText("No children yet.");
+
+    await userEvent.click(screen.getByRole("button", { name: "New child" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(within(dialog).getByText("First name is required.")).toBeInTheDocument();
+    expect(apiClient.POST).not.toHaveBeenCalled();
+  });
+});
+
+describe("ChildDetailPage — Profile tab", () => {
+  it("switches between Profile and Health tabs without a route change", async () => {
+    mockGet({ "/api/children/{id}": makeChild(), "/api/children/{childId}/vaccine-records": [], "/api/children/{childId}/health-records": [] });
+    renderComponent(<ChildDetailPage />);
+
+    await screen.findByRole("tab", { name: "Profile", selected: true });
+    await openHealthTab();
+    await screen.findByRole("tab", { name: "Health", selected: true });
+
+    // A tab switch is a client-side state change, not a navigation — the router is never asked
+    // to push a new route (SC-005).
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("shows GP and pediatrician contact as distinct fields when both are present", async () => {
+    mockGet({
+      "/api/children/{id}": makeChild({ gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33", pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }),
+    });
+    renderComponent(<ChildDetailPage />);
+
+    expect(await screen.findByText("Dr. Peeters")).toBeInTheDocument();
+    expect(screen.getByText("+32 9 111 22 33")).toBeInTheDocument();
+    expect(screen.getByText("Dr. Claes")).toBeInTheDocument();
+    expect(screen.getByText("+32 9 444 55 66")).toBeInTheDocument();
+  });
+
+  it("shows 'Not set' for an unset field rather than an error or blank row", async () => {
+    mockGet({ "/api/children/{id}": makeChild() });
+    renderComponent(<ChildDetailPage />);
+
+    expect((await screen.findAllByText("Not set")).length).toBeGreaterThan(0);
+  });
+
+  it("edits the pediatrician contact independently of the GP contact", async () => {
+    const child = makeChild({ gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33" });
+    mockGet({ "/api/children/{id}": child });
+    vi.mocked(apiClient.PUT).mockResolvedValue(
+      okResponse({ ...child, pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }) as never,
+    );
+
+    renderComponent(<ChildDetailPage />);
+    await screen.findByText("Emma Peeters");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.type(within(dialog).getByLabelText("Pediatrician name"), "Dr. Claes");
+    await userEvent.type(within(dialog).getByLabelText("Pediatrician phone"), "+32 9 444 55 66");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(apiClient.PUT).toHaveBeenCalledWith(
+      "/api/children/{id}",
+      expect.objectContaining({
+        params: { path: { id: "child-1" } },
+        body: expect.objectContaining({
+          gpName: "Dr. Peeters",
+          gpPhone: "+32 9 111 22 33",
+          pediatricianName: "Dr. Claes",
+          pediatricianPhone: "+32 9 444 55 66",
+        }),
+      }),
+    );
+  });
+
+  it("does not submit the edit form when a required field is cleared (US2 AC5)", async () => {
+    mockGet({ "/api/children/{id}": makeChild() });
+    renderComponent(<ChildDetailPage />);
+    await screen.findByText("Emma Peeters");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const dialog = await screen.findByRole("dialog");
+    const firstName = within(dialog).getByLabelText("First name");
+    await userEvent.clear(firstName);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(within(dialog).getByText("First name is required.")).toBeInTheDocument();
+    expect(apiClient.PUT).not.toHaveBeenCalled();
+  });
+
+  it("uploads a profile photo and reloads the child", async () => {
+    const child = makeChild();
+    mockGet({ "/api/children/{id}": child });
+    vi.mocked(apiClient.POST).mockResolvedValue(
+      okResponse({ uploadUrl: "https://fake-gcs.test/upload/children/child-1/photo.jpg", objectPath: "children/child-1/photo.jpg" }) as never,
+    );
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderComponent(<ChildDetailPage />);
+    await screen.findByText("Emma Peeters");
+
+    const file = new File(["jpeg bytes"], "photo.jpg", { type: "image/jpeg" });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, file);
+
+    expect(apiClient.POST).toHaveBeenCalledWith(
+      "/api/children/{id}/photo/upload-url",
+      expect.objectContaining({ params: { path: { id: "child-1" } } }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://fake-gcs.test/upload/children/child-1/photo.jpg",
+      expect.objectContaining({ method: "PUT" }),
+    );
+
+    vi.unstubAllGlobals();
+  });
 });
 
 describe("ChildDetailPage — Gezondheid / vaccines", () => {
@@ -112,6 +283,7 @@ describe("ChildDetailPage — Gezondheid / vaccines", () => {
     });
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
 
     expect(await screen.findByText("Hep B")).toBeInTheDocument();
     expect(screen.getByText("Overdue")).toBeInTheDocument();
@@ -121,6 +293,7 @@ describe("ChildDetailPage — Gezondheid / vaccines", () => {
   it("shows an empty state when the child has no vaccine records", async () => {
     mockGet({ "/api/children/{id}": makeChild(), "/api/children/{childId}/vaccine-records": [] });
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     expect(await screen.findByText("No vaccinations recorded yet.")).toBeInTheDocument();
   });
 
@@ -129,6 +302,7 @@ describe("ChildDetailPage — Gezondheid / vaccines", () => {
     vi.mocked(apiClient.POST).mockResolvedValue(okResponse(makeVaccine()) as never);
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("No vaccinations recorded yet.");
 
     await userEvent.click(screen.getByRole("button", { name: "Add vaccination" }));
@@ -147,6 +321,7 @@ describe("ChildDetailPage — Gezondheid / vaccines", () => {
     vi.mocked(apiClient.DELETE).mockResolvedValue({ response: new Response(null, { status: 204 }), data: undefined, error: undefined } as never);
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("DTP (dose 2)");
 
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
@@ -164,6 +339,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
   it("shows an empty state when the child has no health records", async () => {
     mockGet({ "/api/children/{id}": makeChild(), "/api/children/{childId}/health-records": [] });
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     expect(await screen.findByText("No health records yet.")).toBeInTheDocument();
   });
 
@@ -173,6 +349,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
       "/api/children/{childId}/health-records": [makeHealthRecord({ isExpired: true })],
     });
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     expect(await screen.findByText("Peanut allergy")).toBeInTheDocument();
     expect(screen.getByText("Expired")).toBeInTheDocument();
   });
@@ -182,6 +359,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
     vi.mocked(apiClient.POST).mockResolvedValue(okResponse(makeHealthRecord()) as never);
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("No health records yet.");
 
     await userEvent.click(screen.getByRole("button", { name: "Add record" }));
@@ -208,6 +386,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("Peanut allergy");
 
     const file = new File(["%PDF-1.4"], "letter.pdf", { type: "application/pdf" });
@@ -233,6 +412,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
     });
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("Peanut allergy");
 
     // A drag-and-drop (unlike the native file picker) bypasses the input's `accept` filter, so
@@ -253,6 +433,7 @@ describe("ChildDetailPage — Gezondheid / health records", () => {
     vi.mocked(apiClient.DELETE).mockResolvedValue({ response: new Response(null, { status: 204 }), data: undefined, error: undefined } as never);
 
     renderComponent(<ChildDetailPage />);
+    await openHealthTab();
     await screen.findByText("Peanut allergy");
 
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));

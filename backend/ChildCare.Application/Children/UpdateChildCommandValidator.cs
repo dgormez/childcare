@@ -26,6 +26,8 @@ public class UpdateChildCommandValidator : AbstractValidator<UpdateChildCommand>
         RuleFor(x => x.DietaryRestrictions).MaximumLength(2000).WithMessage("errors.child.dietary_restrictions_too_long");
         RuleFor(x => x.GpName).MaximumLength(200).WithMessage("errors.child.gp_name_too_long");
         RuleFor(x => x.GpPhone).MaximumLength(30).WithMessage("errors.child.gp_phone_too_long");
+        RuleFor(x => x.PediatricianName).MaximumLength(200).WithMessage("errors.child.pediatrician_name_too_long");
+        RuleFor(x => x.PediatricianPhone).MaximumLength(30).WithMessage("errors.child.pediatrician_phone_too_long");
         RuleFor(x => x.HealthInsuranceNumber).MaximumLength(50).WithMessage("errors.child.health_insurance_number_too_long");
         RuleFor(x => x.Kindcode).MaximumLength(20).WithMessage("errors.child.kindcode_too_long");
     }

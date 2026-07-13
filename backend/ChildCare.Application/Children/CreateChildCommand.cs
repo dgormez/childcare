@@ -15,5 +15,7 @@ public record CreateChildCommand(
     string? DietaryRestrictions,
     string? GpName,
     string? GpPhone,
+    string? PediatricianName,
+    string? PediatricianPhone,
     string? HealthInsuranceNumber,
     string? Kindcode) : IRequest<ChildResult>;

@@ -64,7 +64,8 @@ public static class ChildrenEndpoints
                 ParseEnum<Gender>(req.Gender), req.Nationality,
                 req.AllergiesDescription, ParseEnum<AllergySeverity>(req.AllergySeverity),
                 req.MedicalConditions, req.DietaryRestrictions,
-                req.GpName, req.GpPhone, req.HealthInsuranceNumber, req.Kindcode));
+                req.GpName, req.GpPhone, req.PediatricianName, req.PediatricianPhone,
+                req.HealthInsuranceNumber, req.Kindcode));
             return MapResult(result, onSuccess: r => Results.Created($"/api/children/{r.Id}", r));
         });
 
@@ -75,7 +76,8 @@ public static class ChildrenEndpoints
                 ParseEnum<Gender>(req.Gender), req.Nationality,
                 req.AllergiesDescription, ParseEnum<AllergySeverity>(req.AllergySeverity),
                 req.MedicalConditions, req.DietaryRestrictions,
-                req.GpName, req.GpPhone, req.HealthInsuranceNumber, req.Kindcode));
+                req.GpName, req.GpPhone, req.PediatricianName, req.PediatricianPhone,
+                req.HealthInsuranceNumber, req.Kindcode));
             return MapResult(result, onSuccess: Results.Ok);
         });
 

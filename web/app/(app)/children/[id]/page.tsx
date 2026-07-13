@@ -9,6 +9,9 @@ import { Badge } from "../../../../components/ui/badge";
 import { EmptyState } from "../../../../components/EmptyState";
 import { ErrorState } from "../../../../components/ErrorState";
 import { ConfirmDialog } from "../../../../components/ConfirmDialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../../components/ui/tabs";
+import { ChildProfileTab } from "../../../../components/children/ChildProfileTab";
+import { ChildFormDialog, type ChildFormValues } from "../../../../components/children/ChildFormDialog";
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
@@ -17,11 +20,12 @@ import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse } from 
 type LoadState = "loading" | "loaded" | "error";
 
 /**
- * Minimal child-detail screen — a name header plus the Gezondheid tab only (spec.md
- * Assumptions, feature 013c). No other tab (profile, contracts, contacts) exists yet; a future
- * feature building the full child file adds them alongside this one, not by replacing it.
+ * Child-detail screen — "Profiel" (006a) and "Gezondheid" (013c) tabs on one screen, the first
+ * tabbed structure here; 013c's own shipped-notes flagged this screen as the one future
+ * per-child-tab work should extend, rather than replace.
  */
 export default function ChildDetailPage() {
+  const tc = useTranslations("children");
   const t = useTranslations("children.health");
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -30,6 +34,10 @@ export default function ChildDetailPage() {
   const [vaccines, setVaccines] = useState<VaccineRecordResponse[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecordResponse[]>([]);
   const [state, setState] = useState<LoadState>("loading");
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editSaveError, setEditSaveError] = useState<string | null>(null);
 
   const [vaccineFormOpen, setVaccineFormOpen] = useState(false);
   const [editingVaccine, setEditingVaccine] = useState<VaccineRecordResponse | null>(null);
@@ -67,6 +75,36 @@ export default function ChildDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function submitChildEdit(values: ChildFormValues) {
+    setEditSaving(true);
+    setEditSaveError(null);
+    const result = await apiClient.PUT("/api/children/{id}", {
+      params: { path: { id: params.id } },
+      body: values,
+    });
+    setEditSaving(false);
+    if (!result.response.ok) {
+      setEditSaveError(tc("form.saveError"));
+      return;
+    }
+    setEditDialogOpen(false);
+    await load();
+  }
+
+  async function uploadChildPhoto(file: File): Promise<boolean> {
+    const urlResult = await apiClient.POST("/api/children/{id}/photo/upload-url", {
+      params: { path: { id: params.id } },
+    });
+    if (!urlResult.response.ok) return false;
+
+    const { uploadUrl } = urlResult.data as unknown as { uploadUrl: string };
+    const putResult = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+    if (!putResult.ok) return false;
+
+    await load();
+    return true;
+  }
 
   async function submitVaccineRecord(values: VaccineRecordFormValues) {
     setVaccineSaving(true);
@@ -191,6 +229,21 @@ export default function ChildDetailPage() {
 
       <h1 className="mb-6 text-2xl font-semibold text-text dark:text-text-dark">{child.firstName} {child.lastName}</h1>
 
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">{tc("tabProfile")}</TabsTrigger>
+          <TabsTrigger value="health">{tc("tabHealth")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile">
+          <ChildProfileTab
+            child={child}
+            onEdit={() => { setEditSaveError(null); setEditDialogOpen(true); }}
+            onPhotoUpload={uploadChildPhoto}
+          />
+        </TabsContent>
+
+        <TabsContent value="health">
       <h2 className="mb-4 text-lg font-semibold text-text dark:text-text-dark">{t("title")}</h2>
 
       <div className="mb-8">
@@ -353,6 +406,18 @@ export default function ChildDetailPage() {
           </table>
         )}
       </div>
+        </TabsContent>
+      </Tabs>
+
+      <ChildFormDialog
+        open={editDialogOpen}
+        mode="edit"
+        child={child}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={submitChildEdit}
+        saving={editSaving}
+        error={editSaveError}
+      />
 
       <VaccineRecordForm
         open={vaccineFormOpen}

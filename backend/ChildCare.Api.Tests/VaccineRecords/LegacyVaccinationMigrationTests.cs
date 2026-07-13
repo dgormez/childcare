@@ -61,9 +61,17 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     }
 
     /// <summary>
-    /// Reverts only the "AddVaccineAndHealthRecords" migration: drops the new tables, recreates
+    /// Reverts the "AddVaccineAndHealthRecords" migration: drops the new tables, recreates
     /// "vaccination_records" (matching that migration's own Down() shape), and removes its
     /// __EFMigrationsHistory row — everything else this tenant already has stays untouched.
+    /// Also reverts feature 006a's later "AddPediatricianContactToChild" migration (dropping the
+    /// two columns it added to children, removing its history row too) — TenantDbContext's
+    /// custom MigrateAsync() (research.md R8) computes "pending" as "from the schema's last
+    /// *applied* migration to latest", so leaving a chronologically-later migration marked
+    /// applied while this one is reverted would make that computed range empty (last applied ==
+    /// latest == AddPediatricianContactToChild), and `MigrateAsync()` would silently no-op
+    /// instead of restoring vaccine_records/health_records. This must be extended again for any
+    /// future migration added after this one, for the same reason.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -84,8 +92,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 CONSTRAINT "FK_vaccination_records_children_ChildId" FOREIGN KEY ("ChildId")
                     REFERENCES "{schemaName}"."children" ("Id") ON DELETE CASCADE
             );
+            ALTER TABLE "{schemaName}"."children"
+                DROP COLUMN "PediatricianName",
+                DROP COLUMN "PediatricianPhone";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild';
             """);
     }
 
@@ -97,7 +108,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var schemaName = await GetSchemaNameAsync(org.Organisation.Id);
 
         var childResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken,
-            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null)));
+            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null)));
         Assert.Equal(HttpStatusCode.Created, childResponse.StatusCode);
         var child = (await childResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
 

@@ -5197,6 +5197,8 @@ export interface components {
             dietaryRestrictions: null | string;
             gpName: null | string;
             gpPhone: null | string;
+            pediatricianName: null | string;
+            pediatricianPhone: null | string;
             healthInsuranceNumber: null | string;
             kindcode: null | string;
         };
@@ -5510,6 +5512,8 @@ export interface components {
             dietaryRestrictions: null | string;
             gpName: null | string;
             gpPhone: null | string;
+            pediatricianName: null | string;
+            pediatricianPhone: null | string;
             healthInsuranceNumber: null | string;
             kindcode: null | string;
         };

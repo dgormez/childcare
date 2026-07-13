@@ -24,6 +24,8 @@ public class UpdateChildCommandHandler(ITenantDbContext db, IProfilePhotoStorage
         child.DietaryRestrictions = request.DietaryRestrictions;
         child.GpName = request.GpName;
         child.GpPhone = request.GpPhone;
+        child.PediatricianName = request.PediatricianName;
+        child.PediatricianPhone = request.PediatricianPhone;
         child.HealthInsuranceNumber = request.HealthInsuranceNumber;
         child.Kindcode = request.Kindcode;
         child.UpdatedAt = DateTime.UtcNow;
