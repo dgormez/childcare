@@ -12,7 +12,7 @@
  */
 import { apiClient } from "./apiClient";
 import { handleDeviceRejection } from "./deviceAuth";
-import type { RoomRosterCard } from "../types";
+import type { RoomRosterResponse } from "../types";
 import type { PinKeypadResult } from "../components/PinKeypad";
 
 type ErrorBody = { errorKey?: string; lockedUntil?: string; attemptsRemaining?: number };
@@ -29,11 +29,13 @@ async function handleIfDeviceRejected(status: number, error: unknown): Promise<b
   return false;
 }
 
-export async function getRoster(): Promise<RoomRosterCard[]> {
+const EMPTY_ROSTER: RoomRosterResponse = { requiresCaregiverPin: true, caregivers: [] };
+
+export async function getRoster(): Promise<RoomRosterResponse> {
   const result = await apiClient.GET("/api/room-shifts/roster");
-  if (await handleIfDeviceRejected(result.response.status, result.error)) return [];
+  if (await handleIfDeviceRejected(result.response.status, result.error)) return EMPTY_ROSTER;
   if (!result.response.ok) throw new Error("roster_load_failed");
-  return result.data as unknown as RoomRosterCard[];
+  return result.data as unknown as RoomRosterResponse;
 }
 
 /**
@@ -43,11 +45,22 @@ export async function getRoster(): Promise<RoomRosterCard[]> {
  * PIN was even correct. A network error surfaces honestly as errors.network rather than being
  * queued or misreported as an invalid PIN; full offline check-in/out (a queued, unconfirmed
  * state with retroactive correction once synced) is not implemented in this pass.
+ *
+ * Feature 008b: `pin` is omitted entirely when the location's roster reported
+ * `requiresCaregiverPin: false` — the server enforces this from the location's own setting
+ * regardless of what (if anything) the client sends, per FR-007.
  */
-export async function checkIn(staffId: string, pin: string): Promise<PinKeypadResult> {
+// The generated CheckInRequest/CheckOutRequest schemas type `pin` as a required non-nullable
+// `string` — ASP.NET Core's OpenAPI generation here doesn't reflect C#'s `string?` nullable
+// reference type annotation, the same class of generated-type/reality gap this codebase already
+// works around for response types (research.md R1). The cast below is the request-body version
+// of that same workaround; the backend genuinely accepts `pin: null`.
+type GeneratedCheckInOutBody = { staffId: string; pin: string };
+
+export async function checkIn(staffId: string, pin?: string): Promise<PinKeypadResult> {
   let result;
   try {
-    result = await apiClient.POST("/api/room-shifts/check-in", { body: { staffId, pin } });
+    result = await apiClient.POST("/api/room-shifts/check-in", { body: { staffId, pin: pin ?? null } as unknown as GeneratedCheckInOutBody });
   } catch {
     return { ok: false, errorKey: "errors.network" };
   }
@@ -57,10 +70,10 @@ export async function checkIn(staffId: string, pin: string): Promise<PinKeypadRe
   return { ok: false, errorKey: body?.errorKey, lockedUntil: body?.lockedUntil };
 }
 
-export async function checkOut(staffId: string, pin: string): Promise<PinKeypadResult> {
+export async function checkOut(staffId: string, pin?: string): Promise<PinKeypadResult> {
   let result;
   try {
-    result = await apiClient.POST("/api/room-shifts/check-out", { body: { staffId, pin } });
+    result = await apiClient.POST("/api/room-shifts/check-out", { body: { staffId, pin: pin ?? null } as unknown as GeneratedCheckInOutBody });
   } catch {
     return { ok: false, errorKey: "errors.network" };
   }

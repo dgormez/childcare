@@ -12,8 +12,18 @@ namespace ChildCare.Application.RoomShifts;
 /// caregiver by tapping their photo card — this never searches for who a PIN belongs to
 /// (VerifyPinCommand, research.md R6).
 /// </summary>
-public record CheckInCommand(Guid DeviceId, Guid LocationId, Guid GroupId, Guid StaffId, string Pin) : IRequest<CheckInResult>;
+public record CheckInCommand(Guid DeviceId, Guid LocationId, Guid GroupId, Guid StaffId, string? Pin) : IRequest<CheckInResult>;
 
+/// <summary>
+/// Feature 008b: when the location's RequiresCaregiverPin is false, the tapped StaffId alone
+/// completes check-in — VerifyPinCommand.VerifyAsync is still called (it still enforces the
+/// caregiver exists, isn't deactivated, and is eligible at this location, per spec.md
+/// Assumptions), but with a null pin so it skips the bcrypt compare and lockout bookkeeping
+/// entirely (FR-004/FR-007). When the setting is true (the default), a null/empty client pin is
+/// coerced to empty string, never passed through as null — null must only ever mean "the server
+/// decided verification doesn't apply here", never "the client happened to omit a pin", or a
+/// PIN-required location could be bypassed simply by sending no pin.
+/// </summary>
 public class CheckInCommandHandler(VerifyPinCommand verifyPin, CloseStaleShiftsHelper closeStaleShifts, ITenantDbContext db)
     : IRequestHandler<CheckInCommand, CheckInResult>
 {
@@ -21,7 +31,10 @@ public class CheckInCommandHandler(VerifyPinCommand verifyPin, CloseStaleShiftsH
     {
         await closeStaleShifts.CloseStaleShiftsAsync(request.LocationId, DateTime.UtcNow, cancellationToken);
 
-        var verification = await verifyPin.VerifyAsync(request.LocationId, request.StaffId, request.Pin, cancellationToken);
+        var location = await db.Locations.FirstOrDefaultAsync(l => l.Id == request.LocationId, cancellationToken);
+        var pinToVerify = location is { RequiresCaregiverPin: false } ? null : request.Pin ?? string.Empty;
+
+        var verification = await verifyPin.VerifyAsync(request.LocationId, request.StaffId, pinToVerify, cancellationToken);
         if (!verification.Succeeded)
         {
             return verification.Failure switch

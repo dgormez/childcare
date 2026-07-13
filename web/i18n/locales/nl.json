@@ -436,6 +436,7 @@
     "backToList": "Terug naar locaties",
     "tabGeneral": "Algemeen",
     "tabReservationSettings": "Reserveringsinstellingen",
+    "tabCheckInSettings": "Inchecken",
     "general": {
       "nameLabel": "Naam",
       "addressLabel": "Adres",
@@ -467,6 +468,15 @@
       "warningCounts": "{absence} afwezigheid, {extra} extra dag, {exchange} dagwissel betrokken.",
       "warningConfirm": "Toch opslaan",
       "warningCancel": "Annuleren"
+    },
+    "checkInSettings": {
+      "description": "Bepaal of caregivers hun code moeten ingeven bij het in- of uitchecken op deze locatie.",
+      "toggleLabel": "PIN vereist bij in-/uitchecken",
+      "tradeoffIdentity": "Als je dit uitschakelt, wordt de identiteit van een caregiver bij het in- of uitchecken niet meer bevestigd — enkel het aantikken van hun eigen kaartje volstaat.",
+      "tradeoffRisk": "Concreet risico: als een caregiver per ongeluk het verkeerde kaartje aantikt, wordt dat door niets meer opgevangen. De enige correctie is dat iemand het zelf opmerkt en het in-/uitchecken achteraf rechtzet.",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Incheckinstellingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
     }
   },
   "incidents": {

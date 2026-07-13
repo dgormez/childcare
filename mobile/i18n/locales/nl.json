@@ -105,7 +105,8 @@
   "roomHome": {
     "noCaregivers": "Er zijn nog geen begeleiders toegewezen aan deze locatie.",
     "checkedInAt": "Ingecheckt om {{time}}",
-    "exitRoomMode": "Afsluiten door directeur"
+    "exitRoomMode": "Afsluiten door directeur",
+    "checkInFailed": "In-/uitchecken is mislukt. Probeer het opnieuw."
   },
   "pin": {
     "enterPin": "Geef je code in, {{name}}",

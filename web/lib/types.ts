@@ -59,6 +59,7 @@ export interface LocationResponse {
   reservationExtrasMode: ReservationRequestMode;
   reservationSwapsMode: ReservationRequestMode;
   reservationNoticeHours: number;
+  requiresCaregiverPin: boolean;
 }
 
 export interface DeviceSummaryResponse {

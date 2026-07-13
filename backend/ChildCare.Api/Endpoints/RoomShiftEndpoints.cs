@@ -114,9 +114,11 @@ public static class RoomShiftEndpoints
         Guid.Parse(ctx.User.FindFirst(DeviceTokenClaims.GroupId)!.Value));
 }
 
-public record CheckInRequest(Guid StaffId, string Pin);
+/// <summary>Feature 008b: Pin is null when the location's RequiresCaregiverPin is false —
+/// enforcement happens server-side in CheckInCommand/CheckOutCommand, never trusting the client.</summary>
+public record CheckInRequest(Guid StaffId, string? Pin);
 
-public record CheckOutRequest(Guid StaffId, string Pin);
+public record CheckOutRequest(Guid StaffId, string? Pin);
 
 public record ConfirmAdministratorRequest(Guid? StaffId, string? Pin, bool Skip);
 

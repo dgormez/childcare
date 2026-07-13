@@ -74,7 +74,8 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// future migration added after this one, for the same reason — feature 013d's
     /// "AddChildMealPreferences" is the next one, so its table is dropped and its history row
     /// removed here too (found by this test actually failing after that migration shipped, not
-    /// by inspection).
+    /// by inspection). Feature 008b's "AddLocationRequiresCaregiverPin" only adds a column (no
+    /// new table), so it's reverted via DROP COLUMN instead of DROP TABLE, same reasoning.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -99,8 +100,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."children"
                 DROP COLUMN "PediatricianName",
                 DROP COLUMN "PediatricianPhone";
+            ALTER TABLE "{schemaName}"."locations"
+                DROP COLUMN "RequiresCaregiverPin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin';
             """);
     }
 

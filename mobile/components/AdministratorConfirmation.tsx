@@ -19,7 +19,9 @@ interface Props {
  * currently-checked-in caregivers are offered as cards (FR-017: a valid PIN alone isn't
  * enough, the caregiver must actually be present). Skip always succeeds; when offline it
  * resolves to null locally without an API call at all (US5 AC3) — there is nothing to verify
- * server-side for a skip, so there's no reason to queue one.
+ * server-side for a skip, so there's no reason to queue one. Feature 008b: this flow always
+ * requires PIN entry (or Skip) regardless of a location's RequiresCaregiverPin setting — that
+ * setting only governs routine check-in/check-out (spec.md FR-013).
  */
 export function AdministratorConfirmation({ onComplete }: Props) {
   const { t } = useTranslation();
@@ -33,7 +35,7 @@ export function AdministratorConfirmation({ onComplete }: Props) {
     let cancelled = false;
     (async () => {
       const roster = await getRoster();
-      if (!cancelled) setCheckedIn(roster.filter((c) => c.checkedIn));
+      if (!cancelled) setCheckedIn(roster.caregivers.filter((c) => c.checkedIn));
     })();
     return () => {
       cancelled = true;

@@ -47,9 +47,9 @@ async function enterPin(getByText: (text: string) => unknown, digits: string[]) 
 //    keypad addressed by name; a correct PIN closes the overlay and shows checked-in ──
 
 it("renders the roster as cards, and a correct PIN check-in shows the card as checked in", async () => {
-  getRoster.mockResolvedValueOnce([alice]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice] });
   checkIn.mockResolvedValueOnce({ ok: true });
-  getRoster.mockResolvedValueOnce([{ ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" }]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [{ ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" }] });
 
   const { getByText, queryByText } = await render(<RoomHomeScreen />);
   await waitFor(() => expect(getByText("Alice")).toBeTruthy());
@@ -67,14 +67,14 @@ it("renders the roster as cards, and a correct PIN check-in shows the card as ch
 //    after each check-in/out ──
 
 it("shows both cards checked in simultaneously after independent check-ins", async () => {
-  getRoster.mockResolvedValueOnce([alice, bob]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice, bob] });
 
   const { getByText } = await render(<RoomHomeScreen />);
   await waitFor(() => expect(getByText("Alice")).toBeTruthy());
   expect(getByText("Bob")).toBeTruthy();
 
   checkIn.mockResolvedValueOnce({ ok: true });
-  getRoster.mockResolvedValueOnce([{ ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" }, bob]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [{ ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" }, bob] });
 
   fireEvent.press(getByText("Alice"));
   await waitFor(() => expect(getByText(/pin.enterPin/)).toBeTruthy());
@@ -82,10 +82,13 @@ it("shows both cards checked in simultaneously after independent check-ins", asy
   await waitFor(() => expect(checkIn).toHaveBeenCalledWith("sp-a", "1111"));
 
   checkIn.mockResolvedValueOnce({ ok: true });
-  getRoster.mockResolvedValueOnce([
-    { ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" },
-    { ...bob, checkedIn: true, checkedInAt: "2026-01-01T10:01:00Z" },
-  ]);
+  getRoster.mockResolvedValueOnce({
+    requiresCaregiverPin: true,
+    caregivers: [
+      { ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" },
+      { ...bob, checkedIn: true, checkedInAt: "2026-01-01T10:01:00Z" },
+    ],
+  });
 
   await waitFor(() => expect(getByText("Bob")).toBeTruthy());
   fireEvent.press(getByText("Bob"));
@@ -98,8 +101,36 @@ it("shows both cards checked in simultaneously after independent check-ins", asy
 });
 
 it("shows an empty state when no caregivers are eligible at this location", async () => {
-  getRoster.mockResolvedValueOnce([]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [] });
 
   const { getByText } = await render(<RoomHomeScreen />);
   await waitFor(() => expect(getByText("roomHome.noCaregivers")).toBeTruthy());
+});
+
+// ── Feature 008b (T019/T020): configurable caregiver PIN ────────────────────────────
+
+it("skips the PIN keypad and checks in immediately when requiresCaregiverPin is false", async () => {
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: false, caregivers: [alice] });
+  checkIn.mockResolvedValueOnce({ ok: true });
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: false, caregivers: [{ ...alice, checkedIn: true, checkedInAt: "2026-01-01T10:00:00Z" }] });
+
+  const { getByText, queryByText } = await render(<RoomHomeScreen />);
+  await waitFor(() => expect(getByText("Alice")).toBeTruthy());
+
+  fireEvent.press(getByText("Alice"));
+
+  await waitFor(() => expect(checkIn).toHaveBeenCalledWith("sp-a"));
+  expect(queryByText(/pin.enterPin/)).toBeNull();
+});
+
+it("still shows the PIN keypad when requiresCaregiverPin is true (regression guard)", async () => {
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice] });
+
+  const { getByText } = await render(<RoomHomeScreen />);
+  await waitFor(() => expect(getByText("Alice")).toBeTruthy());
+
+  fireEvent.press(getByText("Alice"));
+
+  await waitFor(() => expect(getByText(/pin.enterPin/)).toBeTruthy());
+  expect(checkIn).not.toHaveBeenCalled();
 });

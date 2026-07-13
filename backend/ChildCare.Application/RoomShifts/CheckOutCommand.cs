@@ -6,8 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.RoomShifts;
 
-/// <summary>FR-010: select-then-PIN check-out — tap your own (checked-in) card, confirm PIN.</summary>
-public record CheckOutCommand(Guid LocationId, Guid StaffId, string Pin) : IRequest<CheckOutResult>;
+/// <summary>
+/// FR-010: select-then-PIN check-out — tap your own (checked-in) card, confirm PIN. Feature
+/// 008b: when the location's RequiresCaregiverPin is false, the tap alone completes check-out —
+/// see CheckInCommand's doc comment for the shared reasoning, including why a null/empty client
+/// pin must be coerced to empty string (never passed through as null) when the location does
+/// require PIN verification.
+/// </summary>
+public record CheckOutCommand(Guid LocationId, Guid StaffId, string? Pin) : IRequest<CheckOutResult>;
 
 public class CheckOutCommandHandler(VerifyPinCommand verifyPin, CloseStaleShiftsHelper closeStaleShifts, ITenantDbContext db)
     : IRequestHandler<CheckOutCommand, CheckOutResult>
@@ -16,7 +22,10 @@ public class CheckOutCommandHandler(VerifyPinCommand verifyPin, CloseStaleShifts
     {
         await closeStaleShifts.CloseStaleShiftsAsync(request.LocationId, DateTime.UtcNow, cancellationToken);
 
-        var verification = await verifyPin.VerifyAsync(request.LocationId, request.StaffId, request.Pin, cancellationToken);
+        var location = await db.Locations.FirstOrDefaultAsync(l => l.Id == request.LocationId, cancellationToken);
+        var pinToVerify = location is { RequiresCaregiverPin: false } ? null : request.Pin ?? string.Empty;
+
+        var verification = await verifyPin.VerifyAsync(request.LocationId, request.StaffId, pinToVerify, cancellationToken);
         if (!verification.Succeeded)
         {
             return verification.Failure switch

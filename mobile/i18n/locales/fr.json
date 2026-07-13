@@ -105,7 +105,8 @@
   "roomHome": {
     "noCaregivers": "Aucun intervenant n'est encore assigné à ce site.",
     "checkedInAt": "Arrivée enregistrée à {{time}}",
-    "exitRoomMode": "Sortie directeur"
+    "exitRoomMode": "Sortie directeur",
+    "checkInFailed": "L'enregistrement a échoué. Veuillez réessayer."
   },
   "pin": {
     "enterPin": "Entrez votre code, {{name}}",

@@ -26,6 +26,12 @@ public record RoomRosterCardResponse(
     bool CheckedIn,
     DateTime? CheckedInAt);
 
+/// <summary>Feature 008b: wraps the roster with the location's current RequiresCaregiverPin
+/// setting, fetched alongside the existing roster call rather than a separate request.</summary>
+public record RoomRosterResponse(
+    bool RequiresCaregiverPin,
+    IReadOnlyList<RoomRosterCardResponse> Caregivers);
+
 public record CheckInResponse(
     Guid StaffProfileId,
     string FirstName,

@@ -436,6 +436,7 @@
     "backToList": "Retour aux sites",
     "tabGeneral": "Général",
     "tabReservationSettings": "Paramètres des demandes",
+    "tabCheckInSettings": "Enregistrement",
     "general": {
       "nameLabel": "Nom",
       "addressLabel": "Adresse",
@@ -467,6 +468,15 @@
       "warningCounts": "{absence} absence, {extra} jour supplémentaire, {exchange} échange concerné(s).",
       "warningConfirm": "Enregistrer quand même",
       "warningCancel": "Annuler"
+    },
+    "checkInSettings": {
+      "description": "Déterminez si les accompagnant·e·s doivent saisir leur code lors de l'enregistrement (arrivée/départ) sur ce site.",
+      "toggleLabel": "Code requis pour l'enregistrement",
+      "tradeoffIdentity": "Si vous désactivez ceci, l'identité d'un·e accompagnant·e ne sera plus confirmée lors de l'enregistrement — le simple fait de toucher sa propre carte suffira.",
+      "tradeoffRisk": "Risque concret : si un·e accompagnant·e touche la mauvaise carte par erreur, rien ne le détectera. La seule correction possible est qu'une personne le remarque et corrige l'enregistrement après coup.",
+      "saveButton": "Enregistrer les modifications",
+      "saveSuccess": "Paramètres d'enregistrement enregistrés.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
     }
   },
   "incidents": {

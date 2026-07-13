@@ -18,4 +18,5 @@ public record LocationResponse(
     string ReservationAbsencesMode,
     string ReservationExtrasMode,
     string ReservationSwapsMode,
-    int ReservationNoticeHours);
+    int ReservationNoticeHours,
+    bool RequiresCaregiverPin);

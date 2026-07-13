@@ -69,6 +69,17 @@ internal static class KioskModeTestSupport
             HttpMethod.Post, "/api/groups", accessToken, new CreateGroupRequest(name, locationId))))
             .Content.ReadFromJsonAsync<GroupResponse>())!;
 
+    /// <summary>Feature 008b test helper — flips a location's PIN requirement via the real
+    /// endpoint rather than reaching into the DB directly, so tests exercise the same path
+    /// a director would.</summary>
+    public static async Task SetRequiresCaregiverPinAsync(HttpClient client, string accessToken, Guid locationId, bool requiresCaregiverPin)
+    {
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{locationId}/checkin-settings", accessToken,
+            new UpdateLocationCheckInSettingsRequest(requiresCaregiverPin)));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     public static async Task<StaffResponse> CreateStaffAsync(HttpClient client, string accessToken, string firstName = "Jane") =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/staff", accessToken,
@@ -130,10 +141,10 @@ internal static class KioskModeTestSupport
         return request;
     }
 
-    public static Task<HttpResponseMessage> CheckInAsync(HttpClient client, string deviceToken, Guid staffId, string pin) =>
+    public static Task<HttpResponseMessage> CheckInAsync(HttpClient client, string deviceToken, Guid staffId, string? pin) =>
         client.SendAsync(DeviceRequest(HttpMethod.Post, "/api/room-shifts/check-in", deviceToken, new { staffId, pin }));
 
-    public static Task<HttpResponseMessage> CheckOutAsync(HttpClient client, string deviceToken, Guid staffId, string pin) =>
+    public static Task<HttpResponseMessage> CheckOutAsync(HttpClient client, string deviceToken, Guid staffId, string? pin) =>
         client.SendAsync(DeviceRequest(HttpMethod.Post, "/api/room-shifts/check-out", deviceToken, new { staffId, pin }));
 
     public static Task<HttpResponseMessage> GetRosterAsync(HttpClient client, string deviceToken) =>

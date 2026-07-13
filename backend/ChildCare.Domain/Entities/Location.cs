@@ -25,6 +25,11 @@ public class Location
     public ReservationRequestMode ReservationSwapsMode { get; set; } = ReservationRequestMode.Disabled;
     public int ReservationNoticeHours { get; set; } = 0;
 
+    // Feature 008b — whether caregiver PIN verification is required at check-in/check-out for
+    // this location. Defaults to true so no existing location's behavior changes until a
+    // director explicitly opts out.
+    public bool RequiresCaregiverPin { get; set; } = true;
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

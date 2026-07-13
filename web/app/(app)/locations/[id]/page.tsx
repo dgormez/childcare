@@ -8,10 +8,11 @@ import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { ErrorState } from "../../../../components/ErrorState";
 import { ReservationSettingsForm } from "../../../../components/ReservationSettingsForm";
+import { CheckInSettingsForm } from "../../../../components/CheckInSettingsForm";
 import type { LocationResponse } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
-type Tab = "general" | "reservationSettings";
+type Tab = "general" | "reservationSettings" | "checkInSettings";
 
 /**
  * "Algemeen" tab is deliberately minimal — the core editable fields only. The Opgroeien
@@ -144,10 +145,21 @@ export default function LocationDetailPage() {
         >
           {t("tabReservationSettings")}
         </button>
+        <button
+          onClick={() => setTab("checkInSettings")}
+          className={`px-4 py-2 text-sm font-medium ${
+            tab === "checkInSettings"
+              ? "border-b-2 border-primary text-primary-hover dark:border-primary-dark dark:text-primary-hover-dark"
+              : "text-text-soft dark:text-text-soft-dark"
+          }`}
+        >
+          {t("tabCheckInSettings")}
+        </button>
       </div>
 
       {tab === "general" && <GeneralLocationForm location={location} onSaved={setLocation} />}
       {tab === "reservationSettings" && <ReservationSettingsForm location={location} onSaved={setLocation} />}
+      {tab === "checkInSettings" && <CheckInSettingsForm location={location} onSaved={setLocation} />}
     </div>
   );
 }

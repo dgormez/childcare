@@ -12,6 +12,13 @@ namespace ChildCare.Application.Staff;
 /// check). Not a MediatR command — a plain injectable service called from within CheckInCommand/
 /// CheckOutCommand/ConfirmAdministratorCommand's own handlers, mirroring IShiftAttributionService/
 /// CloseStaleShiftsHelper's established pattern for shared cross-command logic.
+///
+/// Feature 008b: <paramref name="pin"/> is nullable. A null pin means the caller (CheckInCommand/
+/// CheckOutCommand, per the location's RequiresCaregiverPin setting) has already decided PIN
+/// verification doesn't apply — the profile-exists/not-deactivated/location-eligible checks below
+/// still run (the tap-to-identify claim must still name a real, eligible caregiver, spec.md
+/// Assumptions), but the bcrypt compare and PIN lockout bookkeeping are skipped entirely, since
+/// there is nothing to lock someone out of when no PIN was ever checked.
 /// </summary>
 public class VerifyPinCommand(ITenantDbContext db)
 {
@@ -20,7 +27,7 @@ public class VerifyPinCommand(ITenantDbContext db)
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(10);
 
     public async Task<PinVerificationResult> VerifyAsync(
-        Guid locationId, Guid staffId, string pin, CancellationToken cancellationToken = default)
+        Guid locationId, Guid staffId, string? pin, CancellationToken cancellationToken = default)
     {
         var profile = await db.StaffProfiles.FirstOrDefaultAsync(p => p.Id == staffId, cancellationToken);
         if (profile is null || profile.DeactivatedAt is not null)
@@ -30,6 +37,9 @@ public class VerifyPinCommand(ITenantDbContext db)
             e => e.StaffProfileId == staffId && e.LocationId == locationId, cancellationToken);
         if (!eligible)
             return PinVerificationResult.NotEligible();
+
+        if (pin is null)
+            return PinVerificationResult.Success(profile);
 
         var now = DateTime.UtcNow;
         if (profile.PinLockedUntil is { } lockedUntil && lockedUntil > now)
