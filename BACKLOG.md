@@ -44,7 +44,7 @@
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
 | 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | ✅ Done |
 | 013g | `013g-vaccine-catalog` | Shared, admin-maintained vaccine catalog (seeded from the Vlaamse basisvaccinatieschema) backing 013c's free-text vaccineName; adds attachment support on VaccineRecord so a director can attach a scan/photo of the child's vaccinatieboekje | 013c | 🔲 Not started |
-| 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
+| 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
 
@@ -3145,6 +3145,32 @@ Out of scope:
 - Kitchen supplier integration (Phase 3).
 - Nutritional tracking (out of scope entirely).
 ```
+
+**Shipped 2026-07-13** — `specs/013d-meal-list/` (spec → clarify → plan → tasks → checklist →
+analyze → implement → converge, 53/53 tasks, 15 new backend tests + 7 new web tests + 10 new
+mobile tests, 582/582 backend + 99/99 web + 154/154 mobile passing). Daily meal-list aggregation
+(`child_meal_preferences` table, one `GET /locations/{id}/meal-list` read model, a director-web
+printable page, a caregiver-tablet own-group view). Two premises in the BACKLOG prompt were
+wrong and corrected during specification/implementation, not assumed away: allergen severity is
+sourced from `Child.AllergySeverity` (006), not `HealthRecord` (013c) — `HealthRecord` has no
+severity field at all; and "present" needed an explicit `CheckOutAt == null` check alongside
+`Status == Present`, since `CheckOutCommand` (010) never changes `Status` away from `Present` —
+a naive `Status`-only filter would have kept showing a child on the lunch list hours after they'd
+already been picked up, caught by writing this feature's own tests rather than by inspection.
+`/speckit-checklist`'s safety-focused pass found six genuine spec gaps (inclusive date-boundary
+handling for standing medication, single-icon-not-count for multiple medication records, and
+three others) — all fixed in spec.md directly, same standing rule as every prior feature.
+`/speckit-analyze` found two coverage gaps (FR-008's tightened boundary rule and FR-015's
+cross-platform parity requirement lacking dedicated tasks) — both fixed by expanding existing
+test tasks rather than left as debt. A second, separate migration-rollout test
+(`LegacyVaccinationMigrationTests`, not the usual `TenantMigrationRolloutTests`) needed the same
+schema-revert extension every migration-adding feature since 003 has required — its own code
+comment predicted this exact gap for "any future migration," and this was that migration; worth
+checking *every* test that reverts a tenant schema to an earlier migration state, not just the
+one file prior shipped-notes name. Also added a small additive `GET
+/api/children/{childId}/meal-preferences` endpoint beyond the original plan — the director-facing
+edit form needs current values to pre-fill since the `PUT` is a partial-upsert, the same
+"additive gap found while wiring UI" pattern 007a/009 already established.
 
 ---
 

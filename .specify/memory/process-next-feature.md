@@ -366,3 +366,21 @@ use the static code review instead.
   migration-adding feature needed the `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests`
   revert-helper fix (012a, 013c), and the web lockfile needed regenerating for a clean `npm ci`
   under Node 20 (007a, 010, 013b).
+- 013d (`013d-meal-list`): ✅ Done, merged 2026-07-13 (PR #26, squash-merged after green CI —
+  582/582 backend + 99/99 web + 154/154 mobile passing). Daily meal-list aggregation
+  (`child_meal_preferences` table, one `GET /locations/{id}/meal-list` read model, director-web
+  printable page, caregiver-tablet own-group view). Two BACKLOG-prompt premises were wrong and
+  corrected rather than assumed: allergen severity comes from `Child.AllergySeverity` (006), not
+  `HealthRecord` (013c) — that entity has no severity field; and "present" needed an explicit
+  `CheckOutAt == null` check alongside `Status == Present`, since `CheckOutCommand` (010) never
+  actually changes `Status` away from `Present` — caught by writing this feature's own tests, not
+  by inspection, and worth remembering generally whenever a future feature reads
+  `AttendanceRecord.Status` to mean "currently present." Confirms the recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern (012a,
+  013c, 006a) applies to *any* test that reverts a tenant schema to an earlier migration state,
+  not just the one file usually named — this feature needed the fix in
+  `LegacyVaccinationMigrationTests` specifically, whose own code comment predicted exactly this
+  gap for "any future migration." `/speckit-checklist`'s safety-focused pass found six genuine
+  spec gaps (inclusive date-boundary handling for standing medication, single-icon-not-count for
+  multiple medication records, among others) — all fixed in spec.md, not deferred, same standing
+  rule as every prior feature.
