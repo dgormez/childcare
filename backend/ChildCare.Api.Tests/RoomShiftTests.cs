@@ -32,8 +32,9 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("\"photoUrl\":null", body);
 
-        var cards = (await response.Content.ReadFromJsonAsync<List<RoomRosterCardResponse>>())!;
-        var card = Assert.Single(cards, c => c.StaffProfileId == staff.Id);
+        var roster = (await response.Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.True(roster.RequiresCaregiverPin);
+        var card = Assert.Single(roster.Caregivers, c => c.StaffProfileId == staff.Id);
         Assert.Equal("Jane", card.FirstName);
         Assert.Null(card.PhotoUrl);
         Assert.False(card.CheckedIn);
@@ -54,8 +55,8 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         var checkInResponse = await CheckInAsync(client, deviceToken, staff.Id, "1234");
         Assert.Equal(HttpStatusCode.OK, checkInResponse.StatusCode);
 
-        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<List<RoomRosterCardResponse>>())!;
-        var card = Assert.Single(roster, c => c.StaffProfileId == staff.Id);
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        var card = Assert.Single(roster.Caregivers, c => c.StaffProfileId == staff.Id);
         Assert.True(card.CheckedIn);
         Assert.NotNull(card.CheckedInAt);
     }
@@ -76,8 +77,8 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         var checkOutResponse = await CheckOutAsync(client, deviceToken, staff.Id, "1234");
         Assert.Equal(HttpStatusCode.OK, checkOutResponse.StatusCode);
 
-        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<List<RoomRosterCardResponse>>())!;
-        var card = Assert.Single(roster, c => c.StaffProfileId == staff.Id);
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        var card = Assert.Single(roster.Caregivers, c => c.StaffProfileId == staff.Id);
         Assert.False(card.CheckedIn);
     }
 
@@ -97,9 +98,9 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(HttpStatusCode.OK, (await CheckInAsync(client, deviceToken, staffA.Id, "1111")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await CheckInAsync(client, deviceToken, staffB.Id, "2222")).StatusCode);
 
-        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<List<RoomRosterCardResponse>>())!;
-        Assert.True(roster.Single(c => c.StaffProfileId == staffA.Id).CheckedIn);
-        Assert.True(roster.Single(c => c.StaffProfileId == staffB.Id).CheckedIn);
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.True(roster.Caregivers.Single(c => c.StaffProfileId == staffA.Id).CheckedIn);
+        Assert.True(roster.Caregivers.Single(c => c.StaffProfileId == staffB.Id).CheckedIn);
     }
 
     // ── T037: 5 incorrect PIN attempts within 2 minutes locks A for 10 minutes; B unaffected;
@@ -310,6 +311,168 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(HttpStatusCode.OK, stillWorksAtB.StatusCode);
     }
 
+    // ── Feature 008b (T016-T018, T034-T035): configurable caregiver PIN ─────────────────
+
+    [Fact]
+    public async Task CheckIn_LocationDoesNotRequirePin_SucceedsWithNoPinAndWritesRoomShift()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"PinOff CheckIn Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        var checkInResponse = await CheckInAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.OK, checkInResponse.StatusCode);
+
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.False(roster.RequiresCaregiverPin);
+        var card = Assert.Single(roster.Caregivers, c => c.StaffProfileId == staff.Id);
+        Assert.True(card.CheckedIn);
+    }
+
+    [Fact]
+    public async Task CheckOut_LocationDoesNotRequirePin_SucceedsWithNoPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"PinOff CheckOut Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        Assert.Equal(HttpStatusCode.OK, (await CheckInAsync(client, deviceToken, staff.Id, null)).StatusCode);
+        var checkOutResponse = await CheckOutAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.OK, checkOutResponse.StatusCode);
+
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.False(roster.Caregivers.Single(c => c.StaffProfileId == staff.Id).CheckedIn);
+    }
+
+    [Fact]
+    public async Task CheckIn_LocationDoesNotRequirePin_StillRejectsIneligibleStaff()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"PinOff Ineligible Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var otherLocation = await CreateLocationAsync(client, org.AccessToken, "Location B");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, otherLocation.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        var response = await CheckInAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Contains("errors.staff.not_eligible_here", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task CheckIn_LocationRequiresPin_StillRejectsMissingPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"PinOn Missing Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        // RequiresCaregiverPin defaults to true — never explicitly set here.
+
+        var response = await CheckInAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains("errors.pin.invalid", await response.Content.ReadAsStringAsync());
+    }
+
+    // ── Feature 008b (T039, converge): a caregiver who has never had a PIN set at all can
+    //    still check in/out at a PIN-off location (spec.md Edge Cases) ────────────────────
+
+    [Fact]
+    public async Task CheckInAndOut_LocationDoesNotRequirePin_SucceedsForCaregiverWhoNeverSetAPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"NeverSetPin Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateStaffAsync(client, org.AccessToken);
+        await AssignEligibilityAsync(client, org.AccessToken, staff.Id, location.Id);
+        // Deliberately no SetPinAsync call — this caregiver's PinHash is empty/never set.
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        var checkInResponse = await CheckInAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.OK, checkInResponse.StatusCode);
+
+        var checkOutResponse = await CheckOutAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.OK, checkOutResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetRoster_ReflectsCurrentRequiresCaregiverPinValue()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Roster PIN Flag Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+
+        var beforeRoster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.True(beforeRoster.RequiresCaregiverPin);
+
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        var afterRoster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.False(afterRoster.RequiresCaregiverPin);
+    }
+
+    // ── T034: re-enabling mid-day doesn't affect an already-open shift created while PIN was off ──
+
+    [Fact]
+    public async Task ReEnablingPinRequirement_DoesNotAffectAlreadyOpenShift_OnlyNextCheckOutNeedsPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"ReEnable Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        Assert.Equal(HttpStatusCode.OK, (await CheckInAsync(client, deviceToken, staff.Id, null)).StatusCode);
+
+        // Director re-enables mid-shift — the already-open shift is untouched.
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, true);
+        var roster = (await (await GetRosterAsync(client, deviceToken)).Content.ReadFromJsonAsync<RoomRosterResponse>())!;
+        Assert.True(roster.Caregivers.Single(c => c.StaffProfileId == staff.Id).CheckedIn);
+
+        // The next check-out now requires the PIN again.
+        var checkOutWithoutPin = await CheckOutAsync(client, deviceToken, staff.Id, null);
+        Assert.Equal(HttpStatusCode.Unauthorized, checkOutWithoutPin.StatusCode);
+
+        var checkOutWithPin = await CheckOutAsync(client, deviceToken, staff.Id, "1234");
+        Assert.Equal(HttpStatusCode.OK, checkOutWithPin.StatusCode);
+    }
+
+    // ── T035: existing PINs survive turning the requirement off then back on (FR-009) ──────
+
+    [Fact]
+    public async Task TogglingPinRequirementOffThenOn_DoesNotInvalidateExistingPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"PinSurvives Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, true);
+
+        var response = await CheckInAsync(client, deviceToken, staff.Id, "1234");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     // ── T061 (US5): confirm-administrator for a currently-checked-in caregiver sets the field ──
 
     [Fact]
@@ -322,6 +485,48 @@ public class RoomShiftTests(OrganisationOnboardingWebAppFactory factory)
         var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
         var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
         await CheckInAsync(client, deviceToken, staff.Id, "1234");
+
+        var response = await ConfirmAdministratorAsync(client, deviceToken, staff.Id, "1234", false);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<ConfirmAdministratorResponse>())!;
+        Assert.Equal(staff.Id, body.AdministeredByStaffProfileId);
+    }
+
+    // ── Feature 008b (T032): confirm-administrator still requires PIN even when the
+    //    location's RequiresCaregiverPin is false — this feature's setting is scoped to
+    //    routine check-in/check-out only (spec.md FR-013) ─────────────────────────────
+
+    [Fact]
+    public async Task ConfirmAdministrator_PinOffLocation_StillRejectsWrongPin()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"ConfirmAdminPinOff Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+        await CheckInAsync(client, deviceToken, staff.Id, null);
+
+        // Confirming with an actual (wrong) PIN attempt — not the null/Skip shortcut this
+        // command already had before this feature — still fails, unaffected by the location's
+        // RequiresCaregiverPin setting.
+        var response = await ConfirmAdministratorAsync(client, deviceToken, staff.Id, "0000", false);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains("errors.pin.invalid", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ConfirmAdministrator_PinOffLocation_ValidPinStillSetsAdministeredBy()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"ConfirmAdminPinOffValid Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+        await CheckInAsync(client, deviceToken, staff.Id, null);
 
         var response = await ConfirmAdministratorAsync(client, deviceToken, staff.Id, "1234", false);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

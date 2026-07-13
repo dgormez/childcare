@@ -233,4 +233,22 @@ public class BkrRatioTests(OrganisationOnboardingWebAppFactory factory) : IClass
         var bkr = await GetBkrResponseAsync(client, deviceToken, location.Id);
         Assert.Equal(1, bkr.PresentCount);
     }
+
+    // ── Feature 008b (T030): a PIN-off-created shift counts toward QualifiedStaffCount
+    //    identically to a PIN-verified one ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task PinOffLocation_CheckedInCaregiver_CountsTowardQualifiedStaffCountIdentically()
+    {
+        var (client, org, location, _, deviceToken) = await SetupAsync();
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+        var caregiver = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        await CheckInAsync(client, deviceToken, caregiver.Id, null);
+
+        await CheckInNChildrenAsync(client, deviceToken, org.AccessToken, 7);
+
+        var bkr = await GetBkrResponseAsync(client, deviceToken, location.Id);
+        Assert.Equal(1, bkr.QualifiedStaffCount);
+        Assert.Equal("green", bkr.Status);
+    }
 }

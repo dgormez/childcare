@@ -1091,6 +1091,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/checkin-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationCheckInSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/deactivate": {
         parameters: {
             query?: never;
@@ -5659,6 +5698,9 @@ export interface components {
             parentNotifiedHow: null | string;
             witnesses: null | string;
             followUp: null | string;
+        };
+        UpdateLocationCheckInSettingsRequest: {
+            requiresCaregiverPin: boolean;
         };
         UpdateLocationRequest: {
             name: string;

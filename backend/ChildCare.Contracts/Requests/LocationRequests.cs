@@ -25,3 +25,5 @@ public record UpdateLocationReservationSettingsRequest(
     string SwapsMode,
     int NoticeHours,
     bool ConfirmDespitePending);
+
+public record UpdateLocationCheckInSettingsRequest(bool RequiresCaregiverPin);

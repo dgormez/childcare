@@ -105,7 +105,8 @@
   "roomHome": {
     "noCaregivers": "No caregivers are assigned to this location yet.",
     "checkedInAt": "Checked in at {{time}}",
-    "exitRoomMode": "Director exit"
+    "exitRoomMode": "Director exit",
+    "checkInFailed": "Check-in/out failed. Please try again."
   },
   "pin": {
     "enterPin": "Enter PIN for {{name}}",

@@ -63,6 +63,28 @@ public class ShiftAttributionServiceTests(OrganisationOnboardingWebAppFactory fa
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    // ── Feature 008b (T031): attribution resolves identically for a PIN-off-created shift ──
+
+    [Fact]
+    public async Task ResolveRecordedByAsync_PinOffLocation_ResolvesIdenticallyToPinOnLocation()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Attribution Parity Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        var staff = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        await SetRequiresCaregiverPinAsync(client, org.AccessToken, location.Id, false);
+
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        var service = new ShiftAttributionService(ResolveTenantDb(factory.Services, schema));
+
+        await CheckInAsync(client, deviceToken, staff.Id, null);
+        var recordedBy = await service.ResolveRecordedByAsync(location.Id, group.Id, DateTime.UtcNow);
+
+        Assert.Equal(new[] { staff.Id }, recordedBy);
+    }
+
     // ── T058: DeviceAuthenticated endpoints reject a missing or expired token ──
 
     [Fact]

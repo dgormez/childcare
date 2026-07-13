@@ -436,6 +436,7 @@
     "backToList": "Back to locations",
     "tabGeneral": "General",
     "tabReservationSettings": "Reservation Settings",
+    "tabCheckInSettings": "Check-In",
     "general": {
       "nameLabel": "Name",
       "addressLabel": "Address",
@@ -467,6 +468,15 @@
       "warningCounts": "{absence} absence, {extra} extra day, {exchange} exchange request(s) affected.",
       "warningConfirm": "Save anyway",
       "warningCancel": "Cancel"
+    },
+    "checkInSettings": {
+      "description": "Decide whether caregivers must enter their code when checking in or out at this location.",
+      "toggleLabel": "PIN required at check-in/check-out",
+      "tradeoffIdentity": "Turning this off means a caregiver's identity at check-in/out will no longer be confirmed by anything beyond their own card tap.",
+      "tradeoffRisk": "Concrete risk: if a caregiver taps the wrong card by mistake, nothing catches it. The only fix is someone noticing and correcting the check-in/out afterward.",
+      "saveButton": "Save changes",
+      "saveSuccess": "Check-in settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
     }
   },
   "incidents": {

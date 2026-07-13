@@ -13,5 +13,6 @@ internal static class LocationMapper
         ReservationModeMapper.ToWire(l.ReservationAbsencesMode),
         ReservationModeMapper.ToWire(l.ReservationExtrasMode),
         ReservationModeMapper.ToWire(l.ReservationSwapsMode),
-        l.ReservationNoticeHours);
+        l.ReservationNoticeHours,
+        l.RequiresCaregiverPin);
 }

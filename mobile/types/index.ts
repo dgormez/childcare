@@ -135,6 +135,12 @@ export interface RoomRosterCard {
   checkedInAt:    string | null;
 }
 
+// Feature 008b — wraps the roster with the location's current PIN-requirement setting.
+export interface RoomRosterResponse {
+  requiresCaregiverPin: boolean;
+  caregivers:           RoomRosterCard[];
+}
+
 export interface PairDeviceResponse {
   deviceId:     string;
   deviceToken:  string;

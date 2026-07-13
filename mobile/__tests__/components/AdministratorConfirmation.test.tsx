@@ -38,7 +38,7 @@ async function enterPin(getByText: (text: string) => unknown, digits: string[]) 
 }
 
 it("shows only the currently-checked-in roster as cards", async () => {
-  getRoster.mockResolvedValueOnce([alice, bob]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice, bob] });
 
   const { getByText, queryByText } = await render(<AdministratorConfirmation onComplete={jest.fn()} />);
 
@@ -47,7 +47,7 @@ it("shows only the currently-checked-in roster as cards", async () => {
 });
 
 it("calls confirmAdministrator with the tapped card's staffId when online, and completes with the confirmed id", async () => {
-  getRoster.mockResolvedValueOnce([alice]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice] });
   confirmAdministrator.mockResolvedValueOnce({ ok: true, administeredByStaffProfileId: "sp-a" });
   const onComplete = jest.fn();
 
@@ -63,7 +63,7 @@ it("calls confirmAdministrator with the tapped card's staffId when online, and c
 });
 
 it("skip online calls confirmAdministrator with skip:true and completes with its response", async () => {
-  getRoster.mockResolvedValueOnce([alice]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice] });
   confirmAdministrator.mockResolvedValueOnce({ ok: true, administeredByStaffProfileId: null });
   const onComplete = jest.fn();
 
@@ -80,7 +80,7 @@ it("skip online calls confirmAdministrator with skip:true and completes with its
 
 it("skip while offline resolves to null locally, without calling confirmAdministrator", async () => {
   mockUseNetworkStatus.mockReturnValue({ isConnected: false });
-  getRoster.mockResolvedValueOnce([alice]);
+  getRoster.mockResolvedValueOnce({ requiresCaregiverPin: true, caregivers: [alice] });
   const onComplete = jest.fn();
 
   const { getByText } = await render(<AdministratorConfirmation onComplete={onComplete} />);

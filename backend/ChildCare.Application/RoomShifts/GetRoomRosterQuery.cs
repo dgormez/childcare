@@ -11,14 +11,16 @@ namespace ChildCare.Application.RoomShifts;
 /// location, not group, since there's no staff-to-group assignment concept in this codebase
 /// (research.md R7 — that's feature 011 territory).
 /// </summary>
-public record GetRoomRosterQuery(Guid LocationId) : IRequest<IReadOnlyList<RoomRosterCardResponse>>;
+public record GetRoomRosterQuery(Guid LocationId) : IRequest<RoomRosterResponse>;
 
 public class GetRoomRosterQueryHandler(ITenantDbContext db, IProfilePhotoStorage photoStorage, CloseStaleShiftsHelper closeStaleShifts)
-    : IRequestHandler<GetRoomRosterQuery, IReadOnlyList<RoomRosterCardResponse>>
+    : IRequestHandler<GetRoomRosterQuery, RoomRosterResponse>
 {
-    public async Task<IReadOnlyList<RoomRosterCardResponse>> Handle(GetRoomRosterQuery request, CancellationToken cancellationToken)
+    public async Task<RoomRosterResponse> Handle(GetRoomRosterQuery request, CancellationToken cancellationToken)
     {
         await closeStaleShifts.CloseStaleShiftsAsync(request.LocationId, DateTime.UtcNow, cancellationToken);
+
+        var location = await db.Locations.FirstOrDefaultAsync(l => l.Id == request.LocationId, cancellationToken);
 
         var eligibleStaffIds = await db.StaffLocationEligibility
             .Where(e => e.LocationId == request.LocationId)
@@ -42,6 +44,6 @@ public class GetRoomRosterQueryHandler(ITenantDbContext db, IProfilePhotoStorage
             cards.Add(new RoomRosterCardResponse(profile.Id, profile.FirstName, photoUrl, checkedIn, checkedIn ? shift!.CheckedInAt : null));
         }
 
-        return cards;
+        return new RoomRosterResponse(location?.RequiresCaregiverPin ?? true, cards);
     }
 }

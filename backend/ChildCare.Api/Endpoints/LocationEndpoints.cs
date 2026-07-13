@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Application.Locations;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
@@ -50,6 +51,13 @@ public static class LocationEndpoints
         {
             var result = await mediator.Send(new UpdateLocationReservationSettingsCommand(
                 id, req.AbsencesMode, req.ExtrasMode, req.SwapsMode, req.NoticeHours, req.ConfirmDespitePending));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        group.MapPut("/{id:guid}/checkin-settings", async (Guid id, UpdateLocationCheckInSettingsRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var directorId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new UpdateLocationCheckInSettingsCommand(id, directorId, req.RequiresCaregiverPin));
             return MapResult(result, onSuccess: Results.Ok);
         });
 

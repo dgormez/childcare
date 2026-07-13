@@ -35,6 +35,7 @@ const location: LocationResponse = {
   reservationExtrasMode: "approval",
   reservationSwapsMode: "disabled",
   reservationNoticeHours: 0,
+  requiresCaregiverPin: true,
   deactivatedAt: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
