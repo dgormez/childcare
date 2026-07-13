@@ -47,7 +47,7 @@ public class ChildDeactivationTests(OrganisationOnboardingWebAppFactory factory)
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken, string firstName = "Emma") =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, "Peanuts", "Severe", null, null, null, null, null, null))))
+            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, "Peanuts", "Severe", null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     // ── T078: deactivate excludes from default list, includeDeactivated shows it ─

@@ -245,7 +245,22 @@ export interface ChildResponse {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  photoDownloadUrl: string | null;
+  gender: string | null;
+  nationality: string | null;
+  allergiesDescription: string | null;
+  allergySeverity: string | null;
+  medicalConditions: string | null;
+  dietaryRestrictions: string | null;
+  gpName: string | null;
+  gpPhone: string | null;
+  pediatricianName: string | null;
+  pediatricianPhone: string | null;
+  healthInsuranceNumber: string | null;
+  kindcode: string | null;
   deactivatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Feature 013 — parent communication.

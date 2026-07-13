@@ -69,7 +69,9 @@ const child: ChildResponse = {
   id: "c1", firstName: "Timmy", lastName: "Tester",
   dateOfBirth: "2022-01-01", photoDownloadUrl: null,
   allergiesDescription: "Peanuts", allergySeverity: "severe",
-  medicalConditions: null, dietaryRestrictions: null, deactivatedAt: null,
+  medicalConditions: null, dietaryRestrictions: null,
+  gpName: null, gpPhone: null, pediatricianName: null, pediatricianPhone: null,
+  deactivatedAt: null,
 };
 
 beforeEach(() => {

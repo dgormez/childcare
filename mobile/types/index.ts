@@ -59,6 +59,10 @@ export interface ChildResponse {
   allergySeverity:      string | null;
   medicalConditions:    string | null;
   dietaryRestrictions:  string | null;
+  gpName:               string | null;
+  gpPhone:              string | null;
+  pediatricianName:     string | null;
+  pediatricianPhone:    string | null;
   deactivatedAt:        string | null;
 }
 

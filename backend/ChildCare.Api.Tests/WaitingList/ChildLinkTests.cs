@@ -23,7 +23,7 @@ public class ChildLinkTests(OrganisationOnboardingWebAppFactory factory)
 
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken) =>
         (await (await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest("Louis", "Janssens", new DateOnly(2022, 1, 15), null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest("Louis", "Janssens", new DateOnly(2022, 1, 15), null, null, null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     private static Task<HttpResponseMessage> LinkRawAsync(HttpClient client, string accessToken, Guid entryId, Guid? childId, bool createNewChild) =>

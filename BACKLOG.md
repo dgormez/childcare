@@ -41,6 +41,7 @@
 | 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | ✅ Done |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | ✅ Done |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
+| 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -55,6 +56,7 @@
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
 | 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | 🔲 Not started |
+| 031 | `031-photo-lifecycle-governance` | Photo retention/archiving on child departure, GCS storage-class cost tiering, explicit staff/admin/director photo-action RBAC, parent original-download support | 006, 009b, 013b | 🔲 Not started |
 | 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff tap needed at drop-off | 010 | 🔲 Not started |
 | 022 | `022-id-verified-registration` | Streamlined child/parent registration form with director "ID/birth certificate seen" verification checkbox — replaces eID card reader approach | 006 | 🔲 Not started |
 | 023 | `023-digital-enrollment` | Public online enrollment form + parent-initiated waiting list self-registration | 012a | 🔲 Not started |
@@ -2804,6 +2806,75 @@ mobile passing). Scope deltas worth knowing before starting a dependent feature:
 
 ---
 
+### 006a — Child Profile UI (Full Child File)
+
+```
+Build the general-details tab of the child file. Feature 006 modeled a
+child's core profile and medical info end to end in the domain/API layer,
+but no screen anywhere (web or mobile) lets a director create or edit a
+child record — `/children` (web) only has a list and, since 013c, a
+detail screen with a single "Gezondheid" tab. There is no create form and
+no general-profile edit form; every `Child` row in this system today
+exists only because a test, seed script, or the waiting-list-conversion
+flow (012a) called the API directly.
+
+What this solves: directors currently cannot see or maintain a child's
+core profile through the UI at all, and one specific gap prompted this
+item — 006 only ever modeled a GP (huisarts) contact (`GpName`/`GpPhone`),
+not a pediatrician (kinderarts/pédiatre). In Belgium a young child's
+primary medical contact is commonly a pediatrician rather than a general
+practitioner, and the two are frequently different people — the current
+schema has no field for the former at all.
+
+What to build:
+- New "Profiel" tab on the existing child detail screen
+  (`web/app/(app)/children/[id]/page.tsx`), added alongside the existing
+  "Gezondheid" tab from 013c, not replacing it (013c's own shipped-notes
+  flag this screen as the one future per-child-tab work should extend).
+- A create-child form (web) — there is currently no UI path to create a
+  `Child` at all outside of the 012a waiting-list-conversion flow, which
+  itself leaves every medical field null.
+- Add a `PediatricianName`/`PediatricianPhone` pair on `Child`, nullable
+  and optional like the existing `GpName`/`GpPhone` (same FR-003 precedent:
+  medical info never blocks child creation or save). Requires an EF Core
+  migration — generate the SQL script and run it manually, no auto-migrate
+  in production.
+- Director-editable fields: first/last name, DOB, gender, nationality,
+  profile photo, allergies + severity, medical conditions, dietary
+  restrictions, GP name/phone, pediatrician name/phone, health insurance
+  number, kindcode.
+- Mobile (caregiver, read-only): extend the existing allergy/medical/
+  dietary summary on the child screen to also show GP and pediatrician
+  contact — caregivers need this on-site during a medical incident, not
+  just directors in the web admin.
+- All user-facing strings use i18n keys (NL/FR/EN) — "Pediater" or
+  "Kinderarts" (NL), "Pédiatre" (FR), "Pediatrician" (EN), kept visually
+  and linguistically distinct from "Huisarts"/"General practitioner" (GP).
+
+Key constraints:
+- Medical fields remain nullable and never block child creation or save
+  (FR-003 precedent from 006).
+- Pediatrician name/phone are ordinary contact fields, not GDPR
+  special-category data by themselves, but sit on the same entity as
+  allergy/medical fields and should inherit that section's existing access
+  scoping rather than getting a separate rule.
+
+Edge cases:
+- A child has a pediatrician but no GP, or vice versa — both fields stay
+  independently optional, no "at least one" validation.
+- A family switches pediatricians. Overwrite in place; no history is kept
+  (same as the existing GP field today).
+
+Out of scope:
+- Contacts tab, contracts tab, groups tab on the same child file screen —
+  each is separate follow-on work once prioritised, per 013c's precedent
+  of extending this screen one tab at a time.
+- Pediatrician appointment scheduling or reminders (no such feature exists
+  for the GP field either).
+```
+
+---
+
 ### 013d — Meal List (Maaltijdenlijst)
 
 ```
@@ -3583,6 +3654,121 @@ Out of scope:
 - Live API sync with accounting packages (Exact Online REST API, Yuki
   API) — later, after file-based export proves its value.
 - Payroll export (028 handles staff hours; payroll is out of scope).
+```
+
+---
+
+### 031 — Photo Lifecycle & Governance
+
+**Added 2026-07-13, from a brainstorm about whether child/group photos needed to move out of
+the DB into object storage.** They don't — that migration already happened. `IProfilePhotoStorage`
+(005/006), `IGroupActivityPhotoStorage` (009b), and `IHealthAttachmentStorage` (013b/013c) all
+store only a GCS object path on the DB row and serve signed URLs; no photo bytes live in Postgres
+anywhere in this codebase today. What's still missing is the *governance* layer around those
+already-stored photos: what happens to them when a child leaves, how storage cost is kept low
+pre-revenue, and who is explicitly allowed to act on them.
+
+```
+Build the retention, cost-tiering, and access-control rules that govern
+photos already stored in GCS (profile photos, group activity photos,
+health attachments) — no new upload/storage mechanism, this feature only
+adds policy on top of the existing ports.
+
+Context: child/staff profile photos, group activity photos, and health
+attachments are already stored via signed GCS object paths (features 005,
+006, 009b, 013b/013c) — never as DB blobs. This feature does not migrate
+storage; it closes gaps those features deliberately left open.
+
+What to build:
+
+1. Archive-on-departure (not delete-on-departure)
+   - When a child is deactivated (006's soft-delete / DeactivateChildCommand),
+     their GCS photo objects (profile photo, any group-activity photos they
+     appear in, health attachments) are NOT deleted and NOT auto-expired.
+   - Introduce a GCS lifecycle rule that transitions objects belonging to a
+     deactivated child from Standard to a cheaper storage class (Nearline or
+     Coldline) after a grace period (e.g. 30 days post-deactivation) rather
+     than leaving them on Standard indefinitely or deleting them.
+   - Explicit deletion (a parent's GDPR erasure request, or a director's
+     manual purge) is a separate, deliberate action — never automatic.
+   - Group activity photos are trickier: one photo can depict multiple
+     children (009b tags multiple children per activity/moment). A photo is
+     only eligible for archiving once EVERY tagged child in it is inactive —
+     it must stay on Standard tier as long as any actively-enrolled child
+     appears in it.
+
+2. Storage-class cost tiering (pre-revenue cost control)
+   - Default lifecycle policy for ALL photo buckets (not just departed
+     children): move objects from Standard to Nearline after N days of no
+     access (configurable; start conservative, e.g. 90 days), since most
+     photo views happen in the days immediately after upload.
+   - Thumbnails always stay on Standard (cheap, small, frequently re-rendered
+     in gallery/list views) — only full-resolution originals are tiered.
+   - This is a bucket-level GCS lifecycle configuration (Terraform), not
+     application code — no handler changes needed for this part.
+
+3. Explicit photo-action RBAC
+   - Staff, Director, and Admin (if a separate admin role exists beyond
+     Director — confirm against 003/005's role model) can all: upload,
+     caption/edit, delete, and download any photo within their location(s).
+   - Confirm this against the CURRENT authorization on
+     DeleteGroupActivityCommand and any equivalent profile-photo/health-
+     attachment delete path — today's code should be audited for whether
+     these already enforce StaffOrDirector-equivalent policies, or whether
+     they're gated too loosely/tightly. Close any gap found; this feature
+     does not invent a new role, it makes an implicit assumption explicit
+     and consistent across all three photo ports.
+   - Parents (ParentOnly policy, 003) may VIEW and DOWNLOAD original-
+     resolution photos of their own child (including group photos their
+     child is tagged in) but may never delete, edit, or upload.
+
+4. Parent original-photo download
+   - Today, parent-facing photo access (e.g. GetParentGroupActivityGalleryQuery,
+     009b) returns signed view URLs for gallery display. Add an explicit
+     "download original" action in the parent app: a signed URL with
+     Content-Disposition: attachment (rather than inline), pointing at the
+     full-resolution object (not the thumbnail).
+   - Group photos: a parent can download any photo in which their child is
+     tagged, even though other children also appear in it — no cropping or
+     redaction of other children is required for this feature (out of scope
+     below).
+
+Key constraints:
+- No change to where photo bytes are stored (GCS) or how they're uploaded —
+  this is retention/cost/access policy only, layered on existing ports.
+- Lifecycle transitions must never be visible to end users as a functional
+  change — a Nearline/Coldline object is still served via the same signed-URL
+  mechanism, just with higher retrieval latency/cost, which is acceptable
+  since departed-child access is rare.
+- All user-facing strings (download button, any retention-related director
+  setting) use i18n keys (NL/FR/EN).
+
+Edge cases:
+- A child is reactivated (e.g. re-enrolled) after being deactivated and
+  archived. Photos must remain accessible (signed URLs still resolve against
+  Nearline/Coldline objects, just slower) — reactivation does NOT require an
+  explicit "un-archive" step, only faster access could optionally be
+  restored by moving back to Standard.
+- A group photo has 8 tagged children; 7 leave over time, 1 remains enrolled.
+  The photo must stay on Standard tier and fully accessible until the last
+  tagged child also becomes inactive.
+- A director explicitly deletes a departed child's photos (GDPR request).
+  Must cascade to every GCS object referencing that child: profile photo,
+  every group-activity photo where they're the ONLY tagged child, and health
+  attachments — but must NOT delete a group photo still depicting other
+  active children.
+
+Out of scope:
+- Any change to the underlying storage mechanism/provider (GCS stays GCS
+  regardless of whether Postgres ends up on Neon or Google Cloud SQL/AlloyDB
+  in production — these are independent infrastructure decisions).
+- Photo redaction/cropping/blurring of non-consenting children in group
+  photos — if this becomes a real requirement (e.g. a parent revokes photo
+  consent, contract's photos_internal/photos_social_media flags from 007),
+  handle it as its own feature.
+- GDPR data export tooling in general (flagged as Phase 2 out-of-scope back
+  in 006) — this feature only handles the deletion cascade for photos
+  specifically, not a full export/erasure workflow.
 ```
 
 ---

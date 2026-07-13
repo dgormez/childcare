@@ -187,6 +187,22 @@ export default function ChildDetailScreen() {
           </View>
         )}
 
+        {(!!child.gpName || !!child.gpPhone) && (
+          <View className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
+            <Text className="text-text dark:text-text-dark font-semibold mb-1">{t("child.gpTitle")}</Text>
+            {!!child.gpName && <Text className="text-text-soft dark:text-text-soft-dark">{child.gpName}</Text>}
+            {!!child.gpPhone && <Text className="text-text-soft dark:text-text-soft-dark">{child.gpPhone}</Text>}
+          </View>
+        )}
+
+        {(!!child.pediatricianName || !!child.pediatricianPhone) && (
+          <View className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
+            <Text className="text-text dark:text-text-dark font-semibold mb-1">{t("child.pediatricianTitle")}</Text>
+            {!!child.pediatricianName && <Text className="text-text-soft dark:text-text-soft-dark">{child.pediatricianName}</Text>}
+            {!!child.pediatricianPhone && <Text className="text-text-soft dark:text-text-soft-dark">{child.pediatricianPhone}</Text>}
+          </View>
+        )}
+
         {healthSummary?.status === "unavailable" && (
           <View className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
             <Text className="text-text-soft dark:text-text-soft-dark">{t("child.healthSummary.unavailable")}</Text>

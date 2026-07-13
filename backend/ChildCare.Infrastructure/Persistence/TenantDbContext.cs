@@ -306,6 +306,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.DietaryRestrictions).HasMaxLength(2000);
             c.Property(x => x.GpName).HasMaxLength(200);
             c.Property(x => x.GpPhone).HasMaxLength(30);
+            c.Property(x => x.PediatricianName).HasMaxLength(200);
+            c.Property(x => x.PediatricianPhone).HasMaxLength(30);
             c.Property(x => x.HealthInsuranceNumber).HasMaxLength(50);
             c.Property(x => x.Kindcode).HasMaxLength(20);
             c.HasIndex(x => x.DeactivatedAt);

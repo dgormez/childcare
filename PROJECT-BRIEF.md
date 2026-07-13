@@ -102,6 +102,36 @@ This is the standard pattern used by Brightwheel, Procare, and Famly. Implemente
 
 ---
 
+## Pre-Production Scaling Checklist (deferred — revisit before onboarding beyond ~1-2 clients)
+
+Phase 1 targets a single client at $0-if-possible dev cost; cold starts and small DB tiers are
+accepted deliberately for now. Revisit these — mostly config/tier choices, not code changes —
+once real multi-tenant traffic (dozens of KDVs) is in sight:
+
+- **DB tier**: `db-f1-micro` (or Neon free tier) will not hold up once concurrent load from many
+  KDVs' drop-off/pickup rushes hits at once. Pick a properly sized Postgres tier deliberately
+  before onboarding beyond a handful of clients.
+- **Connection pooling**: no pgBouncer/pooler is used — Neon direct connections, one Npgsql pool
+  per Cloud Run instance. Fine at low instance counts; re-examine once Cloud Run scales past a
+  few instances, since pool-size × instances is currently unbounded. Note the original "no
+  pgBouncer" rationale (search_path resets) may be stale — request-time code is schema-qualified
+  via `HasDefaultSchema`, not `search_path`-dependent (only tenant provisioning sets
+  `search_path`); the real constraint is more likely `PostgresAdvisoryLockService`'s session-level
+  `pg_advisory_lock` calls, which transaction-mode pooling would break. Worth confirming properly
+  before picking a pooler mode.
+- **Cloud Run scaling**: `infra/gcp/main.tf` sets no `min_instance_count`, `max_instance_count`,
+  `cpu`, or `memory` — all GCP defaults. Fine for 1 client; set these deliberately once instance
+  count × DB connection limits actually matters. `min_instance_count` also controls cold starts,
+  which are explicitly acceptable for now but not for production.
+- **Push notification fan-out**: `SendAnnouncementCommandHandler` sends one sequential HTTP call
+  to Expo per recipient inside the request. Fine for a single small KDV; will need batching (Expo
+  supports up to 100 messages/call) or a background queue once a location/org has enough parents
+  that this loop takes noticeably long.
+- **`migrate-tenants` CLI**: migrates tenant schemas sequentially, one at a time. Fine at a handful
+  of tenants; parallelize (with a concurrency cap) before tenant count grows into the hundreds.
+
+---
+
 ## Infrastructure
 
 - **Cloud:** GCP, project `childcare-501020`, region `europe-west1`

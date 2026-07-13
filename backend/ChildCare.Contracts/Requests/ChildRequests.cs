@@ -12,6 +12,8 @@ public record CreateChildRequest(
     string? DietaryRestrictions,
     string? GpName,
     string? GpPhone,
+    string? PediatricianName,
+    string? PediatricianPhone,
     string? HealthInsuranceNumber,
     string? Kindcode);
 
@@ -27,6 +29,8 @@ public record UpdateChildRequest(
     string? DietaryRestrictions,
     string? GpName,
     string? GpPhone,
+    string? PediatricianName,
+    string? PediatricianPhone,
     string? HealthInsuranceNumber,
     string? Kindcode);
 
