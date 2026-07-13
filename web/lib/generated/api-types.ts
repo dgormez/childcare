@@ -469,6 +469,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vaccine-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vaccine-custom-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -4882,6 +4948,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/children/{childId}/vaccine-records/{id}/attachment-upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    childId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateVaccineRecordAttachmentUploadUrlRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/vaccine-records/due-soon": {
         parameters: {
             query?: never;
@@ -5263,12 +5369,12 @@ export interface components {
         CheckInRequest: {
             /** Format: uuid */
             staffId: string;
-            pin: string;
+            pin: null | string;
         };
         CheckOutRequest: {
             /** Format: uuid */
             staffId: string;
-            pin: string;
+            pin: null | string;
         };
         ChildEventBatchItemRequest: {
             /** Format: uuid */
@@ -5436,6 +5542,9 @@ export interface components {
             /** Format: time */
             endTime: string;
         };
+        CreateVaccineRecordAttachmentUploadUrlRequest: {
+            contentType: string;
+        };
         CreateVaccineRecordRequest: {
             vaccineName: string;
             /** Format: int32 */
@@ -5446,6 +5555,8 @@ export interface components {
             nextDueDate: null | string;
             administeredBy: null | string;
             notes: null | string;
+            /** Format: uuid */
+            vaccineTypeId?: null | string;
         };
         CreateWaitingListEntryRequest: {
             childFirstName: string;
@@ -5749,6 +5860,8 @@ export interface components {
             nextDueDate: null | string;
             administeredBy: null | string;
             notes: null | string;
+            /** Format: uuid */
+            vaccineTypeId?: null | string;
         };
         UpdateWaitingListEntryRequest: {
             childFirstName: string;

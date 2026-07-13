@@ -18,9 +18,9 @@ public class FakeHealthAttachmentStorage : IHealthAttachmentStorage
         _ => "bin",
     };
 
-    public Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, CancellationToken cancellationToken = default)
+    public Task<(string ObjectPath, string UploadUrl)> CreateUploadUrlAsync(Guid healthRecordId, string contentType, string category = "health-records", CancellationToken cancellationToken = default)
     {
-        var objectPath = $"health-records/{healthRecordId}/attachment.{ExtensionFor(contentType)}";
+        var objectPath = $"{category}/{healthRecordId}/attachment.{ExtensionFor(contentType)}";
         return Task.FromResult((objectPath, $"https://fake-gcs.test/upload/{objectPath}"));
     }
 

@@ -15,6 +15,12 @@ alongside the existing free-text profile fields (feature 006). Also built direct
 per-child detail screen (`/children/[id]`, Gezondheid tab), superseding the "no per-child detail
 screen yet" note this file previously carried under Applications.
 
+**Extended by feature `013g-vaccine-catalog`** (2026-07-13) — added a shared, platform-wide
+vaccine catalog backing 013c's free-text `vaccineName`, a per-tenant "remembered custom entry"
+memory for names not in the catalog, and attachment support (photo/scan of the paper
+vaccinatieboekje) directly on `VaccineRecord`. See "Flow — vaccination & health record tracking,"
+step 1, for the updated director recording flow.
+
 ### Trigger
 
 - Ongoing: a child's medical/emergency profile is created or updated (enrollment, or a parent-
@@ -68,6 +74,13 @@ screen yet" note this file previously carried under Applications.
    a categorized health record (allergy / chronic condition / standing medication / doctor's note
    / other — a title, description, optional validity window, optional signed-URL attachment).
    Both are structured, queryable records, distinct from feature 006's free-text profile fields.
+   Since feature `013g-vaccine-catalog`, the vaccine name is picked from a shared, platform-wide
+   catalog (grouped by category, seeded from the Vlaamse basisvaccinatieschema and never
+   director-editable) or a per-tenant "remembered custom entry" — a name typed once that isn't in
+   the catalog is remembered for that KDV so it never needs retyping. A vaccine record can also
+   carry its own photo/scan attachment of the paper vaccinatieboekje (the same signed-URL
+   mechanism as a health record's attachment, distinct object-path prefix) as a fallback when the
+   KDV's own typed record has fallen behind what the parent's paper booklet actually shows.
 2. The system computes, across every child, which vaccines are due or overdue within 30 days and
    surfaces them in a "Vaccinations due soon" block on the director's dashboard — a compliance
    reminder, not just a log. An overdue vaccine is never auto-dismissed; it clears only when a

@@ -30,6 +30,7 @@ public interface ITenantDbContext
     DbSet<Group> Groups { get; }
     DbSet<ChildGroupAssignment> ChildGroupAssignments { get; }
     DbSet<VaccineRecord> VaccineRecords { get; }
+    DbSet<TenantCustomVaccineEntry> TenantCustomVaccineEntries { get; }
     DbSet<HealthRecord> HealthRecords { get; }
     DbSet<Contract> Contracts { get; }
     DbSet<RoomShift> RoomShifts { get; }

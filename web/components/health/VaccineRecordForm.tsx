@@ -1,14 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import type { VaccineRecordResponse } from "../../lib/types";
+import { VaccineNameCombobox } from "./VaccineNameCombobox";
+import type { CustomVaccineEntryResponse, VaccineRecordResponse, VaccineTypeResponse } from "../../lib/types";
 
 export interface VaccineRecordFormValues {
   vaccineName: string;
+  vaccineTypeId: string | null;
   doseNumber: number | null;
   administeredOn: string;
   nextDueDate: string | null;
@@ -19,6 +21,8 @@ export interface VaccineRecordFormValues {
 interface VaccineRecordFormProps {
   open: boolean;
   record: VaccineRecordResponse | null;
+  vaccineTypes: VaccineTypeResponse[];
+  customVaccineEntries: CustomVaccineEntryResponse[];
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: VaccineRecordFormValues) => Promise<void>;
   saving: boolean;
@@ -27,10 +31,14 @@ interface VaccineRecordFormProps {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-/** Director create/edit form for one vaccine record (spec.md FR-001/FR-002, US1). */
-export function VaccineRecordForm({ open, record, onOpenChange, onSubmit, saving, error }: VaccineRecordFormProps) {
+/** Director create/edit form for one vaccine record (spec.md FR-001/FR-002, US1). Vaccine-name
+ * field is a combobox (spec.md FR-013, US1/US2) — typing never clears a prior catalog/custom
+ * reference (FR-004), only an explicit selection replaces it. */
+export function VaccineRecordForm({ open, record, vaccineTypes, customVaccineEntries, onOpenChange, onSubmit, saving, error }: VaccineRecordFormProps) {
   const t = useTranslations("children.health.vaccines.form");
+  const vaccineNameId = useId();
   const [vaccineName, setVaccineName] = useState("");
+  const [vaccineTypeId, setVaccineTypeId] = useState<string | null>(null);
   const [doseNumber, setDoseNumber] = useState("");
   const [administeredOn, setAdministeredOn] = useState(today());
   const [nextDueDate, setNextDueDate] = useState("");
@@ -40,6 +48,7 @@ export function VaccineRecordForm({ open, record, onOpenChange, onSubmit, saving
   useEffect(() => {
     if (!open) return;
     setVaccineName(record?.vaccineName ?? "");
+    setVaccineTypeId(record?.vaccineTypeId ?? null);
     setDoseNumber(record?.doseNumber ? String(record.doseNumber) : "");
     setAdministeredOn(record?.administeredOn ?? today());
     setNextDueDate(record?.nextDueDate ?? "");
@@ -54,10 +63,22 @@ export function VaccineRecordForm({ open, record, onOpenChange, onSubmit, saving
           <DialogTitle>{record ? t("editTitle") : t("addTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-text dark:text-text-dark">
-            {t("vaccineNameLabel")}
-            <Input className="mt-2" value={vaccineName} onChange={(e) => setVaccineName(e.target.value)} />
-          </label>
+          <div>
+            <label htmlFor={vaccineNameId} className="block text-sm font-medium text-text dark:text-text-dark">
+              {t("vaccineNameLabel")}
+            </label>
+            <VaccineNameCombobox
+              id={vaccineNameId}
+              value={vaccineName}
+              vaccineTypes={vaccineTypes}
+              customEntries={customVaccineEntries}
+              onChange={(text) => setVaccineName(text)}
+              onSelect={({ name, vaccineTypeId: id }) => {
+                setVaccineName(name);
+                setVaccineTypeId(id);
+              }}
+            />
+          </div>
           <div className="flex gap-4">
             <label className="block flex-1 text-sm font-medium text-text dark:text-text-dark">
               {t("doseNumberLabel")}
@@ -95,6 +116,7 @@ export function VaccineRecordForm({ open, record, onOpenChange, onSubmit, saving
             onClick={() =>
               onSubmit({
                 vaccineName: vaccineName.trim(),
+                vaccineTypeId,
                 doseNumber: doseNumber ? Number(doseNumber) : null,
                 administeredOn,
                 nextDueDate: nextDueDate || null,

@@ -9,6 +9,7 @@ public record UpdateVaccineRecordCommand(
     Guid ChildId,
     Guid Id,
     string VaccineName,
+    Guid? VaccineTypeId,
     int? DoseNumber,
     DateOnly AdministeredOn,
     DateOnly? NextDueDate,
@@ -38,7 +39,7 @@ public class UpdateVaccineRecordCommandValidator : AbstractValidator<UpdateVacci
     }
 }
 
-public class UpdateVaccineRecordCommandHandler(ITenantDbContext db) : IRequestHandler<UpdateVaccineRecordCommand, VaccineRecordResult>
+public class UpdateVaccineRecordCommandHandler(ITenantDbContext db, IPublicDbContext publicDb, IHealthAttachmentStorage storage) : IRequestHandler<UpdateVaccineRecordCommand, VaccineRecordResult>
 {
     public async Task<VaccineRecordResult> Handle(UpdateVaccineRecordCommand request, CancellationToken cancellationToken)
     {
@@ -46,6 +47,20 @@ public class UpdateVaccineRecordCommandHandler(ITenantDbContext db) : IRequestHa
             .SingleOrDefaultAsync(v => v.Id == request.Id && v.ChildId == request.ChildId && v.DeletedAt == null, cancellationToken);
         if (record is null)
             return VaccineRecordResult.Fail(VaccineRecordFailure.NotFound);
+
+        if (request.VaccineTypeId.HasValue)
+        {
+            var vaccineTypeExists = await publicDb.VaccineTypes.AnyAsync(v => v.Id == request.VaccineTypeId.Value, cancellationToken);
+            if (!vaccineTypeExists)
+                return VaccineRecordResult.Fail(VaccineRecordFailure.VaccineTypeNotFound);
+        }
+
+        // The two references are mutually exclusive (spec.md FR-004) — whichever the client
+        // sends this time replaces whatever the record carried before.
+        record.VaccineTypeId = request.VaccineTypeId;
+        record.CustomVaccineEntryId = request.VaccineTypeId is null
+            ? await CustomVaccineEntryResolver.ResolveAsync(db, request.VaccineName, cancellationToken)
+            : null;
 
         record.VaccineName = request.VaccineName;
         record.DoseNumber = request.DoseNumber;
@@ -57,6 +72,6 @@ public class UpdateVaccineRecordCommandHandler(ITenantDbContext db) : IRequestHa
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return VaccineRecordResult.Success(VaccineRecordMapper.ToResponse(record));
+        return VaccineRecordResult.Success(await VaccineRecordMapper.ToResponseAsync(record, storage, cancellationToken));
     }
 }

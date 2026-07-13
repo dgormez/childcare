@@ -400,17 +400,34 @@ export interface PagedIncidentReportsResponse {
 
 // ── Vaccine & health records (feature 013c) ────────────────────────────────────
 export interface VaccineRecordResponse {
-  id:             string;
-  childId:        string;
-  vaccineName:    string;
-  doseNumber:     number | null;
-  administeredOn: string;
-  nextDueDate:    string | null;
-  administeredBy: string | null;
-  notes:          string | null;
-  recordedBy:     string | null;
-  createdAt:      string;
-  updatedAt:      string;
+  id:                    string;
+  childId:               string;
+  vaccineName:           string;
+  vaccineTypeId:         string | null;
+  attachmentDownloadUrl: string | null;
+  doseNumber:            number | null;
+  administeredOn:        string;
+  nextDueDate:           string | null;
+  administeredBy:        string | null;
+  notes:                 string | null;
+  recordedBy:            string | null;
+  createdAt:             string;
+  updatedAt:             string;
+}
+
+// ── Vaccine catalog & custom entries (feature 013g) ─────────────────────────────
+export type VaccineCategory = "basisvaccinatieschema" | "aanbevolen_niet_gratis";
+
+export interface VaccineTypeResponse {
+  id:       string;
+  name:     string;
+  category: VaccineCategory | null;
+  sortOrder: number;
+}
+
+export interface CustomVaccineEntryResponse {
+  id:   string;
+  name: string;
 }
 
 export interface VaccinationsDueSoonResponse {

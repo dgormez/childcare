@@ -636,7 +636,15 @@
           "save": "Opslaan"
         },
         "saveError": "Kan de vaccinatie niet opslaan. Probeer het opnieuw.",
-        "deleteError": "Kan de vaccinatie niet verwijderen. Probeer het opnieuw."
+        "deleteError": "Kan de vaccinatie niet verwijderen. Probeer het opnieuw.",
+        "combobox": {
+          "catalogCategory": {
+            "basisvaccinatieschema": "Basisvaccinatieschema",
+            "aanbevolen_niet_gratis": "Aanbevolen, niet gratis"
+          },
+          "usedBeforeGroup": "Andere (eerder gebruikt)",
+          "addCustom": "Gebruik “{name}” (nieuw, onthouden voor de volgende keer)"
+        }
       },
       "records": {
         "title": "Gezondheidsdossiers",

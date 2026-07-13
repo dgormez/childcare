@@ -636,7 +636,15 @@
           "save": "Enregistrer"
         },
         "saveError": "Impossible d'enregistrer cette vaccination. Veuillez réessayer.",
-        "deleteError": "Impossible de supprimer cette vaccination. Veuillez réessayer."
+        "deleteError": "Impossible de supprimer cette vaccination. Veuillez réessayer.",
+        "combobox": {
+          "catalogCategory": {
+            "basisvaccinatieschema": "Schéma de vaccination de base",
+            "aanbevolen_niet_gratis": "Recommandé, non gratuit"
+          },
+          "usedBeforeGroup": "Autre (déjà utilisé)",
+          "addCustom": "Utiliser « {name} » (nouvelle entrée, mémorisée pour la prochaine fois)"
+        }
       },
       "records": {
         "title": "Dossiers de santé",

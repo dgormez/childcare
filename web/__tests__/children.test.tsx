@@ -61,6 +61,8 @@ function makeVaccine(overrides: Partial<VaccineRecordResponse> = {}): VaccineRec
     id: "vaccine-1",
     childId: "child-1",
     vaccineName: "DTP",
+    vaccineTypeId: null,
+    attachmentDownloadUrl: null,
     doseNumber: 2,
     administeredOn: "2026-06-01",
     nextDueDate: null,

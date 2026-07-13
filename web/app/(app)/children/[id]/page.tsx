@@ -16,7 +16,7 @@ import { ChildMealPreferenceForm } from "../../../../components/children/ChildMe
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
-import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse } from "../../../../lib/types";
+import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
 
@@ -34,6 +34,8 @@ export default function ChildDetailPage() {
   const [child, setChild] = useState<ChildResponse | null>(null);
   const [vaccines, setVaccines] = useState<VaccineRecordResponse[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecordResponse[]>([]);
+  const [vaccineTypes, setVaccineTypes] = useState<VaccineTypeResponse[]>([]);
+  const [customVaccineEntries, setCustomVaccineEntries] = useState<CustomVaccineEntryResponse[]>([]);
   const [state, setState] = useState<LoadState>("loading");
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -58,18 +60,23 @@ export default function ChildDetailPage() {
 
   const load = useCallback(async () => {
     setState("loading");
-    const [childResult, vaccinesResult, healthRecordsResult] = await Promise.all([
+    const [childResult, vaccinesResult, healthRecordsResult, vaccineTypesResult, customVaccineEntriesResult] = await Promise.all([
       apiClient.GET("/api/children/{id}", { params: { path: { id: params.id } } }),
       apiClient.GET("/api/children/{childId}/vaccine-records", { params: { path: { childId: params.id } } }),
       apiClient.GET("/api/children/{childId}/health-records", { params: { path: { childId: params.id } } }),
+      apiClient.GET("/api/vaccine-types"),
+      apiClient.GET("/api/vaccine-custom-entries"),
     ]);
-    if (!childResult.response.ok || !vaccinesResult.response.ok || !healthRecordsResult.response.ok) {
+    if (!childResult.response.ok || !vaccinesResult.response.ok || !healthRecordsResult.response.ok
+      || !vaccineTypesResult.response.ok || !customVaccineEntriesResult.response.ok) {
       setState("error");
       return;
     }
     setChild(childResult.data as unknown as ChildResponse);
     setVaccines(vaccinesResult.data as unknown as VaccineRecordResponse[]);
     setHealthRecords(healthRecordsResult.data as unknown as HealthRecordResponse[]);
+    setVaccineTypes(vaccineTypesResult.data as unknown as VaccineTypeResponse[]);
+    setCustomVaccineEntries(customVaccineEntriesResult.data as unknown as CustomVaccineEntryResponse[]);
     setState("loaded");
   }, [params.id]);
 
@@ -112,6 +119,7 @@ export default function ChildDetailPage() {
     setVaccineSaveError(null);
     const body = {
       vaccineName: values.vaccineName,
+      vaccineTypeId: values.vaccineTypeId,
       doseNumber: values.doseNumber,
       administeredOn: values.administeredOn,
       nextDueDate: values.nextDueDate,
@@ -213,6 +221,21 @@ export default function ChildDetailPage() {
     return true;
   }
 
+  async function uploadVaccineRecordAttachment(record: VaccineRecordResponse, file: File): Promise<boolean> {
+    const urlResult = await apiClient.POST("/api/children/{childId}/vaccine-records/{id}/attachment-upload-url", {
+      params: { path: { childId: params.id, id: record.id } },
+      body: { contentType: file.type },
+    });
+    if (!urlResult.response.ok) return false;
+
+    const { uploadUrl } = urlResult.data as unknown as { uploadUrl: string };
+    const putResult = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+    if (!putResult.ok) return false;
+
+    await load();
+    return true;
+  }
+
   if (state === "loading") return <div className="h-64 animate-pulse rounded-xl bg-surface-soft dark:bg-surface-soft-dark" />;
   if (state === "error" || !child) return <ErrorState message={t("loadError")} retryLabel={t("retry")} onRetry={load} />;
 
@@ -274,6 +297,7 @@ export default function ChildDetailPage() {
                 <th className="py-2 pr-4 font-medium">{t("vaccines.columnVaccine")}</th>
                 <th className="py-2 pr-4 font-medium">{t("vaccines.columnAdministeredOn")}</th>
                 <th className="py-2 pr-4 font-medium">{t("vaccines.columnNextDueDate")}</th>
+                <th className="py-2 pr-4 font-medium">{t("records.columnAttachment")}</th>
                 <th className="py-2 pr-4 font-medium" />
               </tr>
             </thead>
@@ -302,6 +326,12 @@ export default function ChildDetailPage() {
                           {t("vaccines.dueSoon")}
                         </Badge>
                       )}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <HealthRecordAttachmentControl
+                        attachmentDownloadUrl={v.attachmentDownloadUrl}
+                        onUpload={(file) => uploadVaccineRecordAttachment(v, file)}
+                      />
                     </td>
                     <td className="py-2 pr-4 text-right">
                       <Button
@@ -424,6 +454,8 @@ export default function ChildDetailPage() {
       <VaccineRecordForm
         open={vaccineFormOpen}
         record={editingVaccine}
+        vaccineTypes={vaccineTypes}
+        customVaccineEntries={customVaccineEntries}
         onOpenChange={setVaccineFormOpen}
         onSubmit={submitVaccineRecord}
         saving={vaccineSaving}

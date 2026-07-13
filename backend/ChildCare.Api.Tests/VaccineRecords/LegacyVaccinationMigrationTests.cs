@@ -76,6 +76,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// removed here too (found by this test actually failing after that migration shipped, not
     /// by inspection). Feature 008b's "AddLocationRequiresCaregiverPin" only adds a column (no
     /// new table), so it's reverted via DROP COLUMN instead of DROP TABLE, same reasoning.
+    /// Feature 013g's "AddVaccineCatalogAndAttachments" is the next one — since this test drops
+    /// "vaccine_records" wholesale, that migration's three new columns on it (VaccineTypeId,
+    /// CustomVaccineEntryId, AttachmentObjectPath) need no separate DROP COLUMN step, but its new
+    /// tenant_custom_vaccine_entries table (referenced by vaccine_records) does need its own
+    /// DROP TABLE, ordered after vaccine_records is already gone.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -85,6 +90,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         await publicDb.Database.ExecuteSqlRawAsync($"""
             DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."vaccine_records";
+            DROP TABLE "{schemaName}"."tenant_custom_vaccine_entries";
             DROP TABLE "{schemaName}"."health_records";
             CREATE TABLE "{schemaName}"."vaccination_records" (
                 "Id" uuid NOT NULL,
@@ -103,7 +109,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."locations"
                 DROP COLUMN "RequiresCaregiverPin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments';
             """);
     }
 

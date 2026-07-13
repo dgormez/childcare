@@ -17,4 +17,6 @@ public enum VaccineRecordFailure
 {
     ChildNotFound,
     NotFound,
+    VaccineTypeNotFound,
+    InvalidContentType,
 }

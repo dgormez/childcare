@@ -47,6 +47,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<VaccineRecord> VaccineRecords => Set<VaccineRecord>();
 
+    public DbSet<TenantCustomVaccineEntry> TenantCustomVaccineEntries => Set<TenantCustomVaccineEntry>();
+
     public DbSet<HealthRecord> HealthRecords => Set<HealthRecord>();
 
     public DbSet<Contract> Contracts => Set<Contract>();
@@ -365,17 +367,39 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
         modelBuilder.Entity<VaccineRecord>(v =>
         {
-            v.ToTable("vaccine_records");
+            v.ToTable("vaccine_records", t =>
+            {
+                // Feature 013g, spec.md FR-004 — DB-enforced, not application-layer-only
+                // (checklist finding D1).
+                t.HasCheckConstraint("CK_vaccine_records_vaccine_reference_exclusive",
+                    "\"VaccineTypeId\" IS NULL OR \"CustomVaccineEntryId\" IS NULL");
+            });
             v.HasKey(x => x.Id);
             v.Property(x => x.VaccineName).IsRequired().HasMaxLength(200);
             v.Property(x => x.AdministeredBy).HasMaxLength(200);
             v.Property(x => x.Notes).HasMaxLength(2000);
             v.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             v.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.RecordedBy);
+            // Feature 013g — no DB FK on VaccineTypeId (research.md R2: VaccineType lives in the
+            // public schema and is soft-delete-only, so a cross-schema FK guards against a
+            // failure mode that can't occur). CustomVaccineEntryId is a real, same-schema FK.
+            v.HasIndex(x => x.VaccineTypeId);
+            v.HasOne<TenantCustomVaccineEntry>().WithMany().HasForeignKey(x => x.CustomVaccineEntryId);
             v.HasIndex(x => x.ChildId);
             // Partial index (research.md R4) — supports the due-soon dashboard aggregate without
             // a full-table scan; excludes soft-deleted rows since they never contribute.
             v.HasIndex(x => x.NextDueDate).HasFilter("\"DeletedAt\" IS NULL");
+        });
+
+        modelBuilder.Entity<TenantCustomVaccineEntry>(c =>
+        {
+            c.ToTable("tenant_custom_vaccine_entries");
+            c.HasKey(x => x.Id);
+            c.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            c.Property(x => x.NormalizedName).IsRequired().HasMaxLength(200);
+            // Case/whitespace/diacritic-insensitive dedupe (research.md R3, spec.md FR-007) —
+            // enforced at the DB level so a concurrent-write race can't create a near-duplicate.
+            c.HasIndex(x => x.NormalizedName).IsUnique();
         });
 
         modelBuilder.Entity<HealthRecord>(hr =>
