@@ -71,7 +71,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// applied while this one is reverted would make that computed range empty (last applied ==
     /// latest == AddPediatricianContactToChild), and `MigrateAsync()` would silently no-op
     /// instead of restoring vaccine_records/health_records. This must be extended again for any
-    /// future migration added after this one, for the same reason.
+    /// future migration added after this one, for the same reason — feature 013d's
+    /// "AddChildMealPreferences" is the next one, so its table is dropped and its history row
+    /// removed here too (found by this test actually failing after that migration shipped, not
+    /// by inspection).
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -79,6 +82,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."vaccine_records";
             DROP TABLE "{schemaName}"."health_records";
             CREATE TABLE "{schemaName}"."vaccination_records" (
@@ -96,7 +100,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "PediatricianName",
                 DROP COLUMN "PediatricianPhone";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences';
             """);
     }
 

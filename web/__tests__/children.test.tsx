@@ -91,9 +91,24 @@ function makeHealthRecord(overrides: Partial<HealthRecordResponse> = {}): Health
   };
 }
 
+// Default meal-preferences response for any ChildDetailPage test that doesn't explicitly set
+// one — feature 013d's ChildMealPreferenceForm fetches this on every render of the Profiel tab,
+// so every test rendering that page needs a well-formed response here, not the generic `[]`
+// fallback other unmapped paths get (which would leave `texture`/`portionSize` undefined).
+const DEFAULT_MEAL_PREFERENCE = {
+  childId: "child-1",
+  texture: "normal",
+  dietaryType: [],
+  portionSize: "normal",
+  additionalNotes: null,
+  updatedBy: null,
+  updatedAt: null,
+};
+
 function mockGet(byPath: Record<string, unknown>) {
   vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
     if (typeof path === "string" && path in byPath) return Promise.resolve(okResponse(byPath[path])) as never;
+    if (path === "/api/children/{childId}/meal-preferences") return Promise.resolve(okResponse(DEFAULT_MEAL_PREFERENCE)) as never;
     return Promise.resolve(okResponse([])) as never;
   });
 }

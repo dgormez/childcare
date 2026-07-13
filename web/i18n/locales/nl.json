@@ -36,7 +36,8 @@
     "groups": "Groepen",
     "dayReservations": "Verzoeken",
     "incidents": "Incidenten",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "mealList": "Maaltijdenlijst"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -682,6 +683,56 @@
       "retry": "Opnieuw proberen",
       "overdue": "Verlopen",
       "dueSoon": "Binnenkort"
+    }
+  },
+  "mealList": {
+    "title": "Maaltijdenlijst",
+    "locationLabel": "Locatie",
+    "dateLabel": "Datum",
+    "includeExpected": "Inclusief verwacht",
+    "print": "Afdrukken",
+    "loadError": "Maaltijdenlijst kon niet geladen worden. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "emptyState": "Nog geen kinderen aanwezig.",
+    "expectedSectionTitle": "Verwacht",
+    "noPreference": "Geen voorkeur",
+    "standingMedication": "Vaste medicatie",
+    "columnChild": "Kind",
+    "columnTexture": "Textuur",
+    "columnDietaryType": "Dieet",
+    "columnPortionSize": "Portie",
+    "columnAllergySeverity": "Allergie",
+    "columnMedication": "Medicatie",
+    "texture": {
+      "pureed": "Gepureerd",
+      "mixed": "Gemengd",
+      "pieces": "Stukjes",
+      "normal": "Normaal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Koosjer",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "gluten_free": "Glutenvrij"
+    },
+    "portionSize": {
+      "small": "Klein",
+      "normal": "Normaal",
+      "large": "Groot"
+    },
+    "allergySeverity": {
+      "severe": "Ernstige allergie",
+      "mild_moderate": "Lichte/matige allergie",
+      "none": "Geen bekende allergie"
+    },
+    "preferenceForm": {
+      "sectionTitle": "Maaltijdvoorkeuren",
+      "editButton": "Maaltijdvoorkeuren bewerken",
+      "saveButton": "Opslaan",
+      "cancelButton": "Annuleren",
+      "notesLabel": "Extra opmerkingen",
+      "saveError": "Maaltijdvoorkeuren konden niet opgeslagen worden. Probeer opnieuw."
     }
   }
 }

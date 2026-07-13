@@ -36,7 +36,8 @@
     "groups": "Groups",
     "dayReservations": "Requests",
     "incidents": "Incidents",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "mealList": "Meal List"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -682,6 +683,56 @@
       "retry": "Retry",
       "overdue": "Overdue",
       "dueSoon": "Due soon"
+    }
+  },
+  "mealList": {
+    "title": "Meal List",
+    "locationLabel": "Location",
+    "dateLabel": "Date",
+    "includeExpected": "Include expected",
+    "print": "Print",
+    "loadError": "Couldn't load the meal list. Please try again.",
+    "retry": "Retry",
+    "emptyState": "No children present yet.",
+    "expectedSectionTitle": "Expected",
+    "noPreference": "No preference",
+    "standingMedication": "Standing medication",
+    "columnChild": "Child",
+    "columnTexture": "Texture",
+    "columnDietaryType": "Dietary",
+    "columnPortionSize": "Portion",
+    "columnAllergySeverity": "Allergy",
+    "columnMedication": "Medication",
+    "texture": {
+      "pureed": "Pureed",
+      "mixed": "Mixed",
+      "pieces": "Pieces",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten_free": "Gluten-free"
+    },
+    "portionSize": {
+      "small": "Small",
+      "normal": "Normal",
+      "large": "Large"
+    },
+    "allergySeverity": {
+      "severe": "Severe allergy",
+      "mild_moderate": "Mild/moderate allergy",
+      "none": "No known allergy"
+    },
+    "preferenceForm": {
+      "sectionTitle": "Meal Preferences",
+      "editButton": "Edit meal preferences",
+      "saveButton": "Save",
+      "cancelButton": "Cancel",
+      "notesLabel": "Additional notes",
+      "saveError": "Couldn't save meal preferences. Please try again."
     }
   }
 }

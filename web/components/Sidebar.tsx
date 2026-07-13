@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert, LayoutDashboard } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert, LayoutDashboard, UtensilsCrossed } from "lucide-react";
 import { cn } from "../lib/cn";
 import { apiClient } from "../lib/apiClient";
 import type { Session } from "../lib/auth";
@@ -16,6 +16,7 @@ const REAL_NAV = [
   { href: "/devices", labelKey: "devices", icon: Tablet },
   { href: "/locations", labelKey: "locations", icon: MapPin },
   { href: "/attendance", labelKey: "attendance", icon: CalendarClock },
+  { href: "/meal-list", labelKey: "mealList", icon: UtensilsCrossed },
   { href: "/groups", labelKey: "groups", icon: Sparkles },
   { href: "/closures", labelKey: "closures", icon: CalendarX },
   { href: "/scheduling", labelKey: "scheduling", icon: CalendarDays },
