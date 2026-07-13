@@ -40,7 +40,7 @@
 | 009c | `009c-multi-child-events` | Caregiver selects multiple children before logging an event (nap, feeding round, diaper check) — one submission creates one record per selected child; reduces repetitive tapping | 009, 008a | ✅ Done |
 | 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | ✅ Done |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | ✅ Done |
-| 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | 🔲 Not started |
+| 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -2769,6 +2769,38 @@ Out of scope:
 - Automated parent reminder for upcoming vaccines (Phase 2 push notification).
 - Integration with Belgian vaccinatienet.be (Phase 3).
 ```
+
+**Shipped 2026-07-13** — `specs/013c-vaccine-health-records/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, all tasks incl. a 1-task convergence pass, 34 new
+backend tests + 8 new web tests + 7 new mobile tests, 563/563 backend + 84/84 web + 140/140
+mobile passing). Scope deltas worth knowing before starting a dependent feature:
+
+- **A genuinely new, no-precedent scope question was found only during planning research, not
+  raised by this feature's own BACKLOG prompt**: an unused `vaccination_records` table/entity
+  from feature 006 (nearly a subset of this feature's schema, zero client callers) sat alongside
+  the new `vaccine_records` this feature needed to build. Per the standing rule on pausing for
+  such questions, this was confirmed directly with the user before proceeding — migrated (data
+  backfill inside the EF migration, mirroring feature 009a's `measurement`→`growth_check`
+  precedent) and removed, rather than left as orphaned dead code beside a second, competing
+  table.
+- **Director web's first per-child detail screen** (`/children/[id]`, replacing the
+  `NotYetAvailable` placeholder feature 007a left in place) and **first dashboard-shaped screen**
+  (`/dashboard`, now the default post-login landing route, replacing the old redirect to
+  `/staff`) both shipped as part of this feature — neither existed anywhere in this codebase
+  before, and this feature's own "Vaccinations due soon" block needed both to be reachable at
+  all. A future feature adding more per-child tabs or dashboard widgets extends these two screens
+  rather than building new ones.
+- Caregiver tablet's existing feature-008 medical quick-access sheet is extended (not replaced)
+  with active health records and due-soon/overdue vaccine flags, offline-cached via a new
+  `mobile/services/healthSummary.ts` following the group view's existing cache-fallback pattern.
+- `/speckit-converge` found one real gap after implementation: `healthSummary.ts`'s actual
+  fetch-then-cache-fallback logic had zero test coverage (the screen-level test only mocked the
+  whole service function) — fixed with a dedicated unit test mirroring the group view's own
+  cache-fallback test, the only precedent for this pattern in the mobile test suite.
+- `IHealthAttachmentStorage`/`GcsHealthAttachmentStorage` is a new signed-URL storage port,
+  deliberately separate from feature 005/006's `IProfilePhotoStorage` (which hardcodes a `.jpg`
+  object path, wrong for a PDF/JPEG/PNG attachment) — reuses the same GCS bucket via a distinct
+  path prefix, no new bucket or Terraform change needed.
 
 ---
 

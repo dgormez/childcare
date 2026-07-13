@@ -339,3 +339,18 @@ use the static code review instead.
   Node 20, flaky Postgres timestamp-precision equality) — same two classes of bug 007a's and
   010's shipped-notes already describe, worth checking for on every feature that touches
   `web/package-lock.json` or compares a just-saved timestamp against a re-queried one.
+- 013c (`013c-vaccine-health-records`): ✅ Done, merged 2026-07-13 (PR #24, squash-merged after
+  green CI — 563/563 backend + 84/84 web + 140/140 mobile passing). Structured vaccine records
+  and categorized health records, a director-web due-soon dashboard, and a caregiver read-only
+  summary extension. Found a genuinely new, no-precedent scope question only during planning
+  research (not raised by the BACKLOG prompt itself): an unused `vaccination_records` table from
+  feature 006 overlapped this feature's new schema — paused and confirmed with the user directly
+  before migrating it (data backfill in the EF migration) rather than guessing. Also built this
+  codebase's first per-child detail screen and first dashboard-shaped screen, since the feature's
+  own due-soon block needed both to exist to be reachable — worth remembering that a feature
+  whose spec only lightly implies a screen (BACKLOG's prompt just said "director dashboard
+  block") can still require building the whole screen category from scratch if none exists yet,
+  same lesson 007a and 013b already logged for `/children`. `/speckit-converge` found one real
+  gap: the mobile offline-cache-fallback service for the new caregiver summary had no test
+  exercising its actual cache logic (only the screen mocked past it) — fixed with a test
+  mirroring the group view's existing cache-fallback test.
