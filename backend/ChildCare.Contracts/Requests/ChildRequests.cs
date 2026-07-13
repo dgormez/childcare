@@ -62,8 +62,3 @@ public record CreateGroupRequest(
 public record AssignChildToGroupRequest(
     Guid GroupId,
     DateOnly StartDate);
-
-public record RecordVaccinationRequest(
-    string VaccineName,
-    DateOnly DateAdministered,
-    DateOnly? NextDueDate);

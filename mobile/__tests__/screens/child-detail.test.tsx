@@ -24,8 +24,13 @@ jest.mock("../../services/offlineQueue", () => ({
   enqueue: jest.fn(),
 }));
 
+jest.mock("../../services/healthSummary", () => ({
+  getChildHealthSummary: jest.fn().mockResolvedValue({ status: "unavailable" }),
+}));
+
 const { useLocalSearchParams } = require("expo-router");
 const { getCached } = require("../../services/readCache");
+const { getChildHealthSummary } = require("../../services/healthSummary");
 
 const child: ChildResponse = {
   id: "c1", firstName: "Timmy", lastName: "Tester",
@@ -72,4 +77,53 @@ it("shows an empty state when the child isn't found in the cache", async () => {
   const { getByText } = await render(<ChildDetailScreen />);
 
   expect(getByText("groupView.empty")).toBeTruthy();
+});
+
+describe("health summary (feature 013c, US4)", () => {
+  it("shows active health records and due-soon/overdue vaccine flags", async () => {
+    getCached.mockReturnValue([child]);
+    getChildHealthSummary.mockResolvedValue({
+      status: "loaded",
+      summary: {
+        childId: "c1",
+        activeHealthRecords: [
+          { id: "h1", childId: "c1", recordType: "allergy", title: "Peanut allergy", description: "Confirmed by allergist.",
+            validFrom: null, validUntil: null, isExpired: false, attachmentDownloadUrl: null, recordedBy: null,
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: null },
+        ],
+        dueSoonVaccines: [
+          { vaccineName: "DTP", nextDueDate: "2026-07-20", isOverdue: false },
+          { vaccineName: "Hep B", nextDueDate: "2026-07-01", isOverdue: true },
+        ],
+      },
+    });
+
+    const { findByText } = await render(<ChildDetailScreen />);
+
+    expect(await findByText("Peanut allergy")).toBeTruthy();
+    expect(await findByText("Confirmed by allergist.")).toBeTruthy();
+    expect(await findByText("DTP")).toBeTruthy();
+    expect(await findByText("Hep B")).toBeTruthy();
+  });
+
+  it("shows a calm empty state when there are no health records or vaccine flags", async () => {
+    getCached.mockReturnValue([child]);
+    getChildHealthSummary.mockResolvedValue({
+      status: "loaded",
+      summary: { childId: "c1", activeHealthRecords: [], dueSoonVaccines: [] },
+    });
+
+    const { findByText } = await render(<ChildDetailScreen />);
+
+    expect(await findByText("child.healthSummary.empty")).toBeTruthy();
+  });
+
+  it("shows a distinct message when the summary can't load and nothing is cached", async () => {
+    getCached.mockReturnValue([child]);
+    getChildHealthSummary.mockResolvedValue({ status: "unavailable" });
+
+    const { findByText } = await render(<ChildDetailScreen />);
+
+    expect(await findByText("child.healthSummary.unavailable")).toBeTruthy();
+  });
 });

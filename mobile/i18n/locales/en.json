@@ -80,7 +80,13 @@
     "feverAlert": "Fever",
     "medicalQuickAccess": "Medical information",
     "medicalConditions": "Medical conditions",
-    "dietaryRestrictions": "Dietary restrictions"
+    "dietaryRestrictions": "Dietary restrictions",
+    "healthSummary": {
+      "empty": "No known health information.",
+      "unavailable": "Can't load health information — check your connection.",
+      "overdue": "Overdue since {{date}}",
+      "dueSoon": "Next dose due on {{date}}"
+    }
   },
   "roomSetup": {
     "title": "Set up this tablet",

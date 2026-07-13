@@ -9,8 +9,4 @@ internal static class GroupMapper
 
     public static ChildGroupAssignmentResponse ToAssignmentResponse(ChildGroupAssignment a, string groupName) => new(
         a.GroupId, groupName, a.StartDate, a.EndDate);
-
-    public static VaccinationResponse ToVaccinationResponse(VaccinationRecord v) => new(
-        v.Id, v.VaccineName, v.DateAdministered, v.NextDueDate,
-        v.NextDueDate.HasValue && v.NextDueDate <= DateOnly.FromDateTime(DateTime.UtcNow));
 }

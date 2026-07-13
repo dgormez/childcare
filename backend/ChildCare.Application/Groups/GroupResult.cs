@@ -32,15 +32,3 @@ public class ChildGroupAssignmentResult
     public static ChildGroupAssignmentResult Success(ChildGroupAssignmentResponse response) => new() { Response = response };
     public static ChildGroupAssignmentResult Fail(GroupFailure failure) => new() { Failure = failure };
 }
-
-/// <summary>Separate result for endpoints returning a VaccinationResponse.</summary>
-public class VaccinationResult
-{
-    public VaccinationResponse? Response { get; private init; }
-    public GroupFailure? Failure { get; private init; }
-
-    public bool Succeeded => Failure is null;
-
-    public static VaccinationResult Success(VaccinationResponse response) => new() { Response = response };
-    public static VaccinationResult Fail(GroupFailure failure) => new() { Failure = failure };
-}

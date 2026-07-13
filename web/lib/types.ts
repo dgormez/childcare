@@ -381,3 +381,44 @@ export interface PagedIncidentReportsResponse {
   pageSize:   number;
   totalCount: number;
 }
+
+// ── Vaccine & health records (feature 013c) ────────────────────────────────────
+export interface VaccineRecordResponse {
+  id:             string;
+  childId:        string;
+  vaccineName:    string;
+  doseNumber:     number | null;
+  administeredOn: string;
+  nextDueDate:    string | null;
+  administeredBy: string | null;
+  notes:          string | null;
+  recordedBy:     string | null;
+  createdAt:      string;
+  updatedAt:      string;
+}
+
+export interface VaccinationsDueSoonResponse {
+  childId:      string;
+  childName:    string;
+  locationId:   string;
+  vaccineName:  string;
+  nextDueDate:  string;
+  isOverdue:    boolean;
+}
+
+export type HealthRecordType = "allergy" | "chronic_condition" | "medication_standing" | "doctor_note" | "other";
+
+export interface HealthRecordResponse {
+  id:                    string;
+  childId:               string;
+  recordType:            HealthRecordType;
+  title:                 string;
+  description:           string;
+  validFrom:             string | null;
+  validUntil:            string | null;
+  isExpired:             boolean;
+  attachmentDownloadUrl: string | null;
+  recordedBy:            string | null;
+  createdAt:             string;
+  updatedAt:             string | null;
+}

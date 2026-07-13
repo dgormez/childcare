@@ -9,6 +9,12 @@ as well as one-off events (incidents, injuries, health alerts).
 **Extended by feature `009-child-events`** (2026-07-08) — added the temperature-alert path and
 medication event recording described below; the ongoing-profile flow (feature 006) is unchanged.
 
+**Extended by feature `013c-vaccine-health-records`** (2026-07-13) — added structured vaccination
+history and categorized health records (see "Flow — vaccination & health record tracking" below),
+alongside the existing free-text profile fields (feature 006). Also built director web's first
+per-child detail screen (`/children/[id]`, Gezondheid tab), superseding the "no per-child detail
+screen yet" note this file previously carried under Applications.
+
 ### Trigger
 
 - Ongoing: a child's medical/emergency profile is created or updated (enrollment, or a parent-
@@ -55,6 +61,29 @@ medication event recording described below; the ongoing-profile flow (feature 00
 3. This is deliberately distinct from *who logged the entry* (`recorded_by`, resolved from the
    room's shift register) — `administered_by` is who actually gave the dose.
 
+### Flow — vaccination & health record tracking (feature 013c)
+
+1. Director opens a child's Gezondheid tab (director web's first per-child detail screen) and
+   records a vaccination (vaccine name, dose, administered date, next due date, clinic, notes) or
+   a categorized health record (allergy / chronic condition / standing medication / doctor's note
+   / other — a title, description, optional validity window, optional signed-URL attachment).
+   Both are structured, queryable records, distinct from feature 006's free-text profile fields.
+2. The system computes, across every child, which vaccines are due or overdue within 30 days and
+   surfaces them in a "Vaccinations due soon" block on the director's dashboard — a compliance
+   reminder, not just a log. An overdue vaccine is never auto-dismissed; it clears only when a
+   director records the vaccination as given or updates the due date.
+3. Caregivers get the same read-only, location-scoped access pattern step 2 above already
+   established (feature 008a's `StaffLocationEligibility` check) extended to this new data: a
+   child's active health records and every due-soon/overdue vaccine flag for that child surface
+   directly in the existing medical quick-access screen — no separate screen, no extra tap.
+4. Caregivers can never create, edit, or delete a vaccine or health record — director-only, in
+   every context.
+5. Vaccine/health record data is excluded from any bulk export or automated summary by default
+   (no such feature exists in this codebase yet — this is a forward-looking constraint on
+   whichever future feature builds one, not an active behavior with a UI today).
+6. Records survive a child's deactivation/departure indefinitely (legal retention) — no cascade
+   delete, no deactivation guard registered by this feature (mirrors 013b's incident reports).
+
 ### Flow — incident/event
 
 **Built as its own record type by feature `013b-incident-reports`** (2026-07-12) — superseding the
@@ -80,16 +109,22 @@ medication event recording described below; the ongoing-profile flow (feature 00
 
 Caregiver Tablet:
 
-- Medical quick-access (read-only) from a child's card.
+- Medical quick-access (read-only) from a child's card — now also shows active health records
+  and due-soon/overdue vaccine flags (feature 013c), same screen, same one-tap reach.
 - Temperature/medication quick-entry with administrator confirmation.
 - Incident report filing ("Incident melden" on the child's profile, feature 013b), works offline.
 
 Director Web:
 
 - Edit medical/emergency profile fields.
+- Child Gezondheid tab (feature 013c, `/children/[id]`) — the first per-child detail screen in
+  this app: vaccine record and health record CRUD, attachment upload for health records.
+- Dashboard "Vaccinations due soon" block (feature 013c) — cross-child, 30-day window, overdue
+  flagged distinctly.
 - Dedicated Incidents screen (feature 013b): cross-location review, filtering, reviewed-state
-  tracking, PDF export for inspection. `/children` itself has no per-child detail screen yet
-  (007a) — 013b's child filter substitutes for a child-file incident tab until one exists.
+  tracking, PDF export for inspection. Now that `/children/[id]` exists (013c), a future pass
+  could link an incident's child directly to their Gezondheid tab, but 013b's own child filter
+  remains the primary incident-lookup path — not changed by this feature.
 - A medication event's `administered_by` can be filled in retroactively via the API — no screen
   in this app exposes it yet (spec.md Assumptions, feature 009).
 
@@ -110,3 +145,11 @@ Parent Mobile:
 - Temperature/medication events: `child_events` table (feature 009) — see `dailycare.md` for the
   shared event-recording mechanics; `Contact.PushToken` (feature 009, nullable, not yet
   populated by any client) is the alert-recipient field.
+- Vaccine record (feature 013c, `vaccine_records` tenant table, replaces feature 006's unused
+  `vaccination_records`): child, vaccine name, dose number, administered/next-due dates,
+  administering clinic, notes, recording director (nullable — legacy-migrated rows have none),
+  soft-delete. Never cascade-deleted when its child is deactivated.
+- Health record (feature 013c, `health_records` tenant table): child, category (allergy/chronic
+  condition/standing medication/doctor's note/other), title, description, optional validity
+  window, optional GCS-signed attachment, recording director, soft-delete. Distinct from feature
+  006's free-text `Child` medical fields — this is the structured, categorized counterpart.

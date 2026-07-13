@@ -52,31 +52,12 @@ public static class GroupsEndpoints
             var result = await mediator.Send(new AssignChildToGroupCommand(childId, req.GroupId, req.StartDate));
             return MapAssignmentResult(result, onSuccess: r => Results.Created($"/api/children/{childId}/groups", r));
         });
-
-        var childVaccinations = app.MapGroup("/api/children/{childId:guid}/vaccinations")
-            .WithTags("Vaccinations")
-            .RequireAuthorization("DirectorOnly");
-
-        childVaccinations.MapGet("/", async (Guid childId, IMediator mediator) =>
-        {
-            var list = await mediator.Send(new ListChildVaccinationsQuery(childId));
-            return Results.Ok(list);
-        });
-
-        childVaccinations.MapPost("/", async (Guid childId, RecordVaccinationRequest req, IMediator mediator) =>
-        {
-            var result = await mediator.Send(new RecordVaccinationCommand(childId, req.VaccineName, req.DateAdministered, req.NextDueDate));
-            return MapVaccinationResult(result, onSuccess: r => Results.Created($"/api/children/{childId}/vaccinations/{r.Id}", r));
-        });
     }
 
     private static IResult MapGroupResult(GroupResult result, Func<GroupResponse, IResult> onSuccess) =>
         result.Succeeded ? onSuccess(result.Response!) : MapGroupFailure(result.Failure!.Value);
 
     private static IResult MapAssignmentResult(ChildGroupAssignmentResult result, Func<ChildGroupAssignmentResponse, IResult> onSuccess) =>
-        result.Succeeded ? onSuccess(result.Response!) : MapGroupFailure(result.Failure!.Value);
-
-    private static IResult MapVaccinationResult(VaccinationResult result, Func<VaccinationResponse, IResult> onSuccess) =>
         result.Succeeded ? onSuccess(result.Response!) : MapGroupFailure(result.Failure!.Value);
 
     private static IResult MapGroupFailure(GroupFailure failure) => failure switch

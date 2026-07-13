@@ -42,6 +42,17 @@ public static class ChildrenEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 013c FR-013/FR-015: caregiver read-only health/allergy summary, reusing the
+        // same eligibility scoping as GetChildByIdQuery above.
+        reads.MapGet("/{id:guid}/health-summary", async (Guid id, HttpContext ctx, IMediator mediator) =>
+        {
+            var (role, tenantUserId) = CallerIdentity(ctx);
+            var result = await mediator.Send(new GetChildHealthSummaryQuery(id, role, tenantUserId));
+            return result.Succeeded
+                ? Results.Ok(result.Response)
+                : Results.Json(new { errorKey = "errors.child.not_found" }, statusCode: StatusCodes.Status404NotFound);
+        });
+
         var group = app.MapGroup("/api/children")
             .WithTags("Children")
             .RequireAuthorization("DirectorOnly");

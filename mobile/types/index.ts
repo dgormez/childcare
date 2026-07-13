@@ -62,6 +62,36 @@ export interface ChildResponse {
   deactivatedAt:        string | null;
 }
 
+// ── Vaccine & health records (feature 013c) — caregiver read-only summary ───────
+export type HealthRecordType = "allergy" | "chronic_condition" | "medication_standing" | "doctor_note" | "other";
+
+export interface HealthRecordResponse {
+  id:                    string;
+  childId:               string;
+  recordType:            HealthRecordType;
+  title:                 string;
+  description:           string;
+  validFrom:             string | null;
+  validUntil:            string | null;
+  isExpired:             boolean;
+  attachmentDownloadUrl: string | null;
+  recordedBy:            string | null;
+  createdAt:             string;
+  updatedAt:             string | null;
+}
+
+export interface ChildHealthSummaryVaccineFlag {
+  vaccineName:  string;
+  nextDueDate:  string;
+  isOverdue:    boolean;
+}
+
+export interface ChildHealthSummaryResponse {
+  childId:            string;
+  activeHealthRecords: HealthRecordResponse[];
+  dueSoonVaccines:     ChildHealthSummaryVaccineFlag[];
+}
+
 // ── Kiosk mode room shift register (feature 008a) ───────────────────────────────
 export interface RoomRosterCard {
   staffProfileId: string;
