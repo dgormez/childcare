@@ -2,6 +2,7 @@ using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
 using ChildCare.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -90,6 +91,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<IncidentReport> IncidentReports => Set<IncidentReport>();
 
+    public DbSet<MealPreference> MealPreferences => Set<MealPreference>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -174,6 +177,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         HealthRecordTypeExtensions.TryParseWireString(value, out var parsed)
             ? parsed
             : throw new FormatException($"Unknown HealthRecordType: {value}");
+
+    private static DietaryType ParseDietaryType(string value) =>
+        DietaryTypeExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown DietaryType: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -743,6 +751,37 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // SourceId is intentionally NOT an FK (polymorphic across three tables — data-model.md).
             // Notification-centre list query: most-recent-first per recipient.
             n.HasIndex(x => new { x.TenantUserId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MealPreference>(mp =>
+        {
+            mp.ToTable("child_meal_preferences");
+            mp.HasKey(x => x.Id);
+            mp.Property(x => x.Texture)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (MealTexture)Enum.Parse(typeof(MealTexture), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            mp.Property(x => x.PortionSize)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (MealPortionSize)Enum.Parse(typeof(MealPortionSize), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            // Native text[] column — DietaryType has no sub-fields (unlike Contract.ContractedDays'
+            // owned-type JSON), so a converted flat array is simpler than an owned collection
+            // (data-model.md). A ValueComparer is required for EF Core to detect in-place
+            // mutations of the List<DietaryType> reference correctly.
+            mp.Property(x => x.DietaryType)
+              .HasConversion(
+                  v => v.Select(d => d.ToWireString()).ToArray(),
+                  v => v.Select(ParseDietaryType).ToList(),
+                  new ValueComparer<List<DietaryType>>(
+                      (a, b) => a!.SequenceEqual(b!),
+                      v => v.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
+                      v => v.ToList()))
+              .HasColumnType("text[]");
+            mp.Property(x => x.AdditionalNotes).HasMaxLength(2000);
+            mp.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            mp.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.UpdatedBy);
+            mp.HasIndex(x => x.ChildId).IsUnique();
         });
     }
 }

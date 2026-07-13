@@ -12,6 +12,7 @@ import { ConfirmDialog } from "../../../../components/ConfirmDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../../components/ui/tabs";
 import { ChildProfileTab } from "../../../../components/children/ChildProfileTab";
 import { ChildFormDialog, type ChildFormValues } from "../../../../components/children/ChildFormDialog";
+import { ChildMealPreferenceForm } from "../../../../components/children/ChildMealPreferenceForm";
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
@@ -241,6 +242,7 @@ export default function ChildDetailPage() {
             onEdit={() => { setEditSaveError(null); setEditDialogOpen(true); }}
             onPhotoUpload={uploadChildPhoto}
           />
+          <ChildMealPreferenceForm childId={child.id} />
         </TabsContent>
 
         <TabsContent value="health">

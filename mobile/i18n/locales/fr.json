@@ -310,5 +310,35 @@
     "photoLimitMessage": "Vous pouvez ajouter un maximum de 10 photos à une activité.",
     "photosUploading": "Téléchargement des photos…",
     "save": "Enregistrer"
+  },
+  "mealList": {
+    "title": "Liste des repas",
+    "includeExpected": "Inclure les enfants attendus",
+    "emptyState": "Aucun enfant présent pour le moment.",
+    "expectedSectionTitle": "Attendus",
+    "noPreference": "Aucune préférence",
+    "texture": {
+      "pureed": "Purée",
+      "mixed": "Mixé",
+      "pieces": "Morceaux",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Casher",
+      "vegetarian": "Végétarien",
+      "vegan": "Végétalien",
+      "gluten_free": "Sans gluten"
+    },
+    "portionSize": {
+      "small": "Petite",
+      "normal": "Normale",
+      "large": "Grande"
+    },
+    "allergySeverity": {
+      "severe": "Allergie sévère",
+      "mild_moderate": "Allergie légère/modérée",
+      "none": "Aucune allergie connue"
+    }
   }
 }

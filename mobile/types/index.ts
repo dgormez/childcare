@@ -96,6 +96,36 @@ export interface ChildHealthSummaryResponse {
   dueSoonVaccines:     ChildHealthSummaryVaccineFlag[];
 }
 
+// ── Meal list (feature 013d) ─────────────────────────────────────────────────────
+export type MealTexture = "pureed" | "mixed" | "pieces" | "normal";
+export type MealPortionSize = "small" | "normal" | "large";
+export type AllergySeverityWireValue = "severe" | "mild_moderate" | "none";
+
+export interface MealListChildEntry {
+  childId:               string;
+  firstName:             string;
+  lastName:              string;
+  texture:               MealTexture;
+  dietaryType:           string[];
+  portionSize:           MealPortionSize;
+  additionalNotes:       string | null;
+  hasPreference:         boolean;
+  allergySeverity:       AllergySeverityWireValue;
+  hasStandingMedication: boolean;
+}
+
+export interface MealListGroupEntry {
+  groupId:   string;
+  groupName: string;
+  children:  MealListChildEntry[];
+}
+
+export interface MealListResponse {
+  date:     string;
+  groups:   MealListGroupEntry[];
+  expected: { children: MealListChildEntry[] } | null;
+}
+
 // ── Kiosk mode room shift register (feature 008a) ───────────────────────────────
 export interface RoomRosterCard {
   staffProfileId: string;

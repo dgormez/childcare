@@ -310,5 +310,35 @@
     "photoLimitMessage": "You can add a maximum of 10 photos to one activity.",
     "photosUploading": "Uploading photos…",
     "save": "Save"
+  },
+  "mealList": {
+    "title": "Meal List",
+    "includeExpected": "Include expected",
+    "emptyState": "No children present yet.",
+    "expectedSectionTitle": "Expected",
+    "noPreference": "No preference",
+    "texture": {
+      "pureed": "Pureed",
+      "mixed": "Mixed",
+      "pieces": "Pieces",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten_free": "Gluten-free"
+    },
+    "portionSize": {
+      "small": "Small",
+      "normal": "Normal",
+      "large": "Large"
+    },
+    "allergySeverity": {
+      "severe": "Severe allergy",
+      "mild_moderate": "Mild/moderate allergy",
+      "none": "No known allergy"
+    }
   }
 }

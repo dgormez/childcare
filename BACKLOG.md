@@ -28,6 +28,7 @@
 | 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | ✅ Done |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
+| 008b | `008b-configurable-caregiver-pin` | Per-location director-web toggle to make the caregiver PIN step optional at check-in/check-out, keeping the tap-to-identify roster flow (and BKR ratio / event attribution, which depend on it) intact | 008a | 🔲 Not started |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
@@ -42,6 +43,7 @@
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | ✅ Done |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
 | 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | ✅ Done |
+| 013g | `013g-vaccine-catalog` | Shared, admin-maintained vaccine catalog (seeded from the Vlaamse basisvaccinatieschema) backing 013c's free-text vaccineName; adds attachment support on VaccineRecord so a director can attach a scan/photo of the child's vaccinatieboekje | 013c | 🔲 Not started |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -944,6 +946,104 @@ Out of scope:
 - Live multi-tablet presence sync (two tablets showing each other's
   checked-in caregivers in real time) — Phase 2. Phase 1: each
   tablet shows who it knows about from the last successful sync.
+```
+
+---
+
+### 008b — Configurable Caregiver PIN
+
+**Added 2026-07-13, from a director asking whether PIN entry could be optional** — some KDVs'
+established way of working doesn't fit a per-caregiver PIN step. Investigated what PIN actually
+protects in 008a's design before proposing this: `RoomShift.StaffProfileId` (which caregiver
+tapped their card and checked in) is what feature 009/010/013b's `IShiftAttributionService`
+uses to resolve `recorded_by`/`administered_by`, and it is *also* the sole data source for
+`GetBkrRatioQuery`'s legally-required live begeleider-kind-ratio (`qualifiedStaffCount` comes
+straight from open `RoomShifts`). Removing check-in itself would silently zero out BKR and leave
+every event/incident unattributed — not acceptable. PIN entry (the *verification* step, on top
+of the tap) is separable from that: `CheckInCommand`/`CheckOutCommand` already gate on
+`VerifyPinCommand.VerifyAsync` before writing the `RoomShift` row, so skipping just that call
+when a location opts out preserves BKR and attribution exactly as today — self-asserted from the
+tapped card instead of PIN-confirmed.
+
+```
+Add a per-location director-web setting to make the caregiver PIN step
+optional at check-in/check-out, for KDVs whose way of working doesn't fit a
+per-caregiver PIN entry — while keeping the underlying tap-to-identify
+check-in flow intact, since BKR ratio (010) and event/incident attribution
+(009/010/013b) both depend on RoomShifts existing, not on the PIN itself.
+
+Context: 008a's kiosk flow is select-then-PIN — a caregiver taps their own
+photo card (identifying themselves), then confirms with a PIN
+(CheckInCommand → VerifyPinCommand.VerifyAsync → writes RoomShift). Every
+downstream legal/audit feature (GetBkrRatioQuery's qualifiedStaffCount,
+IShiftAttributionService's recorded_by/administered_by resolution used by
+009/010/013b) reads only from RoomShifts.CheckedOutAt/StaffProfileId — none
+of it reads or requires that PIN verification happened. This means the tap
+(identity claim) and the PIN (proof of that claim) are separable: a location
+can skip the proof step without breaking BKR or attribution, at the cost of
+self-asserted rather than PIN-verified identity per check-in.
+
+What to build:
+- New `Location.RequiresCaregiverPin` (bool, default true) — follows 013f's
+  precedent (per-location settings on the `Location` entity, surfaced on
+  the existing `/locations/[id]` settings screen 013f already built; add a
+  new tab or extend "Algemeen" — decide at plan time which fits better
+  next to the existing Reserveringsinstellingen tab).
+- `CheckInCommand`/`CheckOutCommand`: when `RequiresCaregiverPin` is false
+  for the location, skip the `VerifyPinCommand.VerifyAsync` call entirely
+  and write the `RoomShift` row directly off the tapped `StaffId` — confirm
+  at plan time whether the caregiver-tablet client omits the PIN
+  field/keypad step entirely when it knows the setting is off (the better
+  UX — no keypad shown at all) rather than showing a keypad that accepts
+  anything.
+- Kiosk tablet UI (mobile `app/(room)/`): when the location's roster
+  response indicates PIN is not required, tapping a caregiver's card
+  completes check-in/out immediately — no PIN keypad overlay appears.
+  Fetch this per-location flag alongside the existing roster call
+  (GET /api/room-shifts/roster) rather than a separate request.
+- `confirmAdministrator` (sensitive-action confirmation, 008a User Story 5):
+  decide at plan time whether this also becomes tap-only when
+  `RequiresCaregiverPin` is false, or whether it always requires a PIN
+  regardless of the location setting since it exists specifically as an
+  extra verification step for medical/sensitive actions, not just routine
+  presence — a real product decision, flag for /speckit-clarify.
+- Web: a labelled toggle on the location settings screen, plus explanatory
+  copy naming the tradeoff (self-asserted identity vs PIN-verified) so a
+  director makes an informed choice, not just flips a switch.
+
+Key constraints:
+- BKR ratio (010) and event/incident recorded_by/administered_by resolution
+  (009/010/013b) must behave identically whether or not PIN is required —
+  both already read only from RoomShifts, so no changes needed there as
+  long as check-in still writes a RoomShift row either way.
+- Existing PINs (StaffProfile's PinHash) are NOT deleted or invalidated when
+  a location disables the requirement — re-enabling it later must not force
+  every caregiver to re-set a PIN.
+- All user-facing strings (toggle label, tradeoff copy) use i18n keys
+  (NL/FR/EN).
+
+Edge cases:
+- A location has `RequiresCaregiverPin = false`, then a director re-enables
+  it mid-day while caregivers are already checked in. Existing open
+  RoomShifts are unaffected (they were validly created); the PIN keypad
+  reappears only for the next check-in/check-out action.
+- Two caregivers share visually similar names/photos and PIN is off — a
+  caregiver taps the wrong card by mistake. There is no PIN to catch the
+  error; the only correction path is the caregiver noticing and checking
+  themselves out / the right person in. Call this out in the tradeoff copy,
+  since it's the concrete risk of turning PIN off, not just an abstraction.
+- Offline behavior (008a's existing skip-PIN-when-offline path for
+  administrator confirmation) must remain distinct from this
+  always-skip-PIN setting — don't collapse the two code paths in a way
+  that makes it unclear later which one fired.
+
+Out of scope:
+- Removing the tap-to-identify step itself (anonymous/no-selection
+  check-in) — always keeps a per-caregiver identity claim, only PIN
+  verification of that claim becomes optional.
+- Any change to how PINs are set/reset/rate-limited when the requirement is
+  on — this feature only adds the off switch, not a new PIN-lifecycle
+  mechanism.
 ```
 
 ---
@@ -2803,6 +2903,106 @@ mobile passing). Scope deltas worth knowing before starting a dependent feature:
   deliberately separate from feature 005/006's `IProfilePhotoStorage` (which hardcodes a `.jpg`
   object path, wrong for a PDF/JPEG/PNG attachment) — reuses the same GCS bucket via a distinct
   path prefix, no new bucket or Terraform change needed.
+
+---
+
+### 013g — Vaccine Catalog & Attachments
+
+**Added 2026-07-13, from a live product discussion about 013c's vaccine records.** 013c shipped
+`VaccineRecord.vaccineName` as pure free text with a manually-typed `nextDueDate` and no
+attachment field — reliable only if whoever enters a record types the name and due date
+correctly every time. This feature adds a maintainable preset catalog (seeded from the Vlaamse
+Departement Zorg basisvaccinatieschema) and lets a director attach a scan/photo of the
+vaccination booklet as a fallback source of truth, since parents don't reliably keep the KDV's
+own record updated.
+
+```
+Add a shared, admin-maintained vaccine catalog to back feature 013c's
+vaccineName field, plus attachment support on VaccineRecord itself so a
+director can attach a photo/scan of the child's paper vaccination booklet
+(vaccinatieboekje) as a fallback when a KDV's own record has fallen behind.
+
+Context: 013c's VaccineRecordForm (web/components/health/VaccineRecordForm.tsx)
+is a plain free-text input for vaccineName and a manually-typed nextDueDate —
+there is no catalog anywhere, so the "due soon" reminder feature depends
+entirely on someone typing both fields correctly. VaccineRecord also has no
+attachment field (unlike HealthRecord, which already has AttachmentObjectPath
++ IHealthAttachmentStorage/GcsHealthAttachmentStorage from 013c) — parents are
+the actual source of truth for a child's vaccination history and won't
+reliably keep the KDV's typed record current, so being able to attach a photo
+of the real booklet is a practical fallback, not just a nice-to-have.
+
+What to build:
+- New shared reference table `vaccine_types` (NOT tenant-scoped — this is
+  national schedule data, not something each KDV maintains separately):
+    id, name TEXT, category TEXT (nullable — e.g. "basisvaccinatieschema" vs
+    "aanbevolen, niet gratis"), sort_order INT, is_active BOOL (soft-delete —
+    never hard-delete, existing VaccineRecords may still reference a retired
+    entry), created_at, updated_at.
+  Seed data: the Vlaamse Departement Zorg basisvaccinatieschema for children
+  0–14 (DTP-Polio-Hib-HepB combination, Pneumococcal, MMR, Meningococcal ACWY,
+  HPV) plus the "recommended but not free" set relevant to daycare-age
+  children (RSV immunisation for infants, Meningococcal B, Hepatitis A,
+  chickenpox). Adult-only entries (flu, shingles, etc.) are out of scope —
+  KDV children are the only subjects of this record.
+- `VaccineRecord` gains a nullable `VaccineTypeId` FK to `vaccine_types`.
+  `vaccineName` stays the source of truth and stays free text: picking a
+  catalog entry auto-fills it; typing something not in the list just leaves
+  `VaccineTypeId` null. This keeps historical records valid even if a catalog
+  entry is later retired or renamed.
+- `VaccineRecord` gains `AttachmentObjectPath` (nullable), reusing the
+  existing `IHealthAttachmentStorage`/`GcsHealthAttachmentStorage` port from
+  013c via a distinct object-path prefix — same signed-URL-on-read pattern,
+  no new bucket or Terraform change.
+- Web: `VaccineRecordForm.tsx`'s vaccineName `Input` becomes a combobox
+  (catalog entries, grouped by category, plus "add custom" free text). Add
+  an attachment upload control, reusing whatever component/flow
+  `HealthRecordForm.tsx` already built for its own attachment upload
+  (contracts/vaccine-health-records-api.md's existing pattern: upload is a
+  separate, subsequent action that never blocks saving the record itself).
+- New screen to manage the shared `vaccine_types` catalog (create, rename,
+  reorder, deactivate) — confirm at plan time whether this is scoped to a
+  platform-level super-admin (since the catalog is shared across all
+  tenants) or exposed to any director, given no super-admin role currently
+  exists in this codebase (003/005's role model is Director/Staff/Parent).
+  This may require defining that role for the first time, or scoping
+  catalog edits to Director with the explicit understanding that one
+  tenant's edits affect every tenant. Flag this as a real open question for
+  /speckit-clarify, not an assumption to make silently.
+
+Key constraints:
+- No new bucket/Terraform change — reuse 013c's existing GCS health-
+  attachment storage port with a new path prefix.
+- `vaccine_types` is never tenant-scoped — do not put it in the tenant
+  schema alongside `vaccine_records`.
+- All user-facing strings use i18n keys (NL/FR/EN).
+- Catalog entries are soft-deleted only; a `VaccineRecord.VaccineTypeId`
+  pointing at a deactivated entry must still render correctly (show the
+  stored `vaccineName`, not fail or blank out).
+
+Edge cases:
+- A catalog entry is renamed after several VaccineRecords already reference
+  it. Existing records keep their originally-typed `vaccineName` (denormalised
+  at creation time) — a rename does not retroactively change past records,
+  only what a director sees when picking that entry going forward.
+- A director picks a catalog entry, then edits the auto-filled vaccineName
+  text before saving. The FK and the free text can diverge — confirm at plan
+  time whether this is allowed (record shows the edited text but keeps
+  VaccineTypeId) or whether editing the text clears the FK.
+- Attachment upload fails after the record itself was already saved. Per
+  013c's established pattern, this must not roll back or block the record —
+  the record exists without an attachment, retryable separately.
+
+Out of scope:
+- Auto-calculating `nextDueDate` from the catalog's standard dosing interval
+  (e.g. "DTP booster due 10 years after this dose") — this feature only adds
+  the picker and the attachment; automatic due-date computation is a
+  separate, future enhancement if the catalog proves reliable in practice.
+- OCR/data-extraction from an uploaded vaccination-booklet photo — the
+  attachment is a human-readable fallback only, not a structured data
+  source.
+- Adult (staff) vaccination tracking — VaccineRecord is child-only.
+```
 
 ---
 

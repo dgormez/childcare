@@ -1050,6 +1050,52 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         });
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.MealPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdditionalNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string[]>("DietaryType")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("PortionSize")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Texture")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("child_meal_preferences", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2029,6 +2075,19 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MealPreference", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>

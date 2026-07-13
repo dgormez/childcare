@@ -36,7 +36,8 @@
     "groups": "Groupes",
     "dayReservations": "Demandes",
     "incidents": "Incidents",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "mealList": "Liste des repas"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -682,6 +683,56 @@
       "retry": "Réessayer",
       "overdue": "En retard",
       "dueSoon": "Bientôt"
+    }
+  },
+  "mealList": {
+    "title": "Liste des repas",
+    "locationLabel": "Lieu",
+    "dateLabel": "Date",
+    "includeExpected": "Inclure les enfants attendus",
+    "print": "Imprimer",
+    "loadError": "Impossible de charger la liste des repas. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "emptyState": "Aucun enfant présent pour le moment.",
+    "expectedSectionTitle": "Attendus",
+    "noPreference": "Aucune préférence",
+    "standingMedication": "Médication permanente",
+    "columnChild": "Enfant",
+    "columnTexture": "Texture",
+    "columnDietaryType": "Régime",
+    "columnPortionSize": "Portion",
+    "columnAllergySeverity": "Allergie",
+    "columnMedication": "Médication",
+    "texture": {
+      "pureed": "Purée",
+      "mixed": "Mixé",
+      "pieces": "Morceaux",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Casher",
+      "vegetarian": "Végétarien",
+      "vegan": "Végétalien",
+      "gluten_free": "Sans gluten"
+    },
+    "portionSize": {
+      "small": "Petite",
+      "normal": "Normale",
+      "large": "Grande"
+    },
+    "allergySeverity": {
+      "severe": "Allergie sévère",
+      "mild_moderate": "Allergie légère/modérée",
+      "none": "Aucune allergie connue"
+    },
+    "preferenceForm": {
+      "sectionTitle": "Préférences alimentaires",
+      "editButton": "Modifier les préférences alimentaires",
+      "saveButton": "Enregistrer",
+      "cancelButton": "Annuler",
+      "notesLabel": "Notes supplémentaires",
+      "saveError": "Impossible d'enregistrer les préférences alimentaires. Veuillez réessayer."
     }
   }
 }

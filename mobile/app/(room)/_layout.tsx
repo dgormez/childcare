@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
+import { UtensilsCrossed } from "lucide-react-native";
 import { useStore } from "../../store/useStore";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useColors } from "../../hooks/useColors";
@@ -55,7 +56,22 @@ export default function RoomLayout() {
           ),
         }}
       >
-        <Stack.Screen name="index" options={{ title: "" }} />
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "",
+            headerLeft: () => (
+              <TouchableOpacity
+                testID="meal-list-nav-button"
+                onPress={() => router.push("/meal-list")}
+                style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
+              >
+                <UtensilsCrossed size={22} strokeWidth={2} color={colors.textSoft} />
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Stack.Screen name="meal-list" options={{ title: t("mealList.title") }} />
       </Stack>
 
       {showExit && (

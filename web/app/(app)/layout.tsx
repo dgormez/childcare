@@ -28,9 +28,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-background dark:bg-background-dark">
-      <Sidebar session={session} onLogout={handleLogout} />
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+    <div className="flex h-screen bg-background dark:bg-background-dark print:block print:h-auto">
+      {/* print:hidden — feature 013d's Maaltijdenlijst page is this app's first print-oriented
+          screen; navigation chrome has no place on a printed kitchen sheet (contracts/
+          meal-list-api.md's "no PDF" decision relies on the browser's own print output). */}
+      <div className="print:hidden">
+        <Sidebar session={session} onLogout={handleLogout} />
+      </div>
+      <main className="flex-1 overflow-y-auto p-8 print:overflow-visible print:p-0">{children}</main>
     </div>
   );
 }

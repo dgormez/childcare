@@ -310,5 +310,35 @@
     "photoLimitMessage": "Je kan maximaal 10 foto's toevoegen aan één activiteit.",
     "photosUploading": "Foto's worden geüpload…",
     "save": "Opslaan"
+  },
+  "mealList": {
+    "title": "Maaltijdenlijst",
+    "includeExpected": "Inclusief verwacht",
+    "emptyState": "Nog geen kinderen aanwezig.",
+    "expectedSectionTitle": "Verwacht",
+    "noPreference": "Geen voorkeur",
+    "texture": {
+      "pureed": "Gepureerd",
+      "mixed": "Gemengd",
+      "pieces": "Stukjes",
+      "normal": "Normaal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Koosjer",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "gluten_free": "Glutenvrij"
+    },
+    "portionSize": {
+      "small": "Klein",
+      "normal": "Normaal",
+      "large": "Groot"
+    },
+    "allergySeverity": {
+      "severe": "Ernstige allergie",
+      "mild_moderate": "Lichte/matige allergie",
+      "none": "Geen bekende allergie"
+    }
   }
 }

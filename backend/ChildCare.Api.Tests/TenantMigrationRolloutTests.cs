@@ -117,7 +117,11 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// columns to the existing children table (no new table, no new FK), so it needs its own
     /// history-removal entry too, since dropping and recreating "children" via a reapplied
     /// "AddChildren" would otherwise leave those two columns permanently missing while EF's
-    /// migration history still claims the column-adding migration was applied.
+    /// migration history still claims the column-adding migration was applied. Feature 013d's
+    /// "AddChildMealPreferences" migration is the same class of gap as day_reservations/
+    /// vaccine_records/health_records above it — child_meal_preferences has FKs to children and
+    /// users (users is never dropped here, only ALTERed), so it only needs to precede the
+    /// children drop.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -150,6 +154,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."notifications";
             DROP TABLE "{schemaName}"."parent_invitations";
             DROP TABLE "{schemaName}"."incident_reports";
+            DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."groups";
             DROP TABLE "{schemaName}"."children";
             DROP TABLE "{schemaName}"."contacts";
@@ -168,7 +173,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences';
             """);
     }
 
