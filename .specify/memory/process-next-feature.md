@@ -354,3 +354,15 @@ use the static code review instead.
   gap: the mobile offline-cache-fallback service for the new caregiver summary had no test
   exercising its actual cache logic (only the screen mocked past it) — fixed with a test
   mirroring the group view's existing cache-fallback test.
+- 006a (`006a-child-profile-ui`): ✅ Done, merged 2026-07-13 (PR #25, squash-merged after green
+  CI — 567/567 backend + 92/92 web + 144/144 mobile passing). This run resumed mid-flight: a
+  prior session had already fully implemented, design-reviewed, and converged the feature (all
+  38 tasks checked off, PR open with green CI) — this invocation found the in-progress branch
+  per step 0, verified nothing was left outstanding, and only needed to merge and update
+  BACKLOG.md's status. Director-web "Profiel" tab on `/children/[id]` (create + edit, alongside
+  013c's "Gezondheid" tab), a new `PediatricianName`/`PediatricianPhone` pair on `Child` distinct
+  from the existing GP fields, and a caregiver-tablet read-only extension of the existing medical
+  summary. Same two recurring bug classes prior features' shipped-notes already flagged: a
+  migration-adding feature needed the `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests`
+  revert-helper fix (012a, 013c), and the web lockfile needed regenerating for a clean `npm ci`
+  under Node 20 (007a, 010, 013b).

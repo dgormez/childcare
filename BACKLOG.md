@@ -41,7 +41,7 @@
 | 013f | `013f-reservation-settings` | Per-location configurability of day reservations: enable/disable swap requests, absence requests; or set to informational-only (no approval queue, just a notification to director) | 013a | ✅ Done |
 | 013b | `013b-incident-reports` | Digital incident/accident report form (legal requirement under Kwaliteitsbesluit) | 006, 010 | ✅ Done |
 | 013c | `013c-vaccine-health-records` | Vaccination schedule tracking, health records, due-date alerts | 006 | ✅ Done |
-| 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | 🔲 Not started |
+| 006a | `006a-child-profile-ui` | Full child profile tab (web + mobile) — director create/edit for core details and medical contacts, adding a pediatrician (kinderarts) field distinct from the existing GP (huisarts) field; extends the `/children/[id]` screen 013c introduced | 006, 013c | ✅ Done |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | 🔲 Not started |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -2872,6 +2872,22 @@ Out of scope:
 - Pediatrician appointment scheduling or reminders (no such feature exists
   for the GP field either).
 ```
+
+**Shipped 2026-07-13** — `specs/006a-child-profile-ui/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 38/38 tasks, PR #24 squash-merged after green CI —
+567/567 backend + 92/92 web + 144/144 mobile passing). Scope deltas worth knowing:
+- `/speckit-converge` caught a real gap after implementation: profile photo was explicitly part
+  of FR-002/FR-004 and this feature's own field list above, but got dropped from `tasks.md`'s
+  task enumeration and never got built — fixed, not deferred.
+- Adding a migration after feature 013c's surfaced a latent fragility in two existing test
+  helpers (`TenantMigrationRolloutTests`, `LegacyVaccinationMigrationTests`) that assumed their
+  target migration would always remain the assembly's latest — both extended to revert this
+  migration too, since `TenantDbContext.MigrateAsync()` computes "pending" from the schema's last
+  *applied* migration and would otherwise silently no-op. Same class of fix 012a's shipped-note
+  already logged for a different pair of tests — worth checking both helpers on any future
+  migration-adding feature.
+- Web lockfile (`package-lock.json`) needed a regenerate for clean `npm ci` under Node 20 —
+  same CI-only class of issue 007a's and 010's shipped-notes already describe.
 
 ---
 
