@@ -28,7 +28,7 @@
 | 007a | `007a-web-admin-scaffold` | Next.js app cleanup, director auth (email/password + Google OAuth), nav shell, first real screen (staff list + PIN management) | 003, 005 | ✅ Done |
 | 008 | `008-caregiver-app-scaffold` | Expo app structure, caregiver auth, API client, offline sync infrastructure | 003, 006 | ✅ Done |
 | 008a | `008a-caregiver-kiosk-mode` | Room tablet kiosk mode, PIN per caregiver, session management | 008 | ✅ Done |
-| 008b | `008b-configurable-caregiver-pin` | Per-location director-web toggle to make the caregiver PIN step optional at check-in/check-out, keeping the tap-to-identify roster flow (and BKR ratio / event attribution, which depend on it) intact | 008a | 🔲 Not started |
+| 008b | `008b-configurable-caregiver-pin` | Per-location director-web toggle to make the caregiver PIN step optional at check-in/check-out, keeping the tap-to-identify roster flow (and BKR ratio / event attribution, which depend on it) intact | 008a | ✅ Done |
 | 009 | `009-child-events` | Daily tracking (sleep, feeding, diaper, mood, weight, etc.) | 006, 008a | ✅ Done |
 | 009a | `009a-child-events-custom-type` | Add a `custom` child event type (caregiver-defined label + free text) for anything the 11 fixed types don't cover; consider renaming `measurement` → `growth_check` for clarity (it's weight+height+head-circumference together, not just height) | 009 | ✅ Done |
 | 010 | `010-attendance` | Daily attendance register, BKR ratio enforcement | 007, 008a | ✅ Done |
@@ -1045,6 +1045,31 @@ Out of scope:
   on — this feature only adds the off switch, not a new PIN-lifecycle
   mechanism.
 ```
+
+**Shipped 2026-07-13** — `specs/008b-configurable-caregiver-pin/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 39/39 tasks, 600/600 backend + 102/102 web + 156/156
+mobile passing). New `Location.RequiresCaregiverPin` (default `true`), a director-web "Inchecken"
+tab with tradeoff copy, and a mobile kiosk that skips the PIN keypad entirely when a location's
+roster reports the setting off. Resolved via `/speckit-clarify` (no user stop needed — a clear
+recommended default existed): `confirmAdministrator` always requires PIN verification regardless
+of this setting, since it's a distinct, higher-bar confirmation for medical/sensitive actions with
+its own existing "Skip" escape hatch — this feature's setting governs routine check-in/check-out
+only. The trickiest implementation bug, caught by a test before merge: `CheckInCommand`/
+`CheckOutCommand` must never let a `null` PIN mean two different things — "server decided
+verification doesn't apply" (safe) vs. "client happened to omit a PIN while the location still
+requires one" (must fail) — conflating them via `VerifyPinCommand.VerifyAsync`'s new nullable-PIN
+skip path would have let any PIN-required location be bypassed by simply sending no PIN; fixed by
+coercing a null/empty client PIN to empty string before the call, reserving actual `null` for the
+server's own location-based decision. `/speckit-analyze` caught two stale test-file-path
+assumptions in tasks.md (a nonexistent `ChildCare.Application.Tests` project and a nonexistent
+`web/__tests__/components/` subdirectory — this repo's real conventions are `ChildCare.Api.Tests`
+flat integration tests and `web/__tests__/*.test.tsx` flat files) and one inaccurate premise (FR-016
+assumed an existing audit-log mechanism that doesn't exist in this codebase — corrected to a plain
+`ILogger` entry). `/speckit-converge` found one genuine edge-case gap after implementation (no test
+proved PIN-off check-in works for a caregiver who never had a PIN set at all, only ones who did) —
+fixed, not deferred, same standing rule as every prior feature. Also extended the
+`TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern once more
+(012a, 013c, 013d, 006a) for this feature's own migration.
 
 ---
 
