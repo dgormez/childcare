@@ -80,7 +80,13 @@
     "feverAlert": "Fièvre",
     "medicalQuickAccess": "Informations médicales",
     "medicalConditions": "Conditions médicales",
-    "dietaryRestrictions": "Restrictions alimentaires"
+    "dietaryRestrictions": "Restrictions alimentaires",
+    "healthSummary": {
+      "empty": "Aucune information de santé connue.",
+      "unavailable": "Impossible de charger les informations de santé — vérifiez votre connexion.",
+      "overdue": "En retard depuis le {{date}}",
+      "dueSoon": "Prochaine dose prévue le {{date}}"
+    }
   },
   "roomSetup": {
     "title": "Configurer cette tablette",

@@ -35,7 +35,8 @@
     "announcements": "Annonces",
     "groups": "Groupes",
     "dayReservations": "Demandes",
-    "incidents": "Incidents"
+    "incidents": "Incidents",
+    "dashboard": "Tableau de bord"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -528,5 +529,107 @@
     "yes": "Oui",
     "no": "Non",
     "none": "Aucune"
+  },
+  "children": {
+    "title": "Enfants",
+    "columnName": "Nom",
+    "columnDateOfBirth": "Date de naissance",
+    "columnStatus": "Statut",
+    "statusActive": "Actif",
+    "statusDeactivated": "Désactivé",
+    "emptyState": "Pas encore d'enfants.",
+    "loadError": "Impossible de charger les enfants. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "health": {
+      "title": "Santé",
+      "backToList": "Retour aux enfants",
+      "loadError": "Impossible de charger ces données. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "vaccines": {
+        "title": "Vaccinations",
+        "addButton": "Ajouter une vaccination",
+        "emptyState": "Aucune vaccination enregistrée.",
+        "columnVaccine": "Vaccin",
+        "columnAdministeredOn": "Administré le",
+        "columnNextDueDate": "Prochaine dose",
+        "dose": "dose {n}",
+        "overdue": "En retard",
+        "dueSoon": "Bientôt",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "cancel": "Annuler",
+        "deleteConfirmTitle": "Supprimer cette vaccination ?",
+        "deleteConfirmDescription": "Cette vaccination sera retirée de l'historique actif. Cette action est irréversible depuis cet écran.",
+        "form": {
+          "addTitle": "Ajouter une vaccination",
+          "editTitle": "Modifier la vaccination",
+          "vaccineNameLabel": "Nom du vaccin",
+          "doseNumberLabel": "Numéro de dose",
+          "administeredOnLabel": "Administré le",
+          "nextDueDateLabel": "Prochaine dose prévue le",
+          "administeredByLabel": "Administré par (médecin/clinique)",
+          "notesLabel": "Notes",
+          "cancel": "Annuler",
+          "save": "Enregistrer"
+        },
+        "saveError": "Impossible d'enregistrer cette vaccination. Veuillez réessayer.",
+        "deleteError": "Impossible de supprimer cette vaccination. Veuillez réessayer."
+      },
+      "records": {
+        "title": "Dossiers de santé",
+        "addButton": "Ajouter un dossier",
+        "emptyState": "Aucun dossier de santé.",
+        "columnTitle": "Titre",
+        "columnType": "Type",
+        "columnAttachment": "Pièce jointe",
+        "expired": "Expiré",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "cancel": "Annuler",
+        "saveError": "Impossible d'enregistrer ce dossier. Veuillez réessayer.",
+        "deleteError": "Impossible de supprimer ce dossier. Veuillez réessayer.",
+        "deleteConfirmTitle": "Supprimer ce dossier de santé ?",
+        "deleteConfirmDescription": "Ce dossier sera retiré de l'historique actif. Cette action est irréversible depuis cet écran.",
+        "form": {
+          "addTitle": "Ajouter un dossier de santé",
+          "editTitle": "Modifier le dossier de santé",
+          "recordTypeLabel": "Type",
+          "recordType": {
+            "allergy": "Allergie",
+            "chronic_condition": "Affection chronique",
+            "medication_standing": "Médication permanente",
+            "doctor_note": "Note médicale",
+            "other": "Autre"
+          },
+          "titleLabel": "Titre",
+          "descriptionLabel": "Description",
+          "validFromLabel": "Valide à partir de",
+          "validUntilLabel": "Valide jusqu'au",
+          "cancel": "Annuler",
+          "save": "Enregistrer"
+        },
+        "attachment": {
+          "addAttachment": "Ajouter une pièce jointe",
+          "replaceAttachment": "Remplacer la pièce jointe",
+          "viewAttachment": "Voir la pièce jointe",
+          "uploading": "Téléchargement en cours...",
+          "uploadSuccess": "Pièce jointe téléchargée.",
+          "uploadError": "Impossible de télécharger la pièce jointe. Veuillez réessayer.",
+          "invalidType": "Seuls les fichiers PDF, JPEG ou PNG sont autorisés.",
+          "tooLarge": "Le fichier est trop volumineux (max 10 Mo)."
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "dueSoon": {
+      "title": "Vaccinations bientôt dues",
+      "emptyState": "Aucune vaccination due ou en retard.",
+      "loadError": "Impossible de charger cet aperçu. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "overdue": "En retard",
+      "dueSoon": "Bientôt"
+    }
   }
 }

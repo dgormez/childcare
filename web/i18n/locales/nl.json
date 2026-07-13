@@ -35,7 +35,8 @@
     "announcements": "Mededelingen",
     "groups": "Groepen",
     "dayReservations": "Verzoeken",
-    "incidents": "Incidenten"
+    "incidents": "Incidenten",
+    "dashboard": "Dashboard"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -528,5 +529,107 @@
     "yes": "Ja",
     "no": "Nee",
     "none": "Geen"
+  },
+  "children": {
+    "title": "Kinderen",
+    "columnName": "Naam",
+    "columnDateOfBirth": "Geboortedatum",
+    "columnStatus": "Status",
+    "statusActive": "Actief",
+    "statusDeactivated": "Gedeactiveerd",
+    "emptyState": "Nog geen kinderen.",
+    "loadError": "Kan de kinderen niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "health": {
+      "title": "Gezondheid",
+      "backToList": "Terug naar kinderen",
+      "loadError": "Kan de gegevens niet laden. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen",
+      "vaccines": {
+        "title": "Vaccinaties",
+        "addButton": "Vaccinatie toevoegen",
+        "emptyState": "Nog geen vaccinaties geregistreerd.",
+        "columnVaccine": "Vaccin",
+        "columnAdministeredOn": "Toegediend op",
+        "columnNextDueDate": "Volgende dosis",
+        "dose": "dosis {n}",
+        "overdue": "Verlopen",
+        "dueSoon": "Binnenkort",
+        "edit": "Bewerken",
+        "delete": "Verwijderen",
+        "cancel": "Annuleren",
+        "deleteConfirmTitle": "Vaccinatie verwijderen?",
+        "deleteConfirmDescription": "Deze vaccinatie wordt uit de actieve historiek verwijderd. Deze actie kan niet ongedaan worden gemaakt via het scherm.",
+        "form": {
+          "addTitle": "Vaccinatie toevoegen",
+          "editTitle": "Vaccinatie bewerken",
+          "vaccineNameLabel": "Naam vaccin",
+          "doseNumberLabel": "Dosisnummer",
+          "administeredOnLabel": "Toegediend op",
+          "nextDueDateLabel": "Volgende dosis verwacht op",
+          "administeredByLabel": "Toegediend door (arts/kliniek)",
+          "notesLabel": "Notities",
+          "cancel": "Annuleren",
+          "save": "Opslaan"
+        },
+        "saveError": "Kan de vaccinatie niet opslaan. Probeer het opnieuw.",
+        "deleteError": "Kan de vaccinatie niet verwijderen. Probeer het opnieuw."
+      },
+      "records": {
+        "title": "Gezondheidsdossiers",
+        "addButton": "Dossier toevoegen",
+        "emptyState": "Nog geen gezondheidsdossiers.",
+        "columnTitle": "Titel",
+        "columnType": "Type",
+        "columnAttachment": "Bijlage",
+        "expired": "Verlopen",
+        "edit": "Bewerken",
+        "delete": "Verwijderen",
+        "cancel": "Annuleren",
+        "saveError": "Kan het dossier niet opslaan. Probeer het opnieuw.",
+        "deleteError": "Kan het dossier niet verwijderen. Probeer het opnieuw.",
+        "deleteConfirmTitle": "Gezondheidsdossier verwijderen?",
+        "deleteConfirmDescription": "Dit dossier wordt uit de actieve historiek verwijderd. Deze actie kan niet ongedaan worden gemaakt via het scherm.",
+        "form": {
+          "addTitle": "Gezondheidsdossier toevoegen",
+          "editTitle": "Gezondheidsdossier bewerken",
+          "recordTypeLabel": "Type",
+          "recordType": {
+            "allergy": "Allergie",
+            "chronic_condition": "Chronische aandoening",
+            "medication_standing": "Vaste medicatie",
+            "doctor_note": "Doktersnotitie",
+            "other": "Andere"
+          },
+          "titleLabel": "Titel",
+          "descriptionLabel": "Beschrijving",
+          "validFromLabel": "Geldig vanaf",
+          "validUntilLabel": "Geldig tot",
+          "cancel": "Annuleren",
+          "save": "Opslaan"
+        },
+        "attachment": {
+          "addAttachment": "Bijlage toevoegen",
+          "replaceAttachment": "Bijlage vervangen",
+          "viewAttachment": "Bijlage bekijken",
+          "uploading": "Bijlage wordt geüpload...",
+          "uploadSuccess": "Bijlage geüpload.",
+          "uploadError": "Kan de bijlage niet uploaden. Probeer het opnieuw.",
+          "invalidType": "Enkel PDF, JPEG of PNG toegestaan.",
+          "tooLarge": "Bestand is te groot (max. 10MB)."
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "dueSoon": {
+      "title": "Vaccinaties binnenkort verlopen",
+      "emptyState": "Geen vaccinaties binnenkort of te laat.",
+      "loadError": "Kan dit overzicht niet laden. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen",
+      "overdue": "Verlopen",
+      "dueSoon": "Binnenkort"
+    }
   }
 }

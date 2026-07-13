@@ -29,7 +29,8 @@ public interface ITenantDbContext
     DbSet<ChildContact> ChildContacts { get; }
     DbSet<Group> Groups { get; }
     DbSet<ChildGroupAssignment> ChildGroupAssignments { get; }
-    DbSet<VaccinationRecord> VaccinationRecords { get; }
+    DbSet<VaccineRecord> VaccineRecords { get; }
+    DbSet<HealthRecord> HealthRecords { get; }
     DbSet<Contract> Contracts { get; }
     DbSet<RoomShift> RoomShifts { get; }
     DbSet<DevicePairing> DevicePairings { get; }

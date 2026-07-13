@@ -80,7 +80,13 @@
     "feverAlert": "Verhoging",
     "medicalQuickAccess": "Medische gegevens",
     "medicalConditions": "Medische aandoeningen",
-    "dietaryRestrictions": "Dieetbeperkingen"
+    "dietaryRestrictions": "Dieetbeperkingen",
+    "healthSummary": {
+      "empty": "Geen bekende gezondheidsinformatie.",
+      "unavailable": "Kan gezondheidsinformatie niet laden — controleer je verbinding.",
+      "overdue": "Verlopen sinds {{date}}",
+      "dueSoon": "Volgende dosis verwacht op {{date}}"
+    }
   },
   "roomSetup": {
     "title": "Deze tablet instellen",

@@ -10,10 +10,3 @@ public record ChildGroupAssignmentResponse(
     string GroupName,
     DateOnly StartDate,
     DateOnly? EndDate);
-
-public record VaccinationResponse(
-    Guid Id,
-    string VaccineName,
-    DateOnly DateAdministered,
-    DateOnly? NextDueDate,
-    bool IsDue);

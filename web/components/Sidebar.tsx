@@ -3,14 +3,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert, LayoutDashboard } from "lucide-react";
 import { cn } from "../lib/cn";
 import { apiClient } from "../lib/apiClient";
 import type { Session } from "../lib/auth";
 import type { MessageThreadSummaryResponse } from "../lib/types";
 
 const REAL_NAV = [
+  { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/staff", labelKey: "staff", icon: Users },
+  { href: "/children", labelKey: "children", icon: Baby },
   { href: "/devices", labelKey: "devices", icon: Tablet },
   { href: "/locations", labelKey: "locations", icon: MapPin },
   { href: "/attendance", labelKey: "attendance", icon: CalendarClock },
@@ -28,9 +30,9 @@ const REAL_NAV = [
 // director can't navigate to a half-built screen from the sidebar itself (direct URL entry is
 // still handled by each route's own not-yet-available page, per spec Edge Cases).
 // "locations" moved to REAL_NAV — feature 013f replaced its NotYetAvailable placeholder.
+// "children" moved to REAL_NAV — feature 013c replaced its NotYetAvailable placeholder.
 const PLACEHOLDER_NAV = [
   { labelKey: "contracts", icon: FileText },
-  { labelKey: "children", icon: Baby },
 ] as const;
 
 interface SidebarProps {

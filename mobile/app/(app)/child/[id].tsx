@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Plus, AlertTriangle } from "lucide-react-native";
+import { Plus, AlertTriangle, Syringe, HeartPulse, Clock } from "lucide-react-native";
 import { getCached } from "../../../services/readCache";
 import { getPending } from "../../../services/offlineQueue";
 import { listChildEvents, deleteChildEvent, updateChildEvent } from "../../../services/childEvents";
+import { getChildHealthSummary, type HealthSummaryLoadResult } from "../../../services/healthSummary";
 import { useColors } from "../../../hooks/useColors";
 import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
 import { QuickActionSheet } from "../../../components/QuickActionSheet";
@@ -57,6 +58,8 @@ export default function ChildDetailScreen() {
   const [incidentReports, setIncidentReports] = useState<IncidentReportResponse[]>([]);
   const [incidentPendingIds, setIncidentPendingIds] = useState<Set<string>>(new Set());
   const [incidentFormVisible, setIncidentFormVisible] = useState(false);
+
+  const [healthSummary, setHealthSummary] = useState<HealthSummaryLoadResult | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -119,6 +122,8 @@ export default function ChildDetailScreen() {
         .map((row) => JSON.parse(row.payload).localId as string)
     );
     setIncidentPendingIds(stillPendingIds);
+
+    setHealthSummary(await getChildHealthSummary(id));
   }, [id]);
 
   useEffect(() => {
@@ -181,6 +186,52 @@ export default function ChildDetailScreen() {
             <Text className="text-text-soft dark:text-text-soft-dark">{child.dietaryRestrictions}</Text>
           </View>
         )}
+
+        {healthSummary?.status === "unavailable" && (
+          <View className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
+            <Text className="text-text-soft dark:text-text-soft-dark">{t("child.healthSummary.unavailable")}</Text>
+          </View>
+        )}
+
+        {healthSummary?.status === "loaded" &&
+          healthSummary.summary.activeHealthRecords.length === 0 &&
+          healthSummary.summary.dueSoonVaccines.length === 0 && (
+            <View className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3 items-center">
+              <HeartPulse size={20} strokeWidth={2} color={colors.textSoft} />
+              <Text className="text-text-soft dark:text-text-soft-dark mt-2">{t("child.healthSummary.empty")}</Text>
+            </View>
+        )}
+
+        {healthSummary?.status === "loaded" && healthSummary.summary.dueSoonVaccines.map((flag) => (
+          <View
+            key={flag.vaccineName}
+            className={`flex-row items-center rounded-xl p-4 mb-3 ${flag.isOverdue ? "bg-danger-bg dark:bg-danger-bg-dark" : "bg-warning dark:bg-warning-dark"}`}
+          >
+            {flag.isOverdue ? (
+              <AlertTriangle size={20} strokeWidth={2} color={colors.danger} />
+            ) : (
+              <Clock size={20} strokeWidth={2} color={colors.warningFg} />
+            )}
+            <View className="ml-2 flex-1">
+              <Text className={flag.isOverdue ? "text-danger dark:text-danger-dark font-semibold" : "text-warning-fg font-semibold"}>
+                {flag.vaccineName}
+              </Text>
+              <Text className={flag.isOverdue ? "text-danger dark:text-danger-dark opacity-80" : "text-warning-fg opacity-80"}>
+                {t(flag.isOverdue ? "child.healthSummary.overdue" : "child.healthSummary.dueSoon", { date: flag.nextDueDate })}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        {healthSummary?.status === "loaded" && healthSummary.summary.activeHealthRecords.map((record) => (
+          <View key={record.id} className="bg-surface dark:bg-surface-dark rounded-xl p-4 mb-3">
+            <View className="flex-row items-center mb-1">
+              <Syringe size={16} strokeWidth={2} color={colors.textSoft} />
+              <Text className="text-text dark:text-text-dark font-semibold ml-2">{record.title}</Text>
+            </View>
+            <Text className="text-text-soft dark:text-text-soft-dark">{record.description}</Text>
+          </View>
+        ))}
 
         <TouchableOpacity
           onPress={() => setIncidentFormVisible(true)}

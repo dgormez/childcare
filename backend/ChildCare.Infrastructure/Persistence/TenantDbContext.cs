@@ -44,7 +44,9 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<ChildGroupAssignment> ChildGroupAssignments => Set<ChildGroupAssignment>();
 
-    public DbSet<VaccinationRecord> VaccinationRecords => Set<VaccinationRecord>();
+    public DbSet<VaccineRecord> VaccineRecords => Set<VaccineRecord>();
+
+    public DbSet<HealthRecord> HealthRecords => Set<HealthRecord>();
 
     public DbSet<Contract> Contracts => Set<Contract>();
 
@@ -167,6 +169,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         ParentNotifiedHowExtensions.TryParseWireString(value, out var parsed)
             ? parsed
             : throw new FormatException($"Unknown ParentNotifiedHow: {value}");
+
+    private static HealthRecordType ParseHealthRecordType(string value) =>
+        HealthRecordTypeExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown HealthRecordType: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -346,12 +353,34 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             a.HasIndex(x => new { x.ChildId, x.EndDate });
         });
 
-        modelBuilder.Entity<VaccinationRecord>(v =>
+        modelBuilder.Entity<VaccineRecord>(v =>
         {
-            v.ToTable("vaccination_records");
+            v.ToTable("vaccine_records");
             v.HasKey(x => x.Id);
             v.Property(x => x.VaccineName).IsRequired().HasMaxLength(200);
+            v.Property(x => x.AdministeredBy).HasMaxLength(200);
+            v.Property(x => x.Notes).HasMaxLength(2000);
             v.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            v.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.RecordedBy);
+            v.HasIndex(x => x.ChildId);
+            // Partial index (research.md R4) — supports the due-soon dashboard aggregate without
+            // a full-table scan; excludes soft-deleted rows since they never contribute.
+            v.HasIndex(x => x.NextDueDate).HasFilter("\"DeletedAt\" IS NULL");
+        });
+
+        modelBuilder.Entity<HealthRecord>(hr =>
+        {
+            hr.ToTable("health_records");
+            hr.HasKey(x => x.Id);
+            hr.Property(x => x.RecordType)
+              .HasConversion(v => v.ToWireString(), v => ParseHealthRecordType(v))
+              .HasMaxLength(30)
+              .IsRequired();
+            hr.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            hr.Property(x => x.Description).IsRequired().HasMaxLength(2000);
+            hr.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            hr.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.RecordedBy);
+            hr.HasIndex(x => x.ChildId);
         });
 
         modelBuilder.Entity<Contract>(c =>

@@ -35,7 +35,8 @@
     "announcements": "Announcements",
     "groups": "Groups",
     "dayReservations": "Requests",
-    "incidents": "Incidents"
+    "incidents": "Incidents",
+    "dashboard": "Dashboard"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -528,5 +529,107 @@
     "yes": "Yes",
     "no": "No",
     "none": "None"
+  },
+  "children": {
+    "title": "Children",
+    "columnName": "Name",
+    "columnDateOfBirth": "Date of birth",
+    "columnStatus": "Status",
+    "statusActive": "Active",
+    "statusDeactivated": "Deactivated",
+    "emptyState": "No children yet.",
+    "loadError": "Could not load children. Please try again.",
+    "retry": "Retry",
+    "health": {
+      "title": "Health",
+      "backToList": "Back to children",
+      "loadError": "Could not load this data. Please try again.",
+      "retry": "Retry",
+      "vaccines": {
+        "title": "Vaccinations",
+        "addButton": "Add vaccination",
+        "emptyState": "No vaccinations recorded yet.",
+        "columnVaccine": "Vaccine",
+        "columnAdministeredOn": "Administered on",
+        "columnNextDueDate": "Next dose due",
+        "dose": "dose {n}",
+        "overdue": "Overdue",
+        "dueSoon": "Due soon",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "deleteConfirmTitle": "Delete this vaccination?",
+        "deleteConfirmDescription": "This vaccination will be removed from the active history. This cannot be undone from this screen.",
+        "form": {
+          "addTitle": "Add vaccination",
+          "editTitle": "Edit vaccination",
+          "vaccineNameLabel": "Vaccine name",
+          "doseNumberLabel": "Dose number",
+          "administeredOnLabel": "Administered on",
+          "nextDueDateLabel": "Next dose due on",
+          "administeredByLabel": "Administered by (doctor/clinic)",
+          "notesLabel": "Notes",
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "saveError": "Could not save this vaccination. Please try again.",
+        "deleteError": "Could not delete this vaccination. Please try again."
+      },
+      "records": {
+        "title": "Health Records",
+        "addButton": "Add record",
+        "emptyState": "No health records yet.",
+        "columnTitle": "Title",
+        "columnType": "Type",
+        "columnAttachment": "Attachment",
+        "expired": "Expired",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "saveError": "Could not save this record. Please try again.",
+        "deleteError": "Could not delete this record. Please try again.",
+        "deleteConfirmTitle": "Delete this health record?",
+        "deleteConfirmDescription": "This record will be removed from the active history. This cannot be undone from this screen.",
+        "form": {
+          "addTitle": "Add health record",
+          "editTitle": "Edit health record",
+          "recordTypeLabel": "Type",
+          "recordType": {
+            "allergy": "Allergy",
+            "chronic_condition": "Chronic condition",
+            "medication_standing": "Standing medication",
+            "doctor_note": "Doctor's note",
+            "other": "Other"
+          },
+          "titleLabel": "Title",
+          "descriptionLabel": "Description",
+          "validFromLabel": "Valid from",
+          "validUntilLabel": "Valid until",
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "attachment": {
+          "addAttachment": "Add attachment",
+          "replaceAttachment": "Replace attachment",
+          "viewAttachment": "View attachment",
+          "uploading": "Uploading attachment...",
+          "uploadSuccess": "Attachment uploaded.",
+          "uploadError": "Could not upload the attachment. Please try again.",
+          "invalidType": "Only PDF, JPEG, or PNG files are allowed.",
+          "tooLarge": "File is too large (max 10MB)."
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "dueSoon": {
+      "title": "Vaccinations due soon",
+      "emptyState": "No vaccinations due or overdue.",
+      "loadError": "Could not load this overview. Please try again.",
+      "retry": "Retry",
+      "overdue": "Overdue",
+      "dueSoon": "Due soon"
+    }
   }
 }

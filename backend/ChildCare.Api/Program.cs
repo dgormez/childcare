@@ -139,6 +139,7 @@ builder.Services.AddHttpClient();
 // No IStaffDeactivationGuard registration — IEnumerable<IStaffDeactivationGuard> resolves
 // empty until features 009/011 each register their own (research.md R4).
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
+builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>();
 
 // ── Group activities (feature 009b) ─────────────────────────────────────────
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
@@ -652,6 +653,8 @@ app.MapNotificationEndpoints();
 app.MapParentEndpoints();
 app.MapDayReservationEndpoints();
 app.MapIncidentReportEndpoints();
+app.MapVaccineRecordEndpoints();
+app.MapHealthRecordEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.
