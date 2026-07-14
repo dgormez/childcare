@@ -138,6 +138,11 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// 008b's "AddLocationRequiresCaregiverPin", whose one new column is removed for free by the
     /// DROP TABLE "locations" above) users is never dropped here, only ALTERed, so its new
     /// IsPlatformAdmin column needs an explicit DROP COLUMN step alongside the existing ones.
+    /// Feature 013e's "AddMonthlyMenuAndMealPreferenceRequests" migration adds three tables:
+    /// monthly_menu_days must drop before monthly_menus (FK to it); meal_preference_change_requests
+    /// has no FK to any table this method also drops other than children, so it only needs to
+    /// precede that drop (research.md R7) — same recurring pattern every migration-adding feature
+    /// since 012a has needed.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -172,12 +177,15 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."parent_invitations";
             DROP TABLE "{schemaName}"."incident_reports";
             DROP TABLE "{schemaName}"."child_meal_preferences";
+            DROP TABLE "{schemaName}"."meal_preference_change_requests";
             DROP TABLE "{schemaName}"."groups";
             DROP TABLE "{schemaName}"."children";
             DROP TABLE "{schemaName}"."contacts";
             DROP TABLE "{schemaName}"."staff_location_eligibility";
             DROP TABLE "{schemaName}"."staff_invitations";
             DROP TABLE "{schemaName}"."staff_profiles";
+            DROP TABLE "{schemaName}"."monthly_menu_days";
+            DROP TABLE "{schemaName}"."monthly_menus";
             DROP TABLE "{schemaName}"."locations";
             DROP TABLE "{schemaName}"."refresh_tokens";
             ALTER TABLE "{schemaName}"."users"
@@ -191,7 +199,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests';
             """);
     }
 
@@ -208,6 +216,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             _ = await db.Users.Select(u => u.Role).FirstOrDefaultAsync();
             _ = await db.Users.Select(u => u.IsPlatformAdmin).FirstOrDefaultAsync();
             _ = await db.RefreshTokens.CountAsync();
+            _ = await db.MonthlyMenus.CountAsync();
+            _ = await db.MealPreferenceChangeRequests.CountAsync();
             return true;
         }
         catch

@@ -84,7 +84,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// "AddIsPlatformAdminToUsers" is the next one — same shape as 008b's
     /// AddLocationRequiresCaregiverPin (one new column, no new table), so it's reverted via
     /// DROP COLUMN on "users" (found by this test actually failing after that migration
-    /// shipped, same as 013d's note above predicted).
+    /// shipped, same as 013d's note above predicted). Feature 013e's
+    /// "AddMonthlyMenuAndMealPreferenceRequests" is the next one — three new tables
+    /// (monthly_menu_days before monthly_menus, which it FKs to; meal_preference_change_requests
+    /// independently), same DROP-TABLE-plus-history-removal shape as 013d's own note above.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -93,6 +96,9 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
             DROP TABLE "{schemaName}"."child_meal_preferences";
+            DROP TABLE "{schemaName}"."meal_preference_change_requests";
+            DROP TABLE "{schemaName}"."monthly_menu_days";
+            DROP TABLE "{schemaName}"."monthly_menus";
             DROP TABLE "{schemaName}"."vaccine_records";
             DROP TABLE "{schemaName}"."tenant_custom_vaccine_entries";
             DROP TABLE "{schemaName}"."health_records";
@@ -115,7 +121,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "IsPlatformAdmin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests';
             """);
     }
 
