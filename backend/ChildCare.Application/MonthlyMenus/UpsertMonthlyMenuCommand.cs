@@ -71,20 +71,35 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
         }
         else
         {
+            // Flushed separately from the Add loop below: EF Core doesn't guarantee delete-before-
+            // insert ordering for unrelated rows in the same SaveChanges batch, and the new day set
+            // can reuse dates from the old one — an unflushed delete+insert of the same
+            // (MenuId, MenuDate) pair would trip the unique constraint.
             db.MonthlyMenuDays.RemoveRange(menu.Days);
             menu.Days.Clear();
+            await db.SaveChangesAsync(cancellationToken);
         }
 
         foreach (var day in request.Days)
         {
-            menu.Days.Add(new MonthlyMenuDay
+            // Explicit Add on the DbSet, not just the navigation collection: MonthlyMenuDay.Id is
+            // pre-populated via a Guid.NewGuid() property initializer, and EF Core's graph-based
+            // state detection treats a reachable entity with a non-default key as pre-existing
+            // ("Modified") rather than new — that produced an UPDATE matching zero rows instead of
+            // an INSERT. An explicit Add forces the correct Added state regardless of the key value.
+            var newDay = new MonthlyMenuDay
             {
+                MenuId = menu.Id,
                 MenuDate = day.Date,
                 Soup = NullIfBlank(day.Soup),
                 MainCourse = NullIfBlank(day.MainCourse),
                 Dessert = NullIfBlank(day.Dessert),
                 Notes = NullIfBlank(day.Notes),
-            });
+            };
+            // Add on the DbSet alone: EF's relationship fixup adds it into menu.Days automatically
+            // (MenuId matches the tracked parent), so also calling menu.Days.Add(newDay) here would
+            // insert it into that List a second time.
+            db.MonthlyMenuDays.Add(newDay);
         }
 
         await db.SaveChangesAsync(cancellationToken);

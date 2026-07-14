@@ -692,6 +692,7 @@ app.MapVaccineTypeEndpoints();
 app.MapPlatformAdminVaccineTypeEndpoints();
 app.MapHealthRecordEndpoints();
 app.MapMealListEndpoints();
+app.MapMonthlyMenuEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

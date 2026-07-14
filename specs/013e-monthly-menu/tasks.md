@@ -71,10 +71,10 @@ publishes it.
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Integration test: `PUT /api/locations/{locationId}/monthly-menus/{year}/{month}` creates a draft menu when none exists for that location/year/month, and a second `PUT` updates the existing menu rather than creating a duplicate (FR-001, FR-005), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
-- [ ] T013 [P] [US1] Integration test: `GET` before publish returns `isPublished: false`; `POST .../publish` sets `publishedAt`; the director `GET` returns the menu regardless of publish state (FR-002, FR-003), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
-- [ ] T014 [P] [US1] Integration test: `POST .../publish` and `POST .../unpublish` both return `404` when no menu exists yet for that location/year/month, in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
-- [ ] T015 [P] [US1] Integration test: a non-Director caller receives `403` on every director monthly-menu endpoint, in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [X] T012 [P] [US1] Integration test: `PUT /api/locations/{locationId}/monthly-menus/{year}/{month}` creates a draft menu when none exists for that location/year/month, and a second `PUT` updates the existing menu rather than creating a duplicate (FR-001, FR-005), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [X] T013 [P] [US1] Integration test: `GET` before publish returns `isPublished: false`; `POST .../publish` sets `publishedAt`; the director `GET` returns the menu regardless of publish state (FR-002, FR-003), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [X] T014 [P] [US1] Integration test: `POST .../publish` and `POST .../unpublish` both return `404` when no menu exists yet for that location/year/month, in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [X] T015 [P] [US1] Integration test: a non-Director caller receives `403` on every director monthly-menu endpoint, in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
 
 ### Implementation for User Story 1
 
@@ -82,7 +82,7 @@ publishes it.
 - [X] T017 [US1] Create `UpsertMonthlyMenuCommand` + handler + validator in `backend/ChildCare.Application/MonthlyMenus/UpsertMonthlyMenuCommand.cs` — find-or-create the `MonthlyMenu` row (draft), replace the full `MonthlyMenuDay` set for the month; validator rejects any `date` outside the URL's `year`/`month` and enforces the 500-char field lengths (depends on T003, T004, T010)
 - [X] T018 [P] [US1] Create `PublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/PublishMonthlyMenuCommand.cs` — sets `PublishedAt = NOW()`, fails with `NotFound` if no menu row exists (depends on T003)
 - [X] T019 [P] [US1] Create `UnpublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/UnpublishMonthlyMenuCommand.cs` — sets `PublishedAt = null`, fails with `NotFound` if no menu row exists (depends on T003)
-- [ ] T020 [US1] Create `backend/ChildCare.Api/Endpoints/MonthlyMenuEndpoints.cs` with the director group (`GET`/`PUT`/`.../publish`/`.../unpublish` on `/api/locations/{locationId}/monthly-menus/{year}/{month}`) under `DirectorOnly`, mapping the `404` `NotFound` failure from T018/T019 (depends on T016, T017, T018, T019)
+- [X] T020 [US1] Create `backend/ChildCare.Api/Endpoints/MonthlyMenuEndpoints.cs` with the director group (`GET`/`PUT`/`.../publish`/`.../unpublish` on `/api/locations/{locationId}/monthly-menus/{year}/{month}`) under `DirectorOnly`, mapping the `404` `NotFound` failure from T018/T019 (depends on T016, T017, T018, T019)
 - [ ] T021 Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client` against the local backend running with the new migration applied (depends on T020)
 - [ ] T022 [US1] Create `web/components/menu/MonthlyMenuDayGrid.tsx` — day-by-day soup/main/dessert/notes inputs for the selected month, Save draft / Publish / Un-publish actions, clearly distinguishing Publish from Un-publish (label + icon, not color alone) (depends on T021)
 - [ ] T023 [US1] Create `web/app/(app)/menu/page.tsx` — location selector + month selector, renders `MonthlyMenuDayGrid`, mirrors `web/app/(app)/meal-list/page.tsx`'s existing location-selector pattern (depends on T022)
