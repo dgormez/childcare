@@ -11,6 +11,10 @@ jest.mock("../services/menu", () => ({
   getMonthlyMenu: jest.fn(),
 }));
 
+jest.mock("../services/apiClient", () => ({
+  apiClient: { GET: jest.fn().mockResolvedValue({ response: { ok: true }, data: [] }) },
+}));
+
 const { getMonthlyMenu } = jest.requireMock("../services/menu") as { getMonthlyMenu: jest.Mock };
 
 function todayIso(): string {

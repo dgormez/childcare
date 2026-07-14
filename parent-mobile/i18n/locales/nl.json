@@ -163,6 +163,13 @@
       "missing_justified_flag": "Kies of deze afwezigheid gerechtvaardigd is.",
       "no_contracted_location": "Kon niet bepalen op welke locatie dit van toepassing is.",
       "not_found": "Dit verzoek kon niet worden gevonden."
+    },
+    "meal_preference_requests": {
+      "duplicate_pending": "Je hebt al een openstaand verzoek voor dit kind.",
+      "nothing_requested": "Kies een textuur of dieetvoorkeur om te wijzigen.",
+      "texture_invalid": "Kies een geldige textuur.",
+      "dietary_type_invalid": "Kies een geldige dieetvoorkeur.",
+      "notes_too_long": "De opmerking is te lang."
     }
   },
   "gallery": {
@@ -177,6 +184,31 @@
     "closed": "Gesloten",
     "noLocations": "Nog geen menu om te tonen.",
     "loadFailed": "Kon het menu niet laden."
+  },
+  "mealPreferenceRequests": {
+    "sectionTitle": "Maaltijdvoorkeuren",
+    "noPreference": "Geen voorkeur ingesteld",
+    "requestChange": "Voorkeur aanpassen",
+    "requestPending": "Aanvraag in behandeling",
+    "formTitle": "Voorkeur aanpassen",
+    "textureLabel": "Textuur",
+    "dietaryTypeLabel": "Dieet",
+    "notesLabel": "Opmerking voor de opvang",
+    "submit": "Aanvraag versturen",
+    "submitFailed": "De aanvraag kon niet verstuurd worden. Probeer opnieuw.",
+    "texture": {
+      "pureed": "Gemixt",
+      "mixed": "Gemengd",
+      "pieces": "Stukjes",
+      "normal": "Normaal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Koosjer",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "gluten_free": "Glutenvrij"
+    }
   },
   "dayReservations": {
     "absenceTitle": "Mijn kind is ziek",

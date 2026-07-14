@@ -163,6 +163,13 @@
       "missing_justified_flag": "Please choose whether this absence is justified.",
       "no_contracted_location": "Couldn't determine which location this applies to.",
       "not_found": "This request could not be found."
+    },
+    "meal_preference_requests": {
+      "duplicate_pending": "You already have a pending request for this child.",
+      "nothing_requested": "Please choose a texture or dietary preference to change.",
+      "texture_invalid": "Please choose a valid texture.",
+      "dietary_type_invalid": "Please choose a valid dietary preference.",
+      "notes_too_long": "The note is too long."
     }
   },
   "gallery": {
@@ -177,6 +184,31 @@
     "closed": "Closed",
     "noLocations": "No menu to show yet.",
     "loadFailed": "Could not load the menu."
+  },
+  "mealPreferenceRequests": {
+    "sectionTitle": "Meal preferences",
+    "noPreference": "No preference set",
+    "requestChange": "Request a change",
+    "requestPending": "Request pending",
+    "formTitle": "Request a preference change",
+    "textureLabel": "Texture",
+    "dietaryTypeLabel": "Dietary",
+    "notesLabel": "Note for the childcare center",
+    "submit": "Submit request",
+    "submitFailed": "Could not submit the request. Please try again.",
+    "texture": {
+      "pureed": "Pureed",
+      "mixed": "Mixed",
+      "pieces": "Pieces",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten_free": "Gluten-free"
+    }
   },
   "dayReservations": {
     "absenceTitle": "My child is sick",

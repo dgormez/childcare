@@ -10,6 +10,7 @@ export default function MenuLayout() {
   return (
     <Stack screenOptions={{ headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }}>
       <Stack.Screen name="index" options={{ title: t("menu.title") }} />
+      <Stack.Screen name="request-preference-change" options={{ title: t("mealPreferenceRequests.formTitle"), presentation: "modal" }} />
     </Stack>
   );
 }

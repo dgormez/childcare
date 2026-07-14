@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { CalendarOff, UtensilsCrossed } from "lucide-react-native";
 import { getMonthlyMenu } from "../../../services/menu";
+import { getMealPreference } from "../../../services/mealPreferenceRequests";
+import { apiClient } from "../../../services/apiClient";
 import { useColors } from "../../../hooks/useColors";
 import { ScreenContainer } from "../../../components/ScreenContainer";
-import type { ParentMonthlyMenuEntry, MonthlyMenuDayEntry } from "../../../types";
+import type { ParentMonthlyMenuEntry, MonthlyMenuDayEntry, ParentChildResponse, ParentMealPreferenceResponse } from "../../../types";
 
 function currentYearMonth(): { year: number; month: number } {
   const now = new Date();
@@ -32,6 +35,7 @@ export default function MenuScreen() {
   const { year, month } = currentYearMonth();
 
   const [entries, setEntries] = useState<ParentMonthlyMenuEntry[]>([]);
+  const [children, setChildren] = useState<ParentChildResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
@@ -40,10 +44,13 @@ export default function MenuScreen() {
     const result = await getMonthlyMenu(year, month);
     if (result.status === "unavailable") {
       setUnavailable(true);
-      return;
+    } else {
+      setUnavailable(false);
+      setEntries(result.entries);
     }
-    setUnavailable(false);
-    setEntries(result.entries);
+
+    const childrenResult = await apiClient.GET("/api/parent/children");
+    if (childrenResult.response.ok) setChildren(childrenResult.data as unknown as ParentChildResponse[]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month]);
 
@@ -73,6 +80,15 @@ export default function MenuScreen() {
         className="flex-1 bg-background dark:bg-background-dark"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
+        {children.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+            <Text className="text-text dark:text-text-dark text-lg font-semibold mb-3">{t("mealPreferenceRequests.sectionTitle")}</Text>
+            {children.map((child) => (
+              <ChildPreferenceRow key={child.id} child={child} />
+            ))}
+          </View>
+        )}
+
         {unavailable && (
           <View className="items-center" style={{ paddingVertical: 48, paddingHorizontal: 24 }}>
             <UtensilsCrossed color={colors.textSoft} size={28} strokeWidth={2} />
@@ -106,6 +122,56 @@ export default function MenuScreen() {
           ))}
       </ScrollView>
     </ScreenContainer>
+  );
+}
+
+function ChildPreferenceRow({ child }: { child: ParentChildResponse }) {
+  const { t } = useTranslation();
+  const colors = useColors();
+  const router = useRouter();
+  const [preference, setPreference] = useState<ParentMealPreferenceResponse | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMealPreference(child.id)
+      .then((p) => {
+        if (!cancelled) setPreference(p);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [child.id]);
+
+  const summary = preference?.texture ? t(`mealPreferenceRequests.texture.${preference.texture}`) : t("mealPreferenceRequests.noPreference");
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <View>
+        <Text className="text-text dark:text-text-dark text-sm font-medium">{child.firstName}</Text>
+        <Text className="text-text-soft dark:text-text-soft-dark text-xs mt-1">{summary}</Text>
+      </View>
+      <TouchableOpacity
+        testID={`request-preference-change-${child.id}`}
+        disabled={preference?.hasPendingRequest}
+        onPress={() => router.push({ pathname: "/(app)/menu/request-preference-change", params: { childId: child.id } })}
+        className="bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+        style={{ minHeight: 48, justifyContent: "center", opacity: preference?.hasPendingRequest ? 0.5 : 1 }}
+      >
+        <Text className="text-text dark:text-text-dark text-sm">
+          {preference?.hasPendingRequest ? t("mealPreferenceRequests.requestPending") : t("mealPreferenceRequests.requestChange")}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 

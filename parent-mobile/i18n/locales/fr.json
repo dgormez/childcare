@@ -163,6 +163,13 @@
       "missing_justified_flag": "Veuillez indiquer si cette absence est justifiée.",
       "no_contracted_location": "Impossible de déterminer à quelle antenne cela s'applique.",
       "not_found": "Cette demande est introuvable."
+    },
+    "meal_preference_requests": {
+      "duplicate_pending": "Vous avez déjà une demande en attente pour cet enfant.",
+      "nothing_requested": "Veuillez choisir une texture ou une préférence alimentaire à modifier.",
+      "texture_invalid": "Veuillez choisir une texture valide.",
+      "dietary_type_invalid": "Veuillez choisir une préférence alimentaire valide.",
+      "notes_too_long": "La note est trop longue."
     }
   },
   "gallery": {
@@ -177,6 +184,31 @@
     "closed": "Fermé",
     "noLocations": "Aucun menu à afficher pour le moment.",
     "loadFailed": "Impossible de charger le menu."
+  },
+  "mealPreferenceRequests": {
+    "sectionTitle": "Préférences alimentaires",
+    "noPreference": "Aucune préférence définie",
+    "requestChange": "Demander une modification",
+    "requestPending": "Demande en attente",
+    "formTitle": "Demander une modification de préférence",
+    "textureLabel": "Texture",
+    "dietaryTypeLabel": "Régime",
+    "notesLabel": "Note pour la crèche",
+    "submit": "Envoyer la demande",
+    "submitFailed": "Impossible d'envoyer la demande. Veuillez réessayer.",
+    "texture": {
+      "pureed": "Mixé",
+      "mixed": "Mixte",
+      "pieces": "Morceaux",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Casher",
+      "vegetarian": "Végétarien",
+      "vegan": "Végétalien",
+      "gluten_free": "Sans gluten"
+    }
   },
   "dayReservations": {
     "absenceTitle": "Mon enfant est malade",
