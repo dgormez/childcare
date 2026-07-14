@@ -80,7 +80,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// "vaccine_records" wholesale, that migration's three new columns on it (VaccineTypeId,
     /// CustomVaccineEntryId, AttachmentObjectPath) need no separate DROP COLUMN step, but its new
     /// tenant_custom_vaccine_entries table (referenced by vaccine_records) does need its own
-    /// DROP TABLE, ordered after vaccine_records is already gone.
+    /// DROP TABLE, ordered after vaccine_records is already gone. Feature 013h's
+    /// "AddIsPlatformAdminToUsers" is the next one — same shape as 008b's
+    /// AddLocationRequiresCaregiverPin (one new column, no new table), so it's reverted via
+    /// DROP COLUMN on "users" (found by this test actually failing after that migration
+    /// shipped, same as 013d's note above predicted).
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -108,8 +112,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "PediatricianPhone";
             ALTER TABLE "{schemaName}"."locations"
                 DROP COLUMN "RequiresCaregiverPin";
+            ALTER TABLE "{schemaName}"."users"
+                DROP COLUMN "IsPlatformAdmin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers';
             """);
     }
 

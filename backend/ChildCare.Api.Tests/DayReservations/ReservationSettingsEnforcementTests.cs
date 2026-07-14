@@ -20,8 +20,10 @@ namespace ChildCare.Api.Tests.DayReservations;
 public class ReservationSettingsEnforcementTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
 {
-    private static readonly DateOnly Monday = new(2026, 7, 13);
-    private static readonly DateOnly Tuesday = new(2026, 7, 14);
+    // See ClosureCalendarTests.cs's identical comment — these expired once "today" caught up
+    // to the original 2026-07-13/14 pair (CreateClosureDayCommand rejects past dates).
+    private static readonly DateOnly Monday = new(2027, 6, 7);
+    private static readonly DateOnly Tuesday = new(2027, 6, 8);
 
     private async Task<(HttpClient Client, RegisterOrganisationResponse Org, LocationResponse Location)> SetupAsync()
     {
