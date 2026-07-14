@@ -78,10 +78,10 @@ publishes it.
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Create `GetMonthlyMenuQuery` + handler in `backend/ChildCare.Application/MonthlyMenus/GetMonthlyMenuQuery.cs` — returns `exists: false` shell when no row exists (depends on T003, T004, T008)
-- [ ] T017 [US1] Create `UpsertMonthlyMenuCommand` + handler + validator in `backend/ChildCare.Application/MonthlyMenus/UpsertMonthlyMenuCommand.cs` — find-or-create the `MonthlyMenu` row (draft), replace the full `MonthlyMenuDay` set for the month; validator rejects any `date` outside the URL's `year`/`month` and enforces the 500-char field lengths (depends on T003, T004, T010)
-- [ ] T018 [P] [US1] Create `PublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/PublishMonthlyMenuCommand.cs` — sets `PublishedAt = NOW()`, fails with `NotFound` if no menu row exists (depends on T003)
-- [ ] T019 [P] [US1] Create `UnpublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/UnpublishMonthlyMenuCommand.cs` — sets `PublishedAt = null`, fails with `NotFound` if no menu row exists (depends on T003)
+- [X] T016 [US1] Create `GetMonthlyMenuQuery` + handler in `backend/ChildCare.Application/MonthlyMenus/GetMonthlyMenuQuery.cs` — returns `exists: false` shell when no row exists (depends on T003, T004, T008)
+- [X] T017 [US1] Create `UpsertMonthlyMenuCommand` + handler + validator in `backend/ChildCare.Application/MonthlyMenus/UpsertMonthlyMenuCommand.cs` — find-or-create the `MonthlyMenu` row (draft), replace the full `MonthlyMenuDay` set for the month; validator rejects any `date` outside the URL's `year`/`month` and enforces the 500-char field lengths (depends on T003, T004, T010)
+- [X] T018 [P] [US1] Create `PublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/PublishMonthlyMenuCommand.cs` — sets `PublishedAt = NOW()`, fails with `NotFound` if no menu row exists (depends on T003)
+- [X] T019 [P] [US1] Create `UnpublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/UnpublishMonthlyMenuCommand.cs` — sets `PublishedAt = null`, fails with `NotFound` if no menu row exists (depends on T003)
 - [ ] T020 [US1] Create `backend/ChildCare.Api/Endpoints/MonthlyMenuEndpoints.cs` with the director group (`GET`/`PUT`/`.../publish`/`.../unpublish` on `/api/locations/{locationId}/monthly-menus/{year}/{month}`) under `DirectorOnly`, mapping the `404` `NotFound` failure from T018/T019 (depends on T016, T017, T018, T019)
 - [ ] T021 Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client` against the local backend running with the new migration applied (depends on T020)
 - [ ] T022 [US1] Create `web/components/menu/MonthlyMenuDayGrid.tsx` — day-by-day soup/main/dessert/notes inputs for the selected month, Save draft / Publish / Un-publish actions, clearly distinguishing Publish from Un-publish (label + icon, not color alone) (depends on T021)
