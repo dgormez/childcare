@@ -47,7 +47,7 @@
 | 013h | `013h-platform-admin-vaccine-catalog` | Platform-admin role + management UI for the shared vaccine catalog 013g introduced (create/rename/reorder/deactivate catalog entries) — the catalog is currently seeded/maintained only via direct data changes, no in-app surface | 013g | ✅ Done |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | ✅ Done |
-| 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | 🔲 Not started |
+| 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | ✅ Done |
 | 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
 
@@ -3456,6 +3456,37 @@ Out of scope:
   preference-request flow — this is a director authoring convenience only.
 - 013j's per-dietary-restriction variant menu (separate backlog item).
 ```
+
+**Shipped 2026-07-14** — `specs/013i-monthly-menu-csv-import/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge → PR #31, squash-merged after green CI — 655/655
+backend + 153/153 web tests). Client-side-only director-web CSV bulk-import: `web/lib/menu/
+csvImport.ts` parses (papaparse), validates, and previews a CSV entirely in the browser, then
+merges valid rows into `MonthlyMenuDayGrid`'s existing in-memory state — the existing Save button
+(013e's whole-month-replace write) is the only write path, no new backend endpoint or migration.
+`/speckit-checklist`'s CSV-import-focused pass (16 findings, all fixed) found the highest-impact
+gap: the original synthesized spec required an explicit confirm step but never required the
+preview to show *what existing content an import would overwrite* — fixed via new FR-024/SC-005,
+alongside a pinned `YYYY-MM-DD` date format, BOM stripping, case/whitespace-tolerant headers, and
+an explicit invalid-reason precedence order. Testing then surfaced a real design gap the checklist
+missed: a ragged CSV row's `date` cell can still parse successfully when the missing/extra columns
+are trailing ones, so column-count mismatches needed their own explicit `malformed_row` check
+(highest precedence) rather than being assumed to always corrupt the date. `/speckit-converge`
+found two small gaps post-implementation (FR-004's extra-column-ignored behavior was untested; an
+unused `MenuCsvFileLevelError` type was dead code) — both fixed. CI hit a new variant of this
+codebase's recurring `web/package-lock.json`-out-of-sync-under-Node-20 issue (007a, 010, 013b,
+006a): unlike those, regenerating the lockfile — even inside a matching `node:20` Docker
+container and verifying `npm ci` passed there — didn't hold, because `@swc/helpers` was only ever
+an *optional* peer dependency of `next-intl`'s bundled `@swc/core` (never pinned to a concrete
+version), and npm's resolution of whether to satisfy it apparently isn't deterministic across npm
+patch versions even at identical Node versions. Fixed by pinning `@swc/helpers` as an explicit
+devDependency instead of relying on optional-peer auto-resolution. Also caught mid-fix: a plain
+`npm install` under a newer local Node silently rewrote an already-Docker-verified lockfile again
+before it was committed — twice, in this session — so any future lockfile fix of this class
+should use `npm ci` (never `npm install`) for every local step after the verified regeneration,
+worth remembering alongside the npm-ci-lockfile-drift pattern itself. This backlog item never had
+its own dedicated Spec Kit Inputs prompt block (only the one-line row + a deferral note from
+013e's shipped-notes) — synthesized one directly from 013e's shipped code before starting the
+pipeline; see this section's own opening note for how that gap was resolved.
 
 ---
 
