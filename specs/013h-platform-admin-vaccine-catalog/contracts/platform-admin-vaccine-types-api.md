@@ -46,6 +46,8 @@ Renames and/or re-categorizes an entry (FR-005).
 
 **Response 200**: the updated entry.
 **Response 404**: unknown `id`.
+**Response 422**: validation failure (empty name, invalid category) — same `ValidationBehavior`
+convention as `POST` above.
 
 ## `POST /api/platform-admin/vaccine-types/{id}/reorder`
 
