@@ -414,3 +414,28 @@ use the static code review instead.
   not just presence, next time this pattern comes up. `/speckit-converge` found one real gap: the
   spec's own Assumptions section promised logging the platform-admin follow-up as a new BACKLOG
   item, which hadn't actually been done until the converge pass caught it.
+- 013h (`013h-platform-admin-vaccine-catalog`): ✅ Done, merged 2026-07-14 (PR #29, squash-merged
+  after green CI — 637/637 backend + 118/118 web tests). Resumed mid-flight: a prior session had
+  already written spec/plan/tasks/data-model/contracts/checklists and Foundational-phase code
+  (`IsPlatformAdmin` flag, JWT claim, `PlatformAdminOnly` policy, `VaccineType` audit columns,
+  `grant-platform-admin` CLI) with zero commits and a build-breaking bug (a raw-string
+  interpolation mixed with an ADO parameter placeholder in `GrantPlatformAdminCommand`) — fixed,
+  then this session implemented all three user stories end-to-end (create/list, rename/reorder,
+  deactivate/reactivate), backend + director-web. Also exposed `IsPlatformAdmin` on
+  `AuthenticatedUser` (login/Google/Apple/refresh) since this web app never decodes the JWT
+  client-side — every existing screen gates purely on session presence, so the sidebar's
+  platform-admin nav entry needed a response field, not a token claim, to key off. Corrected the
+  contract's originally-written `400` to `422` for validation failures, matching this codebase's
+  actual `ValidationBehavior` pipeline convention. `/speckit-analyze`/`/speckit-converge` found
+  and fixed two real gaps: the management table was missing FR-012's display-order column, and no
+  test proved a token carrying `is_platform_admin` without the `director` role is rejected
+  (FR-009) — both fixed. A full-suite run also surfaced two pre-existing, unrelated failures:
+  hardcoded `2026-07-13`/`14` dates in `ClosureCalendarTests`/`DayReservationEndpointsTests`/
+  `ReservationSettingsEnforcementTests` had expired against today's actual date (fixed by bumping
+  forward with a wide buffer, plus deriving the remaining year/range literals from the constants
+  instead of drifting independently again), and `LegacyVaccinationMigrationTests`' revert helper
+  needed extending for this feature's own tenant-schema migration — confirms the recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` pattern (012a, 013c, 006a, 013d,
+  013g) yet again. T049 (granting the real `dgormez@gmail.com` production account) is a manual
+  post-merge step — no production DB access from this session, and per this codebase's convention
+  that production data changes are run manually, not autonomously.
