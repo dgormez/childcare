@@ -30,6 +30,13 @@ public class Location
     // director explicitly opts out.
     public bool RequiresCaregiverPin { get; set; } = true;
 
+    // Feature 013j — ordered set of DietaryType variants this location offers alongside the
+    // base monthly menu. Order IS the priority order used to resolve a child matching more than
+    // one enabled type (spec.md FR-002/FR-008) — not just set membership, unlike
+    // MealPreference.DietaryType. Empty by default so a location that predates this feature
+    // behaves identically to before (FR-012).
+    public List<DietaryType> MenuVariantPriorityOrder { get; set; } = [];
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

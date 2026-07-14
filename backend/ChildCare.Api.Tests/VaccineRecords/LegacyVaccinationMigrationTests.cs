@@ -88,6 +88,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// "AddMonthlyMenuAndMealPreferenceRequests" is the next one — three new tables
     /// (monthly_menu_days before monthly_menus, which it FKs to; meal_preference_change_requests
     /// independently), same DROP-TABLE-plus-history-removal shape as 013d's own note above.
+    /// Feature 013j's "AddMonthlyMenuVariants" is the next one — its monthly_menus.Variant column
+    /// needs no separate step since monthly_menus is already dropped wholesale above, but unlike
+    /// that, locations is never dropped in this test (only ALTERed), so its new
+    /// MenuVariantPriorityOrder column needs its own explicit DROP COLUMN, same as 008b's
+    /// RequiresCaregiverPin right above it.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -117,11 +122,12 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "PediatricianName",
                 DROP COLUMN "PediatricianPhone";
             ALTER TABLE "{schemaName}"."locations"
-                DROP COLUMN "RequiresCaregiverPin";
+                DROP COLUMN "RequiresCaregiverPin",
+                DROP COLUMN "MenuVariantPriorityOrder";
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "IsPlatformAdmin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants';
             """);
     }
 

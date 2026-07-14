@@ -261,6 +261,19 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
               .HasDefaultValue(ReservationRequestMode.Disabled)
               .IsRequired();
             l.Property(x => x.ReservationNoticeHours).HasDefaultValue(0).IsRequired();
+            // Feature 013j — ordered list, same text[] conversion pattern as
+            // MealPreference.DietaryType above; a ValueComparer is required for EF Core to
+            // detect in-place mutations of the List<DietaryType> reference correctly.
+            l.Property(x => x.MenuVariantPriorityOrder)
+              .HasConversion(
+                  v => v.Select(d => d.ToWireString()).ToArray(),
+                  v => v.Select(ParseDietaryType).ToList(),
+                  new ValueComparer<List<DietaryType>>(
+                      (a, b) => a!.SequenceEqual(b!),
+                      v => v.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
+                      v => v.ToList()))
+              .HasColumnType("text[]")
+              .HasDefaultValueSql("'{}'");
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -824,8 +837,18 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             mm.Property(x => x.Year).IsRequired();
             mm.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             mm.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CreatedBy);
-            // FR-005: at most one menu per location/year/month — editing updates this row.
-            mm.HasIndex(x => new { x.LocationId, x.Year, x.Month }).IsUnique();
+            // Feature 013j — non-nullable "base" sentinel, not a nullable column: Postgres
+            // unique indexes treat NULL as distinct from every other NULL, which would silently
+            // allow more than one base-menu row per location/year/month (research.md).
+            mm.Property(x => x.Variant)
+              .HasConversion(
+                  v => v.HasValue ? v.Value.ToWireString() : "base",
+                  v => v == "base" ? (DietaryType?)null : ParseDietaryType(v))
+              .HasColumnType("text")
+              .HasDefaultValue((DietaryType?)null)
+              .IsRequired();
+            // FR-005: at most one menu per location/year/month/variant — editing updates this row.
+            mm.HasIndex(x => new { x.LocationId, x.Year, x.Month, x.Variant }).IsUnique();
             mm.HasMany(x => x.Days).WithOne().HasForeignKey(d => d.MenuId).OnDelete(DeleteBehavior.Cascade);
         });
 
