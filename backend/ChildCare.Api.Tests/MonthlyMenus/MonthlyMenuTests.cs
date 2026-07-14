@@ -233,4 +233,34 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
 
         Assert.Empty(entries);
     }
+
+    // ── US5: director corrects a published menu mid-month ──────────────────────────────────────
+
+    [Fact]
+    public async Task PublishUnpublishEditRepublish_ParentSeesOnlyTheCorrectedValue_NeverTheUnpublishedIntermediateState()
+    {
+        var (client, org, location) = await SetupAsync();
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, DayOfWeek.Monday);
+
+        await UpsertMenuAsync(client, org.AccessToken, location.Id, 2028, 1,
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2028, 1, 3), "Tomatensoep (typo)", "Kip met puree", "Yoghurt", null)]);
+        await PublishAsync(client, org.AccessToken, location.Id, 2028, 1);
+
+        var unpublishResponse = await UnpublishRawAsync(client, org.AccessToken, location.Id, 2028, 1);
+        Assert.Equal(HttpStatusCode.OK, unpublishResponse.StatusCode);
+
+        // Un-published: parents must not see the menu at all, correct or not.
+        var whileUnpublished = await GetParentMenuAsync(client, parentToken, 2028, 1);
+        Assert.False(Assert.Single(whileUnpublished).IsPublished);
+
+        await UpsertMenuAsync(client, org.AccessToken, location.Id, 2028, 1,
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2028, 1, 3), "Tomatensoep", "Kip met puree", "Yoghurt", null)]);
+        await PublishAsync(client, org.AccessToken, location.Id, 2028, 1);
+
+        var afterRepublish = await GetParentMenuAsync(client, parentToken, 2028, 1);
+        var entry = Assert.Single(afterRepublish);
+        Assert.True(entry.IsPublished);
+        Assert.Equal("Tomatensoep", Assert.Single(entry.Days).Soup);
+    }
 }

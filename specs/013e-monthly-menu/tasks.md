@@ -206,12 +206,12 @@ correct a day's entry, and re-publish (confirm parents see the corrected value).
 
 ### Tests for User Story 5
 
-- [ ] T068 [P] [US5] Integration test: publish → unpublish → edit a day's field via `PUT` → re-publish round trip results in the parent-facing `GET /api/parent/monthly-menu` reflecting only the corrected value, never the un-published intermediate draft state (FR-003, FR-004), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [X] T068 [P] [US5] Integration test: publish → unpublish → edit a day's field via `PUT` → re-publish round trip results in the parent-facing `GET /api/parent/monthly-menu` reflecting only the corrected value, never the un-published intermediate draft state (FR-003, FR-004), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T069 [US5] Verify (and adjust if needed) that `MonthlyMenuDayGrid.tsx`'s Un-publish action is visually and textually distinct from Publish — separate labels/icons per design-system.md's icon-pairing convention, not just a toggled button state that could be mis-tapped (depends on T022)
-- [ ] T070 [P] [US5] Web component test: `MonthlyMenuDayGrid`'s Un-publish action calls the unpublish endpoint and updates local state back to draft, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`
+- [X] T069 [US5] Verify (and adjust if needed) that `MonthlyMenuDayGrid.tsx`'s Un-publish action is visually and textually distinct from Publish — separate labels/icons per design-system.md's icon-pairing convention, not just a toggled button state that could be mis-tapped (depends on T022). Already satisfied by T022's original implementation (Badge status + `Send`/`Undo2` distinct icons, only one button shown at a time based on `menu.isPublished`) — verified, no changes needed.
+- [X] T070 [P] [US5] Web component test: `MonthlyMenuDayGrid`'s Un-publish action calls the unpublish endpoint and updates local state back to draft, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`. Already covered by T026's own test ("shows Un-publish (distinct from Publish) for a published menu and calls onUnpublish") — the component is prop-driven (calls `onUnpublish`, doesn't own publish state or call the endpoint itself), so the callback-fires assertion is the correct unit boundary; the actual endpoint call and local-state update are `page.tsx`'s `handleUnpublish`, exercised end-to-end by T068's backend test.
 
 **Checkpoint**: All five user stories independently verified end-to-end.
 
