@@ -265,3 +265,14 @@ nothing to view, both fall short of the feature's purpose).
 **Incremental delivery**: Foundational → US1 + US2 (P1, ship together) → US3 (P2, viewable
 without a review queue) → US4 (P2, closes the loop US3 opens) → US5 (P3, verification pass over
 US1's existing publish/unpublish) → Polish.
+
+---
+
+## Phase 9: Convergence
+
+- [X] T075 Fix FR-010: `parent-mobile/app/(app)/menu/index.tsx`'s `ChildPreferenceRow` showed only
+  the child's current texture in its summary, never the dietary tags spec.md explicitly requires
+  ("MUST show... the parent's child's current meal preference (texture, dietary tags)... in plain
+  language"). Fixed to join both, each already resolved through i18n keys (`mealPreferenceRequests.
+  texture.*`/`mealPreferenceRequests.dietaryType.*`), falling back to `noPreference` only when
+  both are absent. Added a regression test in `parent-mobile/__tests__/menu.test.tsx` (partial)

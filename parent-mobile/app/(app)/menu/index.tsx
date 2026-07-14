@@ -143,7 +143,12 @@ function ChildPreferenceRow({ child }: { child: ParentChildResponse }) {
     };
   }, [child.id]);
 
-  const summary = preference?.texture ? t(`mealPreferenceRequests.texture.${preference.texture}`) : t("mealPreferenceRequests.noPreference");
+  // FR-010: plain-language texture AND dietary tags, not raw enum values, never just texture alone.
+  const parts = [
+    preference?.texture ? t(`mealPreferenceRequests.texture.${preference.texture}`) : null,
+    ...(preference?.dietaryType ?? []).map((tag) => t(`mealPreferenceRequests.dietaryType.${tag}`)),
+  ].filter((v): v is string => v !== null);
+  const summary = parts.length > 0 ? parts.join(" · ") : t("mealPreferenceRequests.noPreference");
 
   return (
     <View
