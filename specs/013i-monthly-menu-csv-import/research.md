@@ -92,3 +92,40 @@ needed to serve a static template. Using the currently-selected month's first da
 date row means the downloaded template opens as an immediately-valid file if re-uploaded
 unmodified (User Story 3's acceptance scenario), rather than needing the director to already know
 the date format.
+
+## Decision: Overwrite-visibility computation (FR-024)
+
+**Decision**: `willOverwriteExisting` is computed inside `validateMenuCsvRows` by accepting the
+grid's current `Map<string, DayFields>` as an input parameter alongside the parsed rows, and
+checking — for each row that validates as `"valid"` — whether the map already has a non-blank
+`DayFields` entry (any of the four fields non-empty) at that date. This is a pure comparison, not
+a stored flag, so it always reflects whatever the grid's state was at the moment of upload,
+including the effect of a prior unsaved import in the same session (FR-025).
+
+**Rationale**: This closes the highest-impact gap `/speckit-checklist`'s `csv-import.md` run
+found (CHK009/CHK010): without it, a director could confirm an import that silently replaces
+manually-typed content with no visibility into what was overwritten until after Save. Computing
+it as part of validation (rather than as a separate pass in the dialog component) keeps the "is
+this safe to apply" decision entirely within the already-tested `csvImport.ts` module.
+
+**Alternatives considered**: Computing the overwrite flag inside the dialog component instead —
+rejected: would split "is this row valid" and "would this row overwrite something" across two
+places that both need the same grid-state snapshot, risking the two falling out of sync.
+
+## Decision: Invalid-reason precedence order (FR-022)
+
+**Decision**: `validateMenuCsvRows` checks each row in a fixed order and returns the first
+failing check's reason: date format/parseability → out-of-range → duplicate-within-file → field
+length. A row failing multiple checks (e.g. an unparseable date that also happens to duplicate
+another unparseable date once both are excluded) is still reported with exactly one reason.
+
+**Rationale**: `/speckit-checklist` flagged that the original FR-005–FR-008 wording didn't state
+what happens when more than one condition applies to the same row, which would otherwise leave
+the exact preview message implementation-defined. Checking date validity first is a genuine
+correctness dependency, not just a display choice — the duplicate-date check partitions rows by
+`date`, so an unparseable date must be resolved (or the row already excluded) before duplicate
+detection can group rows meaningfully. Out-of-range is checked before duplicate detection since a
+row outside the file's own selected month is a more specific, more actionable diagnosis than
+"this shares a date with another out-of-range row." Field length is checked last since it is
+independent of every other check and any of the other three conditions are more likely to be
+what the director needs to fix first to get the row recognized as a real menu day at all.

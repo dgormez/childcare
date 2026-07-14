@@ -40,7 +40,9 @@ One row as read from the uploaded CSV, before validation:
 ### `ValidatedMenuCsvRow`
 
 The result of validating one `ParsedMenuCsvRow` against the currently-selected year/month and the
-field-length limit:
+field-length limit. Validation reasons are mutually exclusive per row, checked in the precedence
+order FR-022 defines (unparseable/wrong-format date → out-of-range date → duplicate date → field
+too long) — a row failing more than one check is still reported with exactly one `errorReason`.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -49,6 +51,7 @@ field-length limit:
 | `status` | `"valid" \| "invalid"` | |
 | `errorReason` | one of `"invalid_date" \| "date_out_of_range" \| "duplicate_date" \| "field_too_long"` when `status === "invalid"` | maps 1:1 to an i18n key under the `menu` namespace |
 | `rowNumber` | `number` | carried through for the preview table |
+| `willOverwriteExisting` | `boolean` | present only when `status === "valid"` — `true` when the grid's current state already has non-blank content for this date (FR-024); computed by comparing against the grid's existing `Map<date, DayFields>` at validation time, not stored, so it always reflects the grid state at the moment of upload |
 
 ### `MenuCsvImportResult`
 

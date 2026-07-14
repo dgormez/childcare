@@ -176,6 +176,9 @@ summary count, while every valid row still applies once confirmed.
 5. **Given** the director fixes the source spreadsheet and re-uploads a corrected CSV, **When**
    the new file is imported, **Then** it behaves exactly as a fresh import — matching dates are
    overwritten, non-matching dates are left alone.
+6. **Given** the grid already has manually-entered, non-blank content for a day, **When** a valid
+   CSV row targets that same date, **Then** the preview visibly flags that row as overwriting
+   existing content before the director confirms (FR-024, SC-005).
 
 ---
 
@@ -214,6 +217,16 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 - The director imports a CSV, merges it into the grid, then navigates away or changes the
   selected location/month without saving: the imported-but-unsaved values are discarded exactly
   as any other unsaved manual grid edit would be today.
+- The director changes the selected location or month while the import preview dialog is still
+  open (before confirming): the dialog closes without merging anything (FR-026), rather than
+  risk confirming a preview built for one month against a different, now-selected month.
+- A data row has a different number of columns than the header (e.g. a trailing stray comma, or
+  a missing trailing field): that row is flagged invalid and excluded, the same as any other
+  per-row validation failure (FR-021) — it does not abort the whole file.
+- The file was exported by Excel with a leading UTF-8 byte-order-mark: the BOM is stripped before
+  parsing so it does not corrupt the header's first column name (FR-020).
+- A row's `date` is present and valid but every other field is blank: the row is valid (FR-023),
+  matching the manual grid's existing allowance for a day with no menu content.
 
 ## Requirements *(mandatory)*
 
@@ -228,8 +241,11 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 - **FR-004**: The system MUST recognize CSV columns `date`, `soup`, `main_course`, `dessert`, and
   `notes`, mapping them to the same fields the manual day grid already edits. Unrecognized
   columns MUST be ignored.
-- **FR-005**: For each data row, the system MUST validate that `date` parses as a real calendar
-  date; a row with an unparseable date MUST be flagged invalid and excluded from the merge.
+- **FR-005**: For each data row, the system MUST validate that `date` matches the `YYYY-MM-DD`
+  format (leading/trailing whitespace trimmed before matching) and parses as a real calendar
+  date; a row whose `date` does not match this format — including a locale-ambiguous format such
+  as `DD/MM/YYYY` — MUST be flagged invalid (`invalid_date`) and excluded from the merge, never
+  guessed at.
 - **FR-006**: For each data row, the system MUST validate that `date` falls within the year and
   month currently selected in the grid; a row outside that range MUST be flagged invalid as
   out-of-range and excluded from the merge.
@@ -249,6 +265,11 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
   merging any parsed values into the grid's in-memory state.
 - **FR-012**: On confirmation, the system MUST overwrite only the grid's day rows whose dates
   matched a valid CSV row; every other day in the grid MUST retain its current value unchanged.
+  A blank field in an otherwise-valid CSV row (e.g. an empty `notes` cell) overwrites any
+  existing non-blank value for that field on the matched day — import is a whole-day
+  overwrite-by-date, the same as if the director had manually cleared that cell, not a
+  field-by-field partial merge. FR-024 requires this to be visible to the director before they
+  confirm.
 - **FR-013**: Merging imported values into the grid MUST NOT itself persist any data; the
   director's existing Save action MUST remain the only way imported values are written, exactly
   as with manually typed values today.
@@ -263,6 +284,35 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
   system (NL/FR/EN), matching every other user-facing string in the Menu section.
 - **FR-018**: The import preview and file-selection controls MUST be operable by keyboard alone,
   and every invalid-row indication MUST be conveyed by more than color alone (an icon plus text).
+- **FR-019**: Header-row column matching MUST be case-insensitive and MUST tolerate
+  leading/trailing whitespace around column names (e.g. `" Date "` matches `date`), so a
+  spreadsheet export with inconsistent header casing is not rejected as unrecognized.
+- **FR-020**: A UTF-8 byte-order-mark (BOM) at the start of the file — the common case for a file
+  exported directly from Excel — MUST be stripped before parsing and MUST NOT cause a
+  file-level parse failure or corrupt the first column's header or values.
+- **FR-021**: A data row whose column count does not match the header row MUST be flagged as an
+  invalid row (excluded from the merge, reported in the preview like any other invalid row) —
+  not treated as a file-level parse failure — as long as the file otherwise has a discernible
+  CSV structure (delimiter and header row).
+- **FR-022**: When a single row triggers more than one invalid condition simultaneously, the
+  system MUST report exactly one reason per row, in this precedence order: unparseable/wrong-
+  format date, out-of-range date, duplicate date, field too long — so the director always sees
+  one actionable reason, not a stacked or ambiguous combination.
+- **FR-023**: A row whose `date` is present and valid but every other field (`soup`,
+  `main_course`, `dessert`, `notes`) is blank MUST be treated as valid, mirroring the manual day
+  grid's own allowance for a day with no menu content.
+- **FR-024**: For every row the preview marks as "will apply," the system MUST indicate whether
+  the target day currently already holds non-blank content in the grid that the import would
+  overwrite, so the director can see exactly what will be replaced before confirming — not only
+  which rows are valid.
+- **FR-025**: If the director imports a second CSV in the same session before saving, the merge
+  MUST apply against the grid's current in-memory state (which may already include a prior
+  unsaved import's merged values), so successive imports compose — the second import's matching
+  dates overwrite the first's, non-matching dates from the first import remain.
+- **FR-026**: The import dialog MUST be scoped to the year and month selected at the moment it
+  was opened; if the director changes the selected location or month while the dialog is open,
+  the dialog MUST close without merging anything, rather than allow a preview generated for one
+  month to be confirmed against a different, now-selected month.
 
 ### Key Entities
 
@@ -276,24 +326,38 @@ unchanged.
 ### Measurable Outcomes
 
 - **SC-001**: A director can populate a full month's menu (28-31 days) from a correctly-formatted
-  CSV and reach the point of pressing Save in under 30 seconds, versus several minutes of manual
-  per-day entry.
+  CSV and reach the point of pressing Save in under 30 seconds — versus up to 124 individual
+  field entries (31 days × 4 fields) if typed by hand into the manual grid.
 - **SC-002**: A CSV containing a mix of valid and invalid rows results in 100% of the valid rows
   being applied and 100% of the invalid rows being clearly identified with a specific reason,
   with zero rows silently dropped or silently mis-applied to the wrong date.
-- **SC-003**: Directors who have never used the feature before can produce a correctly-formatted
-  CSV using only the downloadable template, without needing outside documentation.
+- **SC-003**: A director who has never used the feature before, given only the downloadable
+  template and no other instructions, can fill it in and have it accepted as valid on the first
+  upload attempt.
 - **SC-004**: Re-importing a corrected CSV after fixing earlier errors requires no different
   steps than the first import, and produces the expected result on the first retry.
+- **SC-005**: When an import would overwrite a day that already has director-entered content,
+  100% of those rows are visibly flagged as an overwrite in the preview before the director
+  confirms — never a silent replacement the director only discovers after saving.
 
 ## Assumptions
 
 - Directors already maintain the month's menu content in a spreadsheet or similar tool outside
   this system, which motivated deferring this out of 013e's MVP; this feature does not itself
   provide spreadsheet-authoring tools, only the import path.
-- CSV files are assumed to use standard comma-separated formatting with a UTF-8-compatible
-  encoding and a header row; no support for alternative delimiters (semicolon, tab) is required
-  for the initial version.
+- CSV files are assumed to use standard comma-separated formatting with a header row; no support
+  for alternative delimiters (semicolon, tab) is required for the initial version. Parsing relies
+  on the browser's default UTF-8 decoding with no separate encoding auto-detection — a file saved
+  in a different encoding (e.g. Windows-1252) may render accented Dutch/French characters
+  incorrectly, but this would be visible in the preview (FR-010/FR-024) before the director
+  confirms, not a silent corruption.
+- No explicit file-size or row-count cap is enforced. A file covering the wrong month, or far
+  more rows than one month needs, is handled by the same per-row validation as any other file
+  (FR-006's out-of-range check, up to FR-014's zero-valid-rows rejection for a completely
+  mismatched file) rather than a separate size limit.
+- No dedicated "undo import" action exists. An already-confirmed-but-unsaved import merge is
+  reverted the same way any unsaved manual grid edit is today — by re-editing the affected cells,
+  or by navigating away/changing month without saving (see Edge Cases).
 - The existing 013e day grid's whole-month "replace on Save" write model is unchanged by this
   feature; import only affects what is staged in the grid before that same Save action runs.
 - No audit trail specific to CSV imports (distinct from manual edits) is required — an imported
