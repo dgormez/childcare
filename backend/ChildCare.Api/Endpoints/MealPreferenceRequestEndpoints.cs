@@ -31,6 +31,30 @@ public static class MealPreferenceRequestEndpoints
                 ? Results.Created($"/api/meal-preference-requests/{result.Response!.Id}", result.Response)
                 : MapFailure(result.Failure!.Value);
         });
+
+        var director = app.MapGroup("/api/meal-preference-requests")
+            .WithTags("MealPreferenceRequests")
+            .RequireAuthorization("DirectorOnly");
+
+        director.MapGet("/", async (string? status, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ListMealPreferenceChangeRequestsQuery(status ?? "pending"));
+            return Results.Ok(result);
+        });
+
+        director.MapPost("/{id:guid}/approve", async (Guid id, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = TenantUserIdOf(ctx);
+            var result = await mediator.Send(new ApproveMealPreferenceChangeRequestCommand(tenantUserId, id));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        director.MapPost("/{id:guid}/reject", async (Guid id, RejectMealPreferenceChangeRequestRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = TenantUserIdOf(ctx);
+            var result = await mediator.Send(new RejectMealPreferenceChangeRequestCommand(tenantUserId, id, req.Reason));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
     }
 
     private static Guid TenantUserIdOf(HttpContext ctx) => Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -45,6 +69,9 @@ public static class MealPreferenceRequestEndpoints
 
         MealPreferenceChangeRequestFailure.NotPending => Results.Json(
             new { errorKey = "errors.meal_preference_requests.not_pending" }, statusCode: StatusCodes.Status409Conflict),
+
+        MealPreferenceChangeRequestFailure.ChildNotFound => Results.Json(
+            new { errorKey = "errors.child.not_found" }, statusCode: StatusCodes.Status404NotFound),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(MealPreferenceChangeRequestFailure)}: {failure}"),
     };

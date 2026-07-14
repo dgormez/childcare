@@ -215,6 +215,9 @@ builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactRe
 // unchanged — no new ports needed (research.md).
 builder.Services.AddScoped<ChildCare.Application.DayReservations.DayReservationNotificationService>();
 
+// ── Monthly menu / meal-preference requests (feature 013e) ──────────────────
+builder.Services.AddScoped<ChildCare.Application.MealPreferenceRequests.MealPreferenceRequestNotificationService>();
+
 // ── Reservation settings (feature 013f) ──────────────────────────────────────
 builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPolicyResolver>();
 

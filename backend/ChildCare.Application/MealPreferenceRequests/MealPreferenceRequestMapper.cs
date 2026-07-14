@@ -9,6 +9,7 @@ public enum MealPreferenceChangeRequestFailure
     ChildNotLinked,
     DuplicatePendingRequest,
     NotPending,
+    ChildNotFound,
 }
 
 public class MealPreferenceChangeRequestResult
