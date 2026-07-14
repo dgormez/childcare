@@ -206,6 +206,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
                  v => (UserRole)Enum.Parse(typeof(UserRole), v, ignoreCase: true))
              .HasMaxLength(20)
              .IsRequired();
+            // Feature 013h — IsPlatformAdmin, default false, set only via grant-platform-admin.
+            u.Property(x => x.IsPlatformAdmin).IsRequired().HasDefaultValue(false);
         });
 
         modelBuilder.Entity<TenantUserRefreshToken>(t =>

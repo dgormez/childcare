@@ -131,7 +131,13 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// must be dropped before vaccine_records; the migration's own three new columns on
     /// vaccine_records (VaccineTypeId, CustomVaccineEntryId, AttachmentObjectPath) need no
     /// separate DROP COLUMN step since the DROP TABLE "vaccine_records" below already removes
-    /// them along with the whole table.
+    /// them along with the whole table. Feature 013h's "AddIsPlatformAdminToUsers" migration is
+    /// the same class of gap as 013f's "AddLocationReservationSettings"/006a's
+    /// "AddPediatricianContactToChild" — it only adds one column to the existing users table (no
+    /// new table, no new FK), so it needs its own history-removal entry too, and (unlike
+    /// 008b's "AddLocationRequiresCaregiverPin", whose one new column is removed for free by the
+    /// DROP TABLE "locations" above) users is never dropped here, only ALTERed, so its new
+    /// IsPlatformAdmin column needs an explicit DROP COLUMN step alongside the existing ones.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -180,11 +186,12 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "EmailVerificationToken",
                 DROP COLUMN "EmailVerified",
                 DROP COLUMN "GoogleId",
+                DROP COLUMN "IsPlatformAdmin",
                 DROP COLUMN "PasswordResetExpiry",
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers';
             """);
     }
 
@@ -199,6 +206,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         {
             _ = await db.Users.Select(u => u.GoogleId).FirstOrDefaultAsync();
             _ = await db.Users.Select(u => u.Role).FirstOrDefaultAsync();
+            _ = await db.Users.Select(u => u.IsPlatformAdmin).FirstOrDefaultAsync();
             _ = await db.RefreshTokens.CountAsync();
             return true;
         }

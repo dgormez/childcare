@@ -187,3 +187,35 @@ Includes:
 - Revenue.
 - Classroom utilization.
 - Compliance reporting.
+
+---
+
+## Platform Administration
+
+No detail file yet (feature 013h — first feature in this workflow).
+
+Manages platform-wide, cross-tenant capabilities that sit above any single KDV — distinct from
+every other workflow above, which is scoped to one tenant's operations. A **Platform Admin** is
+not a new kind of account: it is an existing director account (`TenantUser`, still scoped to its
+own tenant like any other director) with an additional flag granting extra authority over
+platform-wide reference data that lives outside any tenant schema.
+
+Actors:
+
+- **Platform Admin** — an existing director account flagged for this extra authority. Granted
+  out-of-band (direct data change), not through any in-app flow, mirroring how the reference data
+  itself is maintained.
+
+Includes:
+
+- Managing the shared vaccine catalog (feature 013g's `vaccine_types` reference table — create,
+  rename, reorder, deactivate entries; feature 013h).
+- Any future platform-wide reference data or cross-tenant administrative capability — this
+  workflow is the intended home for it, reusing the same `IsPlatformAdmin` flag/authorization
+  policy rather than each feature inventing its own cross-tenant admin mechanism.
+
+Explicitly excludes: anything scoped to a single tenant's own data (that's every other workflow
+above, gated by the existing `DirectorOnly`/`StaffOrDirector`/tenant-scoping model) and
+platform-operator actions performed outside the app entirely (e.g. granting the
+`IsPlatformAdmin` flag itself, or infrastructure/deployment operations) — those remain direct
+data changes or ops tooling, not a UI workflow.

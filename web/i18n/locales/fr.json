@@ -37,7 +37,8 @@
     "dayReservations": "Demandes",
     "incidents": "Incidents",
     "dashboard": "Tableau de bord",
-    "mealList": "Liste des repas"
+    "mealList": "Liste des repas",
+    "vaccineTypes": "Catalogue des vaccins"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -752,5 +753,38 @@
       "notesLabel": "Notes supplémentaires",
       "saveError": "Impossible d'enregistrer les préférences alimentaires. Veuillez réessayer."
     }
+  },
+  "vaccineTypes": {
+    "title": "Catalogue des vaccins",
+    "add": "Ajouter un vaccin",
+    "addTitle": "Ajouter un vaccin",
+    "editTitle": "Modifier le vaccin",
+    "dialogDescription": "Cette entrée s'applique à toutes les organisations de la plateforme.",
+    "nameLabel": "Nom",
+    "categoryLabel": "Catégorie",
+    "categoryNone": "Aucune catégorie",
+    "category": {
+      "basisvaccinatieschema": "Schéma obligatoire",
+      "aanbevolen_niet_gratis": "Recommandé, non gratuit"
+    },
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "columnName": "Nom",
+    "columnCategory": "Catégorie",
+    "columnSortOrder": "Ordre",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "statusActive": "Actif",
+    "statusInactive": "Inactif",
+    "deactivatedBy": "Désactivé par {email} le {date}",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "deactivate": "Désactiver",
+    "reactivate": "Réactiver",
+    "emptyState": "Aucun vaccin dans le catalogue pour l'instant.",
+    "loadError": "Impossible de charger le catalogue des vaccins. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "genericError": "Impossible d'enregistrer cette entrée. Veuillez réessayer.",
+    "reorderBoundaryError": "Cette entrée est déjà en bordure de sa catégorie."
   }
 }

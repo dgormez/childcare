@@ -10,6 +10,7 @@ export interface AuthenticatedUser {
   emailVerified: boolean;
   role: string;
   name: string;
+  isPlatformAdmin: boolean;
 }
 
 export interface AuthResponse {
@@ -428,6 +429,17 @@ export interface VaccineTypeResponse {
 export interface CustomVaccineEntryResponse {
   id:   string;
   name: string;
+}
+
+// ── Platform-admin vaccine catalog management (feature 013h) ───────────────────
+export interface PlatformAdminVaccineTypeResponse {
+  id:                 string;
+  name:               string;
+  category:           VaccineCategory | null;
+  sortOrder:          number;
+  isActive:           boolean;
+  deactivatedByEmail: string | null;
+  deactivatedAt:      string | null;
 }
 
 export interface VaccinationsDueSoonResponse {

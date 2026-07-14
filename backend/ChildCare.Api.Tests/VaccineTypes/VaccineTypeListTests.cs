@@ -1,8 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using Xunit;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
+using static ChildCare.Api.Tests.PlatformAdmin.PlatformAdminTestSupport;
 
 namespace ChildCare.Api.Tests.VaccineTypes;
 
@@ -42,5 +44,29 @@ public class VaccineTypeListTests(OrganisationOnboardingWebAppFactory factory)
 
         Assert.Contains(list, v => v.Name == "HPV");
         Assert.Contains(list, v => v.Name == "MenB");
+    }
+
+    /// <summary>Feature 013h regression (tasks.md T017, FR-010): a platform-admin creating a new
+    /// catalog entry must not change this endpoint's response shape or DirectorOnly (not
+    /// PlatformAdminOnly) authorization — a non-platform-admin director can still call it and
+    /// immediately sees the platform-admin's new entry.</summary>
+    [Fact]
+    public async Task ListVaccineTypes_UnaffectedByPlatformAdminActivity_ShapeAndAuthUnchanged()
+    {
+        var client = factory.CreateClient();
+        var (_, adminAccessToken) = await RegisterPlatformAdminAsync(client, factory.Services);
+
+        var activeName = $"Regression Active {Guid.NewGuid():N}";
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/platform-admin/vaccine-types", adminAccessToken,
+            new CreateVaccineTypeRequest(activeName, null)));
+
+        // DirectorOnly, not PlatformAdminOnly — a non-platform-admin director can still call it.
+        var otherEmail = $"director_{Guid.NewGuid():N}@test.com";
+        var otherOrg = await RegisterOrgAsync(client, $"Org {Guid.NewGuid():N}", otherEmail);
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/vaccine-types", otherOrg.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var list = (await response.Content.ReadFromJsonAsync<List<VaccineTypeResponse>>())!;
+        Assert.Contains(list, v => v.Name == activeName);
     }
 }

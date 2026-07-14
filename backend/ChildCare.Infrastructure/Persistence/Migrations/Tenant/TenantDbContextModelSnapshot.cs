@@ -1571,6 +1571,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<string>("GoogleId")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsPlatformAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)

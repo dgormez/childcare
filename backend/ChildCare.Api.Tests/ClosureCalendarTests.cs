@@ -22,8 +22,12 @@ namespace ChildCare.Api.Tests;
 public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
 {
-    private static readonly DateOnly Monday = new(2026, 7, 13);
-    private static readonly DateOnly Tuesday = new(2026, 7, 14);
+    // Pre-existing hardcoded dates (2026-07-13/14) expired once the wall clock caught up to
+    // them — CreateClosureDayCommand rejects any date < BelgianCalendarDay.Today(). Bumped
+    // forward with a wide buffer rather than computed relative to DateTime.Now, so this doesn't
+    // silently rot again the moment "today" drifts past a near-term hardcoded pair.
+    private static readonly DateOnly Monday = new(2027, 6, 7);
+    private static readonly DateOnly Tuesday = new(2027, 6, 8);
 
     private async Task<(HttpClient Client, RegisterOrganisationResponse Org, LocationResponse Location, GroupResponse Group, string Schema)> SetupAsync()
     {
@@ -99,17 +103,17 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
             new UpdateClosureDayRequest("Studiedag", "training", false)));
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
 
-        var listA = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={locationA.Id}&year=2026", org.AccessToken));
+        var listA = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={locationA.Id}&year={Monday.Year}", org.AccessToken));
         var itemsA = (await listA.Content.ReadFromJsonAsync<List<ClosureDayResponse>>())!;
         Assert.Single(itemsA);
         Assert.Equal("training", itemsA[0].ClosureType);
         Assert.False(itemsA[0].NotifyParents);
 
-        var listB = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={locationB.Id}&year=2026", org.AccessToken));
+        var listB = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={locationB.Id}&year={Monday.Year}", org.AccessToken));
         var itemsB = (await listB.Content.ReadFromJsonAsync<List<ClosureDayResponse>>())!;
         Assert.Empty(itemsB);
 
-        var missingLocation = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={Guid.NewGuid()}&year=2026", org.AccessToken));
+        var missingLocation = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/closures?locationId={Guid.NewGuid()}&year={Monday.Year}", org.AccessToken));
         Assert.Equal(HttpStatusCode.NotFound, missingLocation.StatusCode);
     }
 
@@ -379,22 +383,23 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     {
         var (client, org, location, _, schema) = await SetupAsync();
         await CreateEnrolledChildWithParentAsync(client, org.AccessToken, schema, location.Id);
+        var cancelledDate = Tuesday.AddDays(1);
         var published = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday, notify: false);
         var draft = await CreateClosureAsync(client, org.AccessToken, location.Id, Tuesday, notify: false);
-        var cancelled = await CreateClosureAsync(client, org.AccessToken, location.Id, new DateOnly(2026, 7, 15), notify: false);
+        var cancelled = await CreateClosureAsync(client, org.AccessToken, location.Id, cancelledDate, notify: false);
         Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, published.Id)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await PublishClosureAsync(client, org.AccessToken, cancelled.Id)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await CancelClosureAsync(client, org.AccessToken, cancelled.Id)).StatusCode);
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Get,
-            $"/api/closures/billable-exclusions?locationId={location.Id}&from=2026-07-01&to=2026-07-31",
+            $"/api/closures/billable-exclusions?locationId={location.Id}&from={Monday:yyyy-MM-dd}&to={Monday.AddDays(30):yyyy-MM-dd}",
             org.AccessToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = (await response.Content.ReadFromJsonAsync<BillableClosureDatesResponse>())!;
         Assert.Contains(Monday, body.Dates);
         Assert.DoesNotContain(Tuesday, body.Dates);
-        Assert.DoesNotContain(new DateOnly(2026, 7, 15), body.Dates);
+        Assert.DoesNotContain(cancelledDate, body.Dates);
         Assert.NotEqual(Guid.Empty, draft.Id);
     }
 
