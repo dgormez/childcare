@@ -43,7 +43,16 @@ default state, not a separate flag).
 
 **Response 200**: the updated `LocationResponse`, now including `menuVariantPriorityOrder`.
 
-**Validation**: every entry must be a recognized `DietaryType` wire string; no duplicates.
+**Validation**: every entry must be a recognized `DietaryType` wire string; no duplicates
+(FR-002).
+
+### `GET /api/locations/{locationId}` — extended
+
+`LocationResponse` gains `menuVariantPriorityOrder` (`string[]`) alongside a new
+`menuVariantsWithPublishedContent` (`string[]`) — the subset of enabled variants that currently
+have a published `MonthlyMenu` for the current or any future month. The settings UI uses this to
+implement FR-014's removal warning without a separate round-trip: removing any entry present in
+`menuVariantsWithPublishedContent` requires the director to confirm before saving.
 
 ## Parent endpoint (`ParentOnly`) — restructured
 

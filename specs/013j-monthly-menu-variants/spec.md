@@ -165,7 +165,15 @@ selectable in the Menu section for this location, in this order.
    menu), in the order the director set.
 3. **Given** variants are already enabled, **When** the director removes one, **Then** it is no
    longer selectable for future authoring, but any `MonthlyMenu` rows already published for it
-   are not deleted and can be restored by re-enabling it later.
+   are not deleted and can be restored by re-enabling it later — including its publish state,
+   which is unaffected by the disable/re-enable cycle (FR-007).
+4. **Given** a variant currently has a *published* menu for the current or a future month, **When**
+   the director attempts to remove it from the enabled set, **Then** the system warns them that
+   children currently matching this variant will fall back to their next resolution option before
+   the removal takes effect (FR-014).
+5. **Given** the director re-enables a previously-removed `DietaryType`, **When** they check its
+   position in the priority order, **Then** it is appended at the end (lowest priority) rather
+   than restored to its prior position — re-enabling never silently reclaims a high-priority slot.
 
 ---
 
@@ -249,6 +257,15 @@ preference shows the base menu.
 - A parent has multiple children at the same location, each qualifying for a different variant:
   each child's section resolves independently; one child's variant assignment never affects
   another's.
+- A child holds active contracts at two different locations simultaneously (the constitution's
+  split-location scenario, Principle II): each location resolves that child's variant
+  independently, using that location's own `MenuVariantPriorityOrder` and its own set of
+  published menus — the two locations' resolutions never influence each other.
+- A director removes a `DietaryType` that currently has a published menu for the current or a
+  future month: the system warns before the removal takes effect, since children actively
+  matching it will fall back to their next resolution option (FR-014).
+- A director re-enables a previously-removed `DietaryType`: it is appended at the end of the
+  priority order (lowest priority) rather than restored to its prior position.
 
 ## Requirements *(mandatory)*
 
@@ -258,7 +275,9 @@ preference shows the base menu.
   (Halal, Kosher, Vegetarian, Vegan, GlutenFree) are enabled as menu variants. No variant is
   enabled by default for any location.
 - **FR-002**: The system MUST let a director set and change the priority order of a location's
-  enabled variants.
+  enabled variants. The configured set MUST NOT contain duplicate `DietaryType` entries. When a
+  previously-removed `DietaryType` is re-enabled, it MUST be appended at the end of the order
+  (lowest priority) rather than restored to whatever position it previously held.
 - **FR-003**: The system MUST let a director author a variant's monthly menu using the exact same
   day-by-day grid interaction the base menu already uses (013e), including CSV import (013i),
   with no variant-specific authoring UI beyond selecting which variant is being edited.
@@ -270,15 +289,20 @@ preference shows the base menu.
 - **FR-006**: The system MUST reject any attempt (through the web UI or a direct API call) to
   author, publish, or unpublish a menu for a `DietaryType` that is not currently enabled in that
   location's variant configuration.
-- **FR-007**: The system MUST retain a variant's previously-authored `MonthlyMenu` rows when a
-  director removes that `DietaryType` from the location's enabled variants — data is preserved,
-  only future selectability is affected. Re-enabling the type MUST make the prior content
-  selectable again.
+- **FR-007**: The system MUST retain a variant's previously-authored `MonthlyMenu` rows —
+  including their publish state (published or draft) — when a director removes that
+  `DietaryType` from the location's enabled variants; data and publish state are both preserved,
+  only future selectability is affected. Re-enabling the type MUST make the prior content, at
+  whatever publish state it was left in, selectable and resolvable again without requiring the
+  director to re-publish it.
 - **FR-008**: For each parent-visible child at a location, the system MUST resolve which menu
   (variant or base) to show by reading that child's `MealPreference.DietaryType` list and
   checking the location's `MenuVariantPriorityOrder` in order, selecting the first
   `DietaryType` that both (a) the child has and (b) has a *published* `MonthlyMenu` for the
-  requested month.
+  requested month. Matching MUST be exact `DietaryType` equality only — the system MUST NOT infer
+  any relationship between distinct types (e.g. a child recorded as Vegan MUST NOT be treated as
+  automatically matching an enabled Vegetarian variant, even though vegan is a stricter subset of
+  vegetarian in common dietary practice).
 - **FR-009**: If no enabled variant satisfies FR-008 for a given child (no matching type, no
   published menu for any matching type, or no `DietaryType` recorded at all), the system MUST
   fall back to that location's base menu (`Variant == null`), following its own existing
@@ -296,6 +320,11 @@ preference shows the base menu.
 - **FR-013**: All new director-facing and parent-facing strings introduced by this feature MUST
   be provided through the existing i18n systems (NL/FR/EN on web, NL/FR/EN on parent-mobile),
   matching every other user-facing string in these feature areas.
+- **FR-014**: Before removing a `DietaryType` that currently has a *published* `MonthlyMenu` for
+  the current or any future month, the system MUST warn the director that children currently
+  resolving to that variant will fall back to their next resolution option, requiring an explicit
+  confirmation before the removal takes effect. No warning is required when removing a variant
+  that has no published menu for the current or a future month.
 
 ### Key Entities
 
@@ -321,8 +350,10 @@ preference shows the base menu.
   menu when a matching published variant exists.
 - **SC-003**: 100% of locations that have never configured any variant show zero behavioral
   difference from before this feature shipped, for both directors and parents.
-- **SC-004**: A parent with multiple children at the same location sees each child's menu
-  resolved independently, with zero cross-contamination between siblings' dietary results.
+- **SC-004**: For a parent with two children at the same location where each qualifies for a
+  different published variant, both children's sections show their own correct variant
+  simultaneously in a single load — changing one child's `MealPreference.DietaryType` and
+  reloading changes only that child's resolved section, never the sibling's.
 
 ## Assumptions
 

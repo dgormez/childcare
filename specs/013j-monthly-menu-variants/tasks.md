@@ -55,17 +55,22 @@ location's settings are untouched.
 
 - [ ] T014 [P] [US1] Integration test: a location with no `menu-variant-settings` call ever made returns an empty `menuVariantPriorityOrder` (FR-001 default) in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuVariantSettingsTests.cs`
 - [ ] T015 [P] [US1] Integration test: `PUT .../menu-variant-settings` persists the array in the given order, leaves every other location's settings unchanged (FR-002) in the same file
-- [ ] T016 [P] [US1] Integration test: `PUT .../menu-variant-settings` with a duplicate or unrecognized `DietaryType` string returns `422` with field errors in the same file
+- [ ] T016 [P] [US1] Integration test: `PUT .../menu-variant-settings` with a duplicate or unrecognized `DietaryType` string returns `422` with field errors (FR-002) in the same file
 - [ ] T017 [P] [US1] Integration test: non-`DirectorOnly` callers are rejected on `PUT .../menu-variant-settings` (policy boundary, mirrors `LocationReservationSettingsTests` precedent) in the same file
+- [ ] T048 [P] [US1] Integration test: re-enabling a previously-removed `DietaryType` appends it at the end of `menuVariantPriorityOrder`, not its prior position (FR-002) in the same file
+- [ ] T049 [P] [US1] Integration test: `GET /api/locations/{id}` returns `menuVariantsWithPublishedContent` containing exactly the enabled variants with a published `MonthlyMenu` for the current or a future month, and excludes ones with only a draft or no menu at all (FR-014) in the same file
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement `UpdateLocationMenuVariantSettingsCommand` + validator (no-duplicates rule, valid `DietaryType` wire strings) in `backend/ChildCare.Application/Locations/UpdateLocationMenuVariantSettingsCommand.cs` (depends on T007, T009)
+- [ ] T018 [US1] Implement `UpdateLocationMenuVariantSettingsCommand` + validator (no-duplicates rule, valid `DietaryType` wire strings, append-at-end on re-enable per FR-002) in `backend/ChildCare.Application/Locations/UpdateLocationMenuVariantSettingsCommand.cs` (depends on T007, T009)
 - [ ] T019 [US1] Wire `PUT /api/locations/{id}/menu-variant-settings` in `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` (depends on T018)
+- [ ] T050 [US1] Compute `menuVariantsWithPublishedContent` in `LocationMapper.ToResponse` (or the `GetLocationQuery` handler) — enabled variants with a published `MonthlyMenu` for the current or a future month (FR-014) in `backend/ChildCare.Application/Locations/LocationMapper.cs` (depends on T006, T008)
 - [ ] T020 [US1] Regenerate and commit `web/lib/generated/api-types.ts` against the new endpoint and response fields
 - [ ] T021 [P] [US1] Create `MenuVariantSettingsForm.tsx` (checkbox per `DietaryType` to enable, drag/keyboard reorder for enabled ones, save action — mirrors `ReservationSettingsForm.tsx`'s structure) in `web/components/MenuVariantSettingsForm.tsx`
+- [ ] T051 [US1] Add a `ConfirmDialog` (existing component) warning before saving a removal of any entry present in `menuVariantsWithPublishedContent` (FR-014) in `web/components/MenuVariantSettingsForm.tsx` (depends on T021, T050)
 - [ ] T022 [US1] Add a "Menuvarianten" tab to the location detail page alongside the existing "Algemeen"/"Reserveringsinstellingen" tabs in `web/app/(app)/locations/[id]/page.tsx` (depends on T021)
 - [ ] T023 [P] [US1] Web component test: settings tab loads current `menuVariantPriorityOrder`, enabling a variant and reordering calls the new endpoint and reflects the updated order in `web/__tests__/menuVariantSettings.test.tsx`
+- [ ] T052 [P] [US1] Web component test: removing a variant present in `menuVariantsWithPublishedContent` shows a confirmation dialog before saving; removing one that isn't present saves immediately with no dialog (FR-014) in `web/__tests__/menuVariantSettings.test.tsx`
 
 **Checkpoint**: A director can fully configure a location's variant set and priority order,
 independently of any menu authoring or parent-facing resolution.
@@ -120,6 +125,8 @@ correct `resolvedVariant` each, and the parent-mobile screen renders both correc
 - [ ] T037 [P] [US3] Integration test: a child matching a variant whose menu is still a draft (not published) falls back correctly — to the next-lower-priority published match, or the base menu if none (FR-009, US3/AC4) in the same file
 - [ ] T038 [P] [US3] Integration test: a parent with two children at the same location gets two distinct entries, each independently resolved, with correct `childId`/`childName` (FR-010, US3/AC5) in the same file
 - [ ] T039 [P] [US3] Regression test: confirms the per-location query batching (one menu-set fetch per location, not per child) — asserts query count doesn't scale with child count, per research.md's efficiency decision, in the same file
+- [ ] T053 [P] [US3] Integration test: a child recorded as Vegan does NOT match an enabled, published Vegetarian variant (exact-`DietaryType`-equality only, no inferred hierarchy, FR-008) in the same file
+- [ ] T054 [P] [US3] Integration test: a child holding active contracts at two different locations resolves independently at each — one location's `MenuVariantPriorityOrder`/published variants never affect the other's resolution for the same child (FR-008, Edge Cases) in the same file
 
 ### Implementation for User Story 3
 

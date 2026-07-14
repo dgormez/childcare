@@ -71,3 +71,16 @@ for each child the parent has an active contract for, grouped by location:
 
 A child with no `MealPreference` row, or an empty `DietaryType` list, never matches any variant
 and always resolves to the base menu — identical to today's behavior (FR-009, Edge Cases).
+
+`contains dietaryType` above is exact `DietaryType` equality — no type hierarchy is applied (a
+child recorded as Vegan does not match an enabled Vegetarian variant unless Vegan is itself
+independently enabled and published, per FR-008).
+
+## `LocationResponse` extension — settings-change safety
+
+Alongside `menuVariantPriorityOrder`, `LocationResponse` also returns
+`menuVariantsWithPublishedContent: string[]` — the subset of enabled variants that currently have
+a published `MonthlyMenu` for the current or any future month. This lets the settings UI warn
+before a removal that would affect a real, currently-visible-to-parents menu (FR-014), computed
+server-side alongside the existing location read rather than requiring the client to separately
+query every variant's publish state.
