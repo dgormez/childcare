@@ -6,4 +6,5 @@ public enum NotificationType
     Announcement,
     TemperatureAlert,
     DayReservationDecided,
+    MealPreferenceRequestDecided,
 }

@@ -54,6 +54,9 @@ public interface ITenantDbContext
     DbSet<GroupActivityPhoto> GroupActivityPhotos { get; }
     DbSet<IncidentReport> IncidentReports { get; }
     DbSet<MealPreference> MealPreferences { get; }
+    DbSet<MonthlyMenu> MonthlyMenus { get; }
+    DbSet<MonthlyMenuDay> MonthlyMenuDays { get; }
+    DbSet<MealPreferenceChangeRequest> MealPreferenceChangeRequests { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

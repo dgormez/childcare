@@ -42,17 +42,17 @@ depends on this phase.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 [P] Create `MealPreferenceChangeRequestStatus` enum (`Pending`, `Approved`, `Rejected`) in `backend/ChildCare.Domain/Enums/MealPreferenceChangeRequestStatus.cs`
-- [ ] T002 [P] Add `MealPreferenceRequestDecided` to the existing `NotificationType` enum in `backend/ChildCare.Domain/Enums/NotificationType.cs` (research.md R3)
-- [ ] T003 [P] Create `MonthlyMenu` entity (`Id`, `LocationId`, `Year`, `Month`, `PublishedAt`, `CreatedBy`, `CreatedAt`) in `backend/ChildCare.Domain/Entities/MonthlyMenu.cs`
-- [ ] T004 [P] Create `MonthlyMenuDay` entity (`Id`, `MenuId`, `MenuDate`, `Soup`, `MainCourse`, `Dessert`, `Notes`) in `backend/ChildCare.Domain/Entities/MonthlyMenuDay.cs`
-- [ ] T005 [P] Create `MealPreferenceChangeRequest` entity (`Id`, `ChildId`, `RequestedBy`, `NewTexture`, `NewDietaryType`, `Notes`, `Status` default `Pending`, `DecidedBy`, `DecidedAt`, `DecisionNotes`, `CreatedAt`) in `backend/ChildCare.Domain/Entities/MealPreferenceChangeRequest.cs` (depends on T001)
-- [ ] T006 Add `MonthlyMenus`, `MonthlyMenuDays`, `MealPreferenceChangeRequests` `DbSet`s and entity configuration to `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` — `UNIQUE (LocationId, Year, Month)` on `MonthlyMenu`, `UNIQUE (MenuId, MenuDate)` on `MonthlyMenuDay` with cascade delete on `MenuId`, `NewDietaryType` mapped as a native `text[]` (mirrors `MealPreference.DietaryType`'s existing value converter) (depends on T003, T004, T005)
-- [ ] T007 Generate the EF Core migration `AddMonthlyMenuAndMealPreferenceRequests` and its SQL script in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`, per this repo's manual-apply convention (depends on T006)
-- [ ] T008 [P] Create `MonthlyMenuResponse`/`MonthlyMenuDayEntry`/`ParentMonthlyMenuEntry` records (per contracts/monthly-menu-api.md's response shapes) in `backend/ChildCare.Contracts/Responses/MonthlyMenuResponse.cs`
-- [ ] T009 [P] Create `MealPreferenceChangeRequestResponse`/`ParentMealPreferenceResponse` records in `backend/ChildCare.Contracts/Responses/MealPreferenceChangeRequestResponse.cs`
-- [ ] T010 [P] Create `UpsertMonthlyMenuRequest` record in `backend/ChildCare.Contracts/Requests/MonthlyMenuRequests.cs`
-- [ ] T011 [P] Create `SubmitMealPreferenceChangeRequestRequest`/`RejectMealPreferenceChangeRequestRequest` records in `backend/ChildCare.Contracts/Requests/MealPreferenceRequestRequests.cs`
+- [X] T001 [P] Create `MealPreferenceChangeRequestStatus` enum (`Pending`, `Approved`, `Rejected`) in `backend/ChildCare.Domain/Enums/MealPreferenceChangeRequestStatus.cs`
+- [X] T002 [P] Add `MealPreferenceRequestDecided` to the existing `NotificationType` enum in `backend/ChildCare.Domain/Enums/NotificationType.cs` (research.md R3)
+- [X] T003 [P] Create `MonthlyMenu` entity (`Id`, `LocationId`, `Year`, `Month`, `PublishedAt`, `CreatedBy`, `CreatedAt`) in `backend/ChildCare.Domain/Entities/MonthlyMenu.cs`
+- [X] T004 [P] Create `MonthlyMenuDay` entity (`Id`, `MenuId`, `MenuDate`, `Soup`, `MainCourse`, `Dessert`, `Notes`) in `backend/ChildCare.Domain/Entities/MonthlyMenuDay.cs`
+- [X] T005 [P] Create `MealPreferenceChangeRequest` entity (`Id`, `ChildId`, `RequestedBy`, `NewTexture`, `NewDietaryType`, `Notes`, `Status` default `Pending`, `DecidedBy`, `DecidedAt`, `DecisionNotes`, `CreatedAt`) in `backend/ChildCare.Domain/Entities/MealPreferenceChangeRequest.cs` (depends on T001)
+- [X] T006 Add `MonthlyMenus`, `MonthlyMenuDays`, `MealPreferenceChangeRequests` `DbSet`s and entity configuration to `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` — `UNIQUE (LocationId, Year, Month)` on `MonthlyMenu`, `UNIQUE (MenuId, MenuDate)` on `MonthlyMenuDay` with cascade delete on `MenuId`, `NewDietaryType` mapped as a native `text[]` (mirrors `MealPreference.DietaryType`'s existing value converter) (depends on T003, T004, T005)
+- [X] T007 Generate the EF Core migration `AddMonthlyMenuAndMealPreferenceRequests` and its SQL script in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`, per this repo's manual-apply convention (depends on T006)
+- [X] T008 [P] Create `MonthlyMenuResponse`/`MonthlyMenuDayEntry`/`ParentMonthlyMenuEntry` records (per contracts/monthly-menu-api.md's response shapes) in `backend/ChildCare.Contracts/Responses/MonthlyMenuResponse.cs`
+- [X] T009 [P] Create `MealPreferenceChangeRequestResponse`/`ParentMealPreferenceResponse` records in `backend/ChildCare.Contracts/Responses/MealPreferenceChangeRequestResponse.cs`
+- [X] T010 [P] Create `UpsertMonthlyMenuRequest` record in `backend/ChildCare.Contracts/Requests/MonthlyMenuRequests.cs`
+- [X] T011 [P] Create `SubmitMealPreferenceChangeRequestRequest`/`RejectMealPreferenceChangeRequestRequest` records in `backend/ChildCare.Contracts/Requests/MealPreferenceRequestRequests.cs`
 
 **Checkpoint**: Schema, entities, and shared contracts exist. No endpoints yet — API client
 regeneration happens per-phase once each phase's endpoints are mapped. User story implementation
