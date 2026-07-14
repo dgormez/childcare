@@ -47,6 +47,8 @@
 | 013h | `013h-platform-admin-vaccine-catalog` | Platform-admin role + management UI for the shared vaccine catalog 013g introduced (create/rename/reorder/deactivate catalog entries) — the catalog is currently seeded/maintained only via direct data changes, no in-app surface | 013g | ✅ Done |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
+| 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | 🔲 Not started |
+| 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
 
 ### Phase 2 (after Phase 1 is stable)
@@ -3247,6 +3249,15 @@ edit form needs current values to pre-fill since the `PUT` is a partial-upsert, 
 ---
 
 ### 013e — Monthly Menu
+
+**Scope note added 2026-07-14, mid-implementation.** Two questions came up while resuming this
+feature that the spec below doesn't address: (1) how a director bulk-populates a month's menu
+instead of typing each day by hand, (2) whether a location needs an alternative menu for a
+dietary restriction (vegetarian/halal/allergen-free) distinct from its base menu. Confirmed
+directly with the product owner rather than guessed, per the standing rule for no-precedent scope
+questions: both are out of this feature's MVP. 013e ships with the manual day-grid only and a
+single base menu per location/month, exactly as specced below. The two questions are logged as
+follow-ups — `013i-monthly-menu-csv-import` and `013j-monthly-menu-variants`.
 
 ```
 Let the director publish a monthly meal menu visible to parents in the
