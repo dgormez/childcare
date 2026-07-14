@@ -106,6 +106,13 @@
         "rejected_title": "Aanvraag afgewezen",
         "rejected_body": "Je aanvraag is afgewezen.",
         "rejected_body_with_note": "Je aanvraag is afgewezen: {{directorNotes}}"
+      },
+      "meal_preference_request_decided": {
+        "approved_title": "Voorkeur aangepast",
+        "approved_body": "Je aanvraag is goedgekeurd.",
+        "rejected_title": "Aanvraag afgewezen",
+        "rejected_body": "Je aanvraag is afgewezen.",
+        "rejected_body_with_note": "Je aanvraag is afgewezen: {{decisionNotes}}"
       }
     }
   },
@@ -163,6 +170,13 @@
       "missing_justified_flag": "Kies of deze afwezigheid gerechtvaardigd is.",
       "no_contracted_location": "Kon niet bepalen op welke locatie dit van toepassing is.",
       "not_found": "Dit verzoek kon niet worden gevonden."
+    },
+    "meal_preference_requests": {
+      "duplicate_pending": "Je hebt al een openstaand verzoek voor dit kind.",
+      "nothing_requested": "Kies een textuur of dieetvoorkeur om te wijzigen.",
+      "texture_invalid": "Kies een geldige textuur.",
+      "dietary_type_invalid": "Kies een geldige dieetvoorkeur.",
+      "notes_too_long": "De opmerking is te lang."
     }
   },
   "gallery": {
@@ -170,6 +184,38 @@
     "empty": "Nog geen foto's deze maand.",
     "noConsent": "Er zijn nog geen foto's te zien. Vraag de opvang naar de toestemming voor foto's om ze hier te bekijken.",
     "loadFailed": "Kon de galerij niet laden."
+  },
+  "menu": {
+    "title": "Menu",
+    "notAvailable": "Menu nog niet beschikbaar",
+    "closed": "Gesloten",
+    "noLocations": "Nog geen menu om te tonen.",
+    "loadFailed": "Kon het menu niet laden."
+  },
+  "mealPreferenceRequests": {
+    "sectionTitle": "Maaltijdvoorkeuren",
+    "noPreference": "Geen voorkeur ingesteld",
+    "requestChange": "Voorkeur aanpassen",
+    "requestPending": "Aanvraag in behandeling",
+    "formTitle": "Voorkeur aanpassen",
+    "textureLabel": "Textuur",
+    "dietaryTypeLabel": "Dieet",
+    "notesLabel": "Opmerking voor de opvang",
+    "submit": "Aanvraag versturen",
+    "submitFailed": "De aanvraag kon niet verstuurd worden. Probeer opnieuw.",
+    "texture": {
+      "pureed": "Gemixt",
+      "mixed": "Gemengd",
+      "pieces": "Stukjes",
+      "normal": "Normaal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Koosjer",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "gluten_free": "Glutenvrij"
+    }
   },
   "dayReservations": {
     "absenceTitle": "Mijn kind is ziek",

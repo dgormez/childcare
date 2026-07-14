@@ -38,6 +38,7 @@
     "incidents": "Incidents",
     "dashboard": "Tableau de bord",
     "mealList": "Liste des repas",
+    "menu": "Menu",
     "vaccineTypes": "Catalogue des vaccins"
   },
   "session": {
@@ -752,6 +753,47 @@
       "cancelButton": "Annuler",
       "notesLabel": "Notes supplémentaires",
       "saveError": "Impossible d'enregistrer les préférences alimentaires. Veuillez réessayer."
+    }
+  },
+  "menu": {
+    "title": "Menu",
+    "locationLabel": "Site",
+    "monthLabel": "Mois",
+    "loadError": "Impossible de charger le menu mensuel. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "statusPublished": "Publié",
+    "statusDraft": "Brouillon",
+    "saveDraft": "Enregistrer le brouillon",
+    "publish": "Publier",
+    "unpublish": "Dépublier",
+    "columnDate": "Date",
+    "columnSoup": "Soupe",
+    "columnMainCourse": "Plat principal",
+    "columnDessert": "Dessert",
+    "columnNotes": "Notes"
+  },
+  "mealPreferenceRequests": {
+    "queueTitle": "Demandes de modification de préférence en attente",
+    "requestedBy": "Demandé par {name}",
+    "activeHealthRecords": "Dossiers de santé actifs",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "rejectTitle": "Refuser la demande",
+    "rejectReasonLabel": "Motif (facultatif)",
+    "cancel": "Annuler",
+    "confirmReject": "Confirmer le refus",
+    "texture": {
+      "pureed": "Mixé",
+      "mixed": "Mixte",
+      "pieces": "Morceaux",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Casher",
+      "vegetarian": "Végétarien",
+      "vegan": "Végétalien",
+      "gluten_free": "Sans gluten"
     }
   },
   "vaccineTypes": {

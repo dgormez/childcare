@@ -95,6 +95,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<MealPreference> MealPreferences => Set<MealPreference>();
 
+    public DbSet<MonthlyMenu> MonthlyMenus => Set<MonthlyMenu>();
+
+    public DbSet<MonthlyMenuDay> MonthlyMenuDays => Set<MonthlyMenuDay>();
+
+    public DbSet<MealPreferenceChangeRequest> MealPreferenceChangeRequests => Set<MealPreferenceChangeRequest>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -808,6 +814,55 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             mp.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             mp.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.UpdatedBy);
             mp.HasIndex(x => x.ChildId).IsUnique();
+        });
+
+        modelBuilder.Entity<MonthlyMenu>(mm =>
+        {
+            mm.ToTable("monthly_menus", t => t.HasCheckConstraint("ck_monthly_menus_month", "\"Month\" BETWEEN 1 AND 12"));
+            mm.HasKey(x => x.Id);
+            mm.Property(x => x.Month).IsRequired();
+            mm.Property(x => x.Year).IsRequired();
+            mm.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            mm.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CreatedBy);
+            // FR-005: at most one menu per location/year/month — editing updates this row.
+            mm.HasIndex(x => new { x.LocationId, x.Year, x.Month }).IsUnique();
+            mm.HasMany(x => x.Days).WithOne().HasForeignKey(d => d.MenuId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MonthlyMenuDay>(md =>
+        {
+            md.ToTable("monthly_menu_days");
+            md.HasKey(x => x.Id);
+            md.Property(x => x.Soup).HasMaxLength(500);
+            md.Property(x => x.MainCourse).HasMaxLength(500);
+            md.Property(x => x.Dessert).HasMaxLength(500);
+            md.Property(x => x.Notes).HasMaxLength(500);
+            md.HasIndex(x => new { x.MenuId, x.MenuDate }).IsUnique();
+        });
+
+        modelBuilder.Entity<MealPreferenceChangeRequest>(mpcr =>
+        {
+            mpcr.ToTable("meal_preference_change_requests");
+            mpcr.HasKey(x => x.Id);
+            mpcr.Property(x => x.NewTexture).HasMaxLength(20);
+            // Stored wire strings (013d convention) — a plain nullable text[] column, no enum
+            // converter (the wire form is persisted verbatim). A ValueComparer lets EF detect
+            // in-place mutations of the List<string> reference correctly.
+            mpcr.Property(x => x.NewDietaryType)
+              .HasColumnType("text[]");
+            mpcr.Property(x => x.Notes).HasMaxLength(2000);
+            mpcr.Property(x => x.DecisionNotes).HasMaxLength(2000);
+            mpcr.Property(x => x.Status)
+              .HasConversion(
+                  v => v.ToString().ToLowerInvariant(),
+                  v => (MealPreferenceChangeRequestStatus)Enum.Parse(typeof(MealPreferenceChangeRequestStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            // No cascade — a request survives independently of later child-record edits (same as
+            // DayReservation). FK to children only; RequestedBy/DecidedBy are TenantUserIds.
+            mpcr.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            mpcr.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.DecidedBy);
+            mpcr.HasIndex(x => new { x.ChildId, x.Status });
         });
     }
 }

@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicat
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import { MessageCircle, Megaphone, Thermometer, Inbox } from "lucide-react-native";
+import { MessageCircle, Megaphone, Thermometer, Inbox, UtensilsCrossed } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { useColors } from "../../hooks/useColors";
 import { ScreenContainer } from "../../components/ScreenContainer";
@@ -14,6 +14,7 @@ const ICON_BY_TYPE: Record<NotificationType, typeof MessageCircle> = {
   announcement: Megaphone,
   temperaturealert: Thermometer,
   dayreservationdecided: Inbox,
+  mealpreferencerequestdecided: UtensilsCrossed,
 };
 
 export default function NotificationsScreen() {
@@ -63,6 +64,8 @@ export default function NotificationsScreen() {
       router.push(`/(app)/announcements/${notification.sourceId}`);
     } else if (notification.type === "dayreservationdecided") {
       router.push("/(app)/requests");
+    } else if (notification.type === "mealpreferencerequestdecided") {
+      router.push("/(app)/menu");
     }
     // temperaturealert: no navigation target makes sense (the underlying child-event has no
     // parent-facing detail screen) — marking read is the whole interaction.

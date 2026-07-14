@@ -506,3 +506,39 @@ export interface MealPreferenceResponse {
   updatedBy:        string | null;
   updatedAt:        string | null;
 }
+
+// Feature 013e — contracts/monthly-menu-api.md.
+export interface MonthlyMenuDayEntry {
+  date:       string;
+  soup:       string | null;
+  mainCourse: string | null;
+  dessert:    string | null;
+  notes:      string | null;
+}
+
+export interface MonthlyMenuResponse {
+  exists:      boolean;
+  isPublished: boolean;
+  publishedAt: string | null;
+  days:        MonthlyMenuDayEntry[];
+}
+
+export interface MonthlyMenuPublishStateResponse {
+  isPublished: boolean;
+  publishedAt: string | null;
+}
+
+export interface MealPreferenceChangeRequestResponse {
+  id:                  string;
+  childId:             string;
+  childName:           string;
+  requestedByName:     string;
+  newTexture:          MealTexture | null;
+  newDietaryType:      string[] | null;
+  notes:               string | null;
+  status:              "pending" | "approved" | "rejected";
+  createdAt:           string;
+  decidedAt:           string | null;
+  decisionNotes:       string | null;
+  activeHealthRecords: { id: string; recordType: string; title: string; validFrom: string | null; validUntil: string | null }[];
+}

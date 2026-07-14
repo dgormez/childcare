@@ -215,6 +215,9 @@ builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactRe
 // unchanged — no new ports needed (research.md).
 builder.Services.AddScoped<ChildCare.Application.DayReservations.DayReservationNotificationService>();
 
+// ── Monthly menu / meal-preference requests (feature 013e) ──────────────────
+builder.Services.AddScoped<ChildCare.Application.MealPreferenceRequests.MealPreferenceRequestNotificationService>();
+
 // ── Reservation settings (feature 013f) ──────────────────────────────────────
 builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPolicyResolver>();
 
@@ -692,6 +695,8 @@ app.MapVaccineTypeEndpoints();
 app.MapPlatformAdminVaccineTypeEndpoints();
 app.MapHealthRecordEndpoints();
 app.MapMealListEndpoints();
+app.MapMonthlyMenuEndpoints();
+app.MapMealPreferenceRequestEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

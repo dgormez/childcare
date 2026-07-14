@@ -38,6 +38,7 @@
     "incidents": "Incidents",
     "dashboard": "Dashboard",
     "mealList": "Meal List",
+    "menu": "Menu",
     "vaccineTypes": "Vaccine Catalog"
   },
   "session": {
@@ -752,6 +753,47 @@
       "cancelButton": "Cancel",
       "notesLabel": "Additional notes",
       "saveError": "Couldn't save meal preferences. Please try again."
+    }
+  },
+  "menu": {
+    "title": "Menu",
+    "locationLabel": "Location",
+    "monthLabel": "Month",
+    "loadError": "Couldn't load the monthly menu. Please try again.",
+    "retry": "Retry",
+    "statusPublished": "Published",
+    "statusDraft": "Draft",
+    "saveDraft": "Save draft",
+    "publish": "Publish",
+    "unpublish": "Un-publish",
+    "columnDate": "Date",
+    "columnSoup": "Soup",
+    "columnMainCourse": "Main course",
+    "columnDessert": "Dessert",
+    "columnNotes": "Notes"
+  },
+  "mealPreferenceRequests": {
+    "queueTitle": "Pending preference-change requests",
+    "requestedBy": "Requested by {name}",
+    "activeHealthRecords": "Active health records",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectTitle": "Reject request",
+    "rejectReasonLabel": "Reason (optional)",
+    "cancel": "Cancel",
+    "confirmReject": "Confirm reject",
+    "texture": {
+      "pureed": "Pureed",
+      "mixed": "Mixed",
+      "pieces": "Pieces",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten_free": "Gluten-free"
     }
   },
   "vaccineTypes": {

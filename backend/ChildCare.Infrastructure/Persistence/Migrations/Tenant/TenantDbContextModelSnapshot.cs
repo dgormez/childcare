@@ -1099,6 +1099,56 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("child_meal_preferences", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.MealPreferenceChangeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DecisionNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.PrimitiveCollection<List<string>>("NewDietaryType")
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("NewTexture")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("RequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecidedBy");
+
+                    b.HasIndex("ChildId", "Status");
+
+                    b.ToTable("meal_preference_change_requests", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1176,6 +1226,79 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("TenantUserId");
 
                     b.ToTable("message_thread_participants", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MonthlyMenu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("LocationId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("monthly_menus", "tenant_template", t =>
+                        {
+                            t.HasCheckConstraint("ck_monthly_menus_month", "\"Month\" BETWEEN 1 AND 12");
+                        });
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MonthlyMenuDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Dessert")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("MainCourse")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly>("MenuDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("MenuId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Soup")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuId", "MenuDate")
+                        .IsUnique();
+
+                    b.ToTable("monthly_menu_days", "tenant_template");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.Notification", b =>
@@ -2141,6 +2264,19 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasForeignKey("UpdatedBy");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.MealPreferenceChangeRequest", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedBy");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Message", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
@@ -2174,6 +2310,28 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.MessageThread", null)
                         .WithMany()
                         .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MonthlyMenu", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy");
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MonthlyMenuDay", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.MonthlyMenu", null)
+                        .WithMany("Days")
+                        .HasForeignKey("MenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2327,6 +2485,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.MonthlyMenu", b =>
+                {
+                    b.Navigation("Days");
                 });
 #pragma warning restore 612, 618
         }
