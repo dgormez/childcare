@@ -10,6 +10,7 @@ export interface AuthenticatedUser {
   emailVerified: boolean;
   role: string;
   name: string;
+  isPlatformAdmin: boolean;
 }
 
 export interface AuthResponse {

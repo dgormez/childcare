@@ -76,19 +76,19 @@ create a new entry, confirm it appears in the management list and in 013g's `GET
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Integration test: `GET /api/platform-admin/vaccine-types` returns all entries (active + inactive) with audit fields; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/ListVaccineTypesForPlatformAdminTests.cs`
-- [ ] T016 [P] [US1] Integration test: `POST /api/platform-admin/vaccine-types` creates an entry, defaults `sortOrder` to `max+1` and `isActive` to `true`, rejects an empty name with `400`; the created entry is immediately visible via 013g's `GET /api/vaccine-types`; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/CreateVaccineTypeTests.cs`
-- [ ] T017 [P] [US1] Regression test: 013g's `GET /api/vaccine-types` response shape, ordering, and `DirectorOnly` auth policy are byte-for-byte unchanged (FR-010), extending `backend/ChildCare.Api.Tests/VaccineTypes/VaccineTypeListTests.cs`
+- [X] T015 [P] [US1] Integration test: `GET /api/platform-admin/vaccine-types` returns all entries (active + inactive) with audit fields; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/ListVaccineTypesForPlatformAdminTests.cs`
+- [X] T016 [P] [US1] Integration test: `POST /api/platform-admin/vaccine-types` creates an entry, defaults `sortOrder` to `max+1` and `isActive` to `true`, rejects an empty name with `422` (corrected from the contract's originally-written `400` — this codebase's `ValidationBehavior` pipeline always returns 422 for FluentValidation failures, e.g. `WaitingListEndpoints`; `400` is reserved for domain-level edge cases like the reorder boundary, per T031); the created entry is immediately visible via 013g's `GET /api/vaccine-types`; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/CreateVaccineTypeTests.cs`
+- [X] T017 [P] [US1] Regression test: 013g's `GET /api/vaccine-types` response shape, ordering, and `DirectorOnly` auth policy are byte-for-byte unchanged (FR-010), extending `backend/ChildCare.Api.Tests/VaccineTypes/VaccineTypeListTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] `PlatformAdminVaccineTypeResponse` contract per contracts/platform-admin-vaccine-types-api.md, in `backend/ChildCare.Contracts/Responses/PlatformAdminVaccineTypeResponse.cs`
-- [ ] T019 [US1] `CreateVaccineTypeRequest` contract, in `backend/ChildCare.Contracts/Requests/PlatformAdminVaccineTypeRequests.cs`
-- [ ] T020 [US1] `ListVaccineTypesForPlatformAdminQuery` + handler (all entries, audit fields included) + mapper, in `backend/ChildCare.Application/VaccineTypes/ListVaccineTypesForPlatformAdminQuery.cs` (depends on T004, T018)
-- [ ] T021 [US1] `CreateVaccineTypeCommand` + handler + FluentValidation validator (name required, category valid-or-null) per data-model.md, in `backend/ChildCare.Application/VaccineTypes/CreateVaccineTypeCommand.cs` (depends on T004, T019)
-- [ ] T022 [US1] `PlatformAdminVaccineTypeEndpoints.cs`: map `GET /api/platform-admin/vaccine-types` and `POST /api/platform-admin/vaccine-types`, both `.RequireAuthorization("PlatformAdminOnly")`, in `backend/ChildCare.Api/Endpoints/PlatformAdminVaccineTypeEndpoints.cs` (depends on T010, T020, T021)
-- [ ] T023 [US1] Register `PlatformAdminVaccineTypeEndpoints` in the endpoint-mapping startup code, in `backend/ChildCare.Api/Program.cs` (depends on T022)
-- [ ] T024 [US1] Regenerate `web/lib/generated/api-types.ts` from the updated OpenAPI spec (depends on T023)
+- [X] T018 [US1] `PlatformAdminVaccineTypeResponse` contract per contracts/platform-admin-vaccine-types-api.md, in `backend/ChildCare.Contracts/Responses/PlatformAdminVaccineTypeResponse.cs`
+- [X] T019 [US1] `CreateVaccineTypeRequest` contract, in `backend/ChildCare.Contracts/Requests/PlatformAdminVaccineTypeRequests.cs`
+- [X] T020 [US1] `ListVaccineTypesForPlatformAdminQuery` + handler (all entries, audit fields included) + mapper, in `backend/ChildCare.Application/VaccineTypes/ListVaccineTypesForPlatformAdminQuery.cs` (depends on T004, T018)
+- [X] T021 [US1] `CreateVaccineTypeCommand` + handler + FluentValidation validator (name required, category valid-or-null) per data-model.md, in `backend/ChildCare.Application/VaccineTypes/CreateVaccineTypeCommand.cs` (depends on T004, T019)
+- [X] T022 [US1] `PlatformAdminVaccineTypeEndpoints.cs`: map `GET /api/platform-admin/vaccine-types` and `POST /api/platform-admin/vaccine-types`, both `.RequireAuthorization("PlatformAdminOnly")`, in `backend/ChildCare.Api/Endpoints/PlatformAdminVaccineTypeEndpoints.cs` (depends on T010, T020, T021)
+- [X] T023 [US1] Register `PlatformAdminVaccineTypeEndpoints` in the endpoint-mapping startup code, in `backend/ChildCare.Api/Program.cs` (depends on T022)
+- [ ] T024 [US1] Regenerate `web/lib/generated/api-types.ts` from the updated OpenAPI spec (depends on T023) — deferred to a single regeneration pass after all US1-3 endpoints exist (T024/T036/T046 produce an identical result either way)
 - [ ] T025 [P] [US1] `VaccineTypeManagementTable.tsx` (list view: name, category, sortOrder, active/inactive, audit fields when inactive) in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T024)
 - [ ] T026 [US1] Create-entry form (name + category) within the management screen, in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T025)
 - [ ] T027 [US1] `web/app/(app)/platform-admin/vaccine-types/page.tsx` — gated route rendering the management table, redirecting/404-ing if the authenticated director lacks the flag (depends on T025)

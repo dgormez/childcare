@@ -33,7 +33,10 @@ Creates a new catalog entry.
 `sortOrder` defaults to `max(existing) + 1`; `isActive` defaults to `true`.
 
 **Response 201**: the created entry (same shape as the list item above).
-**Response 400**: validation failure (empty name, invalid category).
+**Response 422**: validation failure (empty name, invalid category) — via the standard
+`ValidationBehavior` pipeline every FluentValidation-backed command in this codebase already uses
+(e.g. `WaitingListEndpoints`); `400` is reserved for domain-level edge cases (see the reorder
+endpoint below), not field-shape validation.
 
 ## `PATCH /api/platform-admin/vaccine-types/{id}`
 
