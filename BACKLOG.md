@@ -46,7 +46,7 @@
 | 013g | `013g-vaccine-catalog` | Shared, admin-maintained vaccine catalog (seeded from the Vlaamse basisvaccinatieschema) backing 013c's free-text vaccineName; adds attachment support on VaccineRecord so a director can attach a scan/photo of the child's vaccinatieboekje | 013c | ✅ Done |
 | 013h | `013h-platform-admin-vaccine-catalog` | Platform-admin role + management UI for the shared vaccine catalog 013g introduced (create/rename/reorder/deactivate catalog entries) — the catalog is currently seeded/maintained only via direct data changes, no in-app surface | 013g | ✅ Done |
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
-| 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | 🔲 Not started |
+| 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | ✅ Done |
 | 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | 🔲 Not started |
 | 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | 🔲 Not started |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
@@ -3337,6 +3337,40 @@ Out of scope:
 - Kitchen supplier or recipe management.
 - Allergen matrix per dish (listed on the shared menu) — Phase 3.
 ```
+
+**Shipped 2026-07-14** — `specs/013e-monthly-menu/` (spec → clarify → plan → tasks → checklist
+→ analyze → implement → converge → PR #30, squash-merged after green CI — 655/655 backend +
+126/126 web + 70/70 parent-mobile tests). Director-web "Menu" section (day-grid authoring,
+Save draft / Publish / Un-publish as distinct labeled+iconed actions) and a new parent-mobile
+"Menu" tab (every active-contract location, closure days greyed out and labeled, a per-child
+preference indicator, and a "Voorkeur aanpassen" request form). Meal-preference-change requests
+reuse 013a's exact authorization primitive (`ICurrentParentContactResolver` + `ChildContacts`)
+and exact notification pattern (`IExpoPushSender` + in-app `Notification`); approval writes
+through the existing `UpsertMealPreferenceCommand` (013d) rather than a second write path. Two
+real EF Core bugs were found and fixed by the new tests, not by inspection: an unflushed
+delete+insert unique-constraint collision on menu edits (EF doesn't guarantee delete-before-
+insert ordering within one `SaveChanges` batch), and duplicate day rows from double relationship-
+fixup when a pre-populated `Guid` PK entity was added via both the DbSet and a navigation
+collection. A third real bug — `MealPreferenceRequestNotificationService` never registered in
+`Program.cs`'s DI container — surfaced as a 500 on every approve/reject call until the US4 tests
+caught it. `/speckit-converge` found one genuine spec gap: the parent-mobile preference
+indicator showed only texture, never the dietary tags FR-010 explicitly requires — fixed with a
+regression test, same standing rule as every prior feature. Confirms the recurring
+`TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern (012a,
+013c, 006a, 013d, 013g, 013h) yet again. This session resumed mid-flight: a prior session had
+already committed Phase 2 (schema/entities/migration) and left US1's application-layer commands
+written but uncommitted with zero tests; this pass picked up from there rather than re-running
+specify/plan/tasks. Mid-implementation, this feature's own resumption raised two genuinely new,
+no-precedent scope questions (bulk CSV import for menu authoring; an optional per-dietary-
+restriction variant menu) — paused and confirmed directly with the product owner before
+continuing, per the standing rule: both are out of this feature's MVP, logged as follow-ups
+(`013i-monthly-menu-csv-import`, `013j-monthly-menu-variants`) rather than expanding scope
+mid-flight. `parent-mobile/services/menu.ts` deviates from tasks.md's literal "mirror
+`healthSummary.ts`" instruction: that precedent lives in the caregiver app (`mobile/`) on top of
+feature 008's SQLite offline-sync store, which parent-mobile deliberately has none of (spec.md
+Assumptions — parents are expected to have network access) and no persistence library exists in
+that app at all — implemented as an in-memory per-month cache instead, same fetch-then-cache-
+fallback behavior, no new dependency.
 
 ---
 
