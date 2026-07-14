@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using ChildCare.Application.Common;
 using ChildCare.Application.MonthlyMenus;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -36,6 +38,22 @@ public static class MonthlyMenuEndpoints
         {
             var result = await mediator.Send(new UnpublishMonthlyMenuCommand(locationId, year, month));
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        // Feature 013e US2 — contracts/monthly-menu-api.md. Defaults to the current Europe/Brussels
+        // calendar month (mirrors GetParentGroupActivityGalleryQuery's identical default, 009b).
+        var parent = app.MapGroup("/api/parent")
+            .WithTags("MonthlyMenus")
+            .RequireAuthorization("ParentOnly");
+
+        parent.MapGet("/monthly-menu", async (int? year, int? month, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var today = BelgianCalendarDay.Today();
+            var result = await mediator.Send(new GetParentMonthlyMenuQuery(tenantUserId, year ?? today.Year, month ?? today.Month));
+            return result.Authorized
+                ? Results.Ok(result.Entries)
+                : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
         });
     }
 

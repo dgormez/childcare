@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using Xunit;
+using static ChildCare.Api.Tests.AttendanceTestSupport;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
 using static ChildCare.Api.Tests.ParentTestSupport;
 
@@ -52,6 +53,34 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
 
     private static Task<HttpResponseMessage> UnpublishRawAsync(HttpClient client, string token, Guid locationId, int year, int month) =>
         client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/locations/{locationId}/monthly-menus/{year}/{month}/unpublish", token));
+
+    private static Task<HttpResponseMessage> GetParentMenuRawAsync(HttpClient client, string parentToken, int year, int month) =>
+        client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/parent/monthly-menu?year={year}&month={month}", parentToken));
+
+    private static async Task<List<ParentMonthlyMenuEntry>> GetParentMenuAsync(HttpClient client, string parentToken, int year, int month)
+    {
+        var response = await GetParentMenuRawAsync(client, parentToken, year, month);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<List<ParentMonthlyMenuEntry>>())!;
+    }
+
+    private static async Task PublishAsync(HttpClient client, string token, Guid locationId, int year, int month)
+    {
+        var response = await PublishRawAsync(client, token, locationId, year, month);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    private static async Task<ClosureDayResponse> CreateAndPublishClosureAsync(HttpClient client, string accessToken, Guid locationId, DateOnly date)
+    {
+        var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/closures", accessToken,
+            new CreateClosureDayRequest(locationId, date, "Sluitingsdag", "holiday", true)));
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
+
+        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken, new PublishClosureDayRequest(false)));
+        Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
+        return closure;
+    }
 
     // ── US1: director creates and publishes ────────────────────────────────────────────────────
 
@@ -133,5 +162,75 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
 
         var unpublishResponse = await UnpublishRawAsync(client, parentToken, location.Id, 2027, 6);
         Assert.Equal(HttpStatusCode.Forbidden, unpublishResponse.StatusCode);
+    }
+
+    // ── US2: parent views the current month's published menu ───────────────────────────────────
+
+    [Fact]
+    public async Task GetParentMenu_ReturnsOneEntryPerActiveContractLocation_WithClosureDates()
+    {
+        var (client, org, location) = await SetupAsync();
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, DayOfWeek.Monday);
+        await CreateAndPublishClosureAsync(client, org.AccessToken, location.Id, new DateOnly(2027, 9, 21));
+
+        await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 9,
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 9, 1), "Soep", "Hoofdgerecht", "Dessert", null)]);
+        await PublishAsync(client, org.AccessToken, location.Id, 2027, 9);
+
+        var entries = await GetParentMenuAsync(client, parentToken, 2027, 9);
+
+        var entry = Assert.Single(entries);
+        Assert.Equal(location.Id, entry.LocationId);
+        Assert.True(entry.IsPublished);
+        Assert.Single(entry.Days);
+        Assert.Contains(new DateOnly(2027, 9, 21), entry.ClosureDates);
+    }
+
+    [Fact]
+    public async Task GetParentMenu_WhenNoMenuPublishedForLocation_ReturnsUnpublishedEmptyEntry()
+    {
+        var (client, org, location) = await SetupAsync();
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, DayOfWeek.Monday);
+
+        var entries = await GetParentMenuAsync(client, parentToken, 2027, 10);
+
+        var entry = Assert.Single(entries);
+        Assert.False(entry.IsPublished);
+        Assert.Empty(entry.Days);
+    }
+
+    [Fact]
+    public async Task GetParentMenu_ChildWithContractsAtTwoLocations_ReturnsTwoDistinctEntries()
+    {
+        var (client, org, firstLocation) = await SetupAsync();
+        var secondLocation = await CreateLocationAsync(client, org.AccessToken, "Second");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, firstLocation.Id, DayOfWeek.Monday);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, secondLocation.Id, DayOfWeek.Tuesday);
+
+        var entries = await GetParentMenuAsync(client, parentToken, 2027, 11);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Contains(entries, e => e.LocationId == firstLocation.Id && e.LocationName == "Main");
+        Assert.Contains(entries, e => e.LocationId == secondLocation.Id && e.LocationName == "Second");
+    }
+
+    [Fact]
+    public async Task GetParentMenu_ForUnlinkedChildsLocation_NeverIncludesThatLocation()
+    {
+        var (client, org, location) = await SetupAsync();
+        var (unlinkedChild, _, _) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, unlinkedChild.Id, location.Id, DayOfWeek.Monday);
+        await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 12,
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 12, 1), "Soep", "Hoofdgerecht", "Dessert", null)]);
+        await PublishAsync(client, org.AccessToken, location.Id, 2027, 12);
+
+        var (_, _, otherParentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+
+        var entries = await GetParentMenuAsync(client, otherParentToken, 2027, 12);
+
+        Assert.Empty(entries);
     }
 }
