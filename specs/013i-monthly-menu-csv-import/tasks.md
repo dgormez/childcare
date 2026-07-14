@@ -204,3 +204,10 @@ Task: "Unit test: mergeMenuCsvRowsIntoGrid overwrites only matching dates in web
 - No backend tasks exist in this list — confirmed by plan.md's Constitution Check: this feature
   adds no endpoint, command, or migration.
 - Commit after each task or logical group, per this repo's standing convention.
+
+---
+
+## Phase 7: Convergence
+
+- [X] T035 Add a unit test uploading a CSV with an unrecognized extra column, confirming it parses/validates identically to the same file without it per FR-004 (partial) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T036 Remove the unused `MenuCsvFileLevelError` interface in `web/lib/menu/csvImport.ts` (unrequested)

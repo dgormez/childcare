@@ -42,6 +42,23 @@ describe("parseMenuCsv + validateMenuCsvRows", () => {
     expect(first.fields).toEqual({ soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: "" });
   });
 
+  it("ignores unrecognized extra columns rather than leaking them into a mapped field or erroring (FR-004)", async () => {
+    const withExtra = await parseAndValidate(
+      "date,soup,main_course,dessert,notes,kitchen_notes\n2027-06-01,Tomatensoep,Kip met puree,Yoghurt,,Only for staff",
+      2027,
+      6,
+    );
+    const withoutExtra = await parseAndValidate(
+      "date,soup,main_course,dessert,notes\n2027-06-01,Tomatensoep,Kip met puree,Yoghurt,",
+      2027,
+      6,
+    );
+
+    expect(withExtra[0]).toMatchObject({ status: "valid", date: "2027-06-01" });
+    if (withExtra[0].status !== "valid" || withoutExtra[0].status !== "valid") throw new Error("expected both valid");
+    expect(withExtra[0].fields).toEqual(withoutExtra[0].fields);
+  });
+
   it("strips a leading UTF-8 BOM and matches headers case-insensitively/whitespace-tolerantly (FR-019, FR-020)", async () => {
     const csv = "﻿ Date , Soup ,Main_Course,Dessert,Notes\n2027-06-01,Tomatensoep,Kip met puree,Yoghurt,";
     const rows = await parseAndValidate(csv, 2027, 6);

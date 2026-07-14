@@ -46,13 +46,6 @@ export interface MenuCsvImportResult {
   fileLevelError: null;
 }
 
-export interface MenuCsvFileLevelError {
-  rows: null;
-  validCount: 0;
-  invalidCount: 0;
-  fileLevelError: string;
-}
-
 // A leading UTF-8 byte-order-mark is the common case for a file exported directly from Excel
 // (FR-020) — stripped before parsing so it never corrupts the header's first column name.
 const BOM = "﻿";
