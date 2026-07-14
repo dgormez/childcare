@@ -3374,6 +3374,91 @@ fallback behavior, no new dependency.
 
 ---
 
+### 013i — Monthly Menu CSV Import
+
+**Prompt block synthesized 2026-07-14** — unlike every other backlog entry, 013i never got a
+dedicated spec-kit prompt written when it was logged as a follow-up mid-013e (see 013e's
+shipped-notes above); only the one-line BACKLOG row existed. Grounded the prompt below directly
+in 013e's shipped code (`UpsertMonthlyMenuCommand`'s whole-month-replace write model,
+`MonthlyMenuDayGrid`'s per-calendar-day in-memory state) rather than re-deciding the write
+architecture — this is client-side-only, no new backend endpoint.
+
+```
+Let the director bulk-populate a month's menu via CSV upload instead of typing
+each day by hand in the existing day-grid (013e). This is a director-web-only
+authoring convenience — it does not add any new backend endpoint or change how
+parents see the menu.
+
+Context: deferred out of 013e's MVP per an explicit product-owner decision (see
+013e's shipped-notes) to keep that feature's launch scope to the manual grid
+only. Directors publishing a whole month's menu one day-row at a time is slow;
+many already keep the month's menu in a spreadsheet.
+
+What to build:
+- On the existing "Menu" section (web/app/(app)/menu/page.tsx +
+  MonthlyMenuDayGrid.tsx), add an "Import CSV" action alongside Save/Publish.
+- CSV format: one row per day, columns `date` (YYYY-MM-DD), `soup`,
+  `main_course`, `dessert`, `notes` — matching MonthlyMenuDaySave's fields.
+  A "Download template" link provides a header-only (or header + one example
+  row) CSV in the expected format.
+- Parse client-side (no new backend endpoint — this reuses the exact same
+  PUT /api/locations/{locationId}/monthly-menus/{year}/{month} write path
+  MonthlyMenuDayGrid's existing Save button already calls). Parsing happens
+  entirely in the browser before Save is pressed.
+- On upload, validate every row: `date` must parse as a real calendar date
+  within the grid's currently-selected year/month; no duplicate dates within
+  the file; unknown/extra columns are ignored. Row-level errors are collected,
+  not thrown on the first bad row.
+- Preview before applying: show the parsed rows in a table (reusing the day
+  grid's own row layout where practical) with invalid rows visually flagged
+  and excluded from the merge; a summary line states how many rows will be
+  applied vs. skipped. The director explicitly confirms before the parsed
+  values are merged into the grid's in-memory day state.
+- Merge behavior: imported rows overwrite only the matching dates in the
+  grid's current in-memory state (the grid already holds one row per calendar
+  day of the month); dates not present in the CSV keep whatever value they
+  already had in the grid (typed earlier, or blank). The merge does not save
+  automatically — the director still presses the existing Save button
+  afterward, so a CSV import behaves exactly like manually retyping those
+  rows and can be reviewed/edited further before committing.
+- Import is available regardless of draft/published state, same as manual
+  grid edits today (013e already requires no separate "must be draft" gate
+  for editing — Save works on a published menu too, it just doesn't
+  auto-(re)publish).
+
+Key constraints:
+- No new backend endpoint, no new write path — CSV parsing and validation are
+  entirely client-side; the eventual write is the existing whole-month PUT.
+- All parsing/validation error text uses i18n keys (NL/FR/EN), matching every
+  other user-facing string in this feature area.
+- Field length limits match UpsertMonthlyMenuCommandValidator's existing
+  500-character max per field — a CSV cell over that length is a validation
+  error on that row, not a silent truncation.
+
+Edge cases:
+- CSV has a row for a closure day (011) — accepted like any manual entry;
+  closure days are still shown greyed out to parents regardless of content.
+- CSV is empty, has no rows, or every row fails validation — show a clear
+  error, nothing is merged into the grid.
+- CSV has rows for a different month than what's currently selected in the
+  grid — those rows are flagged invalid (date out of range), not silently
+  applied to the wrong day.
+- Director re-uploads a corrected CSV after fixing errors — same flow, no
+  special-case incremental merge logic; it's the same overwrite-by-date
+  behavior as the first upload.
+- Malformed CSV (wrong delimiter, missing header, binary file) — a single
+  top-level parse error, no partial row processing.
+
+Out of scope:
+- CSV export/download of an existing menu (only the empty template is
+  downloadable).
+- Any change to the parent-facing menu display, publish/unpublish flow, or
+  preference-request flow — this is a director authoring convenience only.
+- 013j's per-dietary-restriction variant menu (separate backlog item).
+```
+
+---
+
 ### 030 — Family Siblings
 
 ```
