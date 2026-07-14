@@ -106,6 +106,13 @@
         "rejected_title": "Demande refusée",
         "rejected_body": "Votre demande a été refusée.",
         "rejected_body_with_note": "Votre demande a été refusée : {{directorNotes}}"
+      },
+      "meal_preference_request_decided": {
+        "approved_title": "Préférence modifiée",
+        "approved_body": "Votre demande a été approuvée.",
+        "rejected_title": "Demande refusée",
+        "rejected_body": "Votre demande a été refusée.",
+        "rejected_body_with_note": "Votre demande a été refusée : {{decisionNotes}}"
       }
     }
   },

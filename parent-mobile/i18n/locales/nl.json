@@ -106,6 +106,13 @@
         "rejected_title": "Aanvraag afgewezen",
         "rejected_body": "Je aanvraag is afgewezen.",
         "rejected_body_with_note": "Je aanvraag is afgewezen: {{directorNotes}}"
+      },
+      "meal_preference_request_decided": {
+        "approved_title": "Voorkeur aangepast",
+        "approved_body": "Je aanvraag is goedgekeurd.",
+        "rejected_title": "Aanvraag afgewezen",
+        "rejected_body": "Je aanvraag is afgewezen.",
+        "rejected_body_with_note": "Je aanvraag is afgewezen: {{decisionNotes}}"
       }
     }
   },

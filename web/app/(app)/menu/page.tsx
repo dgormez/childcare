@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import { apiClient } from "../../../lib/apiClient";
 import { ErrorState } from "../../../components/ErrorState";
 import { MonthlyMenuDayGrid, type MonthlyMenuDaySave } from "../../../components/menu/MonthlyMenuDayGrid";
-import type { LocationResponse, MonthlyMenuResponse, MonthlyMenuPublishStateResponse } from "../../../lib/types";
+import { MealPreferenceRequestQueue } from "../../../components/menu/MealPreferenceRequestQueue";
+import type { LocationResponse, MonthlyMenuResponse, MonthlyMenuPublishStateResponse, MealPreferenceChangeRequestResponse } from "../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
 
@@ -21,6 +22,7 @@ export default function MonthlyMenuPage() {
   const [menu, setMenu] = useState<MonthlyMenuResponse | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [saving, setSaving] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<MealPreferenceChangeRequestResponse[]>([]);
 
   useEffect(() => {
     apiClient.GET("/api/locations").then((result) => {
@@ -30,6 +32,28 @@ export default function MonthlyMenuPage() {
       if (fetched.length > 0) setLocationId((current) => current || fetched[0].id);
     });
   }, []);
+
+  const loadPendingRequests = useCallback(async () => {
+    const result = await apiClient.GET("/api/meal-preference-requests", { params: { query: { status: "pending" } } });
+    if (result.response.ok) setPendingRequests(result.data as unknown as MealPreferenceChangeRequestResponse[]);
+  }, []);
+
+  useEffect(() => {
+    loadPendingRequests();
+  }, [loadPendingRequests]);
+
+  const handleApproveRequest = async (request: MealPreferenceChangeRequestResponse) => {
+    const result = await apiClient.POST("/api/meal-preference-requests/{id}/approve", { params: { path: { id: request.id } } });
+    if (result.response.ok) await loadPendingRequests();
+  };
+
+  const handleRejectRequest = async (request: MealPreferenceChangeRequestResponse, reason: string | null) => {
+    const result = await apiClient.POST("/api/meal-preference-requests/{id}/reject", {
+      params: { path: { id: request.id } },
+      body: { reason },
+    });
+    if (result.response.ok) await loadPendingRequests();
+  };
 
   const load = useCallback(async () => {
     if (!locationId) return;
@@ -136,6 +160,12 @@ export default function MonthlyMenuPage() {
 
       {state === "loaded" && menu && (
         <MonthlyMenuDayGrid year={year} month={month} menu={menu} saving={saving} onSave={handleSave} onPublish={handlePublish} onUnpublish={handleUnpublish} />
+      )}
+
+      {pendingRequests.length > 0 && (
+        <div className="mt-8">
+          <MealPreferenceRequestQueue requests={pendingRequests} onApprove={handleApproveRequest} onReject={handleRejectRequest} />
+        </div>
       )}
     </div>
   );

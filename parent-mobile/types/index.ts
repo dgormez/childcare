@@ -117,7 +117,7 @@ export interface ParentAnnouncementResponse {
   readAt:  string | null;
 }
 
-export type NotificationType = "newmessage" | "announcement" | "temperaturealert" | "dayreservationdecided";
+export type NotificationType = "newmessage" | "announcement" | "temperaturealert" | "dayreservationdecided" | "mealpreferencerequestdecided";
 
 export interface NotificationResponse {
   id:            string;

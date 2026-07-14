@@ -772,6 +772,30 @@
     "columnDessert": "Dessert",
     "columnNotes": "Notes"
   },
+  "mealPreferenceRequests": {
+    "queueTitle": "Pending preference-change requests",
+    "requestedBy": "Requested by {name}",
+    "activeHealthRecords": "Active health records",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectTitle": "Reject request",
+    "rejectReasonLabel": "Reason (optional)",
+    "cancel": "Cancel",
+    "confirmReject": "Confirm reject",
+    "texture": {
+      "pureed": "Pureed",
+      "mixed": "Mixed",
+      "pieces": "Pieces",
+      "normal": "Normal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten_free": "Gluten-free"
+    }
+  },
   "vaccineTypes": {
     "title": "Vaccine Catalog",
     "add": "Add vaccine",

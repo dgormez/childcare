@@ -106,6 +106,13 @@
         "rejected_title": "Request rejected",
         "rejected_body": "Your request has been rejected.",
         "rejected_body_with_note": "Your request has been rejected: {{directorNotes}}"
+      },
+      "meal_preference_request_decided": {
+        "approved_title": "Preference updated",
+        "approved_body": "Your request has been approved.",
+        "rejected_title": "Request rejected",
+        "rejected_body": "Your request has been rejected.",
+        "rejected_body_with_note": "Your request has been rejected: {{decisionNotes}}"
       }
     }
   },

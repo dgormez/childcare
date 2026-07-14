@@ -772,6 +772,30 @@
     "columnDessert": "Dessert",
     "columnNotes": "Opmerkingen"
   },
+  "mealPreferenceRequests": {
+    "queueTitle": "Openstaande voorkeursaanpassingen",
+    "requestedBy": "Aangevraagd door {name}",
+    "activeHealthRecords": "Actieve medische dossiers",
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "rejectTitle": "Aanvraag afwijzen",
+    "rejectReasonLabel": "Reden (optioneel)",
+    "cancel": "Annuleren",
+    "confirmReject": "Afwijzing bevestigen",
+    "texture": {
+      "pureed": "Gemixt",
+      "mixed": "Gemengd",
+      "pieces": "Stukjes",
+      "normal": "Normaal"
+    },
+    "dietaryType": {
+      "halal": "Halal",
+      "kosher": "Koosjer",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "gluten_free": "Glutenvrij"
+    }
+  },
   "vaccineTypes": {
     "title": "Vaccinatiecatalogus",
     "add": "Vaccin toevoegen",
