@@ -350,7 +350,9 @@ see the corrected value).
   language rather than raw enum values.
 - **FR-011**: A parent MUST be able to submit a meal-preference change request (new texture, new
   dietary tags, optional free-text note) for a child they are linked to via `ChildContacts`, using
-  the same authorization pattern as feature 013a's day-reservation requests.
+  the same authorization pattern as feature 013a's day-reservation requests. At least one of the
+  new texture or new dietary tags MUST be present — a request that changes neither is meaningless
+  and MUST be rejected.
 - **FR-012**: The system MUST reject a new preference-change request for a child that already has
   a pending (undecided) request, with a clear error rather than creating a second pending
   request. Concurrent submissions for the same child racing this check is an accepted, low-impact
