@@ -431,6 +431,17 @@ export interface CustomVaccineEntryResponse {
   name: string;
 }
 
+// ── Platform-admin vaccine catalog management (feature 013h) ───────────────────
+export interface PlatformAdminVaccineTypeResponse {
+  id:                 string;
+  name:               string;
+  category:           VaccineCategory | null;
+  sortOrder:          number;
+  isActive:           boolean;
+  deactivatedByEmail: string | null;
+  deactivatedAt:      string | null;
+}
+
 export interface VaccinationsDueSoonResponse {
   childId:      string;
   childName:    string;

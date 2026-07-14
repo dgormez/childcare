@@ -37,7 +37,8 @@
     "dayReservations": "Verzoeken",
     "incidents": "Incidenten",
     "dashboard": "Dashboard",
-    "mealList": "Maaltijdenlijst"
+    "mealList": "Maaltijdenlijst",
+    "vaccineTypes": "Vaccinatiecatalogus"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -752,5 +753,37 @@
       "notesLabel": "Extra opmerkingen",
       "saveError": "Maaltijdvoorkeuren konden niet opgeslagen worden. Probeer opnieuw."
     }
+  },
+  "vaccineTypes": {
+    "title": "Vaccinatiecatalogus",
+    "add": "Vaccin toevoegen",
+    "addTitle": "Vaccin toevoegen",
+    "editTitle": "Vaccin bewerken",
+    "dialogDescription": "Deze vaccinatie geldt voor elke organisatie op het platform.",
+    "nameLabel": "Naam",
+    "categoryLabel": "Categorie",
+    "categoryNone": "Geen categorie",
+    "category": {
+      "basisvaccinatieschema": "Basisvaccinatieschema",
+      "aanbevolen_niet_gratis": "Aanbevolen, niet gratis"
+    },
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "columnName": "Naam",
+    "columnCategory": "Categorie",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "statusActive": "Actief",
+    "statusInactive": "Inactief",
+    "deactivatedBy": "Gedeactiveerd door {email} op {date}",
+    "moveUp": "Omhoog verplaatsen",
+    "moveDown": "Omlaag verplaatsen",
+    "deactivate": "Deactiveren",
+    "reactivate": "Reactiveren",
+    "emptyState": "Nog geen vaccins in de catalogus.",
+    "loadError": "De vaccinatiecatalogus kon niet geladen worden. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "genericError": "Kon deze vaccinatie niet opslaan. Probeer opnieuw.",
+    "reorderBoundaryError": "Deze vaccinatie staat al aan de rand van zijn categorie."
   }
 }

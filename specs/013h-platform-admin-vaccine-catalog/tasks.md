@@ -88,12 +88,12 @@ create a new entry, confirm it appears in the management list and in 013g's `GET
 - [X] T021 [US1] `CreateVaccineTypeCommand` + handler + FluentValidation validator (name required, category valid-or-null) per data-model.md, in `backend/ChildCare.Application/VaccineTypes/CreateVaccineTypeCommand.cs` (depends on T004, T019)
 - [X] T022 [US1] `PlatformAdminVaccineTypeEndpoints.cs`: map `GET /api/platform-admin/vaccine-types` and `POST /api/platform-admin/vaccine-types`, both `.RequireAuthorization("PlatformAdminOnly")`, in `backend/ChildCare.Api/Endpoints/PlatformAdminVaccineTypeEndpoints.cs` (depends on T010, T020, T021)
 - [X] T023 [US1] Register `PlatformAdminVaccineTypeEndpoints` in the endpoint-mapping startup code, in `backend/ChildCare.Api/Program.cs` (depends on T022)
-- [ ] T024 [US1] Regenerate `web/lib/generated/api-types.ts` from the updated OpenAPI spec (depends on T023) — deferred to a single regeneration pass after all US1-3 endpoints exist (T024/T036/T046 produce an identical result either way)
-- [ ] T025 [P] [US1] `VaccineTypeManagementTable.tsx` (list view: name, category, sortOrder, active/inactive, audit fields when inactive) in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T024)
-- [ ] T026 [US1] Create-entry form (name + category) within the management screen, in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T025)
-- [ ] T027 [US1] `web/app/(app)/platform-admin/vaccine-types/page.tsx` — gated route rendering the management table, redirecting/404-ing if the authenticated director lacks the flag (depends on T025)
-- [ ] T028 [US1] Conditional platform-admin nav entry in the director-web sidebar, shown only when the authenticated director's token carries `is_platform_admin`, in `web/components/layout/Sidebar.tsx` (depends on T027)
-- [ ] T029 [US1] NL/FR/EN locale keys for all new platform-admin screen strings (constitution Principle IV), in `web/messages/*.json`
+- [X] T024 [US1] Regenerate `web/lib/generated/api-types.ts` from the updated OpenAPI spec (depends on T023) — done in a single regeneration pass after all US1-3 endpoints existed (T024/T036/T046 produce an identical result either way)
+- [X] T025 [P] [US1] `VaccineTypeManagementTable.tsx` (list view: name, category, sortOrder, active/inactive, audit fields when inactive) in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T024) — plus a shared `VaccineTypeFormDialog.tsx` (create/edit, mirrors `WaitingListEntryDialog`'s dual-purpose pattern)
+- [X] T026 [US1] Create-entry form (name + category) within the management screen, in `web/components/platform-admin/VaccineTypeManagementTable.tsx` (depends on T025)
+- [X] T027 [US1] `web/app/(app)/platform-admin/vaccine-types/page.tsx` — gated route rendering the management table, redirecting if the authenticated director lacks the flag (redirect, not 404, matching `AppLayout`'s existing unauthenticated-redirect convention) (depends on T025)
+- [X] T028 [US1] Conditional platform-admin nav entry in the director-web sidebar, shown only when `session.user.isPlatformAdmin` (resolved server-side via `AuthenticatedUser.IsPlatformAdmin` — corrected during implementation: this app never decodes the JWT client-side, so gating reads a response field, not a token claim), in `web/components/Sidebar.tsx` (path corrected from the plan's assumed `web/components/layout/Sidebar.tsx` — no `layout/` subfolder exists in this codebase) (depends on T027)
+- [X] T029 [US1] NL/FR/EN locale keys for all new platform-admin screen strings (constitution Principle IV), in `web/i18n/locales/*.json` (path corrected from the plan's assumed `web/messages/*.json`)
 
 **Checkpoint**: A platform admin can view and create catalog entries end-to-end; a non-flagged
 director is denied at both the route and API level; 013g's existing read endpoint is unaffected.
@@ -119,10 +119,10 @@ reorder two entries via the up/down buttons, confirm the new order via the same 
 - [X] T033 [US2] `UpdateVaccineTypeCommand` + handler + validator, in `backend/ChildCare.Application/VaccineTypes/UpdateVaccineTypeCommand.cs` (depends on T004, T032)
 - [X] T034 [US2] `ReorderVaccineTypeCommand` + handler (adjacent-swap logic, boundary validation per contracts.md; scoped to the entry's own category, matching the list's Category-then-SortOrder grouping), in `backend/ChildCare.Application/VaccineTypes/ReorderVaccineTypeCommand.cs` (depends on T004, T032)
 - [X] T035 [US2] Map `PATCH /api/platform-admin/vaccine-types/{id}` and `POST /api/platform-admin/vaccine-types/{id}/reorder` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T033, T034)
-- [ ] T036 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T035) — deferred to a single regeneration pass after all US1-3 endpoints exist
-- [ ] T037 [US2] Add rename (inline edit) to `VaccineTypeManagementTable.tsx` (depends on T025, T036)
-- [ ] T038 [US2] Add up/down reorder buttons to `VaccineTypeManagementTable.tsx`, reusing `WaitingListTable.tsx`'s existing button pattern (research.md R4) (depends on T037)
-- [ ] T039 [US2] NL/FR/EN locale keys for rename/reorder UI strings
+- [X] T036 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T035) — done in the single T024/T036/T046 regeneration pass, run against a locally-started API once all three phases' endpoints existed
+- [X] T037 [US2] Add rename (inline edit) to `VaccineTypeManagementTable.tsx` (depends on T025, T036) — implemented via `VaccineTypeFormDialog.tsx` (click the entry name to open it pre-filled), mirroring `WaitingListEntryDialog`'s edit-mode pattern
+- [X] T038 [US2] Add up/down reorder buttons to `VaccineTypeManagementTable.tsx`, reusing `WaitingListTable.tsx`'s existing button pattern (research.md R4) (depends on T037)
+- [X] T039 [US2] NL/FR/EN locale keys for rename/reorder UI strings
 
 **Checkpoint**: Rename and reorder work end-to-end alongside User Story 1's create/list, all still
 reflected correctly in 013g's unaffected read endpoint.
@@ -149,9 +149,9 @@ who/when; reactivate it and confirm the audit fields clear.
 - [X] T043 [US3] `DeactivateVaccineTypeCommand` + handler (reads acting user's id/email from claims, no-op guard) per data-model.md's state-transition rules, in `backend/ChildCare.Application/VaccineTypes/DeactivateVaccineTypeCommand.cs` (depends on T004)
 - [X] T044 [US3] `ReactivateVaccineTypeCommand` + handler (clears audit fields, no-op guard), in `backend/ChildCare.Application/VaccineTypes/ReactivateVaccineTypeCommand.cs` (depends on T004)
 - [X] T045 [US3] Map `POST /api/platform-admin/vaccine-types/{id}/deactivate` and `.../reactivate` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T043, T044)
-- [ ] T046 [US3] Regenerate `web/lib/generated/api-types.ts` (depends on T045) — deferred to a single regeneration pass after all US1-3 endpoints exist
-- [ ] T047 [US3] Add deactivate/reactivate action + inactive-state audit display (who/when) to `VaccineTypeManagementTable.tsx` (depends on T025, T046)
-- [ ] T048 [US3] NL/FR/EN locale keys for deactivate/reactivate UI strings and audit display
+- [X] T046 [US3] Regenerate `web/lib/generated/api-types.ts` (depends on T045) — done in the single T024/T036/T046 regeneration pass
+- [X] T047 [US3] Add deactivate/reactivate action + inactive-state audit display (who/when) to `VaccineTypeManagementTable.tsx` (depends on T025, T046)
+- [X] T048 [US3] NL/FR/EN locale keys for deactivate/reactivate UI strings and audit display
 
 **Checkpoint**: All four actions (create/rename/reorder/deactivate+reactivate) work end-to-end;
 013g's tenant-facing read endpoint remains fully unaffected throughout.

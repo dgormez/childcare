@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert, LayoutDashboard, UtensilsCrossed } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, ListPlus, MessageSquare, Megaphone, Sparkles, Inbox, ShieldAlert, LayoutDashboard, UtensilsCrossed, Syringe } from "lucide-react";
 import { cn } from "../lib/cn";
 import { apiClient } from "../lib/apiClient";
 import type { Session } from "../lib/auth";
@@ -35,6 +35,13 @@ const REAL_NAV = [
 const PLACEHOLDER_NAV = [
   { labelKey: "contracts", icon: FileText },
 ] as const;
+
+// Feature 013h (FR-003) — the only cross-tenant capability in the sidebar, so it's rendered as
+// its own bordered section below the tenant-scoped nav rather than folded into REAL_NAV,
+// visually distinguishing "this tenant" from "the whole platform." Gated purely on
+// session.user.isPlatformAdmin, resolved server-side (AuthenticatedUser.IsPlatformAdmin) since
+// this app never decodes the JWT client-side.
+const PLATFORM_ADMIN_NAV = { href: "/platform-admin/vaccine-types", labelKey: "vaccineTypes", icon: Syringe } as const;
 
 interface SidebarProps {
   // FR-005b: the caller (AppLayout) never renders Sidebar until organisationName/user.name are
@@ -123,6 +130,29 @@ export function Sidebar({ session, onLogout }: SidebarProps) {
             )}
           </div>
         ))}
+
+        {session.user.isPlatformAdmin && (
+          <div className="mt-3 space-y-1 border-t border-border pt-3 dark:border-border-dark">
+            {(() => {
+              const { href, labelKey, icon: Icon } = PLATFORM_ADMIN_NAV;
+              const active = pathname.startsWith(href);
+              return (
+                <Link
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition",
+                    active
+                      ? "bg-primary-soft text-primary-hover dark:bg-primary-soft-dark dark:text-primary-hover-dark"
+                      : "text-text-soft hover:bg-surface-soft dark:text-text-soft-dark dark:hover:bg-surface-soft-dark",
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+                  {!collapsed && <span className="truncate">{t(labelKey)}</span>}
+                </Link>
+              );
+            })()}
+          </div>
+        )}
       </nav>
 
       <div className="space-y-1 border-t border-border pt-3 dark:border-border-dark">

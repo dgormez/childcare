@@ -37,7 +37,8 @@
     "dayReservations": "Requests",
     "incidents": "Incidents",
     "dashboard": "Dashboard",
-    "mealList": "Meal List"
+    "mealList": "Meal List",
+    "vaccineTypes": "Vaccine Catalog"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -752,5 +753,37 @@
       "notesLabel": "Additional notes",
       "saveError": "Couldn't save meal preferences. Please try again."
     }
+  },
+  "vaccineTypes": {
+    "title": "Vaccine Catalog",
+    "add": "Add vaccine",
+    "addTitle": "Add vaccine",
+    "editTitle": "Edit vaccine",
+    "dialogDescription": "This entry is shared across every organisation on the platform.",
+    "nameLabel": "Name",
+    "categoryLabel": "Category",
+    "categoryNone": "No category",
+    "category": {
+      "basisvaccinatieschema": "Mandatory schedule",
+      "aanbevolen_niet_gratis": "Recommended, not free"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "columnName": "Name",
+    "columnCategory": "Category",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "deactivatedBy": "Deactivated by {email} on {date}",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "emptyState": "No catalog entries yet.",
+    "loadError": "Couldn't load the vaccine catalog. Please try again.",
+    "retry": "Retry",
+    "genericError": "Couldn't save this entry. Please try again.",
+    "reorderBoundaryError": "This entry is already at the edge of its category."
   }
 }
