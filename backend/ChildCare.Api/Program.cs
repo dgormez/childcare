@@ -64,6 +64,27 @@ if (args.Length > 0 && args[0] == "backfill-growth-check")
     Environment.Exit(exitCode);
 }
 
+// grant-platform-admin <email> CLI subcommand (feature 013h-platform-admin-vaccine-catalog,
+// spec.md Assumptions, research.md R3) — same early-exit shape as migrate-tenants/
+// backfill-growth-check above. The only write path for TenantUser.IsPlatformAdmin (FR-001).
+if (args.Length > 0 && args[0] == "grant-platform-admin")
+{
+    if (args.Length < 2 || string.IsNullOrWhiteSpace(args[1]))
+    {
+        Console.WriteLine("Usage: dotnet run -- grant-platform-admin <email>");
+        Environment.Exit(1);
+    }
+
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await GrantPlatformAdminCommand.RunAsync(cliScope.ServiceProvider, args[1]);
+    Environment.Exit(exitCode);
+}
+
 // Raises the ThreadPool's minimum worker threads above the .NET default (= ProcessorCount)
 // so a sudden burst of concurrent requests doesn't stall on the pool's slow "hill-climbing"
 // thread-injection rate. Auth endpoints in particular call BCrypt.Verify/HashPassword
@@ -393,6 +414,19 @@ builder.Services.AddAuthorization(options =>
             context.User.HasClaim(c => c.Type == DeviceTokenClaims.DeviceId) ||
             context.User.IsInRole("staff") ||
             context.User.IsInRole("director")));
+
+    // Feature 013h (research.md R1) — the first cross-tenant platform-admin capability. Chaining
+    // RequireRole + RequireAssertion (both requirements must pass, AND'd) makes the
+    // DirectorOnly-equivalent check an explicit, always-enforced prerequisite rather than folding
+    // it into the assertion itself — a token carrying is_platform_admin but not the director role
+    // is still rejected (FR-009), so this is additive on top of DirectorOnly, never a substitute
+    // for or bypass of it. The claim is only ever present as exactly "true"
+    // (JwtService.GenerateAccessToken, FR-002) — any other value or its absence both correctly
+    // fail this check, with no partial-credit state.
+    options.AddPolicy("PlatformAdminOnly", policy => policy
+        .RequireRole("director")
+        .RequireAssertion(context =>
+            context.User.HasClaim(c => c.Type == "is_platform_admin" && c.Value == "true")));
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

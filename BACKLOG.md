@@ -68,6 +68,7 @@
 | 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | 🔲 Not started |
 | 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | 🔲 Not started |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
+| 032 | `032-platform-admin-portal` | Dedicated platform-admin (super-admin) portal — send director/organisation invitations, manage shared platform data (e.g. vaccine catalog) | 001 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -4082,6 +4083,61 @@ Out of scope:
 - GDPR data export tooling in general (flagged as Phase 2 out-of-scope back
   in 006) — this feature only handles the deletion cascade for photos
   specifically, not a full export/erasure workflow.
+```
+
+---
+
+### 032 — Platform-Admin Portal
+
+**Added 2026-07-13.** No cross-tenant admin surface exists anywhere in this codebase today.
+Two gaps prompted this: (1) feature 001 built the director invitation *acceptance* flow
+(token → registration) but never a way to *create* that invitation — it's currently a manual
+token/DB operation; (2) feature 013h (if/when built) needs a platform-admin role to manage the
+013g vaccine catalog, but no such role or portal exists to host it in. This feature is that
+portal — the first genuinely cross-tenant (not tenant-scoped) admin capability.
+
+```
+Build a dedicated platform-admin (super-admin) portal — sits above all
+tenant boundaries, unlike every existing role (Director/Staff/Parent,
+feature 003/005) which is scoped to a single tenant.
+
+What to build:
+- Director/organisation invitations: platform-admin sends an invitation
+  to a prospective KDV director (email + organisation name at minimum).
+  Reuse feature 001's existing invitation-token model (signed token,
+  expiry, single-use) — 001 already built acceptance, this builds creation.
+  Platform-admin can see invitation status (pending / accepted / expired)
+  and resend or revoke a pending invitation.
+- Platform data management: a management UI for shared, platform-wide
+  reference data — starting with whatever is the first concrete dataset
+  that needs it (e.g. the vaccine catalog, if feature 013h has not
+  separately built its own screen for this by the time this is picked up).
+  Structure the portal so a second dataset doesn't require rebuilding the
+  shell, but don't build any dataset's screen speculatively.
+
+Open questions this feature must resolve before implementation (flag for
+/speckit-clarify, do not assume silently):
+- Where does a platform-admin authenticate? No natural tenant exists to
+  scope a JWT to — a new auth path, a super-admin flag on an existing
+  account, or something else entirely needs deciding.
+- Is this a new gated section in the existing Next.js web app, or a
+  genuinely separate internal tool? Given Constitution Principle VII
+  (monolith-first simplicity), default to "same app, new gated route"
+  unless a concrete reason argues otherwise.
+- Who can become a platform-admin, and how is the very first one
+  provisioned (chicken-and-egg — no invitation mechanism exists yet to
+  invite them)? Likely a seeded/manual account — the spec should say so
+  explicitly.
+- Does revoking an invitation, or editing platform data, need an audit
+  trail (who did it, when)?
+
+Out of scope:
+- Any change to existing tenant-facing behavior of whatever platform data
+  this touches (e.g. GET /api/vaccine-types stays exactly as-is).
+- Billing/subscription-plan management from this portal (out of scope per
+  feature 001; still deferred).
+- Tenant suspension/deletion tooling (out of scope per feature 002; still
+  deferred).
 ```
 
 ---

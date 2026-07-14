@@ -64,6 +64,11 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
              .HasMaxLength(30);
             v.HasIndex(x => new { x.Category, x.SortOrder });
             v.HasIndex(x => x.IsActive);
+            // Feature 013h — deactivation audit trail. DeactivatedByUserId is deliberately not
+            // configured with HasOne/FK: it references a TenantUser row in an arbitrary tenant's
+            // schema, which PublicDbContext cannot statically resolve or FK-enforce (research.md
+            // R2, mirrors VaccineRecord.VaccineTypeId's existing cross-schema-reference pattern).
+            v.Property(x => x.DeactivatedByEmail).HasMaxLength(254);
         });
     }
 

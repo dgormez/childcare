@@ -51,7 +51,7 @@ public class GoogleSignInCommandHandler(
         var refreshToken = RefreshTokenFactory.AddRefreshToken(db, user, tokenIssuer);
         await db.SaveChangesAsync(cancellationToken);
 
-        var accessToken = tokenIssuer.IssueAccessToken(user.Id, user.Email, tenant.Id, user.Role.ToString().ToLowerInvariant());
+        var accessToken = tokenIssuer.IssueAccessToken(user.Id, user.Email, tenant.Id, user.Role.ToString().ToLowerInvariant(), user.IsPlatformAdmin);
         return AuthResult.Success(new AuthSessionResponse(
             accessToken,
             refreshToken,

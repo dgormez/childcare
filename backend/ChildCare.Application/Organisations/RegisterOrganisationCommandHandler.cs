@@ -77,7 +77,9 @@ public class RegisterOrganisationCommandHandler(
             tenant.ProvisioningStatus = ProvisioningStatus.Ready;
             await db.SaveChangesAsync(cancellationToken);
 
-            var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id, "director");
+            // A freshly self-registered director is never a platform admin (FR-001 — that flag
+            // is granted only out-of-band, via the grant-platform-admin CLI command, never here).
+            var accessToken = tokenIssuer.IssueAccessToken(directorUserId, invitation.Email, tenant.Id, "director", isPlatformAdmin: false);
 
             return RegisterOrganisationResult.Success(new RegisterOrganisationResponse(
                 accessToken,
