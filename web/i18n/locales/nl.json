@@ -38,6 +38,7 @@
     "incidents": "Incidenten",
     "dashboard": "Dashboard",
     "mealList": "Maaltijdenlijst",
+    "menu": "Menu",
     "vaccineTypes": "Vaccinatiecatalogus"
   },
   "session": {
@@ -753,6 +754,23 @@
       "notesLabel": "Extra opmerkingen",
       "saveError": "Maaltijdvoorkeuren konden niet opgeslagen worden. Probeer opnieuw."
     }
+  },
+  "menu": {
+    "title": "Menu",
+    "locationLabel": "Locatie",
+    "monthLabel": "Maand",
+    "loadError": "Het maandmenu kon niet geladen worden. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "statusPublished": "Gepubliceerd",
+    "statusDraft": "Concept",
+    "saveDraft": "Concept opslaan",
+    "publish": "Publiceren",
+    "unpublish": "Depubliceren",
+    "columnDate": "Datum",
+    "columnSoup": "Soep",
+    "columnMainCourse": "Hoofdgerecht",
+    "columnDessert": "Dessert",
+    "columnNotes": "Opmerkingen"
   },
   "vaccineTypes": {
     "title": "Vaccinatiecatalogus",

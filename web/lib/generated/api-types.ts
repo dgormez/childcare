@@ -5479,6 +5479,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{locationId}/monthly-menus/{year}/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    year: number;
+                    month: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    year: number;
+                    month: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpsertMonthlyMenuRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/locations/{locationId}/monthly-menus/{year}/{month}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    year: number;
+                    month: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/locations/{locationId}/monthly-menus/{year}/{month}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    year: number;
+                    month: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/e2e-support/parent-invitations": {
         parameters: {
             query?: never;
@@ -6095,6 +6231,17 @@ export interface components {
             dietaryType: null | string[];
             portionSize: null | string;
             additionalNotes: null | string;
+        };
+        UpsertMonthlyMenuDayRequest: {
+            /** Format: date */
+            date: string;
+            soup: null | string;
+            mainCourse: null | string;
+            dessert: null | string;
+            notes: null | string;
+        };
+        UpsertMonthlyMenuRequest: {
+            days: components["schemas"]["UpsertMonthlyMenuDayRequest"][];
         };
         VerifyEmailRequest: {
             organisationSlug: string;

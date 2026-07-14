@@ -83,12 +83,12 @@ publishes it.
 - [X] T018 [P] [US1] Create `PublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/PublishMonthlyMenuCommand.cs` — sets `PublishedAt = NOW()`, fails with `NotFound` if no menu row exists (depends on T003)
 - [X] T019 [P] [US1] Create `UnpublishMonthlyMenuCommand` + handler in `backend/ChildCare.Application/MonthlyMenus/UnpublishMonthlyMenuCommand.cs` — sets `PublishedAt = null`, fails with `NotFound` if no menu row exists (depends on T003)
 - [X] T020 [US1] Create `backend/ChildCare.Api/Endpoints/MonthlyMenuEndpoints.cs` with the director group (`GET`/`PUT`/`.../publish`/`.../unpublish` on `/api/locations/{locationId}/monthly-menus/{year}/{month}`) under `DirectorOnly`, mapping the `404` `NotFound` failure from T018/T019 (depends on T016, T017, T018, T019)
-- [ ] T021 Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client` against the local backend running with the new migration applied (depends on T020)
-- [ ] T022 [US1] Create `web/components/menu/MonthlyMenuDayGrid.tsx` — day-by-day soup/main/dessert/notes inputs for the selected month, Save draft / Publish / Un-publish actions, clearly distinguishing Publish from Un-publish (label + icon, not color alone) (depends on T021)
-- [ ] T023 [US1] Create `web/app/(app)/menu/page.tsx` — location selector + month selector, renders `MonthlyMenuDayGrid`, mirrors `web/app/(app)/meal-list/page.tsx`'s existing location-selector pattern (depends on T022)
-- [ ] T024 [US1] Add a "Menu" entry (icon: `CalendarRange`, from `lucide-react`) to `REAL_NAV` in `web/components/Sidebar.tsx`, linking to `/menu` (depends on T023)
-- [ ] T025 [P] [US1] Add `menu.*` i18n keys (page title, day grid field labels, Save/Publish/Un-publish buttons, month/location selectors) to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T026 [P] [US1] Web component test: `MonthlyMenuDayGrid` calls the correct save/publish/unpublish handlers and renders each day's fields, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`
+- [X] T021 Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client` against the local backend running with the new migration applied (depends on T020)
+- [X] T022 [US1] Create `web/components/menu/MonthlyMenuDayGrid.tsx` — day-by-day soup/main/dessert/notes inputs for the selected month, Save draft / Publish / Un-publish actions, clearly distinguishing Publish from Un-publish (label + icon, not color alone) (depends on T021)
+- [X] T023 [US1] Create `web/app/(app)/menu/page.tsx` — location selector + month selector, renders `MonthlyMenuDayGrid`, mirrors `web/app/(app)/meal-list/page.tsx`'s existing location-selector pattern (depends on T022)
+- [X] T024 [US1] Add a "Menu" entry (icon: `CalendarRange`, from `lucide-react`) to `REAL_NAV` in `web/components/Sidebar.tsx`, linking to `/menu` (depends on T023)
+- [X] T025 [P] [US1] Add `menu.*` i18n keys (page title, day grid field labels, Save/Publish/Un-publish buttons, month/location selectors) to `web/i18n/locales/{en,fr,nl}.json`
+- [X] T026 [P] [US1] Web component test: `MonthlyMenuDayGrid` calls the correct save/publish/unpublish handlers and renders each day's fields, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`
 
 **Checkpoint**: A director can create, save as draft, publish, and un-publish a monthly menu
 entirely from the web admin — independently testable and deployable as the MVP's supply side.
