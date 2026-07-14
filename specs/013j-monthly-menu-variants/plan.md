@@ -113,7 +113,7 @@ web/
 ├── app/(app)/menu/page.tsx                               # extended: variant selector wiring
 ├── app/(app)/locations/[id]/page.tsx                     # extended: new settings tab/section
 ├── components/menu/
-│   ├── MonthlyMenuDayGrid.tsx                            # extended: accepts variant prop (thin)
+│   ├── MonthlyMenuDayGrid.tsx                            # unchanged — already variant-agnostic; page.tsx feeds it a different `menu`/save-handler per selected variant
 │   └── MonthlyMenuVariantSelector.tsx                    # NEW
 ├── components/
 │   └── MenuVariantSettingsForm.tsx                       # NEW (mirrors ReservationSettingsForm.tsx)

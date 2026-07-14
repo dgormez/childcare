@@ -135,6 +135,7 @@ correct `resolvedVariant` each, and the parent-mobile screen renders both correc
 - [ ] T042 [US3] Extend `parent-mobile/services/menu.ts`'s cache/fetch shape for the new per-child entry fields (no behavior change to the fetch-then-cache-fallback pattern itself, per its own header comment)
 - [ ] T043 [US3] Update `parent-mobile/app/(app)/menu/index.tsx`'s render loop: key by `${entry.locationId}-${entry.childId}`, section heading shows child name (and the resolved variant in plain language via `mealPreferenceRequests.dietaryType.*` when non-null, per FR-011 — no visible "fallback" messaging) (depends on T040, T041, T005)
 - [ ] T044 [P] [US3] Parent-mobile component test: two children at the same location render two distinct sections, correctly labeled with their respective resolved variant (or none) in `parent-mobile/__tests__/menu.variantSections.test.tsx`
+- [ ] T055 [P] [US3] Parent-mobile component test: a child whose menu fell back from a matching-but-unpublished variant to the base menu renders with zero fallback/resolution-related wording — only the base menu's normal appearance (FR-011's MUST-NOT clause) in the same file
 
 **Checkpoint**: All three user stories are independently functional — a director can configure
 and author variants, and parents see the correct one automatically per child.
