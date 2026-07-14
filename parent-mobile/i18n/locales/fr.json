@@ -171,6 +171,13 @@
     "noConsent": "Aucune photo à afficher pour le moment. Demandez à la crèche le consentement photo pour les voir ici.",
     "loadFailed": "Impossible de charger la galerie."
   },
+  "menu": {
+    "title": "Menu",
+    "notAvailable": "Menu pas encore disponible",
+    "closed": "Fermé",
+    "noLocations": "Aucun menu à afficher pour le moment.",
+    "loadFailed": "Impossible de charger le menu."
+  },
   "dayReservations": {
     "absenceTitle": "Mon enfant est malade",
     "extraTitle": "Demander un jour supplémentaire",

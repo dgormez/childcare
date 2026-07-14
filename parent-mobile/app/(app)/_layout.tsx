@@ -1,7 +1,7 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Home, MessageCircle, Bell, Settings, Images } from "lucide-react-native";
+import { Home, MessageCircle, Bell, Settings, Images, UtensilsCrossed } from "lucide-react-native";
 import { useColors } from "../../hooks/useColors";
 
 export default function AppLayout() {
@@ -30,6 +30,13 @@ export default function AppLayout() {
         options={{
           title: t("gallery.title"),
           tabBarIcon: ({ color, size }) => <Images color={color} size={size} strokeWidth={2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="menu"
+        options={{
+          title: t("menu.title"),
+          tabBarIcon: ({ color, size }) => <UtensilsCrossed color={color} size={size} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen

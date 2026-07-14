@@ -171,6 +171,13 @@
     "noConsent": "Er zijn nog geen foto's te zien. Vraag de opvang naar de toestemming voor foto's om ze hier te bekijken.",
     "loadFailed": "Kon de galerij niet laden."
   },
+  "menu": {
+    "title": "Menu",
+    "notAvailable": "Menu nog niet beschikbaar",
+    "closed": "Gesloten",
+    "noLocations": "Nog geen menu om te tonen.",
+    "loadFailed": "Kon het menu niet laden."
+  },
   "dayReservations": {
     "absenceTitle": "Mijn kind is ziek",
     "extraTitle": "Extra dag aanvragen",

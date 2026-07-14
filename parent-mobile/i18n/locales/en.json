@@ -171,6 +171,13 @@
     "noConsent": "No photos to show yet. Ask the childcare center about photo consent to see them here.",
     "loadFailed": "Could not load the gallery."
   },
+  "menu": {
+    "title": "Menu",
+    "notAvailable": "Menu not available yet",
+    "closed": "Closed",
+    "noLocations": "No menu to show yet.",
+    "loadFailed": "Could not load the menu."
+  },
   "dayReservations": {
     "absenceTitle": "My child is sick",
     "extraTitle": "Request an extra day",

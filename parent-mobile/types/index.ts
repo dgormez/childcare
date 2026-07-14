@@ -166,3 +166,38 @@ export interface ReservationAvailabilityResponse {
   exchange:    ReservationRequestMode;
   noticeHours: number;
 }
+
+// ── Monthly menu (feature 013e) ──────────────────────────────────────────────────
+export interface MonthlyMenuDayEntry {
+  date:       string;
+  soup:       string | null;
+  mainCourse: string | null;
+  dessert:    string | null;
+  notes:      string | null;
+}
+
+export interface ParentMonthlyMenuEntry {
+  locationId:   string;
+  locationName: string;
+  isPublished:  boolean;
+  days:         MonthlyMenuDayEntry[];
+  closureDates: string[];
+}
+
+export type MealTexture = "pureed" | "mixed" | "pieces" | "normal";
+
+export interface ParentMealPreferenceResponse {
+  texture:          MealTexture | null;
+  dietaryType:      string[];
+  hasPendingRequest: boolean;
+}
+
+export interface MealPreferenceChangeRequestResponse {
+  id:       string;
+  childId:  string;
+  status:   "pending" | "approved" | "rejected";
+  newTexture: MealTexture | null;
+  newDietaryType: string[] | null;
+  notes:    string | null;
+  createdAt: string;
+}
