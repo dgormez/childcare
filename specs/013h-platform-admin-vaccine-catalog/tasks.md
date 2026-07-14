@@ -45,20 +45,20 @@ these existing first.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 [P] Add `IsPlatformAdmin` (`bool`, default `false`) to `TenantUser` per data-model.md, in `backend/ChildCare.Domain/Entities/TenantUser.cs`
-- [ ] T002 [P] Add `DeactivatedByUserId (Guid?)`, `DeactivatedByEmail (string?)`, `DeactivatedAt (DateTime?)` to `VaccineType` per data-model.md, in `backend/ChildCare.Domain/Entities/VaccineType.cs`
-- [ ] T003 Add EF model configuration for `TenantUser.IsPlatformAdmin` to `TenantDbContext` (depends on T001), in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
-- [ ] T004 Add EF model configuration for `VaccineType`'s three new columns to `PublicDbContext` — no DB-level FK on `DeactivatedByUserId` (research.md R2) (depends on T002), in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
-- [ ] T005 Generate the tenant-schema EF Core migration `AddIsPlatformAdminToUsers` (depends on T003), in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`
-- [ ] T006 Generate the `public`-schema EF Core migration `AddVaccineTypeDeactivationAudit` (depends on T004), in `backend/ChildCare.Infrastructure/Persistence/Migrations/Public/`
-- [ ] T007 Extend `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs`'s revert helper: drop the new `IsPlatformAdmin` column and this migration's name from the `__EFMigrationsHistory` cleanup clause (established pattern — research.md, 012a/013c/006a/013d/013g), depends on T005
-- [ ] T008 Extend `backend/ChildCare.Api.Tests/VaccineTypes/`'s equivalent public-schema revert helper (or create one, mirroring `LegacyVaccinationMigrationTests.cs`'s pattern) for the new `VaccineType` audit columns, depends on T006
-- [ ] T009 Add `is_platform_admin` claim to `JwtService.GenerateAccessToken`, present only when `IsPlatformAdmin == true` (research.md R1), in `backend/ChildCare.Api/Services/JwtService.cs` (depends on T001)
-- [ ] T010 Register `PlatformAdminOnly` authorization policy (`RequireAssertion`: `RequireRole("director")` AND `is_platform_admin` claim present and `"true"`, mirroring `DeviceOrStaffOrDirector`'s shape — research.md R1), in `backend/ChildCare.Api/Program.cs` (depends on T009)
-- [ ] T011 [P] Create `GrantPlatformAdminCommand` (loop `Ready` tenants, parameterized `UPDATE "{schema}"."Users" SET "IsPlatformAdmin" = true WHERE "Email" = @email`, per-tenant try/catch, summary line — mirrors `MigrateTenantsCommand`/`BackfillGrowthCheckCommand`, research.md R3), in `backend/ChildCare.Api/Cli/GrantPlatformAdminCommand.cs`
-- [ ] T012 Wire `grant-platform-admin <email>` dispatch into the `args[0]` CLI switch (depends on T011), in `backend/ChildCare.Api/Program.cs`
-- [ ] T013 [P] Integration test: a director JWT without the flag has no `is_platform_admin` claim; a director JWT with the flag does, in `backend/ChildCare.Api.Tests/PlatformAdmin/JwtClaimTests.cs` (depends on T009)
-- [ ] T014 [P] Integration test: `GrantPlatformAdminCommand` sets the flag for a matching email in its tenant, leaves non-matching tenants/accounts untouched, and is idempotent on a second run, in `backend/ChildCare.Api.Tests/PlatformAdmin/GrantPlatformAdminCommandTests.cs` (depends on T011)
+- [X] T001 [P] Add `IsPlatformAdmin` (`bool`, default `false`) to `TenantUser` per data-model.md, in `backend/ChildCare.Domain/Entities/TenantUser.cs`
+- [X] T002 [P] Add `DeactivatedByUserId (Guid?)`, `DeactivatedByEmail (string?)`, `DeactivatedAt (DateTime?)` to `VaccineType` per data-model.md, in `backend/ChildCare.Domain/Entities/VaccineType.cs`
+- [X] T003 Add EF model configuration for `TenantUser.IsPlatformAdmin` to `TenantDbContext` (depends on T001), in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
+- [X] T004 Add EF model configuration for `VaccineType`'s three new columns to `PublicDbContext` — no DB-level FK on `DeactivatedByUserId` (research.md R2) (depends on T002), in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
+- [X] T005 Generate the tenant-schema EF Core migration `AddIsPlatformAdminToUsers` (depends on T003), in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`
+- [X] T006 Generate the `public`-schema EF Core migration `AddVaccineTypeDeactivationAudit` (depends on T004), in `backend/ChildCare.Infrastructure/Persistence/Migrations/Public/`
+- [X] T007 Extend `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs`'s revert helper: drop the new `IsPlatformAdmin` column and this migration's name from the `__EFMigrationsHistory` cleanup clause (established pattern — research.md, 012a/013c/006a/013d/013g), depends on T005
+- [X] T008 Extend `backend/ChildCare.Api.Tests/VaccineTypes/`'s equivalent public-schema revert helper (or create one, mirroring `LegacyVaccinationMigrationTests.cs`'s pattern) for the new `VaccineType` audit columns, depends on T006
+- [X] T009 Add `is_platform_admin` claim to `JwtService.GenerateAccessToken`, present only when `IsPlatformAdmin == true` (research.md R1), in `backend/ChildCare.Api/Services/JwtService.cs` (depends on T001)
+- [X] T010 Register `PlatformAdminOnly` authorization policy (`RequireAssertion`: `RequireRole("director")` AND `is_platform_admin` claim present and `"true"`, mirroring `DeviceOrStaffOrDirector`'s shape — research.md R1), in `backend/ChildCare.Api/Program.cs` (depends on T009)
+- [X] T011 [P] Create `GrantPlatformAdminCommand` (loop `Ready` tenants, parameterized `UPDATE "{schema}"."Users" SET "IsPlatformAdmin" = true WHERE "Email" = @email`, per-tenant try/catch, summary line — mirrors `MigrateTenantsCommand`/`BackfillGrowthCheckCommand`, research.md R3), in `backend/ChildCare.Api/Cli/GrantPlatformAdminCommand.cs`
+- [X] T012 Wire `grant-platform-admin <email>` dispatch into the `args[0]` CLI switch (depends on T011), in `backend/ChildCare.Api/Program.cs`
+- [X] T013 [P] Integration test: a director JWT without the flag has no `is_platform_admin` claim; a director JWT with the flag does, in `backend/ChildCare.Api.Tests/PlatformAdmin/JwtClaimTests.cs` (depends on T009)
+- [X] T014 [P] Integration test: `GrantPlatformAdminCommand` sets the flag for a matching email in its tenant, leaves non-matching tenants/accounts untouched, and is idempotent on a second run, in `backend/ChildCare.Api.Tests/PlatformAdmin/GrantPlatformAdminCommandTests.cs` (depends on T011)
 
 **Checkpoint**: Schema, claim, and policy exist; solution builds; both migrations are reversible
 via the extended rollout tests. User story implementation can now begin.
