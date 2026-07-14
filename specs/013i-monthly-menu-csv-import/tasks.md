@@ -15,8 +15,8 @@ testing.
 
 **Purpose**: Dependency and i18n scaffolding shared across all stories.
 
-- [ ] T001 [P] Add `papaparse` (+ `@types/papaparse`) as a `web/` dependency in `web/package.json`
-- [ ] T002 [P] Add new `menu.*` i18n keys under the existing `menu` namespace — import action label, "Download template" label, preview table column headers, applied/skipped summary line, per-row error reasons (`invalid_date`, `date_out_of_range`, `duplicate_date`, `field_too_long`), file-level parse error, and the zero-valid-rows rejection message — to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
+- [X] T001 [P] Add `papaparse` (+ `@types/papaparse`) as a `web/` dependency in `web/package.json`
+- [X] T002 [P] Add new `menu.*` i18n keys under the existing `menu` namespace — import action label, "Download template" label, preview table column headers, applied/skipped summary line, per-row error reasons (`invalid_date`, `date_out_of_range`, `duplicate_date`, `field_too_long`), file-level parse error, and the zero-valid-rows rejection message — to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
 
 ---
 
@@ -26,11 +26,11 @@ testing.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T003 Define `ParsedMenuCsvRow`, `ValidatedMenuCsvRow` (including `willOverwriteExisting`), `MenuCsvImportResult` types and the `MAX_FIELD_LENGTH = 500` constant (per data-model.md, matching `UpsertMonthlyMenuCommandValidator`'s server-side limit) in `web/lib/menu/csvImport.ts`
-- [ ] T004 Implement `parseMenuCsv(file: File)` using `papaparse` (`header: true`; strip a leading UTF-8 BOM first, FR-020; case-insensitive, whitespace-tolerant header matching for `date`/`soup`/`main_course`/`dessert`/`notes`, FR-019; unrecognized columns ignored, FR-004; a row whose column count doesn't match the header is emitted as a row-level parse error rather than aborting the file, FR-021) returning `ParsedMenuCsvRow[]` or a file-level parse error, in `web/lib/menu/csvImport.ts` (depends on T003)
-- [ ] T005 Implement `validateMenuCsvRows(rows: ParsedMenuCsvRow[], { year, month }, currentDays: Map<string, DayFields>): ValidatedMenuCsvRow[]` — checks in FR-022's precedence order (date format/parseability against `YYYY-MM-DD` per FR-005 → out-of-range → duplicate-within-file → `MAX_FIELD_LENGTH`), a date-only row with all other fields blank is valid (FR-023), and `willOverwriteExisting` is set per research.md's decision by comparing each valid row's date against `currentDays` — in `web/lib/menu/csvImport.ts` (depends on T003, T004)
-- [ ] T006 Implement `mergeMenuCsvRowsIntoGrid(currentDays: Map<string, DayFields>, validRows: ValidatedMenuCsvRow[]): Map<string, DayFields>` — overwrites only matching dates (including with a blank imported field clearing existing content, FR-012), returns a new map, does not mutate the input — in `web/lib/menu/csvImport.ts` (depends on T005)
-- [ ] T007 Implement `buildMenuCsvTemplate(year: number, month: number): string` — header row plus one example data row dated the 1st of the given month, per `contracts/csv-format.md` — in `web/lib/menu/csvImport.ts` (depends on T003)
+- [X] T003 Define `ParsedMenuCsvRow`, `ValidatedMenuCsvRow` (including `willOverwriteExisting`), `MenuCsvImportResult` types and the `MAX_FIELD_LENGTH = 500` constant (per data-model.md, matching `UpsertMonthlyMenuCommandValidator`'s server-side limit) in `web/lib/menu/csvImport.ts`
+- [X] T004 Implement `parseMenuCsv(file: File)` using `papaparse` (`header: true`; strip a leading UTF-8 BOM first, FR-020; case-insensitive, whitespace-tolerant header matching for `date`/`soup`/`main_course`/`dessert`/`notes`, FR-019; unrecognized columns ignored, FR-004; a row whose column count doesn't match the header is emitted as a row-level parse error rather than aborting the file, FR-021) returning `ParsedMenuCsvRow[]` or a file-level parse error, in `web/lib/menu/csvImport.ts` (depends on T003)
+- [X] T005 Implement `validateMenuCsvRows(rows: ParsedMenuCsvRow[], { year, month }, currentDays: Map<string, DayFields>): ValidatedMenuCsvRow[]` — checks in FR-022's precedence order (date format/parseability against `YYYY-MM-DD` per FR-005 → out-of-range → duplicate-within-file → `MAX_FIELD_LENGTH`), a date-only row with all other fields blank is valid (FR-023), and `willOverwriteExisting` is set per research.md's decision by comparing each valid row's date against `currentDays` — in `web/lib/menu/csvImport.ts` (depends on T003, T004)
+- [X] T006 Implement `mergeMenuCsvRowsIntoGrid(currentDays: Map<string, DayFields>, validRows: ValidatedMenuCsvRow[]): Map<string, DayFields>` — overwrites only matching dates (including with a blank imported field clearing existing content, FR-012), returns a new map, does not mutate the input — in `web/lib/menu/csvImport.ts` (depends on T005)
+- [X] T007 Implement `buildMenuCsvTemplate(year: number, month: number): string` — header row plus one example data row dated the 1st of the given month, per `contracts/csv-format.md` — in `web/lib/menu/csvImport.ts` (depends on T003)
 
 **Checkpoint**: Core parse/validate/merge/template module complete and independently
 unit-testable — user story implementation can now begin.
@@ -49,19 +49,19 @@ cells; pressing the existing Save button persists exactly what manual entry alre
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Unit tests: `parseMenuCsv` + `validateMenuCsvRows` correctly parse and validate a full valid month (every row valid, dates matching the grid's year/month) in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T009 [P] [US1] Unit test: `mergeMenuCsvRowsIntoGrid` overwrites only the dates present in `validRows` and leaves every other date's existing value untouched (FR-012) in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T030 [P] [US1] Unit tests: `parseMenuCsv` strips a leading UTF-8 BOM and matches headers case-insensitively and with surrounding whitespace tolerated (FR-019, FR-020) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T008 [P] [US1] Unit tests: `parseMenuCsv` + `validateMenuCsvRows` correctly parse and validate a full valid month (every row valid, dates matching the grid's year/month) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T009 [P] [US1] Unit test: `mergeMenuCsvRowsIntoGrid` overwrites only the dates present in `validRows` and leaves every other date's existing value untouched (FR-012) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T030 [P] [US1] Unit tests: `parseMenuCsv` strips a leading UTF-8 BOM and matches headers case-insensitively and with surrounding whitespace tolerated (FR-019, FR-020) in `web/__tests__/menuCsvImport.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Create `MonthlyMenuCsvImportDialog.tsx` — file picker, calls `parseMenuCsv`/`validateMenuCsvRows` (passing the grid's current day state) on selection, renders an all-valid preview table with a summary count and a Confirm action; all strings via `next-intl` `useTranslations("menu")` against T002's keys (FR-017); file picker and preview table keyboard-operable from the start, invalid/overwrite indicators paired with an icon plus text, not color alone (FR-018) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T004, T005)
-- [ ] T011 [US1] Add an "Import CSV" button to `MonthlyMenuDayGrid.tsx` that opens the dialog; on Confirm, call `mergeMenuCsvRowsIntoGrid` against the grid's existing `toFieldMap`-derived state and update it (does not call Save) — in `web/components/menu/MonthlyMenuDayGrid.tsx` (depends on T006, T010)
-- [ ] T012 [US1] Verify the merged state flows unchanged into the existing `onSave`/`handleSave` prop path in `web/app/(app)/menu/page.tsx` — no changes expected beyond confirming the grid's existing `MonthlyMenuDaySave[]` derivation already reflects imported values; adjust only if it does not
-- [ ] T013 [P] [US1] Component test: uploading a full valid-month CSV shows an all-valid preview, confirming fills the grid, and the existing Save button still submits the same `PUT` payload shape as manual entry in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
-- [ ] T026 [US1] Scope the dialog to the year/month selected when it was opened (capture on open); close the dialog without merging if the director changes the selected location or month while it's open (FR-026) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T010)
-- [ ] T032 [P] [US1] Component test: changing the selected month while the import dialog is open closes it without merging anything into the grid (FR-026) in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx` (depends on T026)
-- [ ] T033 [P] [US1] Unit test: confirming a second CSV import in the same session merges against the grid's already-imported (unsaved) state — the second import's matching dates overwrite the first's, the first import's non-matching dates remain (FR-025) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T010 [US1] Create `MonthlyMenuCsvImportDialog.tsx` — file picker, calls `parseMenuCsv`/`validateMenuCsvRows` (passing the grid's current day state) on selection, renders an all-valid preview table with a summary count and a Confirm action; all strings via `next-intl` `useTranslations("menu")` against T002's keys (FR-017); file picker and preview table keyboard-operable from the start, invalid/overwrite indicators paired with an icon plus text, not color alone (FR-018) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T004, T005)
+- [X] T011 [US1] Add an "Import CSV" button to `MonthlyMenuDayGrid.tsx` that opens the dialog; on Confirm, call `mergeMenuCsvRowsIntoGrid` against the grid's existing `toFieldMap`-derived state and update it (does not call Save) — in `web/components/menu/MonthlyMenuDayGrid.tsx` (depends on T006, T010)
+- [X] T012 [US1] Verify the merged state flows unchanged into the existing `onSave`/`handleSave` prop path in `web/app/(app)/menu/page.tsx` — no changes expected beyond confirming the grid's existing `MonthlyMenuDaySave[]` derivation already reflects imported values; adjust only if it does not
+- [X] T013 [P] [US1] Component test: uploading a full valid-month CSV shows an all-valid preview, confirming fills the grid, and the existing Save button still submits the same `PUT` payload shape as manual entry in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [X] T026 [US1] Scope the dialog to the year/month selected when it was opened (capture on open); close the dialog without merging if the director changes the selected location or month while it's open (FR-026) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T010)
+- [X] T032 [P] [US1] Component test: changing the selected month while the import dialog is open closes it without merging anything into the grid (FR-026) in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx` (depends on T026)
+- [X] T033 [P] [US1] Unit test: confirming a second CSV import in the same session merges against the grid's already-imported (unsaved) state — the second import's matching dates overwrite the first's, the first import's non-matching dates remain (FR-025) in `web/__tests__/menuCsvImport.test.ts`
 
 **Checkpoint**: A director can import a well-formed CSV end to end and Save, independently of
 error-recovery or template-download behavior.
@@ -79,20 +79,20 @@ summary count, while every valid row still applies once confirmed.
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Unit tests: `validateMenuCsvRows` flags an unparseable/wrong-format date, an out-of-range date, duplicate dates, and an over-length field with the correct `errorReason` each, and confirms precedence when a row matches more than one condition (FR-005–FR-008, FR-022) in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T015 [P] [US2] Unit test: `mergeMenuCsvRowsIntoGrid` applies only the valid rows from a mixed valid/invalid batch, leaving invalid rows' dates untouched in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T027 [P] [US2] Unit test: `validateMenuCsvRows` sets `willOverwriteExisting: true` only for valid rows whose date already has non-blank content in the passed-in `currentDays`, and `false` for a blank/absent day (FR-024) in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T031 [P] [US2] Unit tests: a row with a mismatched column count is flagged invalid rather than aborting the file, and a row with a valid date but every other field blank is valid (FR-021, FR-023) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T014 [P] [US2] Unit tests: `validateMenuCsvRows` flags an unparseable/wrong-format date, an out-of-range date, duplicate dates, and an over-length field with the correct `errorReason` each, and confirms precedence when a row matches more than one condition (FR-005–FR-008, FR-022) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T015 [P] [US2] Unit test: `mergeMenuCsvRowsIntoGrid` applies only the valid rows from a mixed valid/invalid batch, leaving invalid rows' dates untouched in `web/__tests__/menuCsvImport.test.ts`
+- [X] T027 [P] [US2] Unit test: `validateMenuCsvRows` sets `willOverwriteExisting: true` only for valid rows whose date already has non-blank content in the passed-in `currentDays`, and `false` for a blank/absent day (FR-024) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T031 [P] [US2] Unit tests: a row with a mismatched column count is flagged invalid rather than aborting the file, and a row with a valid date but every other field blank is valid (FR-021, FR-023) in `web/__tests__/menuCsvImport.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Render invalid rows in the preview with an icon-plus-text reason per row (never color alone, FR-018) and an "N will apply / M skipped" summary line in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T010)
-- [ ] T017 [US2] Handle the zero-valid-rows case (FR-014): show a clear rejection message, disable Confirm, perform no merge, in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
-- [ ] T018 [US2] Handle the file-level parse-failure case (FR-015): show a single top-level error distinct from the per-row list, process no rows, in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
-- [ ] T028 [US2] Render an icon-plus-text "will overwrite existing content" indicator on every preview row where `willOverwriteExisting` is true, distinct from the invalid-row indicator (FR-024) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T016)
-- [ ] T019 [P] [US2] Component test: a mixed valid/invalid CSV shows per-row reasons plus the summary count, and confirming applies only the valid rows in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
-- [ ] T020 [P] [US2] Component test: an all-invalid/empty CSV and a malformed non-CSV file each show the correct distinct rejection/error state and leave the grid untouched in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
-- [ ] T029 [P] [US2] Component test: importing into a grid with existing non-blank days shows the overwrite indicator on the affected preview rows before Confirm is pressed (FR-024, SC-005) in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [X] T016 [US2] Render invalid rows in the preview with an icon-plus-text reason per row (never color alone, FR-018) and an "N will apply / M skipped" summary line in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T010)
+- [X] T017 [US2] Handle the zero-valid-rows case (FR-014): show a clear rejection message, disable Confirm, perform no merge, in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
+- [X] T018 [US2] Handle the file-level parse-failure case (FR-015): show a single top-level error distinct from the per-row list, process no rows, in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
+- [X] T028 [US2] Render an icon-plus-text "will overwrite existing content" indicator on every preview row where `willOverwriteExisting` is true, distinct from the invalid-row indicator (FR-024) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T016)
+- [X] T019 [P] [US2] Component test: a mixed valid/invalid CSV shows per-row reasons plus the summary count, and confirming applies only the valid rows in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [X] T020 [P] [US2] Component test: an all-invalid/empty CSV and a malformed non-CSV file each show the correct distinct rejection/error state and leave the grid untouched in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [X] T029 [P] [US2] Component test: importing into a grid with existing non-blank days shows the overwrite indicator on the affected preview rows before Confirm is pressed (FR-024, SC-005) in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
 
 **Checkpoint**: Mixed-quality CSVs are handled transparently — nothing silently drops or
 mis-applies a row, and nothing silently overwrites existing content — independently of the
@@ -110,10 +110,10 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Add a "Download template" action that triggers a client-side `Blob` download of `buildMenuCsvTemplate`'s output for the grid's currently-selected year/month in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T007)
-- [ ] T022 [P] [US3] Unit test: `buildMenuCsvTemplate` produces the expected header row plus one example row dated within the given year/month in `web/__tests__/menuCsvImport.test.ts`
-- [ ] T023 [P] [US3] Component test: clicking "Download template" triggers a download whose content matches `buildMenuCsvTemplate`'s output in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
-- [ ] T034 [P] [US3] Unit test: `buildMenuCsvTemplate`'s own output, fed straight back through `parseMenuCsv` + `validateMenuCsvRows`, is recognized as fully valid with zero invalid rows (SC-003 round-trip guarantee) in `web/__tests__/menuCsvImport.test.ts`
+- [X] T021 [US3] Add a "Download template" action that triggers a client-side `Blob` download of `buildMenuCsvTemplate`'s output for the grid's currently-selected year/month in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T007)
+- [X] T022 [P] [US3] Unit test: `buildMenuCsvTemplate` produces the expected header row plus one example row dated within the given year/month in `web/__tests__/menuCsvImport.test.ts`
+- [X] T023 [P] [US3] Component test: clicking "Download template" triggers a download whose content matches `buildMenuCsvTemplate`'s output in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [X] T034 [P] [US3] Unit test: `buildMenuCsvTemplate`'s own output, fed straight back through `parseMenuCsv` + `validateMenuCsvRows`, is recognized as fully valid with zero invalid rows (SC-003 round-trip guarantee) in `web/__tests__/menuCsvImport.test.ts`
 
 **Checkpoint**: All three user stories are independently functional.
 
@@ -125,8 +125,8 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 error indication (FR-018) are built into T010/T016 as they're written, not deferred here — this
 phase is a final audit confirming nothing regressed, not the first place accessibility is added.
 
-- [ ] T024 [P] Accessibility audit: confirm file input and preview table (including the overwrite indicators from T028) are fully keyboard-operable and focus moves to the preview/summary region once parsing completes (per spec.md's UX Requirements); fix anything T010/T016/T028 missed in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
-- [ ] T025 Run `quickstart.md`'s four scenarios manually against the local `web` dev server and confirm each expected outcome
+- [X] T024 [P] Accessibility audit: confirm file input and preview table (including the overwrite indicators from T028) are fully keyboard-operable and focus moves to the preview/summary region once parsing completes (per spec.md's UX Requirements); fix anything T010/T016/T028 missed in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
+- [X] T025 Run `quickstart.md`'s four scenarios manually against the local `web` dev server and confirm each expected outcome
 
 ---
 

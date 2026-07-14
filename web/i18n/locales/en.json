@@ -770,7 +770,30 @@
     "columnSoup": "Soup",
     "columnMainCourse": "Main course",
     "columnDessert": "Dessert",
-    "columnNotes": "Notes"
+    "columnNotes": "Notes",
+    "csvImport": {
+      "trigger": "Import CSV",
+      "title": "Import menu from CSV",
+      "description": "Upload a CSV file to fill in this month's menu in one go, instead of typing each day by hand.",
+      "selectFile": "Choose file",
+      "downloadTemplate": "Download template",
+      "fileError": "This file couldn't be read as a CSV. Check the delimiter, header row, and file format, then try again.",
+      "summary": "{applied} {applied, plural, one {row} other {rows}} will apply, {skipped} skipped",
+      "noValidRows": "None of the rows in this file could be applied. Fix the issues and upload again.",
+      "columnStatus": "Status",
+      "blankDate": "(blank date)",
+      "willApply": "Will apply",
+      "willOverwrite": "Will overwrite existing content",
+      "cancel": "Cancel",
+      "confirm": "Apply to grid",
+      "error": {
+        "malformed_row": "This row has a different number of columns than the header",
+        "invalid_date": "Not a valid date (expected YYYY-MM-DD)",
+        "date_out_of_range": "Outside the selected month",
+        "duplicate_date": "Duplicate date in this file",
+        "field_too_long": "A field exceeds 500 characters"
+      }
+    }
   },
   "mealPreferenceRequests": {
     "queueTitle": "Pending preference-change requests",

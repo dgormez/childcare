@@ -770,7 +770,30 @@
     "columnSoup": "Soupe",
     "columnMainCourse": "Plat principal",
     "columnDessert": "Dessert",
-    "columnNotes": "Notes"
+    "columnNotes": "Notes",
+    "csvImport": {
+      "trigger": "Importer un CSV",
+      "title": "Importer le menu depuis un CSV",
+      "description": "Téléchargez un fichier CSV pour remplir le menu du mois en une seule fois, au lieu de saisir chaque jour manuellement.",
+      "selectFile": "Choisir un fichier",
+      "downloadTemplate": "Télécharger le modèle",
+      "fileError": "Ce fichier n'a pas pu être lu comme un CSV. Vérifiez le séparateur, la ligne d'en-tête et le format du fichier, puis réessayez.",
+      "summary": "{applied} {applied, plural, one {ligne} other {lignes}} seront appliquées, {skipped} ignorée(s)",
+      "noValidRows": "Aucune ligne de ce fichier n'a pu être appliquée. Corrigez les erreurs et téléchargez à nouveau.",
+      "columnStatus": "Statut",
+      "blankDate": "(date vide)",
+      "willApply": "Sera appliqué",
+      "willOverwrite": "Remplacera le contenu existant",
+      "cancel": "Annuler",
+      "confirm": "Appliquer à la grille",
+      "error": {
+        "malformed_row": "Cette ligne n'a pas le même nombre de colonnes que l'en-tête",
+        "invalid_date": "Date invalide (format attendu AAAA-MM-JJ)",
+        "date_out_of_range": "En dehors du mois sélectionné",
+        "duplicate_date": "Date en double dans ce fichier",
+        "field_too_long": "Un champ dépasse 500 caractères"
+      }
+    }
   },
   "mealPreferenceRequests": {
     "queueTitle": "Demandes de modification de préférence en attente",

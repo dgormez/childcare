@@ -60,7 +60,7 @@ downloaded file is immediately valid if re-uploaded unmodified.
 | Every row fails validation | Same as above — rejection message, grid untouched (FR-014) |
 | Some rows valid, some invalid | Valid rows proceed to the preview as applicable; invalid rows are listed with their specific reason and excluded (FR-009, FR-010) |
 | A row triggers more than one invalid condition at once | Reported with exactly one reason, by precedence: invalid date → out-of-range date → duplicate date → field too long (FR-022) |
-| A data row's column count doesn't match the header | Flagged as an invalid row, not a file-level failure (FR-021) |
+| A data row's column count doesn't match the header | Flagged as an invalid row with reason `malformed_row`, not a file-level failure (FR-021) — checked before every other per-row validation, since a ragged row's `date` cell can still coincidentally look parseable when the missing/extra columns are trailing ones |
 | A valid row's date matches a day that already has non-blank content in the grid | Row still applies, but the preview flags it as an overwrite before the director confirms (FR-024) |
 
 ## Stability

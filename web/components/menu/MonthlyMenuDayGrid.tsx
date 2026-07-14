@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Save, Send, Undo2, CheckCircle2, FileEdit } from "lucide-react";
+import { Save, Send, Undo2, CheckCircle2, FileEdit, Upload } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { MonthlyMenuCsvImportDialog } from "./MonthlyMenuCsvImportDialog";
 import type { MonthlyMenuResponse } from "../../lib/types";
 
-interface DayFields {
+export interface DayFields {
   soup: string;
   mainCourse: string;
   dessert: string;
@@ -68,6 +69,7 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
   const t = useTranslations("menu");
   const dates = daysInMonth(year, month);
   const [fields, setFields] = useState<Map<string, DayFields>>(() => toFieldMap(menu, dates));
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   useEffect(() => {
     setFields(toFieldMap(menu, dates));
@@ -113,6 +115,10 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
           )}
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="secondary" disabled={saving} onClick={() => setCsvImportOpen(true)}>
+            <Upload className="h-4 w-4" strokeWidth={2} />
+            {t("csvImport.trigger")}
+          </Button>
           <Button variant="secondary" disabled={saving} onClick={handleSave}>
             <Save className="h-4 w-4" strokeWidth={2} />
             {t("saveDraft")}
@@ -165,6 +171,15 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
           })}
         </TableBody>
       </Table>
+
+      <MonthlyMenuCsvImportDialog
+        open={csvImportOpen}
+        onOpenChange={setCsvImportOpen}
+        year={year}
+        month={month}
+        currentDays={fields}
+        onImport={setFields}
+      />
     </div>
   );
 }

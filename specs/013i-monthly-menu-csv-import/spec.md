@@ -295,9 +295,11 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
   not treated as a file-level parse failure — as long as the file otherwise has a discernible
   CSV structure (delimiter and header row).
 - **FR-022**: When a single row triggers more than one invalid condition simultaneously, the
-  system MUST report exactly one reason per row, in this precedence order: unparseable/wrong-
-  format date, out-of-range date, duplicate date, field too long — so the director always sees
-  one actionable reason, not a stacked or ambiguous combination.
+  system MUST report exactly one reason per row, in this precedence order: column-count mismatch
+  (FR-021), unparseable/wrong-format date, out-of-range date, duplicate date, field too long — so
+  the director always sees one actionable reason, not a stacked or ambiguous combination.
+  Column-count mismatch is checked first because a ragged row's `date` cell can still
+  coincidentally look parseable when the missing/extra columns are trailing ones.
 - **FR-023**: A row whose `date` is present and valid but every other field (`soup`,
   `main_course`, `dessert`, `notes`) is blank MUST be treated as valid, mirroring the manual day
   grid's own allowance for a day with no menu content.

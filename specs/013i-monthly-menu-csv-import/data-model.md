@@ -43,6 +43,10 @@ The result of validating one `ParsedMenuCsvRow` against the currently-selected y
 field-length limit. Validation reasons are mutually exclusive per row, checked in the precedence
 order FR-022 defines (unparseable/wrong-format date → out-of-range date → duplicate date → field
 too long) — a row failing more than one check is still reported with exactly one `errorReason`.
+A fifth reason, `malformed_row` (FR-021, checked first — highest precedence), covers a column-
+count mismatch against the header row; discovered during implementation that a ragged row's
+`date` cell can still parse successfully when the missing/extra columns are trailing ones, so
+column-count is checked explicitly rather than assumed to always corrupt the date.
 
 | Field | Type | Notes |
 |---|---|---|
