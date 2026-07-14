@@ -55,11 +55,13 @@ cells; pressing the existing Save button persists exactly what manual entry alre
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Create `MonthlyMenuCsvImportDialog.tsx` — file picker, calls `parseMenuCsv`/`validateMenuCsvRows` (passing the grid's current day state) on selection, renders an all-valid preview table with a summary count and a Confirm action — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T004, T005)
+- [ ] T010 [US1] Create `MonthlyMenuCsvImportDialog.tsx` — file picker, calls `parseMenuCsv`/`validateMenuCsvRows` (passing the grid's current day state) on selection, renders an all-valid preview table with a summary count and a Confirm action; all strings via `next-intl` `useTranslations("menu")` against T002's keys (FR-017); file picker and preview table keyboard-operable from the start, invalid/overwrite indicators paired with an icon plus text, not color alone (FR-018) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T004, T005)
 - [ ] T011 [US1] Add an "Import CSV" button to `MonthlyMenuDayGrid.tsx` that opens the dialog; on Confirm, call `mergeMenuCsvRowsIntoGrid` against the grid's existing `toFieldMap`-derived state and update it (does not call Save) — in `web/components/menu/MonthlyMenuDayGrid.tsx` (depends on T006, T010)
 - [ ] T012 [US1] Verify the merged state flows unchanged into the existing `onSave`/`handleSave` prop path in `web/app/(app)/menu/page.tsx` — no changes expected beyond confirming the grid's existing `MonthlyMenuDaySave[]` derivation already reflects imported values; adjust only if it does not
 - [ ] T013 [P] [US1] Component test: uploading a full valid-month CSV shows an all-valid preview, confirming fills the grid, and the existing Save button still submits the same `PUT` payload shape as manual entry in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
 - [ ] T026 [US1] Scope the dialog to the year/month selected when it was opened (capture on open); close the dialog without merging if the director changes the selected location or month while it's open (FR-026) — in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T010)
+- [ ] T032 [P] [US1] Component test: changing the selected month while the import dialog is open closes it without merging anything into the grid (FR-026) in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx` (depends on T026)
+- [ ] T033 [P] [US1] Unit test: confirming a second CSV import in the same session merges against the grid's already-imported (unsaved) state — the second import's matching dates overwrite the first's, the first import's non-matching dates remain (FR-025) in `web/__tests__/menuCsvImport.test.ts`
 
 **Checkpoint**: A director can import a well-formed CSV end to end and Save, independently of
 error-recovery or template-download behavior.
@@ -111,6 +113,7 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 - [ ] T021 [US3] Add a "Download template" action that triggers a client-side `Blob` download of `buildMenuCsvTemplate`'s output for the grid's currently-selected year/month in `web/components/menu/MonthlyMenuCsvImportDialog.tsx` (depends on T007)
 - [ ] T022 [P] [US3] Unit test: `buildMenuCsvTemplate` produces the expected header row plus one example row dated within the given year/month in `web/__tests__/menuCsvImport.test.ts`
 - [ ] T023 [P] [US3] Component test: clicking "Download template" triggers a download whose content matches `buildMenuCsvTemplate`'s output in `web/__tests__/MonthlyMenuCsvImportDialog.test.tsx`
+- [ ] T034 [P] [US3] Unit test: `buildMenuCsvTemplate`'s own output, fed straight back through `parseMenuCsv` + `validateMenuCsvRows`, is recognized as fully valid with zero invalid rows (SC-003 round-trip guarantee) in `web/__tests__/menuCsvImport.test.ts`
 
 **Checkpoint**: All three user stories are independently functional.
 
@@ -118,9 +121,11 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that span all three stories.
+**Purpose**: Improvements that span all three stories. Keyboard operability and icon-plus-text
+error indication (FR-018) are built into T010/T016 as they're written, not deferred here — this
+phase is a final audit confirming nothing regressed, not the first place accessibility is added.
 
-- [ ] T024 [P] Accessibility pass: file input and preview table fully keyboard-operable, focus moves to the preview/summary region once parsing completes (per spec.md's UX Requirements) in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
+- [ ] T024 [P] Accessibility audit: confirm file input and preview table (including the overwrite indicators from T028) are fully keyboard-operable and focus moves to the preview/summary region once parsing completes (per spec.md's UX Requirements); fix anything T010/T016/T028 missed in `web/components/menu/MonthlyMenuCsvImportDialog.tsx`
 - [ ] T025 Run `quickstart.md`'s four scenarios manually against the local `web` dev server and confirm each expected outcome
 
 ---
@@ -150,13 +155,13 @@ row (and an example row) that, when re-uploaded unmodified, is recognized as val
 ### Parallel Opportunities
 
 - T001 and T002 (Setup) can run in parallel.
-- T008, T009, and T030 (US1 tests) can run in parallel; T013 depends on T010–T012 having landed;
-  T026 depends on T010.
+- T008, T009, T030, and T033 (US1 tests) can run in parallel; T013 depends on T010–T012 having
+  landed; T026 depends on T010; T032 depends on T026.
 - T014, T015, T027, and T031 (US2 tests) can run in parallel with each other, and with US1's
   implementation once Foundational is done, since they target the same already-built
   `csvImport.ts` functions.
 - T019, T020, and T029 (US2 component tests) can run in parallel; T028 depends on T016.
-- T022 and T023 (US3 tests) can run in parallel.
+- T022, T023, and T034 (US3 tests) can run in parallel.
 - T024 (Polish) can run in parallel with the last story's tests once the dialog exists.
 
 ---
