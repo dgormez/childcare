@@ -63,7 +63,15 @@ public class DeactivateVaccineTypeTests(OrganisationOnboardingWebAppFactory fact
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         var second = (await secondResponse.Content.ReadFromJsonAsync<PlatformAdminVaccineTypeResponse>())!;
 
-        Assert.Equal(first.DeactivatedAt, second.DeactivatedAt);
+        // Tolerant, not exact, equality — PostgreSQL's timestamp round-trip precision can differ
+        // by a few hundred nanoseconds from the in-memory DateTime.UtcNow value the first
+        // response carries (feature 010/013b's same CI-only flake, e.g. ".4072354Z vs
+        // ".4072350Z"). A real reapplication would differ by the ~50ms Task.Delay above, not a
+        // sub-microsecond rounding artifact, so this tolerance still catches the bug it guards
+        // against.
+        Assert.NotNull(first.DeactivatedAt);
+        Assert.NotNull(second.DeactivatedAt);
+        Assert.True((first.DeactivatedAt!.Value - second.DeactivatedAt!.Value).Duration() < TimeSpan.FromSeconds(1));
         Assert.Equal(first.DeactivatedByEmail, second.DeactivatedByEmail);
     }
 
