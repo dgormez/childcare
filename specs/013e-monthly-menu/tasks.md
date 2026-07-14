@@ -176,20 +176,21 @@ separately, reject a request with a reason and confirm the notification includes
 - [ ] T053 [P] [US4] Integration test: `POST .../approve` creates or updates `MealPreference` with the requested texture/dietary tags via the existing upsert path, marks the request `Approved` with `decidedBy`/`decidedAt` set, and sends a decision notification; approving a non-`Pending` request returns `409` (research.md R1), in `backend/ChildCare.Api.Tests/MealPreferenceRequests/MealPreferenceRequestTests.cs`
 - [ ] T054 [P] [US4] Integration test: `POST .../reject` leaves `MealPreference` unchanged, marks the request `Rejected` with `decisionNotes` set when a reason is given, and the notification body differs between a reason present vs. absent (research.md R3, FR-016), in `backend/ChildCare.Api.Tests/MealPreferenceRequests/MealPreferenceRequestTests.cs`
 - [ ] T055 [P] [US4] Integration test: a non-Director caller receives `403` on every director meal-preference-request endpoint, in `backend/ChildCare.Api.Tests/MealPreferenceRequests/MealPreferenceRequestTests.cs`
+- [ ] T056 [P] [US4] Integration test: approving a request whose target child has since been deactivated fails cleanly with a clear error and modifies neither `MealPreference` nor the request's decided state, in `backend/ChildCare.Api.Tests/MealPreferenceRequests/MealPreferenceRequestTests.cs` (spec.md Edge Cases)
 
 ### Implementation for User Story 4
 
-- [ ] T056 [US4] Create `ListMealPreferenceChangeRequestsQuery` + handler in `backend/ChildCare.Application/MealPreferenceRequests/ListMealPreferenceChangeRequestsQuery.cs` — filters by `status` (default `pending`), joins each request's child's currently-active `HealthRecord` rows (013c) for context (depends on T005, T009)
-- [ ] T057 [US4] Create `MealPreferenceRequestNotificationService` in `backend/ChildCare.Application/MealPreferenceRequests/MealPreferenceRequestNotificationService.cs`, mirroring `DayReservationNotificationService`'s exact shape — resolves the requesting parent's `Contact`, writes an in-app `Notification` row (`NotificationType.MealPreferenceRequestDecided`), sends an Expo push if a token is registered (try/catch, logged not thrown), and uses a distinct i18n `BodyKey` when `DecisionNotes` is non-blank vs. blank (research.md R3) (depends on T002)
-- [ ] T058 [US4] Create `ApproveMealPreferenceChangeRequestCommand` + handler in `backend/ChildCare.Application/MealPreferenceRequests/ApproveMealPreferenceChangeRequestCommand.cs` — sends `UpsertMealPreferenceCommand` via `IMediator` (research.md R1), marks the request `Approved`, calls the notification service; fails with `Conflict` if not currently `Pending` (depends on T005, T057)
-- [ ] T059 [US4] Create `RejectMealPreferenceChangeRequestCommand` + handler in `backend/ChildCare.Application/MealPreferenceRequests/RejectMealPreferenceChangeRequestCommand.cs` — marks the request `Rejected` with `DecisionNotes`, calls the notification service; fails with `Conflict` if not currently `Pending` (depends on T005, T057)
-- [ ] T060 [US4] Add the director group (`GET /api/meal-preference-requests`, `POST .../approve`, `POST .../reject`) to `backend/ChildCare.Api/Endpoints/MealPreferenceRequestEndpoints.cs` under `DirectorOnly`, mapping the `409` `Conflict` failure (depends on T045, T056, T058, T059)
-- [ ] T061 Regenerate `web/lib/generated/api-types.ts` (depends on T060)
-- [ ] T062 [US4] Create `web/components/menu/MealPreferenceRequestQueue.tsx` — pending-request list, each item showing requested texture/dietary tags, the parent's note, the child's active health records, and Approve / Reject (with an optional reason field) actions (depends on T061)
-- [ ] T063 [US4] Wire `MealPreferenceRequestQueue` into `web/app/(app)/menu/page.tsx`, alongside the day-grid authoring section (depends on T023, T062)
-- [ ] T064 [P] [US4] Add `mealPreferenceRequests.*` i18n keys (queue labels, approve/reject actions, reason field, status badges — pairing icon with color per design-system.md) to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T065 [US4] Locate the existing `NotificationType`-to-i18n-key mapping that already renders `DayReservationDecided` (web notifications screen and `parent-mobile/app/(app)/notifications/`) and add the `MealPreferenceRequestDecided` case alongside it, so the new notification type renders correctly rather than falling through to a generic/unknown case (depends on T002)
-- [ ] T066 [P] [US4] Web component test: `MealPreferenceRequestQueue` renders pending requests with health-record context and calls the approve/reject handlers, in `web/__tests__/MealPreferenceRequestQueue.test.tsx`
+- [ ] T057 [US4] Create `ListMealPreferenceChangeRequestsQuery` + handler in `backend/ChildCare.Application/MealPreferenceRequests/ListMealPreferenceChangeRequestsQuery.cs` — filters by `status` (default `pending`), joins each request's child's currently-active `HealthRecord` rows (013c) for context (depends on T005, T009)
+- [ ] T058 [US4] Create `MealPreferenceRequestNotificationService` in `backend/ChildCare.Application/MealPreferenceRequests/MealPreferenceRequestNotificationService.cs`, mirroring `DayReservationNotificationService`'s exact shape — resolves the requesting parent's `Contact`, writes an in-app `Notification` row (`NotificationType.MealPreferenceRequestDecided`), sends an Expo push if a token is registered (try/catch, logged not thrown), and uses a distinct i18n `BodyKey` when `DecisionNotes` is non-blank vs. blank (research.md R3) (depends on T002)
+- [ ] T059 [US4] Create `ApproveMealPreferenceChangeRequestCommand` + handler in `backend/ChildCare.Application/MealPreferenceRequests/ApproveMealPreferenceChangeRequestCommand.cs` — sends `UpsertMealPreferenceCommand` via `IMediator` (research.md R1), which itself rejects a deactivated child (013d's existing validator) — that failure MUST propagate as a clean error, not a swallowed no-op (spec.md Edge Cases); only updates the fields the request actually specified, per FR-014's partial-write-through rule; marks the request `Approved` on success, calls the notification service; fails with `Conflict` if not currently `Pending` (depends on T005, T058)
+- [ ] T060 [US4] Create `RejectMealPreferenceChangeRequestCommand` + handler in `backend/ChildCare.Application/MealPreferenceRequests/RejectMealPreferenceChangeRequestCommand.cs` — marks the request `Rejected` with `DecisionNotes`, calls the notification service; fails with `Conflict` if not currently `Pending` (depends on T005, T058)
+- [ ] T061 [US4] Add the director group (`GET /api/meal-preference-requests`, `POST .../approve`, `POST .../reject`) to `backend/ChildCare.Api/Endpoints/MealPreferenceRequestEndpoints.cs` under `DirectorOnly`, mapping the `409` `Conflict` failure (depends on T045, T057, T059, T060)
+- [ ] T062 Regenerate `web/lib/generated/api-types.ts` (depends on T061)
+- [ ] T063 [US4] Create `web/components/menu/MealPreferenceRequestQueue.tsx` — pending-request list, each item showing requested texture/dietary tags, the parent's note, the child's active health records, and Approve / Reject (with an optional reason field) actions (depends on T062)
+- [ ] T064 [US4] Wire `MealPreferenceRequestQueue` into `web/app/(app)/menu/page.tsx`, alongside the day-grid authoring section (depends on T023, T063)
+- [ ] T065 [P] [US4] Add `mealPreferenceRequests.*` i18n keys (queue labels, approve/reject actions, reason field, status badges — pairing icon with color per design-system.md) to `web/i18n/locales/{en,fr,nl}.json`
+- [ ] T066 [US4] Locate the existing `NotificationType`-to-i18n-key mapping that already renders `DayReservationDecided` (web notifications screen and `parent-mobile/app/(app)/notifications/`) and add the `MealPreferenceRequestDecided` case alongside it, so the new notification type renders correctly rather than falling through to a generic/unknown case (depends on T002)
+- [ ] T067 [P] [US4] Web component test: `MealPreferenceRequestQueue` renders pending requests with health-record context and calls the approve/reject handlers, in `web/__tests__/MealPreferenceRequestQueue.test.tsx`
 
 **Checkpoint**: The full request → review → decision → notification loop works end-to-end — all
 four P1/P2 user stories independently verified.
@@ -205,12 +206,12 @@ correct a day's entry, and re-publish (confirm parents see the corrected value).
 
 ### Tests for User Story 5
 
-- [ ] T067 [P] [US5] Integration test: publish → unpublish → edit a day's field via `PUT` → re-publish round trip results in the parent-facing `GET /api/parent/monthly-menu` reflecting only the corrected value, never the un-published intermediate draft state (FR-003, FR-004), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
+- [ ] T068 [P] [US5] Integration test: publish → unpublish → edit a day's field via `PUT` → re-publish round trip results in the parent-facing `GET /api/parent/monthly-menu` reflecting only the corrected value, never the un-published intermediate draft state (FR-003, FR-004), in `backend/ChildCare.Api.Tests/MonthlyMenus/MonthlyMenuTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T068 [US5] Verify (and adjust if needed) that `MonthlyMenuDayGrid.tsx`'s Un-publish action is visually and textually distinct from Publish — separate labels/icons per design-system.md's icon-pairing convention, not just a toggled button state that could be mis-tapped (depends on T022)
-- [ ] T069 [P] [US5] Web component test: `MonthlyMenuDayGrid`'s Un-publish action calls the unpublish endpoint and updates local state back to draft, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`
+- [ ] T069 [US5] Verify (and adjust if needed) that `MonthlyMenuDayGrid.tsx`'s Un-publish action is visually and textually distinct from Publish — separate labels/icons per design-system.md's icon-pairing convention, not just a toggled button state that could be mis-tapped (depends on T022)
+- [ ] T070 [P] [US5] Web component test: `MonthlyMenuDayGrid`'s Un-publish action calls the unpublish endpoint and updates local state back to draft, in `web/__tests__/MonthlyMenuDayGrid.test.tsx`
 
 **Checkpoint**: All five user stories independently verified end-to-end.
 
@@ -218,10 +219,10 @@ correct a day's entry, and re-publish (confirm parents see the corrected value).
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T070 Extend `TenantMigrationRolloutTests`' schema-revert helper for the three new tables' FKs (`monthly_menu_days` before `monthly_menus` in FK-dependency order; `meal_preference_change_requests` independently, FK to `children`), following the same fix every migration-adding feature since 012a has needed (research.md R7), in `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs`
-- [ ] T071 [P] Run through quickstart.md's four scenarios end-to-end locally (backend + web + parent-mobile) and fix any discrepancy found
-- [ ] T072 [P] Verify NL/FR/EN i18n key parity (no missing translation in any locale file touched by T025/T036/T050/T064) across `web/i18n/locales/` and `parent-mobile/i18n/locales/`
-- [ ] T073 [P] Verify FR-019: confirm no monthly-menu or meal-preference-request endpoint is reachable under any caregiver device-token authorization policy — review `MonthlyMenuEndpoints.cs`/`MealPreferenceRequestEndpoints.cs` for `DeviceOrStaffOrDirector`/`DeviceOrDirector`-style policies and confirm neither is used here
+- [ ] T071 Extend `TenantMigrationRolloutTests`' schema-revert helper for the three new tables' FKs (`monthly_menu_days` before `monthly_menus` in FK-dependency order; `meal_preference_change_requests` independently, FK to `children`), following the same fix every migration-adding feature since 012a has needed (research.md R7), in `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs`
+- [ ] T072 [P] Run through quickstart.md's four scenarios end-to-end locally (backend + web + parent-mobile) and fix any discrepancy found
+- [ ] T073 [P] Verify NL/FR/EN i18n key parity (no missing translation in any locale file touched by T025/T036/T050/T065) across `web/i18n/locales/` and `parent-mobile/i18n/locales/`
+- [ ] T074 [P] Verify FR-019: confirm no monthly-menu or meal-preference-request endpoint is reachable under any caregiver device-token authorization policy — review `MonthlyMenuEndpoints.cs`/`MealPreferenceRequestEndpoints.cs` for `DeviceOrStaffOrDirector`/`DeviceOrDirector`-style policies and confirm neither is used here
 
 ---
 
@@ -250,7 +251,7 @@ correct a day's entry, and re-publish (confirm parents see the corrected value).
   → T024; T025 in parallel with T023/T024; T026 after T022.
 - Phase 4 (US2) backend (T027-T032) can run in parallel with Phase 3's web UI tasks (T022-T026)
   once T020 is done; its own mobile UI tasks (T033-T038) are sequential after T032.
-- Phase 5 (US3) and Phase 6 (US4) share no files until T060 (US4's endpoint file), so US3's full
+- Phase 5 (US3) and Phase 6 (US4) share no files until T061 (US4's endpoint file), so US3's full
   stack (T039-T051) can be built in parallel with US1/US2 once Foundational is done; US4 must wait
   for US3's entity/commands (T043) to exist for its own tests to have data to review.
 

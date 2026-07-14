@@ -111,8 +111,11 @@ API impact: director endpoints for monthly-menu CRUD/publish/unpublish and prefe
 list/approve/reject; parent endpoints for reading the published monthly menu (per child's
 active-contract location(s)) and submitting a preference-change request. A new parent-facing
 closure-day read is also required — no such endpoint exists today (the only closure-calendar read
-endpoint, `GET /api/closures`, is `DirectorOnly`); this feature adds the first parent-scoped read
-of closure days, reusing the existing closure-calendar data rather than duplicating it.
+endpoint, `GET /api/closures`, is `DirectorOnly` and also returns director-facing notification-
+delivery status alongside each closure date); this feature adds the first parent-scoped read of
+closure days, reusing the existing closure-calendar data rather than duplicating it, but exposing
+only the date itself (plus a display label) — the parent-facing read MUST NOT expose delivery
+status or any other director-only field carried by the existing closure read.
 
 Data-model impact: new tenant-schema tables for the monthly menu (one row per location/year/month,
 plus one child row per calendar day with soup/main/dessert/notes), and for preference-change
@@ -305,6 +308,15 @@ see the corrected value).
   codebase's existing single-record update convention (no new concurrency mechanism introduced).
 - A parent submits a preference-change request for a child they are not linked to — rejected, same
   authorization pattern as feature 013a's day-reservation requests.
+- A child is deactivated while a preference-change request for them is still `Pending` — the
+  request remains visible in the review queue, but approving it MUST fail cleanly with a clear
+  error (the existing `child_meal_preferences` write-through already refuses a deactivated child,
+  per feature 013d) rather than silently succeeding or corrupting the child's preference record;
+  the director can still reject the request to clear it from the queue.
+- Two directors attempt to decide (approve or reject) the same pending request at the same
+  moment — the second decision attempt MUST fail cleanly (the request is no longer `Pending` by
+  the time it runs) rather than silently overwriting the first decision or applying two
+  conflicting outcomes.
 
 ## Requirements *(mandatory)*
 
@@ -321,7 +333,11 @@ see the corrected value).
   month updates that menu rather than creating a duplicate.
 - **FR-006**: The parent app MUST show, for the current month, every location the parent's child
   holds an active contract at, each with its own published menu (or the placeholder from FR-008),
-  clearly labeled by location name when more than one applies.
+  clearly labeled by location name when more than one applies. The system MUST NOT show a menu,
+  or any closure-day data (FR-009), for a location none of the requesting parent's linked
+  children currently holds an active contract at — this location set MUST be derived server-side
+  from the requesting parent's own active contracts, never accepted as a client-supplied
+  `locationId` parameter.
 - **FR-007**: A day with no menu entries MUST render as "—" per field, not as a blank or missing
   row.
 - **FR-008**: If no menu has been published for a location's current month, the parent app MUST
@@ -336,13 +352,20 @@ see the corrected value).
   dietary tags, optional free-text note) for a child they are linked to via `ChildContacts`, using
   the same authorization pattern as feature 013a's day-reservation requests.
 - **FR-012**: The system MUST reject a new preference-change request for a child that already has
-  a pending (undecided) request, with a clear error rather than creating a second pending request.
+  a pending (undecided) request, with a clear error rather than creating a second pending
+  request. Concurrent submissions for the same child racing this check is an accepted, low-impact
+  edge case (at most one extra pending row briefly exists per child) rather than a scenario the
+  system must prevent with a stronger concurrency mechanism — a director deciding either resulting
+  request still leaves the child in a correct final state.
 - **FR-013**: Director web MUST expose a queue of pending preference-change requests, each
   showing the requesting parent, the requested changes, the free-text note, and the child's
   currently active health records (013c) for context.
 - **FR-014**: Approving a preference-change request MUST create or update the child's
-  `child_meal_preferences` record with the requested texture/dietary tags (reusing the existing
-  013d upsert write path) and mark the request `Approved` with `decided_by`/`decided_at` set.
+  `child_meal_preferences` record with only the fields the request actually specified (reusing
+  the existing 013d partial-upsert write path) — a request that specifies only a new texture
+  MUST leave the child's existing dietary tags, portion size, and notes unchanged, and vice
+  versa; approving MUST NEVER clear a field the request did not ask to change. The system MUST
+  mark the request `Approved` with `decided_by`/`decided_at` set.
 - **FR-015**: Rejecting a preference-change request MUST leave `child_meal_preferences` unchanged,
   record an optional reason, and mark the request `Rejected` with `decided_by`/`decided_at` set.
 - **FR-016**: On approval or rejection, the requesting parent MUST receive an in-app notification
