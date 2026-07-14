@@ -137,7 +137,17 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
                 $"Pending migration SQL for '{SchemaName}' still references the placeholder schema " +
                 $"'{PlaceholderSchema}' after substitution — refusing to run it.");
 
-        await Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        // ExecuteSqlRawAsync treats its `sql` argument as a composite format string internally
+        // (RawSqlCommandBuilder.Build) regardless of whether any parameters are supplied — a
+        // migration whose generated DDL contains a literal '{' or '}' (e.g. Postgres's '{}'
+        // empty-array default literal, first hit by feature 013j's AddMonthlyMenuVariants
+        // migration) throws a FormatException instead of running. Braces must be escaped by
+        // doubling, the standard .NET composite-format-string escape, before executing — found
+        // by TenantMigrationRolloutTests/LegacyVaccinationMigrationTests actually failing, not by
+        // inspection. TenantProvisioningService's baseline-script path is unaffected: it runs its
+        // SQL through a raw NpgsqlCommand directly, never through this EF Core helper.
+        var escapedSql = sql.Replace("{", "{{").Replace("}", "}}");
+        await Database.ExecuteSqlRawAsync(escapedSql, cancellationToken);
     }
 
     public async Task<bool> HasPendingMigrationsAsync(CancellationToken cancellationToken = default)
