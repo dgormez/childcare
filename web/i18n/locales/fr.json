@@ -771,6 +771,7 @@
     "cancel": "Annuler",
     "columnName": "Nom",
     "columnCategory": "Catégorie",
+    "columnSortOrder": "Ordre",
     "columnStatus": "Statut",
     "columnActions": "Actions",
     "statusActive": "Actif",

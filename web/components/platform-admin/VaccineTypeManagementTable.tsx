@@ -32,6 +32,7 @@ export function VaccineTypeManagementTable({ entries, onEdit, onReorder, onDeact
         <TableRow>
           <TableHead>{t("columnName")}</TableHead>
           <TableHead>{t("columnCategory")}</TableHead>
+          <TableHead>{t("columnSortOrder")}</TableHead>
           <TableHead>{t("columnStatus")}</TableHead>
           <TableHead className="text-right">{t("columnActions")}</TableHead>
         </TableRow>
@@ -48,6 +49,9 @@ export function VaccineTypeManagementTable({ entries, onEdit, onReorder, onDeact
               </button>
             </TableCell>
             <TableCell className="text-text-soft dark:text-text-soft-dark">{categoryLabel(t, entry.category)}</TableCell>
+            <TableCell className="text-text-soft dark:text-text-soft-dark" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {entry.sortOrder}
+            </TableCell>
             <TableCell>
               <Badge variant={entry.isActive ? "success" : "neutral"}>
                 {entry.isActive ? (

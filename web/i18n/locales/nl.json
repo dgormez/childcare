@@ -771,6 +771,7 @@
     "cancel": "Annuleren",
     "columnName": "Naam",
     "columnCategory": "Categorie",
+    "columnSortOrder": "Volgorde",
     "columnStatus": "Status",
     "columnActions": "Acties",
     "statusActive": "Actief",

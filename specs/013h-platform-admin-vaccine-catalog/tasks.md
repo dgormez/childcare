@@ -168,6 +168,13 @@ who/when; reactivate it and confirm the audit fields clear.
 
 ---
 
+## Phase 7: Convergence
+
+- [X] T052 Add a visible display-order (`sortOrder`) column to `VaccineTypeManagementTable.tsx` per FR-012, US1/AC1 (missing)
+- [X] T053 Add a regression test hand-minting a JWT with the `is_platform_admin: true` claim but no `director` role, asserting `403` on a `PlatformAdminOnly` endpoint, per FR-009 (missing) — `PlatformAdminOnlyPolicyTests.cs`; a random unresolvable `tenant_id` is safe to use here since `UseAuthorization()` runs before `TenantMiddleware` in `Program.cs`'s pipeline, so the 403 is provably from the role/claim policy, never from tenant resolution
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
