@@ -19,8 +19,9 @@ public class PublishMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHan
         if (request.Variant is not null && !await MonthlyMenuVariantHelper.IsEnabledAsync(db, request.LocationId, request.Variant.Value, cancellationToken))
             return MonthlyMenuPublishResult.Fail(MonthlyMenuFailure.VariantNotEnabled);
 
+        var variantWire = MonthlyMenuVariantHelper.ToStorageWire(request.Variant);
         var menu = await db.MonthlyMenus.FirstOrDefaultAsync(
-            m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == request.Variant,
+            m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == variantWire,
             cancellationToken);
         if (menu is null)
             return MonthlyMenuPublishResult.Fail(MonthlyMenuFailure.NotFound);

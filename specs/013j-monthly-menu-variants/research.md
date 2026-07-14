@@ -5,27 +5,55 @@ questions were resolved with the product owner before writing it (see BACKLOG.md
 section). This document records the implementation-level decisions research surfaced while
 grounding the plan in the actual backend schema.
 
-## Decision: `MonthlyMenu.Variant` storage — sentinel string, not a nullable column
+## Decision: `MonthlyMenu.Variant` storage — sentinel string column, plain `string` CLR type
 
 **Decision**: Store `Variant` as a non-nullable `text` column with the wire value `"base"`
-representing the base menu, converted to/from a domain-level `DietaryType?` (`null` for `"base"`)
-via an EF Core `HasConversion`, reusing `DietaryTypeExtensions.ToWireString`/
-`TryParseWireString` for the five real values. The unique index becomes
-`(LocationId, Year, Month, Variant)` on this non-nullable column.
+representing the base menu. The domain entity's CLR property is a plain `string` (default
+`"base"`), not `DietaryType?` — no EF Core `HasConversion` is registered for it at all. The
+`DietaryType?` <-> `"base"`-sentinel-string translation happens entirely in the Application layer
+(`MonthlyMenuVariantHelper.ToStorageWire`/`FromStorageWire`), reusing
+`DietaryTypeExtensions.ToWireString`/`TryParseWireString`. Command/query records (e.g.
+`GetMonthlyMenuQuery.Variant`) still expose `DietaryType?` as their public API — only the entity
+and its EF configuration are plain strings. The unique index becomes
+`(LocationId, Year, Month, Variant)` on this non-nullable column. `Location.
+MenuVariantPriorityOrder` follows the identical reasoning: `List<string>` (wire strings), not
+`List<DietaryType>`, with no EF conversion either.
 
-**Rationale**: PostgreSQL unique indexes treat `NULL` as distinct from every other `NULL` — a
-naive `Variant DietaryType?` nullable column would let multiple base-menu rows exist for the same
-`(LocationId, Year, Month)` with no constraint violation, silently breaking the exact invariant
-013e depended on (`UpsertMonthlyMenuCommand`'s find-or-create-by-`(LocationId, Year, Month)`
-logic would then pick an arbitrary one of several rows). A sentinel non-null value sidesteps this
-Postgres behavior entirely while keeping the domain-level API (`DietaryType?`) exactly as
-`spec.md` describes it.
+**Rationale — the sentinel value itself**: PostgreSQL unique indexes treat `NULL` as distinct
+from every other `NULL` — a naive `Variant DietaryType?` nullable column would let multiple
+base-menu rows exist for the same `(LocationId, Year, Month)` with no constraint violation,
+silently breaking the exact invariant 013e depended on (`UpsertMonthlyMenuCommand`'s
+find-or-create-by-`(LocationId, Year, Month)` logic would then pick an arbitrary one of several
+rows).
+
+**Rationale — avoiding `DietaryType?`/`List<DietaryType>` EF conversions entirely (discovered
+during implementation, not anticipated during planning)**: The original plan called for
+`Variant DietaryType?` with a custom `HasConversion` (sentinel logic in the lambda) and
+`MenuVariantPriorityOrder List<DietaryType>` with the same whole-collection `HasConversion`
+pattern `MealPreference.DietaryType` already uses successfully. Implementing this exactly as
+planned crashed every write/read touching either property with `System.ArgumentException:
+Expression of type 'DietaryType' cannot be used for parameter of type 'Nullable<DietaryType>'`
+inside `Npgsql.EntityFrameworkCore.PostgreSQL`'s `NpgsqlArrayConverter`. Isolating it (removing
+each new conversion in turn) showed the trigger was `MonthlyMenu.Variant`'s new *nullable scalar*
+`DietaryType?` converter colliding with `MealPreference.DietaryType`'s **pre-existing**
+`List<DietaryType>` converter (013d, unrelated to this feature, already shipped and working) — a
+Npgsql provider bug in how it discovers/reuses an "element converter for `DietaryType`" across
+the whole model when both a nullable-scalar and a list conversion for the same enum coexist.
+Since `MealPreference.DietaryType` cannot be touched (out of scope, already shipped), the fix was
+to keep *both* of this feature's own properties as plain strings at the EF-mapped/entity level,
+eliminating any `DietaryType`-keyed value converter this feature would otherwise add to the
+model. The JSON wire contract (`string`/`string[]`) is completely unaffected either way — this
+was purely an internal representation choice forced by an EF/Npgsql provider limitation, worth
+remembering generally: introducing a new nullable-enum `HasConversion` in a model that already
+has a `List<TheSameEnum>` conversion elsewhere is a de-risked pattern to avoid in this codebase
+until this specific Npgsql bug is fixed upstream.
 
 **Alternatives considered**:
 - A genuinely nullable column with a Postgres partial unique index
   (`WHERE "Variant" IS NULL`) covering only the base-menu case, plus the normal composite index
   for variants — rejected: two separate index definitions to keep in sync is more moving parts
-  than one sentinel value, for no behavioral benefit.
+  than one sentinel value, for no behavioral benefit, and doesn't even address the Npgsql
+  collision above (that's about EF's own converter machinery, not the SQL index shape).
 - A separate boolean `IsBaseMenu` flag alongside a nullable `Variant` — rejected: reintroduces
   the same NULL-uniqueness gap unless also constrained, and adds a second field that must stay
   consistent with the first.
@@ -64,14 +92,13 @@ validation belongs in the command, not the endpoint or the client.
 
 ## Decision: `Location.MenuVariantPriorityOrder` storage
 
-**Decision**: `List<DietaryType>` stored as `text[]`, converted via the exact same
-`HasConversion`/`ValueComparer` pattern `MealPreference.DietaryType` already uses
-(`TenantDbContext.cs`), defaulting to an empty array.
-
-**Rationale**: This is the identical shape (an ordered — order matters here, more than for
-`MealPreference.DietaryType` where it doesn't — list of the same enum) to an already-solved
-problem in this exact codebase. Postgres `text[]` preserves insertion order, which is required
-since the list *is* the priority order (FR-002/FR-008), not just a set membership check.
+**Decision**: `List<string>` (wire strings, order-preserving) stored as a plain `text[]`, no EF
+conversion — see the merged `MonthlyMenu.Variant` decision above for the full rationale (the
+originally-planned `List<DietaryType>` + `HasConversion` approach, matching
+`MealPreference.DietaryType`'s pattern, is what triggered the Npgsql collision this feature had
+to route around). Postgres `text[]` preserves insertion order, which is required since the list
+*is* the priority order (FR-002/FR-008), not just a set membership check — order still matters
+identically whether the elements are stored as raw strings or converted enums.
 
 ## Decision: `GetParentMonthlyMenuQuery` restructuring — resolve per child inside the existing
 location loop, don't add a second query

@@ -45,10 +45,13 @@ public class UpdateLocationMenuVariantSettingsCommandHandler(ITenantDbContext db
         if (location is null)
             return LocationResult.Fail(LocationFailure.NotFound);
 
+        // Re-normalized through parse+ToWireString (not the raw incoming strings) so casing/
+        // whitespace variance from a client never leaks into storage — the validator above
+        // already guarantees every entry parses successfully.
         var newOrder = request.MenuVariantPriorityOrder
-            .Select(v => DietaryTypeExtensions.TryParseWireString(v, out var parsed) ? parsed : (DietaryType?)null)
-            .Where(v => v.HasValue)
-            .Select(v => v!.Value)
+            .Select(v => DietaryTypeExtensions.TryParseWireString(v, out var parsed) ? parsed.ToWireString() : null)
+            .Where(v => v is not null)
+            .Select(v => v!)
             .ToList();
 
         if (!request.ConfirmDespiteRemovingPublished)

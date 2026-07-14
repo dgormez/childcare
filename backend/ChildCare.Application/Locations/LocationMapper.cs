@@ -1,7 +1,6 @@
 using ChildCare.Application.Common;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Entities;
-using ChildCare.Domain.Enums;
 
 namespace ChildCare.Application.Locations;
 
@@ -20,6 +19,6 @@ internal static class LocationMapper
         ReservationModeMapper.ToWire(l.ReservationSwapsMode),
         l.ReservationNoticeHours,
         l.RequiresCaregiverPin,
-        l.MenuVariantPriorityOrder.Select(v => v.ToWireString()).ToList(),
+        l.MenuVariantPriorityOrder,
         menuVariantsWithPublishedContent ?? []);
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -15,11 +16,6 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                 schema: "tenant_template",
                 table: "monthly_menus");
 
-            // "base" (not EF's scaffolded "") matches the EF conversion's sentinel
-            // (TenantDbContext.cs) for the absence of a variant — every pre-013j row backfills
-            // to the base menu. EF Core's migration scaffolding does not run HasConversion
-            // against HasDefaultValue when generating this literal, so it must be corrected
-            // by hand every time this migration is regenerated.
             migrationBuilder.AddColumn<string>(
                 name: "Variant",
                 schema: "tenant_template",
@@ -28,7 +24,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                 nullable: false,
                 defaultValue: "base");
 
-            migrationBuilder.AddColumn<string[]>(
+            migrationBuilder.AddColumn<List<string>>(
                 name: "MenuVariantPriorityOrder",
                 schema: "tenant_template",
                 table: "locations",

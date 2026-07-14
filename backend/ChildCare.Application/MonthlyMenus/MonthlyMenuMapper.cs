@@ -27,7 +27,7 @@ public static class MonthlyMenuMapper
 {
     public static MonthlyMenuResponse ToResponse(MonthlyMenu menu) => new(
         Exists: true,
-        Variant: menu.Variant?.ToWireString(),
+        Variant: menu.Variant == MonthlyMenuVariantHelper.BaseSentinel ? null : menu.Variant,
         IsPublished: menu.PublishedAt is not null,
         PublishedAt: menu.PublishedAt,
         Days: menu.Days

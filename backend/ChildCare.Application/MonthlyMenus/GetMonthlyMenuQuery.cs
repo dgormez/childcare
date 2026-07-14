@@ -18,10 +18,11 @@ public class GetMonthlyMenuQueryHandler(ITenantDbContext db) : IRequestHandler<G
 {
     public async Task<MonthlyMenuResponse> Handle(GetMonthlyMenuQuery request, CancellationToken cancellationToken)
     {
+        var variantWire = MonthlyMenuVariantHelper.ToStorageWire(request.Variant);
         var menu = await db.MonthlyMenus
             .Include(m => m.Days)
             .FirstOrDefaultAsync(
-                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == request.Variant,
+                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == variantWire,
                 cancellationToken);
 
         return menu is null

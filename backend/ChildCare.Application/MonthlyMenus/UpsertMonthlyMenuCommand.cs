@@ -64,10 +64,11 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
 {
     public async Task<MonthlyMenuResponse> Handle(UpsertMonthlyMenuCommand request, CancellationToken cancellationToken)
     {
+        var variantWire = MonthlyMenuVariantHelper.ToStorageWire(request.Variant);
         var menu = await db.MonthlyMenus
             .Include(m => m.Days)
             .FirstOrDefaultAsync(
-                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == request.Variant,
+                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == variantWire,
                 cancellationToken);
 
         if (menu is null)
@@ -77,7 +78,7 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
                 LocationId = request.LocationId,
                 Year = request.Year,
                 Month = request.Month,
-                Variant = request.Variant,
+                Variant = variantWire,
                 CreatedBy = request.UpdatedBy,
             };
             db.MonthlyMenus.Add(menu);

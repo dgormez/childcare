@@ -93,25 +93,27 @@ public class GetParentMonthlyMenuQueryHandler(
                 var childDietaryTypes = preferences.TryGetValue(childId, out var pref) ? pref.DietaryType : [];
 
                 // FR-008: exact DietaryType equality only, no inferred hierarchy between types.
-                DietaryType? resolvedVariant = null;
-                foreach (var candidate in location.MenuVariantPriorityOrder)
+                string? resolvedVariantWire = null;
+                foreach (var candidateWire in location.MenuVariantPriorityOrder)
                 {
-                    if (childDietaryTypes.Contains(candidate) && publishedByVariant.ContainsKey(candidate))
+                    if (!DietaryTypeExtensions.TryParseWireString(candidateWire, out var candidate))
+                        continue;
+                    if (childDietaryTypes.Contains(candidate) && publishedByVariant.ContainsKey(candidateWire))
                     {
-                        resolvedVariant = candidate;
+                        resolvedVariantWire = candidateWire;
                         break;
                     }
                 }
 
-                // FR-009: falls back to the base menu (key null) when nothing matched above.
-                var resolvedMenu = publishedByVariant.GetValueOrDefault(resolvedVariant);
+                // FR-009: falls back to the base menu when nothing matched above.
+                var resolvedMenu = publishedByVariant.GetValueOrDefault(resolvedVariantWire ?? MonthlyMenuVariantHelper.BaseSentinel);
 
                 entries.Add(new ParentMonthlyMenuEntry(
                     LocationId: locationId,
                     LocationName: location.Name,
                     ChildId: childId,
                     ChildName: child.FirstName,
-                    ResolvedVariant: resolvedVariant?.ToWireString(),
+                    ResolvedVariant: resolvedVariantWire,
                     IsPublished: resolvedMenu is not null,
                     Days: resolvedMenu is null ? [] : resolvedMenu.Days.OrderBy(d => d.MenuDate).Select(MonthlyMenuMapper.ToDayEntry).ToList(),
                     ClosureDates: closureDates));

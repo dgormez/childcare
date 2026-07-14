@@ -1,5 +1,3 @@
-using ChildCare.Domain.Enums;
-
 namespace ChildCare.Domain.Entities;
 
 // monthly_menus (data-model.md, feature 013e; Variant added feature 013j) — one row per
@@ -14,12 +12,15 @@ public class MonthlyMenu
     public int Year { get; set; }
     public int Month { get; set; }
 
-    // Feature 013j — null = the base menu; a real value = that DietaryType's variant. Stored at
-    // the DB level as a non-nullable "base" sentinel string (TenantDbContext.cs), never as a
-    // nullable column — see specs/013j-monthly-menu-variants/research.md for why: Postgres
-    // unique indexes treat NULL as distinct from every other NULL, which would silently allow
-    // more than one base-menu row per location/year/month.
-    public DietaryType? Variant { get; set; }
+    // Feature 013j — "base" = the base menu; a DietaryType wire string = that variant. Deliberately
+    // a plain non-nullable string, not DietaryType? — two reasons: (1) Postgres unique indexes
+    // treat NULL as distinct from every other NULL, which would silently allow more than one
+    // base-menu row per location/year/month (research.md); (2) an EF Core HasConversion for
+    // DietaryType? on this property collides with MealPreference.DietaryType's pre-existing
+    // List<DietaryType> converter in a Npgsql.EntityFrameworkCore.PostgreSQL array-conversion
+    // provider bug (research.md's "MonthlyMenu.Variant storage" decision) — parsing to/from
+    // DietaryType happens in the Application layer (MonthlyMenuVariantHelper), not via EF.
+    public string Variant { get; set; } = "base";
 
     public DateTime? PublishedAt { get; set; }
 

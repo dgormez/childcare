@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20260714191114_AddMonthlyMenuVariants")]
+    [Migration("20260714193956_AddMonthlyMenuVariants")]
     partial class AddMonthlyMenuVariants
     {
         /// <inheritdoc />
@@ -996,7 +996,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<int>("MaxCapacity")
                         .HasColumnType("integer");
 
-                    b.Property<string[]>("MenuVariantPriorityOrder")
+                    b.PrimitiveCollection<List<string>>("MenuVariantPriorityOrder")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text[]")
@@ -1260,7 +1260,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.Property<string>("Variant")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("base");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");

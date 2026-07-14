@@ -261,17 +261,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
               .HasDefaultValue(ReservationRequestMode.Disabled)
               .IsRequired();
             l.Property(x => x.ReservationNoticeHours).HasDefaultValue(0).IsRequired();
-            // Feature 013j — ordered list, same text[] conversion pattern as
-            // MealPreference.DietaryType above; a ValueComparer is required for EF Core to
-            // detect in-place mutations of the List<DietaryType> reference correctly.
+            // Feature 013j — plain text[] of wire strings, no enum HasConversion (unlike
+            // MealPreference.DietaryType above) — see Location.cs's field comment for why: a
+            // second List<DietaryType>-shaped converter here collides with MonthlyMenu.Variant's
+            // DietaryType? converter in a Npgsql provider bug. Same simple pattern
+            // MealPreferenceChangeRequest.NewDietaryType already uses below.
             l.Property(x => x.MenuVariantPriorityOrder)
-              .HasConversion(
-                  v => v.Select(d => d.ToWireString()).ToArray(),
-                  v => v.Select(ParseDietaryType).ToList(),
-                  new ValueComparer<List<DietaryType>>(
-                      (a, b) => a!.SequenceEqual(b!),
-                      v => v.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
-                      v => v.ToList()))
               .HasColumnType("text[]")
               .HasDefaultValueSql("'{}'");
             l.HasIndex(x => x.DeactivatedAt);
@@ -837,15 +832,17 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             mm.Property(x => x.Year).IsRequired();
             mm.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             mm.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CreatedBy);
-            // Feature 013j — non-nullable "base" sentinel, not a nullable column: Postgres
-            // unique indexes treat NULL as distinct from every other NULL, which would silently
-            // allow more than one base-menu row per location/year/month (research.md).
+            // Feature 013j — plain string, "base" sentinel default (matches
+            // MonthlyMenuVariantHelper.BaseSentinel and the AddMonthlyMenuVariants migration's
+            // hand-corrected AddColumn default — all three must stay in sync). Not a nullable
+            // column (Postgres unique indexes treat NULL as distinct from every other NULL,
+            // which would silently allow more than one base-menu row per location/year/month)
+            // and not a DietaryType? HasConversion (collides with MealPreference.DietaryType's
+            // List<DietaryType> converter in a Npgsql provider bug) — see MonthlyMenu.cs's field
+            // comment and research.md.
             mm.Property(x => x.Variant)
-              .HasConversion(
-                  v => v.HasValue ? v.Value.ToWireString() : "base",
-                  v => v == "base" ? (DietaryType?)null : ParseDietaryType(v))
               .HasColumnType("text")
-              .HasDefaultValue((DietaryType?)null)
+              .HasDefaultValue("base")
               .IsRequired();
             // FR-005: at most one menu per location/year/month/variant — editing updates this row.
             mm.HasIndex(x => new { x.LocationId, x.Year, x.Month, x.Variant }).IsUnique();
