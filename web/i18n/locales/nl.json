@@ -770,7 +770,30 @@
     "columnSoup": "Soep",
     "columnMainCourse": "Hoofdgerecht",
     "columnDessert": "Dessert",
-    "columnNotes": "Opmerkingen"
+    "columnNotes": "Opmerkingen",
+    "csvImport": {
+      "trigger": "CSV importeren",
+      "title": "Menu importeren uit CSV",
+      "description": "Upload een CSV-bestand om het menu van deze maand in één keer in te vullen, in plaats van elke dag manueel in te typen.",
+      "selectFile": "Bestand kiezen",
+      "downloadTemplate": "Sjabloon downloaden",
+      "fileError": "Dit bestand kon niet als CSV gelezen worden. Controleer het scheidingsteken, de kopregel en het bestandsformaat, en probeer opnieuw.",
+      "summary": "{applied} {applied, plural, one {rij} other {rijen}} worden toegepast, {skipped} overgeslagen",
+      "noValidRows": "Geen enkele rij uit dit bestand kon toegepast worden. Los de fouten op en upload opnieuw.",
+      "columnStatus": "Status",
+      "blankDate": "(lege datum)",
+      "willApply": "Wordt toegepast",
+      "willOverwrite": "Overschrijft bestaande inhoud",
+      "cancel": "Annuleren",
+      "confirm": "Toepassen op rooster",
+      "error": {
+        "malformed_row": "Deze rij heeft een ander aantal kolommen dan de kopregel",
+        "invalid_date": "Geen geldige datum (verwacht formaat JJJJ-MM-DD)",
+        "date_out_of_range": "Buiten de geselecteerde maand",
+        "duplicate_date": "Dubbele datum in dit bestand",
+        "field_too_long": "Een veld overschrijdt 500 tekens"
+      }
+    }
   },
   "mealPreferenceRequests": {
     "queueTitle": "Openstaande voorkeursaanpassingen",
