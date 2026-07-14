@@ -18,6 +18,10 @@ public class LocationResult
     // PublishClosureCalendarResult's CheckedInCount payload-carrying pattern (feature 011).
     public IReadOnlyDictionary<string, int>? PendingCounts { get; private init; }
 
+    // Feature 013j FR-014 — only populated for MenuVariantRemovalWarning, same
+    // confirm-despite-a-real-consequence shape as PendingCounts above.
+    public IReadOnlyList<string>? VariantsRequiringConfirmation { get; private init; }
+
     public bool Succeeded => Failure is null;
 
     public static LocationResult Success(LocationResponse response) => new() { Response = response };
@@ -27,6 +31,11 @@ public class LocationResult
         Failure = failure,
         PendingCounts = pendingCounts,
     };
+    public static LocationResult FailMenuVariantRemoval(IReadOnlyList<string> variantsRequiringConfirmation) => new()
+    {
+        Failure = LocationFailure.MenuVariantRemovalWarning,
+        VariantsRequiringConfirmation = variantsRequiringConfirmation,
+    };
 }
 
 public enum LocationFailure
@@ -34,4 +43,5 @@ public enum LocationFailure
     NotFound,
     HasActiveDependents,
     PendingRequestsWarning,
+    MenuVariantRemovalWarning,
 }

@@ -1,11 +1,15 @@
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 
 namespace ChildCare.Application.MonthlyMenus;
 
 public enum MonthlyMenuFailure
 {
     NotFound,
+    // Feature 013j FR-006 — the requested variant isn't in the location's
+    // MenuVariantPriorityOrder, so no author/publish/unpublish write is allowed against it.
+    VariantNotEnabled,
 }
 
 public class MonthlyMenuPublishResult
@@ -23,6 +27,7 @@ public static class MonthlyMenuMapper
 {
     public static MonthlyMenuResponse ToResponse(MonthlyMenu menu) => new(
         Exists: true,
+        Variant: menu.Variant?.ToWireString(),
         IsPublished: menu.PublishedAt is not null,
         PublishedAt: menu.PublishedAt,
         Days: menu.Days
@@ -30,8 +35,9 @@ public static class MonthlyMenuMapper
             .Select(ToDayEntry)
             .ToList());
 
-    public static MonthlyMenuResponse EmptyShell() => new(
+    public static MonthlyMenuResponse EmptyShell(DietaryType? variant = null) => new(
         Exists: false,
+        Variant: variant?.ToWireString(),
         IsPublished: false,
         PublishedAt: null,
         Days: []);

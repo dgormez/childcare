@@ -2,11 +2,13 @@ using System.Security.Claims;
 using ChildCare.Application.Common;
 using ChildCare.Application.MonthlyMenus;
 using ChildCare.Contracts.Requests;
+using ChildCare.Domain.Enums;
 using MediatR;
 
 namespace ChildCare.Api.Endpoints;
 
-/// <summary>Feature 013e — contracts/monthly-menu-api.md.</summary>
+/// <summary>Feature 013e — contracts/monthly-menu-api.md. Variant query parameter added feature
+/// 013j — contracts/013j-monthly-menu-variants/monthly-menu-variants-api.md.</summary>
 public static class MonthlyMenuEndpoints
 {
     public static void MapMonthlyMenuEndpoints(this WebApplication app)
@@ -15,28 +17,28 @@ public static class MonthlyMenuEndpoints
             .WithTags("MonthlyMenus")
             .RequireAuthorization("DirectorOnly");
 
-        director.MapGet("/", async (Guid locationId, int year, int month, IMediator mediator) =>
+        director.MapGet("/", async (Guid locationId, int year, int month, string? variant, IMediator mediator) =>
         {
-            var result = await mediator.Send(new GetMonthlyMenuQuery(locationId, year, month));
+            var result = await mediator.Send(new GetMonthlyMenuQuery(locationId, year, month, ParseVariant(variant)));
             return Results.Ok(result);
         });
 
-        director.MapPut("/", async (Guid locationId, int year, int month, UpsertMonthlyMenuRequest req, HttpContext ctx, IMediator mediator) =>
+        director.MapPut("/", async (Guid locationId, int year, int month, string? variant, UpsertMonthlyMenuRequest req, HttpContext ctx, IMediator mediator) =>
         {
             var updatedBy = Guid.Parse(ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var result = await mediator.Send(new UpsertMonthlyMenuCommand(locationId, year, month, req.Days, updatedBy));
+            var result = await mediator.Send(new UpsertMonthlyMenuCommand(locationId, year, month, ParseVariant(variant), req.Days, updatedBy));
             return Results.Ok(result);
         });
 
-        director.MapPost("/publish", async (Guid locationId, int year, int month, IMediator mediator) =>
+        director.MapPost("/publish", async (Guid locationId, int year, int month, string? variant, IMediator mediator) =>
         {
-            var result = await mediator.Send(new PublishMonthlyMenuCommand(locationId, year, month));
+            var result = await mediator.Send(new PublishMonthlyMenuCommand(locationId, year, month, ParseVariant(variant)));
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
         });
 
-        director.MapPost("/unpublish", async (Guid locationId, int year, int month, IMediator mediator) =>
+        director.MapPost("/unpublish", async (Guid locationId, int year, int month, string? variant, IMediator mediator) =>
         {
-            var result = await mediator.Send(new UnpublishMonthlyMenuCommand(locationId, year, month));
+            var result = await mediator.Send(new UnpublishMonthlyMenuCommand(locationId, year, month, ParseVariant(variant)));
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
         });
 
@@ -57,10 +59,18 @@ public static class MonthlyMenuEndpoints
         });
     }
 
+    // Absent/unrecognized query value = base menu — mirrors this codebase's convention of
+    // defaulting to the "no special state" case rather than rejecting an unset optional param.
+    private static DietaryType? ParseVariant(string? variant) =>
+        variant is not null && DietaryTypeExtensions.TryParseWireString(variant, out var parsed) ? parsed : null;
+
     private static IResult MapFailure(MonthlyMenuFailure failure) => failure switch
     {
         MonthlyMenuFailure.NotFound => Results.Json(
             new { errorKey = "errors.monthly_menu.not_found" }, statusCode: StatusCodes.Status404NotFound),
+
+        MonthlyMenuFailure.VariantNotEnabled => Results.Json(
+            new { errorKey = "errors.monthly_menu.variant_not_enabled" }, statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(MonthlyMenuFailure)}: {failure}"),
     };
