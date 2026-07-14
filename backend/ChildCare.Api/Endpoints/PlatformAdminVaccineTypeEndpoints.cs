@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Application.VaccineTypes;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -27,7 +28,40 @@ public static class PlatformAdminVaccineTypeEndpoints
             var result = await mediator.Send(new CreateVaccineTypeCommand(req.Name, req.Category));
             return Results.Created($"/api/platform-admin/vaccine-types/{result.Response!.Id}", result.Response);
         });
+
+        group.MapPatch("/{id:guid}", async (Guid id, UpdateVaccineTypeRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateVaccineTypeCommand(id, req.Name, req.Category));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        group.MapPost("/{id:guid}/reorder", async (Guid id, ReorderVaccineTypeRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ReorderVaccineTypeCommand(id, req.Direction));
+            return result.Succeeded ? Results.Ok(result.Entries) : MapFailure(result.Failure!.Value);
+        });
+
+        group.MapPost("/{id:guid}/deactivate", async (Guid id, HttpContext ctx, IMediator mediator) =>
+        {
+            var (userId, email) = ActingUserOf(ctx);
+            var result = await mediator.Send(new DeactivateVaccineTypeCommand(id, userId, email));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        group.MapPost("/{id:guid}/reactivate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ReactivateVaccineTypeCommand(id));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
     }
+
+    // FR-008: the acting platform-admin's own authenticated identity, never a client-supplied
+    // value — resolved here from the same claims JwtService already issues (NameIdentifier,
+    // Email), mirroring every other "resolved server-side" identity field's endpoint-layer
+    // pattern in this codebase (e.g. AnnouncementEndpoints.TenantUserIdOf).
+    private static (Guid UserId, string Email) ActingUserOf(HttpContext ctx) => (
+        Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value),
+        ctx.User.FindFirst(ClaimTypes.Email)!.Value);
 
     private static IResult MapFailure(PlatformAdminVaccineTypeFailure failure) => failure switch
     {

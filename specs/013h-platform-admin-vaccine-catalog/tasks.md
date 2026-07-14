@@ -110,16 +110,16 @@ reorder two entries via the up/down buttons, confirm the new order via the same 
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] Integration test: `PATCH /api/platform-admin/vaccine-types/{id}` renames/re-categorizes and the new name/category is immediately visible via 013g's `GET /api/vaccine-types` (FR-011); existing `VaccineRecord`s that reference this entry keep their own originally-saved name text unchanged (013g FR-010, re-verified here); unknown id → `404`; director without flag → `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/UpdateVaccineTypeTests.cs`
-- [ ] T031 [P] [US2] Integration test: `POST /api/platform-admin/vaccine-types/{id}/reorder` swaps adjacent `sortOrder` values, with the new order immediately visible via 013g's `GET /api/vaccine-types` (FR-011); `"up"` on the first entry and `"down"` on the last both return `400`; unknown id → `404`; director without flag → `403` (FR-009), in `backend/ChildCare.Api.Tests/PlatformAdmin/ReorderVaccineTypeTests.cs`
+- [X] T030 [P] [US2] Integration test: `PATCH /api/platform-admin/vaccine-types/{id}` renames/re-categorizes and the new name/category is immediately visible via 013g's `GET /api/vaccine-types` (FR-011); existing `VaccineRecord`s that reference this entry keep their own originally-saved name text unchanged (013g FR-010, re-verified here); unknown id → `404`; director without flag → `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/UpdateVaccineTypeTests.cs`
+- [X] T031 [P] [US2] Integration test: `POST /api/platform-admin/vaccine-types/{id}/reorder` swaps adjacent `sortOrder` values, with the new order immediately visible via 013g's `GET /api/vaccine-types` (FR-011); `"up"` on the first entry and `"down"` on the last both return `400`; unknown id → `404`; director without flag → `403` (FR-009), in `backend/ChildCare.Api.Tests/PlatformAdmin/ReorderVaccineTypeTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T032 [P] [US2] `UpdateVaccineTypeRequest`/`ReorderVaccineTypeRequest` contracts, in `backend/ChildCare.Contracts/Requests/PlatformAdminVaccineTypeRequests.cs`
-- [ ] T033 [US2] `UpdateVaccineTypeCommand` + handler + validator, in `backend/ChildCare.Application/VaccineTypes/UpdateVaccineTypeCommand.cs` (depends on T004, T032)
-- [ ] T034 [US2] `ReorderVaccineTypeCommand` + handler (adjacent-swap logic, boundary validation per contracts.md), in `backend/ChildCare.Application/VaccineTypes/ReorderVaccineTypeCommand.cs` (depends on T004, T032)
-- [ ] T035 [US2] Map `PATCH /api/platform-admin/vaccine-types/{id}` and `POST /api/platform-admin/vaccine-types/{id}/reorder` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T033, T034)
-- [ ] T036 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T035)
+- [X] T032 [P] [US2] `UpdateVaccineTypeRequest`/`ReorderVaccineTypeRequest` contracts, in `backend/ChildCare.Contracts/Requests/PlatformAdminVaccineTypeRequests.cs`
+- [X] T033 [US2] `UpdateVaccineTypeCommand` + handler + validator, in `backend/ChildCare.Application/VaccineTypes/UpdateVaccineTypeCommand.cs` (depends on T004, T032)
+- [X] T034 [US2] `ReorderVaccineTypeCommand` + handler (adjacent-swap logic, boundary validation per contracts.md; scoped to the entry's own category, matching the list's Category-then-SortOrder grouping), in `backend/ChildCare.Application/VaccineTypes/ReorderVaccineTypeCommand.cs` (depends on T004, T032)
+- [X] T035 [US2] Map `PATCH /api/platform-admin/vaccine-types/{id}` and `POST /api/platform-admin/vaccine-types/{id}/reorder` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T033, T034)
+- [ ] T036 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T035) — deferred to a single regeneration pass after all US1-3 endpoints exist
 - [ ] T037 [US2] Add rename (inline edit) to `VaccineTypeManagementTable.tsx` (depends on T025, T036)
 - [ ] T038 [US2] Add up/down reorder buttons to `VaccineTypeManagementTable.tsx`, reusing `WaitingListTable.tsx`'s existing button pattern (research.md R4) (depends on T037)
 - [ ] T039 [US2] NL/FR/EN locale keys for rename/reorder UI strings
@@ -140,16 +140,16 @@ who/when; reactivate it and confirm the audit fields clear.
 
 ### Tests for User Story 3
 
-- [ ] T040 [P] [US3] Integration test: `POST /api/platform-admin/vaccine-types/{id}/deactivate` sets `IsActive=false` and populates `DeactivatedByUserId`/`Email`/`At` from the caller; the entry no longer appears in 013g's `GET /api/vaccine-types` active-only response (FR-011, US3 Independent Test); is a no-op (unchanged audit fields) if already inactive; director without flag → `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/DeactivateVaccineTypeTests.cs`
-- [ ] T041 [P] [US3] Integration test: `POST /api/platform-admin/vaccine-types/{id}/reactivate` sets `IsActive=true`, clears all three audit fields, and the entry reappears in 013g's `GET /api/vaccine-types` (FR-011); a subsequent deactivate populates fresh audit fields (spec.md FR-008); director without flag → `403` (FR-009), in `backend/ChildCare.Api.Tests/PlatformAdmin/ReactivateVaccineTypeTests.cs`
-- [ ] T042 [P] [US3] Integration test: an existing `VaccineRecord` referencing a now-deactivated entry is completely unaffected — same read paths, same fields, no error (013g FR-010, re-verified here), extending `backend/ChildCare.Api.Tests/VaccineRecords/VaccineTypeReferenceTests.cs`
+- [X] T040 [P] [US3] Integration test: `POST /api/platform-admin/vaccine-types/{id}/deactivate` sets `IsActive=false` and populates `DeactivatedByUserId`/`Email`/`At` from the caller; the entry no longer appears in 013g's `GET /api/vaccine-types` active-only response (FR-011, US3 Independent Test); is a no-op (unchanged audit fields) if already inactive; director without flag → `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/DeactivateVaccineTypeTests.cs`
+- [X] T041 [P] [US3] Integration test: `POST /api/platform-admin/vaccine-types/{id}/reactivate` sets `IsActive=true`, clears all three audit fields, and the entry reappears in 013g's `GET /api/vaccine-types` (FR-011); a subsequent deactivate populates fresh audit fields (spec.md FR-008); director without flag → `403` (FR-009), in `backend/ChildCare.Api.Tests/PlatformAdmin/ReactivateVaccineTypeTests.cs`
+- [X] T042 [P] [US3] Integration test: an existing `VaccineRecord` referencing a now-deactivated entry is completely unaffected — same read paths, same fields, no error (013g FR-010, re-verified here), extending `backend/ChildCare.Api.Tests/VaccineRecords/VaccineTypeReferenceTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] `DeactivateVaccineTypeCommand` + handler (reads acting user's id/email from claims, no-op guard) per data-model.md's state-transition rules, in `backend/ChildCare.Application/VaccineTypes/DeactivateVaccineTypeCommand.cs` (depends on T004)
-- [ ] T044 [US3] `ReactivateVaccineTypeCommand` + handler (clears audit fields, no-op guard), in `backend/ChildCare.Application/VaccineTypes/ReactivateVaccineTypeCommand.cs` (depends on T004)
-- [ ] T045 [US3] Map `POST /api/platform-admin/vaccine-types/{id}/deactivate` and `.../reactivate` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T043, T044)
-- [ ] T046 [US3] Regenerate `web/lib/generated/api-types.ts` (depends on T045)
+- [X] T043 [US3] `DeactivateVaccineTypeCommand` + handler (reads acting user's id/email from claims, no-op guard) per data-model.md's state-transition rules, in `backend/ChildCare.Application/VaccineTypes/DeactivateVaccineTypeCommand.cs` (depends on T004)
+- [X] T044 [US3] `ReactivateVaccineTypeCommand` + handler (clears audit fields, no-op guard), in `backend/ChildCare.Application/VaccineTypes/ReactivateVaccineTypeCommand.cs` (depends on T004)
+- [X] T045 [US3] Map `POST /api/platform-admin/vaccine-types/{id}/deactivate` and `.../reactivate` in `PlatformAdminVaccineTypeEndpoints.cs`, both `.RequireAuthorization("PlatformAdminOnly")` (FR-009 — same policy as T022's routes, restated here since it must independently apply per-endpoint) (depends on T022, T043, T044)
+- [ ] T046 [US3] Regenerate `web/lib/generated/api-types.ts` (depends on T045) — deferred to a single regeneration pass after all US1-3 endpoints exist
 - [ ] T047 [US3] Add deactivate/reactivate action + inactive-state audit display (who/when) to `VaccineTypeManagementTable.tsx` (depends on T025, T046)
 - [ ] T048 [US3] NL/FR/EN locale keys for deactivate/reactivate UI strings and audit display
 
