@@ -1,7 +1,16 @@
+using System.Data.Common;
 using System.Net;
 using System.Net.Http.Json;
+using ChildCare.Application.Common;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
+using ChildCare.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static ChildCare.Api.Tests.AttendanceTestSupport;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
@@ -15,9 +24,67 @@ namespace ChildCare.Api.Tests.MonthlyMenus;
 /// FR-008 (priority-order resolution, exact-type matching), FR-009 (fallback to base),
 /// FR-010 (one entry per (location, child) pair).
 /// </summary>
-public class GetParentMonthlyMenuVariantResolutionTests(OrganisationOnboardingWebAppFactory factory)
-    : IClassFixture<OrganisationOnboardingWebAppFactory>
+public class GetParentMonthlyMenuVariantResolutionTests(
+    OrganisationOnboardingWebAppFactory factory,
+    GetParentMonthlyMenuVariantResolutionTests.QueryCountingWebAppFactory countingFactory)
+    : IClassFixture<OrganisationOnboardingWebAppFactory>, IClassFixture<GetParentMonthlyMenuVariantResolutionTests.QueryCountingWebAppFactory>
 {
+    /// <summary>
+    /// T039 — dedicated factory (own Postgres container) that swaps in a counting
+    /// <see cref="ITenantDbContextResolver"/> so this file's batching regression test can assert
+    /// SQL command count without adding interceptor plumbing to the shared
+    /// <see cref="OrganisationOnboardingWebAppFactory"/> every other test class depends on.
+    /// </summary>
+    public class QueryCountingWebAppFactory : OrganisationOnboardingWebAppFactory
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+
+            builder.ConfigureServices(services =>
+            {
+                // Registered after the base factory's real TenantDbContextResolver — last
+                // registration wins for a non-collection service (same pattern this factory
+                // already uses for FakeGoogleTokenValidator etc.).
+                services.AddSingleton<ITenantDbContextResolver>(sp =>
+                    new CountingTenantDbContextResolver(sp.GetRequiredService<IConfiguration>()));
+            });
+        }
+    }
+
+    private sealed class CountingTenantDbContextResolver(IConfiguration configuration) : ITenantDbContextResolver
+    {
+        public static int CommandCount;
+
+        public ITenantDbContext ForSchema(string schemaName)
+        {
+            if (string.IsNullOrEmpty(schemaName))
+                throw new InvalidOperationException(
+                    "CountingTenantDbContextResolver.ForSchema was called with no schema name.");
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseNpgsql(connectionString, npgsql =>
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", schemaName));
+            optionsBuilder.ReplaceService<IModelCacheKeyFactory, DynamicSchemaModelCacheKeyFactory>();
+            optionsBuilder.AddInterceptors(new CommandCountingInterceptor());
+
+            return new TenantDbContext(optionsBuilder.Options, schemaName);
+        }
+    }
+
+    private sealed class CommandCountingInterceptor : DbCommandInterceptor
+    {
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            CountingTenantDbContextResolver.CommandCount++;
+            return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        }
+    }
+
     private async Task<(HttpClient Client, RegisterOrganisationResponse Org, LocationResponse Location)> SetupWithVariantsAsync(params string[] enabledVariants)
     {
         var client = factory.CreateClient();
@@ -195,5 +262,46 @@ public class GetParentMonthlyMenuVariantResolutionTests(OrganisationOnboardingWe
         Assert.Equal("vegetarian", firstEntry.ResolvedVariant);
         Assert.Null(secondEntry.ResolvedVariant);
         Assert.Equal("Basis soep 2", Assert.Single(secondEntry.Days).Soup);
+    }
+
+    [Fact]
+    public async Task ResolutionQueryCount_DoesNotScaleWithChildCount()
+    {
+        // T039 — research.md's efficiency decision: one MonthlyMenu fetch per location, not per
+        // child. Uses the dedicated counting factory/tenant so this test's own setup queries
+        // (registration, contracts, meal preferences) don't pollute the count.
+        var client = countingFactory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Query Count Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var settingsResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{location.Id}/menu-variant-settings", org.AccessToken,
+            new UpdateLocationMenuVariantSettingsRequest(["vegetarian"], false)));
+        Assert.Equal(HttpStatusCode.OK, settingsResponse.StatusCode);
+        var (child1, contact, parentToken) = await InviteAndLoginParentAsync(client, countingFactory, org.Organisation.Slug, org.AccessToken);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child1.Id, location.Id, DayOfWeek.Monday);
+        await SetDietaryTypeAsync(client, org.AccessToken, child1.Id, "vegetarian");
+        await UpsertAndPublishAsync(client, org.AccessToken, location.Id, 2028, 3, "Basis soep");
+        await UpsertAndPublishAsync(client, org.AccessToken, location.Id, 2028, 3, "Veggie soep", "vegetarian");
+
+        CountingTenantDbContextResolver.CommandCount = 0;
+        var oneChildEntries = await GetParentMenuAsync(client, parentToken, 2028, 3);
+        var oneChildCommandCount = CountingTenantDbContextResolver.CommandCount;
+        Assert.Single(oneChildEntries);
+
+        var child2 = await CreateChildAsync(client, org.AccessToken, "Second");
+        await LinkContactAsync(client, org.AccessToken, child2.Id, contact.Id);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child2.Id, location.Id, DayOfWeek.Monday);
+        var child3 = await CreateChildAsync(client, org.AccessToken, "Third");
+        await LinkContactAsync(client, org.AccessToken, child3.Id, contact.Id);
+        await CreateAndActivateContractAsync(client, org.AccessToken, child3.Id, location.Id, DayOfWeek.Monday);
+
+        CountingTenantDbContextResolver.CommandCount = 0;
+        var threeChildEntries = await GetParentMenuAsync(client, parentToken, 2028, 3);
+        var threeChildCommandCount = CountingTenantDbContextResolver.CommandCount;
+        Assert.Equal(3, threeChildEntries.Count);
+
+        // Three children at the same location must not triple the command count — the per-
+        // location MonthlyMenu/closure fetches are shared across all of that location's children.
+        Assert.Equal(oneChildCommandCount, threeChildCommandCount);
     }
 }
