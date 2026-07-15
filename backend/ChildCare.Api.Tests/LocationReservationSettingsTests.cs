@@ -201,7 +201,7 @@ public class LocationReservationSettingsTests(OrganisationOnboardingWebAppFactor
 
     // ── User Story 4: pending-requests warning before a mode change strands them (FR-014) ────
 
-    private static readonly DateOnly Monday = new(2026, 7, 13);
+    private static readonly DateOnly Monday = new(2027, 6, 7);
 
     [Fact]
     public async Task ChangeModeAwayFromApproval_WithPendingRequests_Returns409WithCounts_AndDoesNotPersist()
