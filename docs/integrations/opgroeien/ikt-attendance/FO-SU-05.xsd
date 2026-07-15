@@ -1,0 +1,302 @@
+<!-- edited with XMLSpy v2015 sp2 (http://www.altova.com) by Nico Weyens (Kind en Gezin) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="qualified" id="XFASchemaXSD">
+	<!-- 
+
+versienummer: 2.3
+
+-->
+	<xs:element name="IKG">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="prestaties">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="prestatie" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:complexContent>
+										<xs:extension base="prestatietype"/>
+									</xs:complexContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="closing">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="verantwoordelijke" type="xs:string">
+								<xs:annotation>
+									<xs:documentation>Bevat de naam en voornaam van de verantwoordelijke van de opvanglocatie.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="locatiegegevens" type="locatieType"/>
+				<xs:element name="Header">
+					<xs:complexType>
+						<xs:all>
+							<xs:annotation>
+								<xs:documentation>DocumentIndicator: is een indicator die intern bij Kind en Gezin wordt gebruikt om aan te geven van welk type formulier de gegevens afkomstig zijn. Voor deze XSD is dit FO-SU-05.
+FormVersion: 1.0
+UsedViewer: naam en versie van de applicatie waarmee de XML data werd opgebouwd.
+				</xs:documentation>
+							</xs:annotation>
+							<xs:element name="DocumentIndicator" type="xs:string" fixed="FO-SU-05">
+								<xs:annotation>
+									<xs:documentation>Indicator die intern bij Kind en Gezin wordt gebruikt om aan te geven van welk type formulier de gegevens afkomstig zijn. Voor deze XSD is dit FO-SU-05.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="FormVersion" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Versie van het formulier</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="MinReaderVersion" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Minimum versie van Adobe Reader waarmee het formulier dient geopend te worden. Dit is belangrijk om te verhinderen dat bepaalde functionaliteiten niet zouden werken. Is standaard ingesteld op versie 9.1</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="UsedViewer" type="xs:string">
+								<xs:annotation>
+									<xs:documentation>Programma waarmee het formulier werd geopend/opgebouwd. Voor softwareleveranciers is het belangrijk om een indicatie te geven met welk programma de gegevens werden geregistreerd.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="FormulierGecontroleerd">
+					<xs:annotation>
+						<xs:documentation>Indicator die aangeeft of de gegevens in het formulier zijn gecontroleerd op volledigheid en correctheid. Formulieren waarbij deze indicator op 'N' staat zullen niet verwerkt worden.</xs:documentation>
+					</xs:annotation>
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="N"/>
+							<xs:enumeration value="J"/>
+							<xs:enumeration value="n"/>
+							<xs:enumeration value="j"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="Config" minOccurs="0">
+					<xs:complexType>
+						<xs:all>
+							<xs:element name="TargetURL" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Dit element bevat het email adres waarnaar het ingevuld formulier dient opgestuurd te worden. Standaard is dat ko.formulieren@kindengezin.be</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Subject" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Bevat het onderwerp van de mail die naar kind en Gezin wordt gestuurd. Standaard wordt daar 'Opvangprestaties' in gezet.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="prestatietype">
+		<xs:all>
+			<xs:element name="kindInfo" type="kindInfo"/>
+			<xs:element name="aanwezigheden" type="aanwezigheidsType"/>
+			<xs:element name="gerechtvaardigde_afwezigheden" type="aanwezigheidsType"/>
+			<xs:element name="niet_gerechtvaardigde_afwezigheden" type="aanwezigheidsType"/>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="kindInfo">
+		<xs:sequence>
+			<xs:element name="kind">
+				<xs:complexType>
+					<xs:all>
+						<xs:annotation>
+							<xs:documentation>
+							</xs:documentation>
+						</xs:annotation>
+						<xs:element name="code" nillable="false">
+							<xs:annotation>
+								<xs:documentation>Het element 'code' bevat de kindcode van het kind waarvoor de opvangprestaties worden doorgegeven. Deze kindcode is terug te vinden op het 'Attest inkomenstarief' die de ouder(s) heeft(hebben) ontvangen na berekening van het inkomenstarief.</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:union>
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:length value="0"/>
+										</xs:restriction>
+									</xs:simpleType>
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:maxLength value="13"/>
+											<xs:pattern value="[0-9]{6}([ -])?[0-9]{3}([ -])?([0-9]*)?"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:union>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="voornaam" nillable="false">
+							<xs:annotation>
+								<xs:documentation>Het element 'voornaam' bevat de voornaam van het kind waarvoor de opvangprestaties worden doorgegeven. Deze voornaam dient exact overeen te komen met de voornaam zoals terug te vinden is op het 'Attest inkomenstarief' die de ouder(s) heeft(hebben) ontvangen na berekening van het inkomenstarief.</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="50"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="naam" nillable="false">
+							<xs:annotation>
+								<xs:documentation>Het element 'naam' bevat de naam van het kind waarvoor de opvangprestaties worden doorgegeven. Deze naam dient exact overeen te komen met de naam zoals terug te vinden is op het 'Attest inkomenstarief' die de ouder(s) heeft(hebben) ontvangen na berekening van het inkomenstarief.</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:maxLength value="50"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+						<xs:element name="bo" nillable="false">
+							<xs:annotation>
+								<xs:documentation>Het element 'bo' bevat de indicatie of de opgegeven prestaties buitenschoolse prestaties zijn of niet.		</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="N"/>
+									<xs:enumeration value="n"/>
+									<xs:enumeration value="J"/>
+									<xs:enumeration value="j"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:element>
+					</xs:all>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="kinderopvangInitiatief">
+		<xs:sequence>
+			<xs:element name="dossiernummer" type="xs:string" nillable="false"/>
+			<xs:element name="naamLocatie" type="xs:string" nillable="false"/>
+			<xs:element name="naamOrganisator" type="xs:string" nillable="false"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="aanwezigheidsType">
+		<xs:all>
+			<xs:element name="min3u" type="dagType" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Aantal prestaties van minder dan 3u. Opgelet : dit kan enkel geregistreerd worden voor buitenschoolse opvang.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="min5u" type="dagType" nillable="true">
+				<xs:annotation>
+					<xs:documentation>Aantal prestaties van minder dan 5u. Dit kan geregistreerd worden voor buitenschoolse als ook voor voorschoolse opvang.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="min11u" type="dagType" nillable="true">
+				<xs:annotation>
+					<xs:documentation>Aantal prestaties van tussen 5u en 11u. Dit kan geregistreerd worden voor buitenschoolse als ook voor voorschoolse opvang.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="min11uFlex" type="dagType" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Aantal prestaties van meer dan 11u die worden beschouwd als flexibele opvang. Opgelet : dit kan enkel geregistreerd worden indien de opvanglocatie de erkenning heeft ontvangen om flexibele opvang aan te bieden.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:simpleType name="dagType">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:length value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:int"/>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:complexType name="locatieType">
+		<xs:all>
+			<xs:element name="naam_locatie">
+				<xs:annotation>
+					<xs:documentation>Bevat de naam van de vergunde opvanglocatie zoals gekend bij Kind en Gezin</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="dossiernummer">
+				<xs:annotation>
+					<xs:documentation>Bevat het dossiernummer van de vergunde opvanglocatie, toegewezen door Kind en Gezin</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="9"/>
+						<xs:maxLength value="10"/>
+						<xs:pattern value="[0-9]{9}[0-9, ]*"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="naam_organisator">
+				<xs:annotation>
+					<xs:documentation>Naam van de organisatie die de opvanglocatie organiseert, zoals gekend bij Kind en Gezin.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="periode">
+				<xs:annotation>
+					<xs:documentation>Periode waarvoor de opvangprestaties worden geregistreerd. Opgelet : formaat is MM/YYYY</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="\d{2}/\d{4}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="aantal_openingsdagen">
+				<xs:annotation>
+					<xs:documentation>Aantal dagen waarop de opvanglocatie open was tijdens de opgegeven maand.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="2"/>
+						<xs:pattern value="[0-9]*"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="bo">
+				<xs:annotation>
+					<xs:documentation>Indicatie op de opvanglocatie buitenschoolse prestaties voor de opgegeven periode mag doorgeven of niet.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="N"/>
+						<xs:enumeration value="n"/>
+						<xs:enumeration value="J"/>
+						<xs:enumeration value="j"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flex" nillable="true">
+				<xs:annotation>
+					<xs:documentation>Indicatie of er, voor de opgegeven opvanglocatie, prestaties volgens het principe van flexibele opvang mogen geregistreerd worden of niet.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="N"/>
+						<xs:enumeration value="n"/>
+						<xs:enumeration value="J"/>
+						<xs:enumeration value="j"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+</xs:schema>

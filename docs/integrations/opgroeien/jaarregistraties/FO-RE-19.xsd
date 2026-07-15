@@ -1,0 +1,266 @@
+<!-- edited with XMLSpy v2015 sp2 (http://www.altova.com) by Nico Weyens (Kind en Gezin) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="qualified" id="XFASchemaXSD">
+	<!-- 
+
+versienummer: 1.1
+
+-->
+	<xs:element name="KindEnGezin">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Header">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="DocumentIndicator" type="xs:string" fixed="FO-RE-19">
+								<xs:annotation>
+									<xs:documentation>Indicator die intern bij Kind en Gezin wordt gebruikt om aan te geven van welk type formulier de gegevens afkomstig zijn. Voor deze XSD is dit FO-RE-19.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="FormVersion" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Versie van het formulier</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="MinReaderVersion" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Minimum versie van Adobe Reader waarmee het formulier dient geopend te worden. Dit is belangrijk om te verhinderen dat bepaalde functionaliteiten niet zouden werken. Is standaard ingesteld op versie 9.1</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="UsedViewer" type="xs:string">
+								<xs:annotation>
+									<xs:documentation>Programma waarmee het formulier werd geopend/opgebouwd. Voor softwareleveranciers is het belangrijk om een indicatie te geven met welk programma de gegevens werden geregistreerd.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="DocumentGegevens" type="DocumentGegevensType"/>
+				<xs:element name="Voorrangsgroepen">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Voorrangsgroep" type="KindOpeningsdagType" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="FormulierGecontroleerd" type="KgJaNeenType">
+					<xs:annotation>
+						<xs:documentation>Indicator die aangeeft of de gegevens in het formulier zijn gecontroleerd op volledigheid en correctheid. Formulieren waarbij deze indicator op 'N' staat zullen niet verwerkt worden.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Parameters">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ParamVerschilRatio" type="KgIntRequired" nillable="false">
+								<xs:annotation>
+									<xs:documentation>Parameter waarde voor controle op de geldigheid van de ingegeven waardes in het formulier. Indien de gegevens via XML worden doorgestuurd dient dit veld de waarde 999 te bevatten.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Config" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="TargetURL" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Dit element bevat het email adres waarnaar het ingevuld formulier dient opgestuurd te worden. Standaard is dat ko.formulieren@kindengezin.be</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Subject" type="xs:string" nillable="true">
+								<xs:annotation>
+									<xs:documentation>Bevat het onderwerp van de mail die naar kind en Gezin wordt gestuurd.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="DocumentGegevensType">
+		<xs:sequence>
+			<xs:element name="NaamSubsidiegroep" type="KgNaam">
+				<xs:annotation>
+					<xs:documentation>Naam van de subsidiegroep zoals gekend bij Kind en Gezin</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NaamOrganisator" type="KgNaam">
+				<xs:annotation>
+					<xs:documentation>Naam van de organisatie die de opvanglocatie organiseert, zoals gekend bij Kind en Gezin.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubsidiegroepId" type="KgIdRequired">
+				<xs:annotation>
+					<xs:documentation>Identificatienummer van de subsidiegroep zoals gekend bij Kind en Gezin.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Jaar" type="KgJaar">
+				<xs:annotation>
+					<xs:documentation>Het jaar waarvoor de gegevens worden doorgegeven</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="KindOpeningsdagType">
+		<xs:sequence>
+			<xs:element name="LocatieId" type="KgIdRequired">
+				<xs:annotation>
+					<xs:documentation>Indentificatienummer van de locatie zoals gekend bij Kind en Gezin.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LocatieNaam" type="KgNaam">
+				<xs:annotation>
+					<xs:documentation>Naam van de locatie zoals gekend bij Kind en Gezin</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaxVergundeCapaciteit" type="KgIntRequired">
+				<xs:annotation>
+					<xs:documentation>Maximale vergunde capaciteit zoals gekend bij Kind en Gezin en die wordt gebruikt als controle op de geldigheid van de ingegeven waardes in het formulier. Indien de gegevens via XML worden doorgestuurd dient dit veld de waarde 999 te bevatten.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InkomensTarief">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DatumBegin" type="KgDatum">
+							<xs:annotation>
+								<xs:documentation>De vroegste start datum voor inkomensgerelateerde opvang in het jaar waarvoor de gegevens worden doorgegeven </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="DatumEind" type="KgDatum">
+							<xs:annotation>
+								<xs:documentation>De maximale eind datum voor inkomensgerelateerde opvang in het jaar waarvoor de gegevens worden doorgegeven </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="KenmerkPlusSubsidie" type="KgJaNeenType">
+				<xs:annotation>
+					<xs:documentation>Het kenmerk plus subsidie zoals gekend bij Kind en Gezin</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AantalOpgevangenKinderen">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Totaal" type="KgInt" nillable="true">
+							<xs:annotation>
+								<xs:documentation>Het totaal aantal opgevangen kinderen in  de opvang locatie voor het opgegeven jaar</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="UitVoorrangsgroepen" type="KgInt" nillable="true">
+							<xs:annotation>
+								<xs:documentation>Het aantal opgevangen kinderen uit voorrangsgroepen incl kinderen uit kwetsbare gezinnen in de opvang locatie voor het opgegeven jaar</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="UitKwetsbareGezinnen" type="KgInt" nillable="true">
+							<xs:annotation>
+								<xs:documentation>Het aantal opgevangen kinderen enkel uit kwetsbare gezinnen in de opvang locatie voor het opgegeven jaar</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="DetailsVoorrangsgroep">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="WerkOpleiding" type="KgInt" nillable="true"/>
+						<xs:element name="Alleenstaanden" type="KgInt" nillable="true"/>
+						<xs:element name="LaagInkomen" type="KgInt" nillable="true"/>
+						<xs:element name="Pleegkinderen" type="KgInt" nillable="true"/>
+						<xs:element name="GezinslidHandicap" type="KgInt" nillable="true"/>
+						<xs:element name="GezinslidZelfzorgvermogen" type="KgInt" nillable="true"/>
+						<xs:element name="SociaalPedagogisch" type="KgInt" nillable="true"/>
+						<xs:element name="LaagOpleidingsniveau" type="KgInt" nillable="true"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="KindPlaatsRatio" type="KgDecimal10-2" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Verhouding van het aantal opgevangen kinderen uit de voorrangsgroepen tov de vergunde capaciteit van de opgegeven locatie.  Wordt gebruikt in het formulier om te vermijden dat verkeerde waardes worden ingegeven. Indien de gegevens via XML worden doorgestuurd is het niet nodig hier een waarde mee te geven. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="KgEmptyString">
+		<xs:restriction base="xs:string">
+			<xs:length value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgIntRequired">
+		<xs:annotation>
+			<xs:documentation>Integer waarden mogen enkel bestaan uit cijfers en maximaal 3 lang zijn.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgInt">
+		<xs:annotation>
+			<xs:documentation>Integer waarden mogen enkel bestaan uit cijfers en maximaal 3 lang zijn.</xs:documentation>
+		</xs:annotation>
+		<xs:union memberTypes="KgIntRequired KgEmptyString"/>
+	</xs:simpleType>
+	<xs:simpleType name="KgDecimal10-2Required">
+		<xs:annotation>
+			<xs:documentation>Decimale waarden moet enkel bestaan uit cijfers </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:maxInclusive value="9999999999"/>
+			<xs:fractionDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgDecimal10-2">
+		<xs:annotation>
+			<xs:documentation>Decimale waarden moet enkel bestaan uit cijfers </xs:documentation>
+		</xs:annotation>
+		<xs:union memberTypes="KgDecimal10-2Required KgEmptyString"/>
+	</xs:simpleType>
+	<xs:simpleType name="KgJaar">
+		<xs:annotation>
+			<xs:documentation>Jaar moet zijn van de vorm YYYY en moet na 2014 liggen</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="2014"/>
+			<xs:maxInclusive value="9999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgNaam">
+		<xs:annotation>
+			<xs:documentation>Naam: mag maximaal 50 karakters lang zijn</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgIdRequired">
+		<xs:annotation>
+			<xs:documentation>Interne Id's van Kind en Gezin: bestaat enkel uit Cijfers en mogen maximaal 10 karakters lang zijn</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:long">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="9999999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KgId">
+		<xs:annotation>
+			<xs:documentation>Interne Id's van Kind en Gezin: bestaat enkel uit Cijfers en mogen maximaal 10 karakters lang zijn</xs:documentation>
+		</xs:annotation>
+		<xs:union memberTypes="KgIdRequired KgEmptyString"/>
+	</xs:simpleType>
+	<xs:simpleType name="KgDatum">
+		<xs:annotation>
+			<xs:documentation>Datum mag doorgegeven worden onder volgende vorm YYYY-MM-DD</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date"/>
+	</xs:simpleType>
+	<xs:simpleType name="KgJaNeenType">
+		<xs:annotation>
+			<xs:documentation>JaNeenType: Mag enkel bestaan uit J, N</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="N"/>
+			<xs:enumeration value="J"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
