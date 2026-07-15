@@ -223,6 +223,8 @@ builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPoli
 
 // ── Invoicing (feature 014) ──────────────────────────────────────────────────
 builder.Services.AddScoped<ChildCare.Application.Invoices.BillableDayCalculator>();
+builder.Services.AddScoped<ChildCare.Application.Invoices.InvoiceNotificationService>();
+builder.Services.AddScoped<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");

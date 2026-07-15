@@ -34,5 +34,53 @@ public static class InvoiceEndpoints
                 ? Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound)
                 : Results.Ok(invoice);
         });
+
+        director.MapPut("/invoices/{id:guid}/extra-charges", async (Guid id, UpdateInvoiceExtraChargesRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateInvoiceExtraChargesCommand(
+                id, req.ExtraCharges.Select(c => new InvoiceExtraCharge(c.Label, c.AmountCents)).ToList()));
+            if (result.Succeeded)
+                return Results.Ok(result.Response);
+            return result.Failure switch
+            {
+                UpdateInvoiceExtraChargesFailure.NotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                UpdateInvoiceExtraChargesFailure.NotDraft => Results.Json(new { errorKey = "errors.invoice.not_draft" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(UpdateInvoiceExtraChargesFailure)}: {result.Failure}"),
+            };
+        });
+
+        director.MapPost("/invoices/send", async (SendInvoicesRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new SendInvoicesCommand(req.InvoiceIds));
+            if (result.Succeeded)
+                return Results.Ok(result.Responses);
+            return result.Failure switch
+            {
+                SendInvoicesFailure.NotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                SendInvoicesFailure.NotDraft => Results.Json(new { errorKey = "errors.invoice.not_draft" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(SendInvoicesFailure)}: {result.Failure}"),
+            };
+        });
+
+        director.MapPost("/invoices/{id:guid}/mark-paid", async (Guid id, MarkInvoicePaidRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new MarkInvoicePaidCommand(id, req.PaidAt));
+            if (result.Succeeded)
+                return Results.Ok(result.Response);
+            return result.Failure switch
+            {
+                MarkInvoicePaidFailure.NotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                MarkInvoicePaidFailure.NotSent => Results.Json(new { errorKey = "errors.invoice.not_sent" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(MarkInvoicePaidFailure)}: {result.Failure}"),
+            };
+        });
+
+        director.MapGet("/invoices/{id:guid}/pdf", async (Guid id, IMediator mediator, string? locale) =>
+        {
+            var result = await mediator.Send(new GenerateInvoicePdfQuery(id, locale));
+            if (!result.Found)
+                return Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound);
+            return Results.File(result.Bytes, "application/pdf", $"invoice-{id}.pdf");
+        });
     }
 }
