@@ -68,6 +68,13 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        group.MapPut("/{id:guid}/invoice-settings", async (Guid id, UpdateLocationInvoiceSettingsRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationInvoiceSettingsCommand(
+                id, req.Erkenningsnummer, req.BankAccountNumber, req.InvoiceDueDays));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateLocationCommand(id));

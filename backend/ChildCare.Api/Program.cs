@@ -221,6 +221,9 @@ builder.Services.AddScoped<ChildCare.Application.MealPreferenceRequests.MealPref
 // ── Reservation settings (feature 013f) ──────────────────────────────────────
 builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPolicyResolver>();
 
+// ── Invoicing (feature 014) ──────────────────────────────────────────────────
+builder.Services.AddScoped<ChildCare.Application.Invoices.BillableDayCalculator>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -697,6 +700,7 @@ app.MapHealthRecordEndpoints();
 app.MapMealListEndpoints();
 app.MapMonthlyMenuEndpoints();
 app.MapMealPreferenceRequestEndpoints();
+app.MapInvoiceEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.
