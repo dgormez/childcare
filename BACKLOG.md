@@ -48,7 +48,7 @@
 | 013d | `013d-meal-list` | Daily maaltijdenlijst for kitchen — who eats what, allergen flags, meal texture per child (mixed/pieces/solid), printable | 007, 009 | ✅ Done |
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | ✅ Done |
 | 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | ✅ Done |
-| 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | 🔲 Not started |
+| 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | ✅ Done |
 | 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
 
 ### Phase 2 (after Phase 1 is stable)
@@ -3609,6 +3609,36 @@ Out of scope:
   multi-type-resolution decision.
 - Per-dish overrides within a variant (see the authoring-model decision).
 ```
+
+**Shipped 2026-07-15** — `specs/013j-monthly-menu-variants/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge → PR #32, squash-merged after green CI — 677/677
+backend + 157/157 web + 72/72 parent-mobile tests). `MonthlyMenu.Variant` and
+`Location.MenuVariantPriorityOrder` are stored as plain `string`/`List<string>` at the EF/entity
+level rather than `DietaryType?`/`List<DietaryType>` as originally planned — implementing the
+enum-typed version exactly as planned crashed every read/write with a genuine Npgsql provider
+bug: a nullable-enum scalar `HasConversion` on `MonthlyMenu.Variant` collided with the
+pre-existing `List<DietaryType>` conversion already shipped on `MealPreference.DietaryType`
+(013d), throwing `NpgsqlArrayConverter`'s `Nullable<T>`/`T` type-mismatch exception regardless of
+which of the two colliding properties was touched first. Fixed by moving all `DietaryType`↔string
+translation to the Application layer (`MonthlyMenuVariantHelper`), keeping EF itself unaware of
+the enum — Postgres's NULL-is-never-equal-to-NULL semantics also ruled out a nullable `Variant`
+column for the unique index, so a `"base"` sentinel string is used instead of `null`. Also
+surfaced a second, unrelated latent bug in shared code while fixing the first: `TenantDbContext.
+MigrateAsync`'s `ExecuteSqlRawAsync` call treats its SQL argument as a composite format string
+even with zero parameters, so the new migration's Postgres `'{}'` empty-array-default literal
+threw a `FormatException` — no prior migration had added a non-nullable array column with an
+empty-array default through this code path before. Fixed by escaping braces before the call; this
+protects every future migration through `migrate-tenants`, not just this one. `/speckit-converge`
+found one real gap post-implementation: `GetParentMonthlyMenuVariantResolutionTests.cs` was
+missing its own T039 regression test (query count must not scale with child count) — added via a
+dedicated `QueryCountingWebAppFactory`/`DbCommandInterceptor` scoped to that one test file, which
+confirmed at runtime (not just by code inspection) that resolving 3 children at one location
+issues the identical SQL command count as resolving 1. Running the full suite before merge also
+caught an unrelated, pre-existing flaky test in `LocationReservationSettingsTests.cs`: a hardcoded
+`2026-07-13` reservation date had fallen into the past as real time advanced past it, tripping
+`SubmitDayReservationCommand`'s "not more than 1 day in the past" validation — fixed in its own
+separate commit, bumped to the same safely-future date `DayReservationEndpointsTests.cs` already
+uses.
 
 ---
 
