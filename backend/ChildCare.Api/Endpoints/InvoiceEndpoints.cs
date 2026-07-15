@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Application.Invoices;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -78,6 +79,26 @@ public static class InvoiceEndpoints
         director.MapGet("/invoices/{id:guid}/pdf", async (Guid id, IMediator mediator, string? locale) =>
         {
             var result = await mediator.Send(new GenerateInvoicePdfQuery(id, locale));
+            if (!result.Found)
+                return Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound);
+            return Results.File(result.Bytes, "application/pdf", $"invoice-{id}.pdf");
+        });
+
+        var parent = app.MapGroup("/api/parent").WithTags("Invoices").RequireAuthorization("ParentOnly");
+
+        parent.MapGet("/invoices", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new GetParentInvoicesQuery(tenantUserId));
+            return result.Authorized
+                ? Results.Ok(result.Invoices)
+                : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
+        });
+
+        parent.MapGet("/invoices/{id:guid}/pdf", async (Guid id, HttpContext ctx, IMediator mediator, string? locale) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new GenerateParentInvoicePdfQuery(tenantUserId, id, locale));
             if (!result.Found)
                 return Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound);
             return Results.File(result.Bytes, "application/pdf", $"invoice-{id}.pdf");
