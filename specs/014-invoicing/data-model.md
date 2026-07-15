@@ -15,7 +15,7 @@
 | `TotalCents` | `int` | `SubtotalCents` + sum of `LineItems.ExtraCharges`. |
 | `LineItems` | `jsonb` → `InvoiceLineItems` | See shape below. |
 | `OgmReference` | `string` | `+++XXX/XXXX/XXXXX+++`, derived from `SequenceNumber` (research.md R3). Unique. |
-| `DueDate` | `DateOnly` | `CreatedAt`'s date + `Location.InvoiceDueDays` at generation time (spec.md FR-005a). |
+| `DueDate` | `DateOnly?` | Null until sent — set once, at send time, as that day's date + `Location.InvoiceDueDays` (spec.md FR-005a). Never recomputed on regenerate (FR-011). |
 | `SentAt` | `DateTime?` | Null until sent. |
 | `PaidAt` | `DateTime?` | Null until paid; the director-recorded payment date. |
 | `CreatedAt` | `DateTime` | |
@@ -61,7 +61,7 @@ Opgroeien-reporting fields:
 |---|---|---|
 | `Erkenningsnummer` | `string?` | Childcare license number, per-location. |
 | `BankAccountNumber` | `string?` | IBAN the location is paid into, printed on the PDF. |
-| `InvoiceDueDays` | `int` | Default `14`. Offset added to an invoice's generation date to compute `DueDate` (spec.md FR-005a). |
+| `InvoiceDueDays` | `int` | Default `14`. Offset added to an invoice's *sent* date to compute `DueDate` (spec.md FR-005a). |
 
 ## `Tenant` (existing, public schema, extended)
 

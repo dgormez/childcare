@@ -348,8 +348,10 @@ the same (it identifies this invoice, not this specific PDF revision).
   breakdown, the total due, the due date, the OGM reference (visually prominent), and the
   location's bank account number (if set).
 - **FR-005a**: The system MUST let a director configure a location's invoice due date offset
-  (`InvoiceDueDays`, default 14) and MUST compute each invoice's `DueDate` as its generation
-  date plus that location's configured offset.
+  (`InvoiceDueDays`, default 14) and MUST compute each invoice's `DueDate` as the date it is
+  *sent* (FR-007) plus that location's configured offset — not its generation date. A `draft`
+  invoice has no meaningful due date yet, since the parent hasn't seen it; a draft can sit for
+  days or weeks before sending, and a due date fixed at generation time would not reflect that.
 - **FR-006**: The system MUST let a director add manual extra-charge line items (a label and a
   positive amount in cents — zero or negative amounts are rejected, extra charges are
   additive-only in this phase, never a discount) to a `draft` invoice before sending. The

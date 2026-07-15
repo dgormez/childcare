@@ -200,7 +200,7 @@ it paid and confirm the status updates.
 - [ ] T047 [US2] Implement `SendInvoicesCommand` (batch, all-or-nothing; computes `DueDate` from
   the location's `InvoiceDueDays`, generates the OGM reference, sends the existing
   email/push notification per child's linked parent(s)) in
-  `backend/ChildCare.Application/Invoices/SendInvoicesCommand.cs` (depends on T016, T017)
+  `backend/ChildCare.Application/Invoices/SendInvoicesCommand.cs` (depends on T009, T016, T017)
 - [ ] T048 [US2] Implement `MarkInvoicePaidCommand` in
   `backend/ChildCare.Application/Invoices/MarkInvoicePaidCommand.cs` (depends on T017)
 - [ ] T049 [US2] Implement `QuestPdfInvoiceGenerator`/`IInvoicePdfGenerator` (mirrors
