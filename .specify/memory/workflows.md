@@ -160,7 +160,8 @@ Includes:
 
 ## Billing & Payments
 
-No detail file yet.
+Detail: `Workflows/billing.md` (feature 014 — monthly invoice generation and payment tracking;
+the first feature in this workflow).
 
 Manages financial relationship between families and the center.
 
