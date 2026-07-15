@@ -194,6 +194,21 @@
     "sectionTitle": "{{child}} · {{location}}",
     "variantLabel": "{{type}}-menu"
   },
+  "invoices": {
+    "title": "Facturen",
+    "noInvoices": "Nog geen facturen om te tonen.",
+    "loadFailed": "Kon je facturen niet laden.",
+    "statusSent": "Wacht op betaling",
+    "statusOverdue": "Achterstallig",
+    "statusPaid": "Betaald",
+    "amount": "Bedrag",
+    "dueDate": "Vervalt op {{date}}",
+    "paidOn": "Betaald op {{date}}",
+    "downloadPdf": "PDF downloaden",
+    "downloadFailed": "Kon de PDF niet downloaden. Probeer het opnieuw.",
+    "ogmReference": "Betalingsreferentie",
+    "period": "{{month}} {{year}}"
+  },
   "mealPreferenceRequests": {
     "sectionTitle": "Maaltijdvoorkeuren",
     "noPreference": "Geen voorkeur ingesteld",

@@ -194,6 +194,21 @@
     "sectionTitle": "{{child}} · {{location}}",
     "variantLabel": "{{type}} menu"
   },
+  "invoices": {
+    "title": "Invoices",
+    "noInvoices": "No invoices to show yet.",
+    "loadFailed": "Could not load your invoices.",
+    "statusSent": "Awaiting payment",
+    "statusOverdue": "Overdue",
+    "statusPaid": "Paid",
+    "amount": "Amount",
+    "dueDate": "Due {{date}}",
+    "paidOn": "Paid on {{date}}",
+    "downloadPdf": "Download PDF",
+    "downloadFailed": "Could not download the PDF. Please try again.",
+    "ogmReference": "Payment reference",
+    "period": "{{month}} {{year}}"
+  },
   "mealPreferenceRequests": {
     "sectionTitle": "Meal preferences",
     "noPreference": "No preference set",
