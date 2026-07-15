@@ -35,13 +35,17 @@
   "daysMin11u": 4,
   "extraCharges": [
     { "label": "Registration fee", "amountCents": 2500 }
-  ]
+  ],
+  "subsidyAmountCents": null
 }
 ```
 
 `daysMin5u`/`daysMin11u` are duration-categorized present-day counts (spec.md FR-019),
 derived from `AttendanceRecord.PlannedDurationMinutes` at ≥5h/≥11h thresholds — stored now,
 consumed by nothing yet (future Belcotax/Opgroeien reporting compatibility).
+
+`subsidyAmountCents` is a nullable placeholder for a future IKT subsidy amount (spec.md
+FR-020) — always `null` in Phase 1, never computed, subtracted from any total, or displayed.
 
 **State transitions**:
 

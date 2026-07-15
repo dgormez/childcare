@@ -524,6 +524,8 @@
     "title": "Invoices",
     "locationLabel": "Location",
     "monthLabel": "Month",
+    "statusFilterLabel": "Status",
+    "statusFilterAll": "All statuses",
     "generateButton": "Generate invoices",
     "generateSuccess": "{count} {count, plural, one {invoice} other {invoices}} generated.",
     "generateError": "Couldn't generate invoices. Please try again.",

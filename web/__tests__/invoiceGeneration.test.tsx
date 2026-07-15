@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import messages from "../i18n/locales/en.json";
@@ -121,7 +121,7 @@ describe("InvoicesPage", () => {
 
     expect(await screen.findByText("Emma Peeters")).toBeInTheDocument();
     expect(screen.getByText("€450.00")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Draft")).toBeInTheDocument();
     expect(apiClient.POST).toHaveBeenCalledWith(
       "/api/locations/{locationId}/invoices/generate",
       expect.objectContaining({ params: { path: { locationId: "loc-1" } } }),
@@ -138,6 +138,26 @@ describe("InvoicesPage", () => {
     await userEvent.click(await screen.findByText("€450.00"));
 
     expect(push).toHaveBeenCalledWith("/invoices/inv-1");
+  });
+
+  it("re-fetches with the selected status filter (FR-015)", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
+      if (path === "/api/locations") return Promise.resolve(okResponse([location])) as ReturnType<typeof apiClient.GET>;
+      return Promise.resolve(okResponse([])) as ReturnType<typeof apiClient.GET>;
+    });
+    renderPage();
+
+    await screen.findByText("No invoices generated yet for this location and month.");
+    vi.mocked(apiClient.GET).mockClear();
+
+    await userEvent.selectOptions(screen.getByLabelText("Status"), "paid");
+
+    await waitFor(() =>
+      expect(apiClient.GET).toHaveBeenCalledWith(
+        "/api/locations/{locationId}/invoices",
+        expect.objectContaining({ params: expect.objectContaining({ query: expect.objectContaining({ status: "paid" }) }) }),
+      ),
+    );
   });
 
   it("shows an error state when loading invoices fails", async () => {

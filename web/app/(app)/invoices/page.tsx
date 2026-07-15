@@ -16,11 +16,14 @@ function currentYearMonth(): { year: number; month: number } {
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
 }
 
+type StatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
+
 export default function InvoicesPage() {
   const t = useTranslations("invoices");
   const [locations, setLocations] = useState<LocationResponse[]>([]);
   const [locationId, setLocationId] = useState<string>("");
   const [{ year, month }, setYearMonth] = useState(currentYearMonth());
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [generating, setGenerating] = useState(false);
@@ -39,7 +42,7 @@ export default function InvoicesPage() {
     if (!locationId) return;
     setState("loading");
     const result = await apiClient.GET("/api/locations/{locationId}/invoices", {
-      params: { path: { locationId }, query: { year, month } },
+      params: { path: { locationId }, query: { year, month, status: status === "all" ? undefined : status } },
     });
     if (!result.response.ok) {
       setState("error");
@@ -47,7 +50,7 @@ export default function InvoicesPage() {
     }
     setInvoices(result.data as unknown as InvoiceResponse[]);
     setState("loaded");
-  }, [locationId, year, month]);
+  }, [locationId, year, month, status]);
 
   useEffect(() => {
     load();
@@ -101,6 +104,18 @@ export default function InvoicesPage() {
             aria-label={t("monthLabel")}
             className="h-10 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark"
           />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as StatusFilter)}
+            aria-label={t("statusFilterLabel")}
+            className="h-10 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark"
+          >
+            <option value="all">{t("statusFilterAll")}</option>
+            <option value="draft">{t("statusDraft")}</option>
+            <option value="sent">{t("statusSent")}</option>
+            <option value="overdue">{t("statusOverdue")}</option>
+            <option value="paid">{t("statusPaid")}</option>
+          </select>
           <Button onClick={generate} disabled={generating || !locationId}>
             {t("generateButton")}
           </Button>

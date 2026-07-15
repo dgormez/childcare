@@ -15,7 +15,11 @@ public record InvoiceLineItems(
     int ClosureDaysExcluded,
     int DaysMin5u,
     int DaysMin11u,
-    IReadOnlyList<InvoiceExtraCharge> ExtraCharges)
+    IReadOnlyList<InvoiceExtraCharge> ExtraCharges,
+    // FR-020: placeholder for a future IKT subsidy amount. Always null in Phase 1 — never
+    // computed, subtracted from any total, or displayed anywhere; exists only so a later
+    // subsidy feature extends this shape instead of introducing a second JSONB schema.
+    int? SubsidyAmountCents = null)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

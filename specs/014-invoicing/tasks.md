@@ -407,3 +407,14 @@ invoice rejects the same attempt.
   `AttendanceRecord`/`Contract` but must never write to them) — only running the *existing* test
   suites unmodified actually proves it held.
 - Commit after each task or logical group, per this repo's standing convention.
+
+---
+
+## Phase 8: Convergence
+
+- [x] T071 Add a nullable subsidy-amount placeholder field to `InvoiceLineItems`
+  (`backend/ChildCare.Application/Invoices/InvoiceLineItems.cs`) and `data-model.md`'s JSONB
+  shape, always `null` in Phase 1 and never computed or displayed anywhere, per FR-020 (missing)
+- [x] T072 Add a status filter control (draft/sent/paid/overdue) to the director invoice list in
+  `web/app/(app)/invoices/page.tsx`, wired to `ListInvoicesQuery`'s existing `status` query
+  parameter (already implemented backend-side, per FR-015 (partial)

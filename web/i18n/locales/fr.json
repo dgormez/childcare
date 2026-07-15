@@ -524,6 +524,8 @@
     "title": "Factures",
     "locationLabel": "Établissement",
     "monthLabel": "Mois",
+    "statusFilterLabel": "Statut",
+    "statusFilterAll": "Tous les statuts",
     "generateButton": "Générer les factures",
     "generateSuccess": "{count} {count, plural, one {facture générée} other {factures générées}}.",
     "generateError": "Impossible de générer les factures. Veuillez réessayer.",
