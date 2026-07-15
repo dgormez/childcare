@@ -158,10 +158,39 @@ once real multi-tenant traffic (dozens of KDVs) is in sight:
 ### Belgian KDV Regulatory Context
 - **KDV** (kinderdagverblijf) — licensed daycare centre, Flanders.
 - **Erkenning** — operating licence issued by Opgroeien (Flemish agency).
-- **BKR** (begeleider-kind-ratio) — legal caregiver-to-child ratios: solo caregiver max 8 children; 2+ caregivers max 9 per caregiver; nap time max 14; leefgroep (living group) max 18.
+- **BKR** (begeleider-kind-ratio) — legal caregiver-to-child ratios: solo caregiver max 8 children; 2+ caregivers max 9 per caregiver; nap time max 14; leefgroep (living group) max 18. **IMPORTANT: a lower kindratio becomes mandatory 1 January 2027** (verified from Opgroeien's kindratio special): baby-only leefgroep (≤12m) 1:5, only >12m 1:8, mixed leefgroep 1:7, rest moment max 14 (max 2h, 2+ caregivers actively supervising), max leefgroep size stays 18; ratio assessed at location level. Transition until 31/12/2026; early adoption allowed and subsidy-linked. BKR rules must therefore be **date-versioned config, not constants** — backlog feature 041.
 - **MeMoQ** — mandatory pedagogical quality self-evaluation (6 dimensions). Applies to all KDVs with erkenning. Phase 2 feature.
 - **IKT** — income-based subsidy from Opgroeien. Phase 3 only. Adds significant complexity; excluded from Phase 1–2.
+- **Kinderopvangtoeslag (Groeipakket)** — parents using **free-price** childcare (i.e. the Phase 1 target segment) receive a fixed allowance per (half) day of presence via the Groeipakket. The organisator must report presences to Opgroeien **every month** — via the free AARON web app or via webservice (REST/JSON, bearer token). Backlog feature 033, Phase 2.
+- **Aanwezigheidsregister** — legal attendance register: arrival/departure **times** per child, recorded **at the moment** (never in advance or afterwards), **confirmed by parents** in writing or electronically (frequency chosen by the organisator), kept **≥ 12 months** for Zorginspectie. Backlog feature 037.
+- **Inlichtingenfiche** — mandatory, up-to-date information sheet per child (identity, parent + GP contacts, medical data, authorised pickups). Access legally restricted to: organisator, verantwoordelijke, the child's caregiver, Zorginspectie, Opgroeien. Covered by features 006/006a; the access restriction is an RBAC constraint on every child-data surface.
+- **Huishoudelijk reglement & schriftelijke overeenkomst** — mandatory documents; parents sign the reglement for *kennisname* (acknowledgment, incl. on changes) and the overeenkomst for *akkoord*. Opgroeien publishes model documents.
+- **Fiscaal attest 281.86** — annual tax certificate for childcare costs. The **mandatory federal model** must be used, and the attest data must be **filed digitally with FOD Financiën via Belcotax-on-web** (deadline: end of February following the income year). Parents also receive their copy. Features 015 (PDF + manual BOW entry) and 019 item 5 (automated submission).
+- **Attest slaaphouding** — babies < 1 year sleep on their back; a signed parental attest (plus medical attest if medical) is required for any other position. Feature 035.
+- **Risicoanalyse** — legally required risk analysis on 4 domains: injuries/accidents, crises/life-threatening situations, child disappearance, illness/contamination. Continuous process; unacceptable risks must be addressed immediately. Feature 035.
+- **Verplichte melding** — legal duty to report to Opgroeien asap: every crisis and grensoverschrijdend gedrag, morality-related criminal investigations/convictions of anyone in regular contact with children, complaints about a crisis, continuity threats, important governance changes. Official meldingsformulier → klantenbeheerder; urgent cases via Opgroeipunt. Feature 036.
+- **Bewaartermijnen** — legal retention: 10y complaints/crisis; 5y child/family data and staff data (staff clock starts at end of employment); 3y strafregister extract (destroy previous when a new one arrives); ≥12m attendance register. Feature 038.
 - **Closure calendar** — each KDV sets its own holiday/closure schedule (independent of school holidays). Types: `holiday`, `training`, `extraordinary`. Parents must be notified.
+
+### Opgroeien / Government Integration Surface (verified 2026-07)
+
+Opgroeien states (email + website) that it offers **no general public API or developer support**. However, the Organisator → Software page publishes concrete integration contracts for specific flows:
+
+| Flow | Tech | Auth | Backlog |
+|---|---|---|---|
+| IKT: attest matching + opvangprestaties | SOAP webservice (WSDL: test `tstarws.kindengezin.be`, prod `arws.kindengezin.be`), operations MatchKind / MatchKinderen / MatchKinderenResultaat / OpvangPrestatiesResultaat | WS-Security X.509 (Kind & Gezin certificate; one **vendor-level certificate** on the supplier's KBO may cover all client organisations) | 019 (Phase 3) |
+| Kinderopvangtoeslag (Groeipakket) presences | REST/JSON webservice ("AARON" backend); test Swagger: `tstgpappr.kindengezin.be/swagger-ui.html` | Bearer token (test token on request) | 033 (Phase 2) |
+| Aanwezigheidsregistratie per location/month (IKT/T2 locations) | FO-SU-05.xsd v2.3 — monthly aggregated counts per kindcode in buckets min3u/min5u/min11u/min11uFlex × (present / justified absent / unjustified absent); submitted as XML by email to ko.formulieren@opgroeien.be (webservice exchange announced) | n/a (email) / X.509 for webservice | 019 item 4 |
+| Jaarregistraties | XML per form: FO-RE-14 (inclusieve opvang), FO-RE-15 (flex openingstijden), FO-RE-19 (voorrangsgroepen/IKT), FO-RE-28 (dringende plaatsen), FO-RE-29 (ruimere openingsmomenten), FO-RE-30 (kwetsbare gezinnen) — all subsidy-tied; medewerkers form = PDF only; Opgroeien supplies per-organisation pre-filled values as Excel | n/a (file submission) | 034 (Phase 2, may shift to Phase 3 — subsidy-tied) |
+| Fiscaal attest 281.86 | Belcotax-on-web (FOD Financiën, federal — not Opgroeien) | see FOD technical docs | 015 / 019 item 5 |
+
+Vendor onboarding contact for all Opgroeien flows: **software-ontwikkeling@opgroeien.be** (a.k.a. @kindengezin.be).
+
+**Vendor certificate contract** (verified from the official contract .docx, V5.0): ChildCare signs a contract with Opgroeien to obtain one KIND&GEZIN certificate on its own KBO, acting for all client organisators. Binding conditions: data centre inside the EU, vendor + subcontractors under GDPR, a **verwerkersovereenkomst with every organisator** (KDV = verantwoordelijke, ChildCare = verwerker — Opgroeien publishes a template), full vendor liability for misuse, **Opgroeien audit right**, certificate revocable on breach. Signed form goes to **dpo@opgroeien.be**. Consequence: the verwerkersovereenkomst belongs in organisation onboarding, and the GCP `europe-west1` hosting + subprocessor chain must be documented audit-ready.
+
+The official schema/contract files (FO-RE-14/15/19/28/29/30.xsd, FO-SU-05.xsd v2.3, the aanwezigheden beschrijving PDF, the certificate contract) were obtained on 2026-07-15 — commit them to the repo (e.g. `docs/integrations/opgroeien/`) as the reference contracts for features 019 and 034.
+
+**Kinderopvangzoeker** (kinderopvangzoeker.be): official parent-facing directory of licensed locations incl. inspection reports. **No public API**; not an integration target.
 
 ### Core Entities (Phase 1)
 - **Organisation** — the tenant. Has many Locations.
@@ -171,6 +200,15 @@ once real multi-tenant traffic (dozens of KDVs) is in sight:
 - **Caregiver** — staff member, can be assigned to multiple locations.
 - **Director** — user role with full admin rights for their organisation.
 - **child_events** — single JSONB table tracking: `sleep`, `temperature`, `medication`, `feeding_bottle`, `feeding_solid`, `diaper`, `mood`, `activity`, `note`, `weight`, `measurement`. No separate tables per event type.
+
+---
+
+## Competitive Landscape (Flanders, snapshot 2026-07)
+
+- **D-Care (daycare-solutions.be)** — Flemish, built by a KDV operator. Model: touchscreen terminals on the floor (hardware can be included in the subscription), web-based parent app (day reports, development tracking, absences, reservation status, closure days, invoices with in-app payment via **POM**), automatic generation of contracts, invoices, fiscal attests and IKT documents. Pricing scales with capacity. Public site is marketing-thin — a demo is needed for a real feature-by-feature comparison.
+- **Bitcare (bitcare.com)** — Dutch company (Delft) with a real Belgian module (crawl verified 2026-07-15): **attendance submission to Kind & Gezin, fiscal attests + BOW/Belcotax file for the FOD, subsidy admin, Flemish kindratio calculations** — it already covers a chunk of the 015/019 government-reporting scope. Broader feature set: digital enrollment → auto-contract → e-signature with SEPA mandate; waiting list + forward occupancy + BKR placement checks + doorstroom planning; parent request queue; integrated staff planning with clock-in/out, plus/min-hours, leave self-service, salary export (Humanwave); group app with digital diary, chat, offline access; invoicing with automatic reminders, betalingsbewijzen, Mollie payments, accounting couplings (Exact, AFAS, Twinfield, MS Dynamics, SnelStart); dashboards incl. a "kwaliteitsmonitor" data-completeness check; "BOP" onboarding = 3 human-guided sessions + shadow-running. Weak spot (Play Store 2026-07): parent app 2.7★, staff app 2.2★ — crashes, late/missing push notifications, sync bugs. **Mobile reliability is a differentiator.**
+- **Differentiation bets for ChildCare** (nothing on either competitor's public materials): Flemish risk-analysis support (035), crisis/verplichte-melding workflows (036), verontrusting registration (036), retention automation (038), productised self-service migration + full tenant export (039), attendance-register parent confirmation built for the Flemish rules (037), caregiver PIN/kiosk model (008a), NL/FR/EN i18n from day one.
+- Competitor parity items in the backlog: parent-app payments + automatic reminders + receipts (014a, PSP to be chosen: Stripe/Mollie/POM — investigate before implementation), accounting export (029), occupancy reporting + data-completeness monitor (018), forward occupancy/placement/doorstroom planning (040), staff app (027), HR dossier + time registration (028), digital enrollment + e-signature (023/024).
 
 ---
 
@@ -194,8 +232,8 @@ The repo at `ChildCare/` contains a **walking skeleton** to avoid building on no
 | Phase | Scope |
 |---|---|
 | 1 | Core operations: child profiles, contracts, daily tracking (child_events), attendance, caregiver scheduling, parent communication, closure calendar, basic invoicing |
-| 2 | MeMoQ quality tracking, fiscal attestations (tax certificates), developmental milestones, management reporting, email communications (bulk parent emails by location/section, emailed daily reports) |
-| 3 | IKT subsidy integration (Opgroeien API), advanced financial admin |
+| 2 | MeMoQ quality tracking, fiscal attestations (tax certificates), developmental milestones, management reporting, email communications, invoice payments & reminders (014a); government reporting: kinderopvangtoeslag/AARON submission (033), jaarregistraties XML (034); compliance: safety & risk-analysis register (035), crisis & mandatory reporting (036), attendance-register compliance (037), data retention & GDPR lifecycle (038); growth: tenant onboarding & supplier-switch migration (039), occupancy & placement planning (040); regulatory: date-versioned BKR 2027 ruleset (041) |
+| 3 | IKT subsidy integration (Opgroeien SOAP webservices + X.509 certificate), Belcotax 281.86 automated submission, advanced financial admin |
 
 ---
 
@@ -211,3 +249,5 @@ The repo at `ChildCare/` contains a **walking skeleton** to avoid building on no
 8. QuestPDF for all PDF output — no other PDF library.
 9. Signed GCP URLs for all file access — no public blob URLs.
 10. Sensitive config (secrets, connection strings) never hardcoded — always via env vars or Secret Manager.
+11. Legal retention classes (10y/5y/3y/12m — see Bewaartermijnen) respected in every data model; no destructive delete of retention-bound records outside the retention engine (038).
+12. Government submissions (AARON, jaarregistraties, IKT, Belcotax) always keep an immutable audit copy of exactly what was sent.

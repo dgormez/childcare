@@ -220,3 +220,35 @@ above, gated by the existing `DirectorOnly`/`StaffOrDirector`/tenant-scoping mod
 platform-operator actions performed outside the app entirely (e.g. granting the
 `IsPlatformAdmin` flag itself, or infrastructure/deployment operations) — those remain direct
 data changes or ops tooling, not a UI workflow.
+
+---
+
+## Government Reporting & Compliance
+
+Detail: `Workflows/government-reporting.md` (added 2026-07-15 by the regulatory research pass;
+first features: 033–038, 041 — none started yet).
+
+Change note (per governance rules): added because the 2026-07-15 research pass surfaced a whole
+category of legally mandated flows between a KDV and Flemish/federal authorities that no existing
+workflow covered — affects features 015, 019, 033–038, 041 (and touches 024/034); no existing
+implementation needs review, since none of these features has started.
+
+Manages the legally mandated data flows between the organisation and government bodies
+(Opgroeien / Kind & Gezin, FOD Financiën, Zorginspectie), plus the in-house compliance registers
+those bodies require.
+
+Includes:
+
+- Monthly kinderopvangtoeslag attendance submission (AARON webservice — feature 033).
+- Monthly IKT opvangprestaties submission (FO-SU-05 — feature 019).
+- Annual jaarregistraties (FO-RE forms + medewerkers helper — feature 034).
+- Fiscal attest 281.86 generation and Belcotax-on-web filing (features 015, 019).
+- Risk-analysis register, incident logbook, sleep-position attests (feature 035).
+- Crisis / grensoverschrijdend-gedrag mandatory reporting and verontrusting registration
+  (feature 036).
+- Attendance-register legal compliance: parent confirmation, retention, inspection export
+  (feature 037).
+- Data-retention lifecycle per sector terms (feature 038).
+- Effective-dated regulatory rulesets (BKR 2027 — feature 041).
+
+Source contracts: `docs/integrations/opgroeien/` (see its README.md).

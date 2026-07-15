@@ -55,6 +55,7 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
+| 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | 🔲 Not started |
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | 🔲 Not started |
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
@@ -71,6 +72,15 @@
 | 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | 🔲 Not started |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
 | 032 | `032-platform-admin-portal` | Dedicated platform-admin (super-admin) portal — send director/organisation invitations, manage shared platform data (e.g. vaccine catalog) | 001 | 🔲 Not started |
+| 033 | `033-kinderopvangtoeslag-aaron` | Monthly attendance submission to Opgroeien for the kinderopvangtoeslag (Groeipakket) — REST/JSON webservice (AARON backend, bearer-token auth). Applies to vrije-prijs (free-price) KDVs = the Phase 1 target segment; replaces the director's manual entry in the free AARON web app | 010 | 🔲 Not started |
+| 034 | `034-jaarregistraties-xml` | Annual Opgroeien jaarregistratie forms via XML export (all forms except the medewerkers form, which must stay PDF); import of Opgroeien's pre-filled per-organisation values (Excel) to minimise validation errors | 004, 005, 006, 010 | 🔲 Not started |
+| 035 | `035-safety-risk-register` | Safety & risk-analysis register: the legally required risicoanalyse across 4 domains (injuries/accidents, crises/life-threatening situations, child disappearance, illness/contamination), (near-)incident logbook, digitised actielijst checklists, attest slaaphouding tracking on the child profile | 006, 013b | 🔲 Not started |
+| 036 | `036-crisis-mandatory-reporting` | Crisis & grensoverschrijdend gedrag workflow: register the event, pre-fill Opgroeien's official meldingsformulier, track the melding to the klantenbeheerder; verontrusting (home-situation concern) signal registration with restricted access; 10-year retention | 006, 035 | 🔲 Not started |
+| 037 | `037-attendance-register-compliance` | Legal compliance layer on the attendance register: parent confirmation of presences (electronic, configurable frequency), record-at-the-moment enforcement/audit, ≥12-month retention, Zorginspectie export | 010, 013 | 🔲 Not started |
+| 038 | `038-data-retention` | Automated data-retention lifecycle per Opgroeien terms: 10y complaints/crisis records, 5y child/family and staff data (staff clock starts at end of employment), 3y uittreksel strafregister (destroy previous on receipt of new), ≥12m attendance register; destruction jobs with audit trail | 006, 010, 013b | 🔲 Not started |
+| 039 | `039-tenant-onboarding-migration` | Productised KDV onboarding & supplier-switch migration: guided setup wizard, bulk import of children/parents/contracts/staff from CSV/Excel (as exported by D-Care/Bitcare/spreadsheets), dry-run validation + preview, shadow-run mode, and a full tenant data export (data portability / no lock-in) | 001, 006, 007 | 🔲 Not started |
+| 040 | `040-occupancy-placement-planning` | Forward occupancy & placement planning: available places per day/week/month/year per group, BKR-aware "can this child be placed on these days?" simulation for enquiries, and doorstroom (age-based group-transition) planning to avoid occupancy gaps | 007, 010, 012a | 🔲 Not started |
+| 041 | `041-bkr-2027-ruleset` | Date-versioned BKR rulesets: the lower Flemish kindratio becomes mandatory 1 Jan 2027 (transition period until 31 Dec 2026, early adoption allowed per location); includes new countable staffing profiles (AKT trainees, logistieke medewerkers under conditions) and an average-over-staffing-hours ratio report at location level (how Opgroeien assesses the linked subsidy) | 010, 012 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -1846,8 +1856,50 @@ Edge cases:
 Out of scope:
 - CODA/CODABOX bank import (Phase 2).
 - SEPA direct debit XML (Phase 2).
-- In-app payment (Phase 4 — Belgian parents prefer bank transfer).
+- In-app payment (moved to feature 014a — payment links, reminders, receipts).
 - IKT subsidy lines and inkomenstarief billing (Phase 3).
+```
+
+---
+
+### 014a — Invoice Payments Plus
+
+```
+Follow-up on the shipped 014-invoicing: online payment links, automatic
+payment reminders and payment receipts. 014 itself is DONE — this feature
+only ADDS endpoints/jobs/screens on top of the existing invoices table
+and lifecycle; do not change 014's billable-day rules or PDF.
+
+Competitive context (verified 2026-07-15): D-Care offers in-app invoice
+payment via POM; Bitcare via Mollie, plus automatic reminders and
+betalingsbewijzen. Bank transfer with OGM stays our default rail.
+
+What to build:
+1. Optional payment link per invoice: the link opens the PSP's hosted
+   payment page from the invoice email / parent app; a webhook marks the
+   invoice paid (reusing 014's existing paid transition + OGM/audit trail).
+   PSP candidates: Stripe, Mollie, POM — all support Bancontact.
+   NOTE (product-owner decision 2026-07-15): the PSP choice must be
+   investigated and decided BEFORE implementation — do not hardcode a
+   provider; design the integration behind an abstraction.
+2. Automatic payment reminders for overdue invoices (configurable delay
+   and cadence per location; respects 020's email infrastructure if built,
+   otherwise in-app/push via 013).
+3. Automatic payment receipt (betalingsbewijs) to the parent when an
+   invoice transitions to paid (manual marking or webhook).
+
+Key constraints:
+- Webhook handling must be idempotent and tenant-scoped (payment events
+  arrive on a public endpoint — resolve tenant from the payment reference,
+  e.g. the OGM, never trust payload tenant claims).
+- All money in cents; PSP fees recorded separately, never mutate the
+  invoice total.
+- i18n keys everywhere (reminder + receipt templates in NL/FR/EN).
+
+Out of scope:
+- SEPA direct debit (026), CODA matching (025).
+- Partial payments / payment plans — decide at plan time if trivial,
+  otherwise defer.
 ```
 
 ---
@@ -1909,8 +1961,15 @@ Edge cases:
   were enrolled.
 
 Out of scope:
-- Belcotax On-web JSON API submission (Phase 3). MVP = PDF only.
+- Belcotax On-web automated submission (Phase 3). MVP = PDF only.
   Directors enter data in Belcotax On-web manually.
+  LEGAL NOTE (verified 2026-07 on opgroeien.be + financien.belgium.be):
+  digital filing of the 281.86 attest data with FOD Financiën via
+  Belcotax-on-web is a hard obligation (deadline: end of February following
+  the income year) and the mandatory federal model attest must be used.
+  Manual entry in the Belcotax-on-web portal satisfies the obligation for MVP;
+  the automated path is feature 019 item 5. Technical docs:
+  https://financien.belgium.be/nl/E-services/Belcotaxonweb/technische-documentatie
 - SSIN collection and secure storage (only needed for Phase 3 electronic submission).
 ```
 
@@ -2057,6 +2116,10 @@ What to build:
     Paid / outstanding / overdue invoices for the current month.
     Total revenue collected vs. total invoiced.
     List of overdue invoices with days overdue.
+- Data-completeness monitor (Bitcare calls this "kwaliteitsmonitor"):
+    flags missing/expired critical data per child and staff member —
+    e.g. no inlichtingenfiche fields, no authorised pickups, expired
+    medical info, staff document gaps. Cheap to build, high director value.
 
 All reports are scoped to the director's tenant. Multi-location directors
 see an aggregate view with the ability to filter by location.
@@ -2141,20 +2204,64 @@ What to build:
      1005 = registered but not yet processed
    Rate validity: attest valid until 30 September (from 2026 onward — October indexing).
 
-4. FO-SU-05 XML monthly attendance report:
+4. FO-SU-05 XML monthly attendance report
+   (contract verified 2026-07-15 against FO-SU-05.xsd v2.3 + the official
+   "registratie aanwezigheden — beschrijving" PDF, 04/2025; commit both to
+   docs/integrations/opgroeien/):
    Generate the XML file for Opgroeien monthly attendance submission.
-   Schema: FO-SU-05.xsd v2.3. Root element: <IKG>.
-   Submit via email to ko.formulieren@kindengezin.be (MVP path).
-   Required fields from settings: dossiernummer, naam_locatie, verantwoordelijke,
-   bo flag (buitenschoolse opvang), flex flag.
-   Per child: kindcode (or tariefCode), naam, voornaam, and attendance
-   counts classified by duration:
-     min5u: days with planned_duration_minutes < 300 (< 5h)
-     min11u: days with planned_duration_minutes 300–659 (5–10h59)
-     min11uFlex: days with planned_duration_minutes ≥ 660 (>11h, flex locations only)
-   Plus justified and unjustified absence counts in the same duration buckets.
-   UsedViewer field must contain "ChildCare vX.Y.Z" (software name + version).
-   FormulierGecontroleerd must be "J" — if "N", Opgroeien silently ignores it.
+   Schema: FO-SU-05.xsd v2.3. Root element: <IKG>, containing:
+     prestaties/prestatie[1..n]: per line kindInfo (kind: code, voornaam,
+       naam, bo J/N) + aanwezigheden + gerechtvaardigde_afwezigheden +
+       niet_gerechtvaardigde_afwezigheden (each an aanwezigheidsType)
+     closing/verantwoordelijke (name of the person who filled the form or
+       the location responsible)
+     locatiegegevens: naam_locatie (≤50), dossiernummer (9–10 digits),
+       naam_organisator (≤50), periode "MM/YYYY", aantal_openingsdagen,
+       bo J/N, flex J/N
+     Header: DocumentIndicator fixed "FO-SU-05", FormVersion,
+       MinReaderVersion, UsedViewer = "ChildCare vX.Y.Z"
+     FormulierGecontroleerd must be "J" — "N" is not processed
+     Config (optional): TargetURL default ko.formulieren@kindengezin.be,
+       Subject default "Opvangprestaties"
+   Duration buckets (aanwezigheidsType — counts per month per kindcode,
+   NOT per-day begin/end times):
+     min3u: < 3h — ONLY allowed when bo=J (buitenschoolse opvang)
+     min5u: babies/toddlers < 5h; for BO children 3h–4u59
+     min11u: 5h–10u59 (planned_duration_minutes 300–659)
+     min11uFlex: > 10u59 (≥ 660) — only locations with flex permission
+   Business rules from the beschrijving PDF:
+     - "Bestellen is betalen": every reserved day counts — presence,
+       justified absence (respijtdag/ziekte), or unjustified absence, each
+       in the same duration buckets. Even same-day ad-hoc care counts as
+       reserved.
+     - Presences counted are between 6u and 20u; night care (20u–6u) and
+       >10u59 prestaties may ONLY be registered by flex-permitted locations
+       (non-flex locations charge a free tariff for those hours instead and
+       must not register them).
+     - Per line the sum of each block may not exceed aantal_openingsdagen.
+     - Two lines with the same kindcode are only allowed when the child had
+       both BO and baby/peuter care in the same month (BO auto-applies from
+       full-time school or age > 3.5y / 42 months; mid-month transition =
+       two lines, one with bo=J and one with bo=N); then the SUM of both
+       lines is checked against aantal_openingsdagen.
+     - Opgroeien matches kindcode + naam + voornaam against the attest
+       inkomenstarief data with a 90% name-matching procedure (name parts
+       split on spaces; swapped first/last names tolerated). On mismatch the
+       whole form is returned by email with an error overview — names must
+       be copied EXACTLY as on the attest.
+     - A child can have MULTIPLE kindcodes (e.g. separated parents each
+       with their own inkomenstarief attest) — the data model must allow >1
+       kindcode per child.
+     - Kindcode = 11 digits YYMMDD-NNN-VV (birthdate + sequence + attest
+       volgnummer; a new attest after recalculation bumps VV).
+   Submission (MVP path): monthly email to ko.formulieren@opgroeien.be;
+   multiple locations may go in ONE mail with the XMLs as separate
+   attachments. Opgroeien also emails pre-filled PDF forms monthly to T2
+   locations (kindcodes from the previous month) regardless — ignore them
+   when submitting XML. Opgroeien has announced webservice-based XML
+   exchange (see aanwezigheidsregistratie-webservice PDF; IKGResponse
+   returnCode 0000 = OK, 0003 = firewall block) — evaluate at plan time
+   whether the webservice path can replace email.
 
 5. Belcotax Fiche 281.86 electronic submission:
    Submit fiscal attestation data electronically to FOD Financiën.
@@ -2180,8 +2287,10 @@ Key constraints:
   Build a certificate expiry alert in the director dashboard.
 
 Out of scope:
-- AARON daily registration for vrije prijs / KOT children (Phase 4).
-- Groeipakket attendance report (Phase 4).
+- Kinderopvangtoeslag / Groeipakket monthly attendance submission for
+  vrije-prijs children — moved to feature 033 (Phase 2), it targets the
+  Phase 1 client segment and uses a separate, simpler REST/JSON webservice
+  (bearer token), not the IKT SOAP stack.
 - IKT-mix (simultaneous IKT + vrije prijs places) administration (Phase 4).
 ```
 
@@ -4455,6 +4564,619 @@ Out of scope:
 
 ---
 
+### 033 — Kinderopvangtoeslag (AARON) Submission
+
+```
+Build monthly attendance submission to Opgroeien for the kinderopvangtoeslag
+(Groeipakket childcare allowance) — for vrije-prijs (free-price) KDVs.
+
+Regulatory context (verified 2026-07 on opgroeien.be):
+- Parents using childcare with a FREE PRICE (not IKT) receive a
+  kinderopvangtoeslag via the Groeipakket: a fixed amount per (half) day
+  the child is present.
+- The organisator must report the children's presences to Opgroeien EVERY
+  MONTH. Opgroeien offers the free web app AARON for manual entry, but using
+  it is not mandatory — software can submit via webservice instead.
+- This applies to exactly the Phase 1 target segment (private KDVs), unlike
+  IKT (feature 019, Phase 3).
+
+Known technical facts (from "Kinderopvangtoeslag webservice - beschrijving",
+opgroeien.be, and the AARON-related pages):
+- REST/JSON webservice, NOT the IKT SOAP stack.
+- Auth: bearer token. A test-environment token is obtained on request from
+  software-ontwikkeling@kindengezin.be.
+- Test environment Swagger UI: https://tstgpappr.kindengezin.be/swagger-ui.html
+- Request identifies the K&G-dossiernummer and the month; payload models:
+  PrestatieData (top level) → KindData (child identification) →
+  KindPrestatieData (day of month present) → KindPrestatieDetailsData
+  (periods of presence within that day).
+- Response: OpvangPrestatieResponseDTO with SUCCESS or ERROR;
+  errors detailed in ErrorResponseDTO.
+
+Functional facts from the official AARON handleiding voor ouders
+(obtained 2026-07-15):
+- AARON records ARRIVAL AND DEPARTURE TIMES per child per day (not just
+  day counts) — via a per-child unique QR code + numeric code.
+- Child identity in AARON: voornaam, familienaam, geboortedatum, GESLACHT —
+  and it must match the child's ID exactly: Opgroeien matches against the
+  RIJKSREGISTER; a mismatch means the parent does not get paid.
+- Optional field: the date the child starts school.
+- Up to 5 contact persons per child (voornaam, familienaam, e-mail); added
+  contacts get an AARON registration email and can then follow their
+  child's registrations daily (read access) and spot errors.
+- Opt-out: if the parent has no right to (or does not want) the toeslag,
+  the location flags this and the child's data is NOT sent to Opgroeien.
+- Implication for our child model: gender + exact official name fields +
+  school-start date + per-child toeslag opt-out flag are needed for this
+  feature; parents reviewing registrations is already covered by 037's
+  confirmation flow (may double as the AARON accuracy check).
+- QR phase-out (snelinfo 25/07/2025): printed AARON QR cards are being
+  discontinued — codes are now generated digitally at child registration
+  and may live on the parent's smartphone. Opportunity: display the
+  child's AARON QR + numeric code inside OUR parent app (ties in with
+  021 QR check-in).
+
+Facts from the official AARON sector handleiding (39 p., obtained
+2026-07-15):
+- DEADLINE: registrations must reach Opgroeien by the 7TH of the month
+  following the care month. In AARON this happens automatically when the
+  data is error-free; unresolved errors past the 8th trigger an automatic
+  reminder e-mail and risk a FINE ("boete") — our 033 must surface a
+  pre-deadline error dashboard + alerting well before the 7th.
+- Validation: Opgroeien matches each child against a valid
+  rijksregisternummer/bisnummer; typical errors = missing arrival or
+  departure time, or identity mismatch. Only the first given name is
+  needed when a child has several.
+- Toeslag right expires when the child turns 2.5 YEARS, unless the child
+  starts school later — birthdate correctness is critical.
+- Opt-out has a PERIOD (start defaults to birthdate, open end allowed);
+  non-paying children INCLUDING the organisator's own children get no
+  toeslag and must be flagged.
+- Offline registration is supported in AARON (sync on reconnect) and
+  paper + manual after-the-fact entry is acceptable — matches our
+  caregiver app's offline-first design; 033 derives from 010 data anyway.
+- AARON also handles location lifecycle (stop, no licence, no free-price
+  places, relocation, new location starting next month) — our submission
+  flow must handle mid-month location changes.
+
+What to build:
+- Monthly submission job/screen: derive per-child presence days (and periods)
+  for a location+month from the existing attendance data (feature 010),
+  build the JSON payload, submit, store the response.
+- Submission log per location+month: payload sent, response, status,
+  resubmission after corrections.
+- Director review screen before sending (like the FO-SU-05 review in 019).
+- Alerting when a month has not been submitted by its deadline.
+
+FIELD-LEVEL CONTRACT — VERIFIED (Swagger 2.0 definition
+KinderOpvangToeslag.json obtained 2026-07-15, host tstgpappr.kindengezin.be;
+commit to docs/integrations/opgroeien/):
+- Single endpoint: POST /opvangprestaties ("Registreer een nieuwe
+  opvangprestatie"), bearer-token security.
+- Request: locatieId* (string, dossiernummer, example "91XXXXXXX"),
+  periode* (date string = the care month), prestaties* : PrestatieData[].
+- PrestatieData: kind* : KindData.
+- KindData: kindNaam*, kindVoornaam* (strings), kindGeboortedatum* (date),
+  kindGeslacht* (enum "M"/"V"), datumSchoolgaand (date, optional),
+  kindPrestaties* : KindPrestatieData[].
+- KindPrestatieData: datumOpvang* (date) +
+  kindPrestatiesDetails* : KindPrestatieDetailsData[].
+- KindPrestatieDetailsData: checkIn* and checkOut* (datetime, e.g.
+  2018-06-30T09:30:00) — RAW ARRIVAL/DEPARTURE TIMESTAMPS. No day/half-day
+  classification is sent: Opgroeien derives the (half-)day entitlement
+  server-side from the periods. Our attendance records (010) map 1:1.
+- Response OpvangPrestatieResponseDTO: success (bool), result
+  ("SUCCESS"/"ERROR"), crlId (logging reference "GP_REST_..."),
+  errorList : ErrorResponseDTO[] (errorNr, errorCode, errorText).
+- Note: the API has NO opt-out field — children flagged "no toeslag" are
+  simply omitted from the payload.
+
+Open questions (do NOT invent — resolve with Opgroeien before /speckit-plan):
+- Production auth/onboarding procedure for the bearer token (only the test
+  procedure is documented publicly) — ask software-ontwikkeling@kindengezin.be.
+- Correction/resubmission semantics: does re-POSTing the same
+  locatieId+periode replace the previous submission? (Deadline is known:
+  7th of the following month, fines possible — see sector handleiding
+  facts above.)
+
+Key constraints:
+- Multi-tenancy respected; submissions are per organisation (dossiernummer).
+- All user-facing strings use i18n keys (NL/FR/EN).
+- Store what was sent (immutable audit copy) — this is a subsidy-relevant
+  government submission.
+```
+
+---
+
+### 034 — Jaarregistraties XML Export
+
+```
+Build the annual Opgroeien "jaarregistratie" reporting export.
+
+Regulatory context (verified 2026-07 on opgroeien.be, Organisator page):
+- Organisators submit yearly registration forms to Kind en Gezin/Opgroeien.
+- The data can be delivered in XML format — EXCEPT the medewerkers
+  (staff) form, which must be delivered as PDF.
+- Opgroeien's PDF forms come with values pre-filled per organisation. When
+  submitting via XML, those pre-filled values must be sent back correctly —
+  the import runs validation checks against them. Opgroeien can provide an
+  Excel file per organisation per form type with these values, intended to
+  be imported into the vendor's database to minimise error messages.
+
+What to build:
+- XML export per form type per year, built from data already in the platform
+  (locations, staff, children, attendance).
+- Import screen for Opgroeien's per-organisation Excel file of pre-filled
+  values; store them and merge into the XML output.
+- Validation before export; export history with the exact files produced.
+- PDF path for the medewerkers form (QuestPDF or the official form —
+  decide at plan time based on what the official form allows).
+
+Known schema facts (XSDs obtained 2026-07-15 from the official zip —
+commit them to the repo, e.g. docs/integrations/opgroeien/, and attach to
+the spec):
+- Six jaarregistratie XSDs, all SUBSIDY-related annual forms:
+    FO-RE-14 — Prestaties inclusieve opvang: per child with an
+      IdInclusieveOpvang (pattern I+6 digits): DerdeDag/HalveDag/VolleDag
+      counts, optional name/birthdate/period, Gestopt flag.
+    FO-RE-15 — Flexibele openingstijden: per location (LocatieId, name):
+      counts Min30v7, Min30na18, Min30, Feestdag, Weekend.
+    FO-RE-19 — Voorrangsgroepen (IKT): per location: MaxVergundeCapaciteit,
+      IKT period, KenmerkPlusSubsidie J/N, children counts
+      (Totaal / UitVoorrangsgroepen / UitKwetsbareGezinnen), priority-group
+      detail (WerkOpleiding, Alleenstaanden, LaagInkomen, Pleegkinderen,
+      GezinslidHandicap, GezinslidZelfzorgvermogen, SociaalPedagogisch,
+      LaagOpleidingsniveau), KindPlaatsRatio (decimal 10,2), plus a
+      ParamVerschilRatio parameter.
+    FO-RE-28 — Dringende opvangplaatsen: per location: StartWerk,
+      StartOpleiding, WegvallenOpvang, CrisisgeenZorg, CrisisZorg.
+    FO-RE-29 — Ruimere openingsmomenten: per location: Voor7uur, Na18uur,
+      Zaterdagen, ZonFeestdagen.
+    FO-RE-30 — Kwetsbare gezinnen: like FO-RE-19's counts without
+      Pleegkinderen.
+- Common envelope on all six: root <KindEnGezin>; Header (DocumentIndicator,
+  FormVersion, MinReaderVersion, UsedViewer = software name+version);
+  DocumentGegevens (NaamSubsidiegroep, NaamOrganisator — max 50 chars,
+  SubsidiegroepId — long, Jaar ≥ 2014); FormulierGecontroleerd 'J'/'N'
+  ('N' = Opgroeien does not process it); optional Config
+  (TargetURL — default ko.formulieren@kindengezin.be, Subject).
+- Timing (per the attendance-registration description PDF): these annual
+  forms are requested once per year, at the start of the following
+  calendar year.
+- IMPORTANT scope note: the six XML forms are tied to subsidies (inclusieve
+  opvang, flex, IKT voorrang, dringende plaatsen, ruimere openingsmomenten,
+  kwetsbare gezinnen) — for pure vrije-prijs (Phase 1) clients they largely
+  do not apply. BUT (verified in the official jaarregistraties brochure,
+  dec 2024 version, obtained 2026-07-15): the MEDEWERKERS registration
+  applies to ALL organisators, subsidised or not. So 034 has a small
+  Phase 2-relevant core (medewerkers support) and a larger subsidy-tied
+  tail (the six XML forms) that can shift to Phase 3.
+
+Medewerkers form facts (brochure, groepsopvang variant):
+- PDF-only — explicitly CANNOT be submitted as XML ("omwille van de
+  complexiteit"). Opgroeien emails a pre-filled Adobe PDF form in the first
+  months of the year; it must be completed in Adobe Reader and sent via the
+  form's send button (or as mail attachment to ko.formulieren@opgroeien.be);
+  printing/scanning is not processed; a confirmation email follows;
+  corrections = edit and resend the same form (overwrites previous).
+- Snapshot date: staff situation on 1 JANUARY. Include: kinderbegeleiders,
+  the (single) verantwoordelijke per location, and staff who systematically
+  support the verantwoordelijke — any paid status (employee, self-employed,
+  interim, sociale maribel); include both titularis and replacement if
+  absent-but-replaced; exclude anyone inactive > 12 consecutive months.
+  Exclude: logistics staff, purely administrative staff, unqualified
+  helpers, volunteers/interns, external contractors.
+- Fields per staff member: naam, voornaam, geboortedatum,
+  RIJKSREGISTERNUMMER, geslacht, diploma (from a list), other
+  kwalificatiebewijzen (optional), kennis Nederlands (J/N),
+  kwalificatietraject verantwoordelijke (J/N), kwalificatietraject
+  begeleider (J/N).
+- Consequence for ChildCare: since the form is pre-filled and PDF-only, the
+  platform cannot submit it — but it CAN generate a "medewerkers
+  jaarregistratie helper report" listing exactly these fields from the
+  staff module (005/028) so the director can copy/verify in minutes.
+  NOTE: staff rijksregisternummer storage would be needed for the full
+  helper value — decide deliberately (028's HR dossier is the natural home;
+  the current architecture avoids storing NRN).
+
+Open questions (do NOT invent — resolve before /speckit-plan):
+- Which of the six XML forms applies to which subsidy trap for a given
+  client.
+- Exact submission deadline per form (stated only in Opgroeien's
+  accompanying emails).
+
+Key constraints:
+- All money/counts derived from recorded data, never re-keyed by hand.
+- Immutable audit copy of every exported file.
+- i18n keys for all UI strings (NL/FR/EN).
+```
+
+---
+
+### 035 — Safety & Risk-Analysis Register
+
+```
+Build the safety & risk-analysis module: the legally required risicoanalyse,
+an incident/near-incident logbook, and sleep-safety attest tracking.
+
+Regulatory context (verified 2026-07 on opgroeien.be, Veiligheid page):
+- Every childcare organisator must have a risk analysis covering FOUR legal
+  domains: (1) injuries and accidents, (2) crises and life-threatening
+  situations, (3) children going missing, (4) illness, infection and
+  contamination.
+- It is a CONTINUOUS process, not a one-off document: risks are identified,
+  weighed (aanvaardbaar/onaanvaardbaar — Opgroeien's "3 A's": Aandacht,
+  Afweging, Aanpassing), and unacceptable risks must be addressed immediately.
+- Opgroeien publishes non-mandatory "actielijst" checklists (binnen, buiten,
+  kwaliteitsvol handelen, omgevingsfactoren, slapen, verzorging, ziekte) as
+  .docx downloads — these are the natural seed content for digital checklists.
+- Opgroeien explicitly recommends keeping a LOGBOEK of (near-)incidents and
+  evaluating them with the 3 A's.
+- Sleep safety: babies < 1 year must sleep on their back. If parents insist
+  on another position, a signed "attest slaaphouding" is required (official
+  .docx model exists), plus a medical attest if the reason is medical.
+
+What to build:
+- Risk register per location: risk items classified under the 4 legal
+  domains; status (identified / weighed / action decided / resolved);
+  linked actions with owner and due date; periodic review reminders.
+- Digitised checklist templates seeded from Opgroeien's actielijsten,
+  editable per location; completed checklist runs stored with date + user.
+- (Near-)incident logbook: quick entry (what/where/when/children involved),
+  link to a risk item, link to a 013b incident report when one was filed.
+- Attest slaaphouding on the child profile: flag + stored signed document
+  (upload; e-signature only if 024 exists), plus medical attest when
+  applicable. Caregiver tablet shows the sleep-position flag on the child.
+  Verified from the official attest model (31/03/2025, obtained 2026-07-15):
+  one attest per child; it must be signed by EVERY person who holds a
+  schriftelijke overeenkomst for that child at the location (and by a
+  non-consenting parent with parental authority if applicable); two
+  declaration checkboxes per signer (request for non-back sleeping +
+  confirmation of having read the safe-sleep information); delivered to
+  the location's verantwoordelijke. Data model: attest supports multiple
+  signers with per-signer name/relation/date.
+- Seed checklist content: Opgroeien's actielijst "Veilig slapen" (docx
+  obtained 2026-07-15) confirms the checklist structure: per question —
+  "Hoe zorg je daar nu voor?" / "Kan de aanpak nog verbeteren? Hoe en
+  wanneer?" — grouped in themes (rugligging, wennen en toezicht, ...);
+  locations may drop/add questions. Model checklist items with those two
+  free-text answer fields and per-location customisation.
+- Director dashboard widget: open unacceptable risks, overdue reviews.
+
+Key constraints:
+- This is a differentiator: neither D-Care nor Bitcare markets risk-analysis
+  support for the Flemish rules. Keep the UX lightweight — caregivers log,
+  directors review.
+- Documents via GCS signed URLs; i18n keys everywhere; no business logic in
+  endpoint handlers.
+```
+
+---
+
+### 036 — Crisis & Mandatory Reporting
+
+```
+Build the crisis / grensoverschrijdend gedrag workflow and verontrusting
+signal registration.
+
+Regulatory context (verified 2026-07 on opgroeien.be, Veiligheid page):
+- An organisator is LEGALLY OBLIGED to report to Opgroeien, as fast as
+  possible: every crisis and every instance of grensoverschrijdend gedrag;
+  criminal investigations or convictions (morality-related) involving anyone
+  in regular direct contact with the children; complaints about a crisis;
+  problems threatening continuity of the childcare; important governance
+  changes in the organisation.
+- Crisis = situation where a child's physical or psychological integrity is
+  in danger or violated (examples: violence/neglect/abuse even if not yet
+  objectively established, death of a child or staff member, serious or
+  unexplained injuries, sudden unexplained behavioural change, risk factors
+  in staff such as stress/drug/alcohol use).
+- Grensoverschrijdend gedrag = child is (at risk of becoming) a victim of
+  degrading treatment, threats or violence by a person present in the
+  childcare.
+- Reporting channel: Opgroeien's official meldingsformulier (.docx:
+  crisissituatie-kinderopvang-meldingsformulier.docx) emailed to the
+  organisation's klantenbeheerder; in urgent cases by phone via Opgroeipunt.
+- Verontrusting = concern about a child's home situation. Opgroeien provides
+  an ABC stappenplan (Aandacht, Bespreken, Communicatie met ouders) and a
+  signal-registration document ("Signalen van verontrusting registreren").
+- Retention: complaints and crisis records must be kept 10 YEARS.
+
+What to build:
+- Crisis/GOG event registration: structured record (type, when, who involved,
+  actions taken), restricted to director role by default.
+- Meldingsformulier pre-fill: generate the report document from the recorded
+  event. Fields VERIFIED from the official model ("Meldingsformulier
+  Crisissituatie Kinderopvang", 26/07/2024, obtained 2026-07-15):
+    melder: naam, adres, telefoon, e-mail, functie;
+    locatie: naam, dossiernummer, adres;
+    voorval: datum, uitgebreide beschrijving, afloop, wie werd
+    geïnformeerd, gerechtelijk onderzoek/politie J/N (+ PV-nummer indien
+    gekend), genomen/geplande preventieve acties;
+    betrokken kind (bij voorval met 1 specifiek kind): naam, geslacht,
+    geboortedatum, startdatum opvang.
+  Model note: if the fiche can't be completed immediately, the
+  klantenbeheerder must first be informed by phone/e-mail and the fiche
+  follows — the workflow must support "reported first, form completed
+  later". Track: sent to whom (klantenbeheerder contact stored per
+  organisation), when, follow-up notes.
+  Explicit NON-reportables (from the model): everyday minor injuries with
+  a plausible explanation (schaafwond, buil, blauwe plek...) — these stay
+  in 013b incident reports only.
+- Continuity-problem and governance-change meldingen as lighter record types
+  (same obligation list, simpler payloads).
+- Verontrusting signal log per child: dated observations following the ABC
+  steps; STRICTLY restricted access (director + the child's caregivers only);
+  explicitly excluded from parent-facing views and daily reports.
+- 10-year retention class on all records in this module (see feature 038).
+
+Key constraints:
+- Extreme access-control care: this is the most sensitive data in the
+  platform. Audit-log every read.
+- Not a replacement for the legal duty itself — the platform documents and
+  supports the melding, the director still sends/confirms it.
+- i18n keys everywhere.
+```
+
+---
+
+### 037 — Attendance Register Compliance
+
+```
+Build the legal compliance layer on top of the existing attendance register
+(feature 010, done — do not modify its core model; extend it).
+
+Regulatory context (verified 2026-07 on opgroeien.be, Ouders-en-kinderen page):
+- The aanwezigheidsregister must record each child's arrival and departure
+  TIMES daily, filled in AT THE MOMENT of arrival/departure — never in
+  advance, never afterwards.
+- PARENTS must confirm the registered presences, in writing or
+  electronically. The frequency is the organisator's choice (daily, weekly,
+  ...).
+- The register must be kept at least 12 MONTHS for Zorginspectie.
+
+What to build:
+- Parent confirmation flow in the parent app: parent reviews the recorded
+  arrival/departure times for a configurable period (daily/weekly/monthly,
+  set per location) and confirms electronically; confirmation stored with
+  timestamp + parent identity.
+- Dispute path: parent flags an incorrect time → director sees it, corrects
+  via the existing correction mechanism, parent re-confirms.
+- Record-at-the-moment audit: server-side recorded_at vs occurred_at delta
+  is already implicit — surface it: an inspection view showing when each
+  entry was recorded vs the arrival/departure time it claims.
+- Zorginspectie export: per location + date range, arrival/departure times
+  per child + confirmation status, printable/PDF.
+- Retention marker: attendance records enter a ≥12-month legal-hold class
+  (see feature 038).
+
+Key constraints:
+- Extends 010 and 013 (parent app) — no changes to the done features' core
+  behaviour, only additive endpoints/screens.
+- i18n keys everywhere; QuestPDF for the export.
+```
+
+---
+
+### 038 — Data Retention & GDPR Lifecycle
+
+```
+Build automated data-retention management per the sector's legal terms.
+
+Regulatory context (verified 2026-07 on opgroeien.be, Organisator page,
+"Bewaartermijnen van gegevens"):
+- 10 years: complaints and crisis situations.
+- 5 years: data about children and families (identification, medical,
+  financial, social vulnerability, their childcare request and usage);
+  data about organisators, staff and onthaalouders (medical fitness attest,
+  identification, training); for staff the clock starts at END OF EMPLOYMENT.
+- 3 years: uittreksel strafregister (criminal-record extract), counted from
+  appointment date, for organisators, all staff and every adult in direct
+  contact with children; the PREVIOUS extract must be destroyed when a new
+  one is received.
+- ≥12 months: attendance register (feature 037).
+- GDPR baseline: privacy policy in the huishoudelijk reglement,
+  verwerkersovereenkomst between KDV and software vendor (Opgroeien publishes
+  a template "Overeenkomst tussen verantwoordelijke en verwerker"), image
+  consent form for photos (beeldmateriaal toestemmingsformulier).
+
+What to build:
+- Retention classes as first-class config: each retention-relevant entity
+  is tagged with a class (10y / 5y-child / 5y-staff-post-employment / 3y /
+  12m) and an anchor date (event date, departure date, employment end,
+  appointment date).
+- Scheduled destruction job: irreversibly deletes (or anonymises, decide per
+  entity at plan time) expired records; every destruction writes an audit
+  entry (what class, what anchor, when destroyed — no content).
+- Strafregister special rule: storing a new extract triggers destruction of
+  the previous one.
+- Director-facing retention report: what is scheduled for destruction, what
+  was destroyed.
+- Legal-hold override (e.g. ongoing dispute) with reason, per record.
+
+Relationship to 031 (photo lifecycle): 031 stays photo-specific (storage
+tiering, RBAC, parent downloads); 038 provides the generic retention engine.
+If 031 is built after 038, its retention part should use 038's engine.
+
+Key constraints:
+- Destruction must be tenant-scoped and provably complete (including GCS
+  objects via lifecycle/delete, and excluded from backups' restore playbook —
+  document the backup caveat honestly in the spec).
+- Never auto-destroy records under an active legal hold.
+- i18n keys everywhere.
+```
+
+---
+
+### 039 — Tenant Onboarding & Supplier-Switch Migration
+
+```
+Productise KDV onboarding so that moving from another software supplier
+(or from paper/spreadsheets) to ChildCare is ultra simple.
+
+Competitive context (verified 2026-07-15): Bitcare's "BOP" onboarding is a
+SERVICE — three guided human sessions (1: settings + reading in a
+kind/parent list; 2: contract template + planning + tablet walkthrough,
+then 1–2 weeks shadow-running; 3: side-by-side first invoicing), then
+helpdesk/videos. D-Care offers personal onboarding similarly. Neither
+productises migration as self-service tooling — that is the opportunity.
+
+What to build:
+1. Guided setup wizard (director-facing, resumable checklist):
+   organisation → locations → groups → BKR config → closure calendar →
+   staff + PINs → contract templates/rates → invoice settings. Progress
+   indicator; each step links to the existing screens (nothing new behind
+   the wizard, it orchestrates what features 001–014 already provide).
+2. Bulk import with dry-run:
+   - CSV/Excel import for: children + family contacts, contracts
+     (days/rates/dates), staff, waiting-list entries.
+   - Column-mapping UI (source files come from D-Care, Bitcare, or
+     arbitrary spreadsheets — do NOT assume a fixed layout).
+   - Dry-run validation with a full preview + per-row errors BEFORE
+     anything is written; import is transactional per entity type.
+   - Import report stored (what was created, skipped, failed).
+3. Shadow-run support:
+   - A tenant-level "shadow mode" flag: everything works, but parent
+     notifications/emails are suppressed so the team can practise with
+     real data for 1–2 weeks without spamming parents. Clear banner.
+   - One-click "go live" lifts the flag (and optionally sends the parent
+     invitation emails in bulk at that moment).
+4. Full tenant export (the other direction — trust + GDPR portability):
+   - Director can export all tenant data (children, contacts, contracts,
+     attendance, events, invoices, documents index) as CSV/JSON zip.
+   - This is deliberate: being easy to LEAVE is a selling point and keeps
+     us honest; it also satisfies GDPR data-portability expectations.
+
+Key constraints:
+- Import must be idempotent-safe: re-running a corrected file must not
+  duplicate children/contracts (match on natural keys within the tenant,
+  e.g. name + birthdate for children — confirm strategy at plan time).
+- Contract imports must pass the same validators as manual entry
+  (split-location day-overlap, BKR interactions) — no backdoor.
+- Multi-tenancy: import/export strictly tenant-scoped; exports via signed
+  GCS URLs.
+- i18n keys everywhere.
+
+Open questions (resolve before /speckit-plan):
+- Obtain real export files from D-Care and Bitcare (a prospective client
+  switching over can supply theirs) to build the default mapping presets —
+  do NOT invent their column layouts.
+- Whether historical data (past attendance, old invoices) is in scope for
+  import or only current-state data. Recommendation: current-state only
+  for MVP; history import as a later increment.
+```
+
+---
+
+### 040 — Occupancy & Placement Planning
+
+```
+Build forward-looking occupancy and placement planning — the director's
+answer to "can I take this child?" and "where are my future gaps?".
+
+Competitive context: this is a Bitcare kindplanning headline capability
+(direct insight into available places; automatic BKR check on placement;
+"soepele doorstroom" between groups). Our backlog covers TODAY's occupancy
+(018) and the waiting list (012a), but not forward planning.
+
+What to build:
+1. Forward occupancy view:
+   - Per group and location: contracted children per weekday, projected
+     forward per day/week/month/year (driven by contract start/end dates
+     and known age-based group transitions).
+   - Free places per weekday = licensed capacity (and BKR-feasible
+     capacity given planned staff) minus contracted children.
+2. Placement simulation:
+   - Director enters a hypothetical child (birthdate, desired days, start
+     date) — e.g. from a waiting-list entry (012a) or a phone enquiry —
+     and gets an immediate answer: possible in which group from which
+     date, and the BKR/capacity impact.
+   - One click converts an accepted simulation into a contract draft (007).
+3. Doorstroom (group-transition) planning:
+   - Age-based transition rules per location (e.g. babies → peuters at X
+     months, configurable).
+   - Timeline of upcoming transitions; each transition frees a place in
+     the source group — surfaced in the forward occupancy view so intake
+     can be planned against future, not just current, capacity.
+   - Director confirms/adjusts each proposed transition (no automatic
+     moves).
+
+Key constraints:
+- Read-model heavy: all computed from contracts (007), groups/BKR config
+  (004), staff scheduling (012) — no new source-of-truth tables beyond
+  transition rules and confirmed transition records.
+- BKR logic must reuse the exact enforcement code from 010 — one
+  implementation, not a parallel calculation.
+- i18n keys everywhere.
+
+Open questions (resolve before /speckit-plan):
+- Whether group transitions are formal (a new contract/amendment per 007)
+  or an assignment change within the same contract — align with how 007
+  models the child↔group relationship.
+```
+
+---
+
+### 041 — BKR 2027 Ruleset
+
+```
+Make the BKR (kindratio) engine rule-versioned: the Vlaamse Regering
+lowers the maximum kindratio, mandatory from 1 JANUARY 2027.
+
+Regulatory context (from Opgroeien's "kindratio special", updated
+25/06/2024, markdown copy in the working folder — VERIFY against the
+original PDF before /speckit-plan, the conversion lost some bullets):
+- Until 31/12/2026 the CURRENT ratio applies (transition period):
+  solo caregiver max 8; 2+ caregivers present: per-caregiver ratio;
+  rest moment max 14 per caregiver for max 2 consecutive hours with 2+
+  caregivers actively supervising.
+- From 01/01/2027 the NEW lower ratio is mandatory for everyone
+  (VERIFIED 2026-07-15 from the original kindratio special PDF, p.4):
+  Groepsopvang — ratio assessed at LOCATION level; the opvang chooses
+  its leefgroep layout:
+    * leefgroep with only babies (up to 12 months): 1 begeleider per max 5
+    * leefgroep with only children > 12 months:     1 begeleider per max 8
+    * mixed leefgroep:                              1 begeleider per max 7
+    * rest moment: max 14 per kinderbegeleider, max 2 consecutive hours,
+      with 2+ kinderbegeleiders present providing active supervision
+    * maximum leefgroep size stays 18
+  Gezinsopvang: target max 4 children per onthaalouder on a quarterly
+  basis; max 7 present simultaneously.
+  Locations MAY adopt the new ratio earlier (linked to a higher
+  basissubsidie: 60% automatic, 40% on application when the new ratio is
+  demonstrably met).
+- Assessment method for the 40% subsidy: Opgroeien evaluates the ratio
+  at LOCATION level as an AVERAGE over staffing hours vs child-presence
+  hours across the calendar year — not moment-by-moment.
+- Countable staffing profiles (besides qualified kinderbegeleiders):
+  kinderbegeleider in an actief kwalificerend traject (AKT) and, under
+  conditions, logistieke medewerkers; unqualified persons only as an
+  exception during sudden staff shortage.
+
+What to build:
+1. Rule-versioned BKR config: ratio rules get effective-date ranges;
+   the enforcement in 010/012 (do NOT modify their behaviour, extend
+   their config source) resolves the applicable ruleset by date.
+   Per-location opt-in to apply the new ruleset before 2027.
+2. Baby-group rule support: ratio dependent on group age composition
+   (baby-only leefgroep vs mixed) — requires the group's age profile.
+3. Staffing-profile weights: mark staff as qualified / AKT / logistiek
+   and define per-ruleset which profiles count (and any caps).
+4. Average-ratio report: per location + calendar year, total child
+   presence hours vs total countable staffing hours, versus the target
+   ratio — the evidence a director needs for the 40% subsidy request
+   and for Zorginspectie during the transition.
+
+Key constraints:
+- One BKR implementation: 010's enforcement, 012's scheduling checks and
+  040's simulations must all read the same versioned ruleset.
+- Historic data untouched: past attendance is evaluated against the
+  ruleset in force on that date.
+- i18n keys everywhere.
+```
+
+---
+
 ## Notes
 
 - Each feature branch follows the Spec Kit cycle: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`
@@ -4465,4 +5187,18 @@ Out of scope:
 - IKT compliance (019) requires an X.509 certificate — initiate procurement at least 4 weeks before Phase 3 starts
 - Email communications (020) consolidates the "Email notification fallback (Phase 2)" items deferred by both 011 (closure calendar) and 013 (parent communication) — no need to build email delivery separately in either of those specs
 - **020's scope was refined 2026-07-09** (direct product-owner request, not yet planned): the daily-report email is default-on/opt-out (auto-sent every day, unsubscribe is the only way to stop it) with a per-contact unsubscribe, not the originally-drafted opt-in digest — and it goes to *every* parent/guardian contact of the child independently (e.g. both mother and father each get their own email/unsubscribe state), not a single "primary contact." Bulk parent emails also need a document-upload/attachment capability. All of this is written into 020's prompt block above — flagging here since this changes the shape of 020's data model (an unsubscribe flag per-`Contact`, and a recipient query that fans out to every parent/guardian-role contact rather than picking one) versus what an earlier read of this backlog might have assumed.
+- **Research pass 2026-07-15 (opgroeien.be crawl + competitor scan)** added features 033–041 and 014a, and amended the not-started 015/018/019. 014 was originally amended too, but it shipped the same day — its payment-link/reminders/receipts additions were extracted into 014a instead, and 014's prompt block was restored to what was actually built. Sources: opgroeien.be Organisator/Software pages, Ouders-en-kinderen page, Veiligheid page, the IKT webservice cookbook PDF, the kinderopvangtoeslag webservice PDF, daycare-solutions.be, bitcare.com. Done features were deliberately left untouched.
+- **Government integration surface (verified 2026-07)** — despite Opgroeien's email stating "no public APIs for external developers", the Organisator → Software page publishes real contracts: (1) IKT SOAP webservice (WSDL test `https://tstarws.kindengezin.be/kinderopvang-ikgwebservices/service/ikg.wsdl`, prod `https://arws.kindengezin.be/...`; WS-Security X.509; operations MatchKind, MatchKinderen, MatchKinderenResultaat, OpvangPrestatiesResultaat; return codes 0000/0002/0003/0004/0005/9999; match opmerkingCodes 1000–1005) → feature 019. (2) Kinderopvangtoeslag REST/JSON webservice (bearer token, test Swagger `https://tstgpappr.kindengezin.be/swagger-ui.html`) → feature 033. (3) Aanwezigheidsregistratie XML/webservice → related to 019 item 4. (4) Jaarregistraties XML → feature 034. Vendor onboarding for all of these goes through software-ontwikkeling@opgroeien.be / @kindengezin.be. A software vendor can hold ONE X.509 certificate on its own KBO number covering all client organisations (confirmed in the IKT cookbook, "certificaat op naam van leverancier") — this is the architecture already assumed in 019.
+- **Official contract files obtained 2026-07-15** (product owner downloaded them; commit to the repo under e.g. `docs/integrations/opgroeien/`): the six jaarregistratie XSDs FO-RE-14/15/19/28/29/30 (analysed into 034's prompt), FO-SU-05.xsd v2.3 + the "registratie aanwezigheden — beschrijving" PDF (analysed into 019 item 4), and the softwareleverancier certificate contract (analysed below). The attendance beschrijving PDF's text layer is broken — keep the PDF for reference but treat the extracted rules in 019 item 4 as the working copy.
+- **Softwareleverancier certificate contract** (V5.0, 27.10.2021, verified from the official .docx): the vendor signs a contract with Opgroeien to obtain a KIND&GEZIN certificate on the vendor's own KBO number, acting for 1..n organisators. Conditions: data centre must be inside the EU and vendor + all subcontractors under GDPR; vendor must have a **verwerkersovereenkomst with every organisator** (KDV = verantwoordelijke, ChildCare = verwerker); vendor bears full liability for misuse; **Opgroeien has an audit right** at the vendor and can revoke the certificate on breach. Submission: filled + (electronically) signed form to **dpo@opgroeien.be**. Impact: the verwerkersovereenkomst must become a standard step in organisation onboarding before Phase 3 (and arguably earlier, plain GDPR) — and hosting/subprocessors (GCP europe-west1) must be documented for the audit.
+- **Reference corpus in the working folder (`Claude-markdown/`, ~60 markdown conversions of official PDFs, indexed 2026-07-15)** — treat as the local source library when speccing. Highlights per feature: Belcotax/BOW technical set for 019 item 5 (`161-presentatie-bow-2-20250526.md`, `161-belcotax-bow-mappage-fiche-01-voorbeeld-nl.md`, `protocol-ogr-vutg-fiscale-attesten.md`, `161-bericht-attest-281-62-*.md`); `kindratio-kinderopvang_special.md` (041 — conversion lost the new ratio table, re-extract from the original PDF); `inkomenstarief-wijzigingen-indexering-2026-snelinfo_0.md` (confirms 019's October-indexing and 30-months kindkorting rules); `verwerkersovereenkomst-sjabloon.md` + `overeenkomst-verantwoordelijke-verwerker.md` (onboarding/039 + certificate contract obligation); `privacyverklaring-ouders-sjabloon.md` (parent privacy statement template); `brochure-jaarregistraties-kleuteropvang.md` (kleuteropvang segment variant of 034); `Vaccinaties volgens leeftijd` HTML (seed data check for 013g's vaccine catalog); `KIB_inkomenstarief_2024.md`, vergunning procedures, subsidy procedures. A `conversion_failures.log` lists PDFs that did not convert — check it before assuming a document is absent.
+- **Financial reporting for subsidised organisators** (snelinfo 11/12/2025, in the corpus): all organisators must make an annual budget; organisators receiving > €200,000/year in Opgroeien subsidies (IKT parent contributions count toward this!) must keep double-entry bookkeeping and produce a financial report per opvangvorm within 7 months of closing the book year; Zorginspectie runs financial inspection rounds. Phase 3 relevance: 029 (accounting export) should tag revenue/costs per opvangvorm and per location so subsidised clients can produce this split; 018's revenue reporting can surface the €200k threshold.
+- **Documents obtained 2026-07-15 (second batch)**: the original kindratio special PDF (041's full 2027 ratio table now verified), the official meldingsformulier crisissituatie .docx (036's field list now verified), the AARON sector handleiding (033: 7th-of-month deadline, fines, RRN/bisnummer validation, 2.5y toeslag expiry, opt-out periods, offline support), the Opgroeien kinderopvang FAQ page (general reference incl. the "attest aanvragen for a parent" step-by-step relevant to 019), and the huishoudelijk reglement + schriftelijke overeenkomst models — NOTE: the received models are the SCHOOLKIND (school-age) variants; structurally useful for 024, but fetch the baby's & peuters variants (huishoudelijkreglement-model.docx, schriftelijkeovereenkomst-model.docx on the Ouders-en-kinderen page) before speccing 024's templates. One structural takeaway already: the overeenkomst model has an explicit section "wijziging van het huishoudelijk reglement in het nadeel van de contracthouder" — reglement changes to the parent's disadvantage give contract-termination rights, reinforcing the need for reglement version + acknowledgment tracking (open question under 024).
+- **Actielijst set complete (obtained 2026-07-15)**: all six risicoanalyse actielijsten are now in hand (binnen, omgevingsfactoren, kwaliteitsvol handelen, ziekte, verzorging, slapen) — 035's checklist seed content is fully covered; same question structure as the verified "slapen" list.
+- **Document collection COMPLETE (2026-07-15)**: all previously missing sources are now in hand — the baby's & peuters huishoudelijk reglement model (16/02/2026) + schriftelijke overeenkomst model (15/04/2025) for 024 (both use a mandatory-vs-optional structure: obligatory rubrics in black, suggested content in red/blue — 024's template engine should mirror that fixed/editable split), and the AARON Swagger 2.0 definition `KinderOpvangToeslag.json` (field-level contract now written into 033). Commit all source files to `docs/integrations/opgroeien/`. Remaining open items are QUESTIONS, not documents: AARON production-token onboarding + resubmission semantics (033), FO-SU-05 webservice-vs-email choice (019), form-to-subsidy mapping + deadlines (034), PSP choice (014), reglement-acknowledgment placement (024).
+- **Kinderopvangzoeker** (kinderopvangzoeker.be) has NO public API (client-rendered app; confirmed by Opgroeien's email). It is where parents see licences and inspection reports. No integration feature is warranted; at most a marketing note that directors should keep their listing current.
+- **Competitor snapshot 2026-07 (updated after full bitcare.com crawl 2026-07-15)**: D-Care (daycare-solutions.be) = Flemish, touchscreen-on-the-floor + hardware-included model, parent web-app with day reports, development tracking, absences, closure days, invoices + in-app payment via POM; IKT documents and fiscal attests auto-generated. Bitcare (bitcare.com) = Dutch company (Delft) with a REAL Belgian module — its BE wetgeving sections confirm: attendance submission to Kind & Gezin, fiscal attests + **BOW (Belcotax-on-web) file generation for the FOD**, subsidy admin, and the "new Flemish kindratio" — so Bitcare already covers a chunk of our 015/019 government-reporting scope. Full Bitcare feature set from the crawl: digital enrollment form → auto-generated contract → e-signature with SEPA-mandate consent in the flow (our 023/024); waiting list + forward occupancy + BKR placement check + doorstroom (our 012a + new 040); parent request queue with push notifications (013a — done); staff planning integrated with child planning, over/under-staffing signals, clock-in/out, plus/min-hours, self-service leave/swap via the Medewerker app, role-based access, salary export via Humanwave/NL CAO (027/028); group app with per-group day view, digital diary, photos, 1-1/group chat, news posts, offline access (008/009/013 — done); invoicing from price models, one-click send, automatic reminders, betalingsbewijzen, Mollie payments, prepayment/refund handling, accounting couplings Exact/AFAS/Twinfield/MS Dynamics/SnelStart (014/025/026/029); dashboards for bezetting/in-uitstroom/contract value/revenue + a "kwaliteitsmonitor" data-completeness check (018); parent app in multiple languages; BOP onboarding = 3 human-guided sessions + 1–2 weeks shadow-running (inspiration for 039, where we productise it instead).
+- **Bitcare app-quality intel (Play Store, 2026-07)**: parent app 2.7★ (177 reviews, 50K+ downloads), medewerker app 2.2★ — recurring complaints: crashes, push notifications missing or hours late, photo-download bugs, un-editable hour entries, forced re-logins. Mobile reliability (especially push timeliness and offline behaviour) is itself a competitive differentiator — treat notification-delivery observability as a first-class requirement in the parent/staff apps.
+- **Remaining differentiation bets** (nothing on either competitor's public materials): Flemish risk-analysis support (035), crisis/melding workflows (036), verontrusting registration (036), retention automation (038), productised self-service migration + full data export (039), caregiver PIN/kiosk model (008a), NL/FR/EN from day one. D-Care's public site remains thin; a demo is still needed for a real feature-by-feature comparison.
+- **Huishoudelijk reglement acknowledgment** (parents must sign for kennisname of the reglement and of changes; schriftelijke overeenkomst signed for akkoord) — currently only partially covered by 024 (e-signature on contracts). OPEN QUESTION for the product owner: extend 024 to cover reglement versioning + per-parent acknowledgment tracking, or add a separate document-management feature.
 - **Flag for 005 (Staff), 007 (Contracts), 012 (Caregiver Scheduling)**: feature 004 (Locations) deliberately does not build any "move/relocate a location" continuity — when a KDV physically relocates (old building closes, new one opens), 004 only offers a "duplicate location" convenience (clones location-level settings, no data carryover). Whoever builds 005/007/012 needs to design the actual staff/child reassignment UX for a location closing down, keeping in mind staff are NOT bound to a single location (a caregiver can already work different locations on different days per 012's scheduling model) — so "moving" a location is really a bulk reassignment of active contracts (007) and future schedule entries (012), not a 1:1 staff/child transfer.

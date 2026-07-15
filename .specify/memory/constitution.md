@@ -1,6 +1,42 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.3.0 → 1.4.0 (MINOR — existing guidance materially expanded)
+
+Modified sections:
+- II. Regulatory Compliance by Design (NON-NEGOTIABLE) — added a "Regulation is time-versioned"
+  clause. The BKR ratio thresholds this principle lists are the CURRENT (pre-2027) regime; the
+  Vlaamse Regering has enacted a lower kindratio that becomes mandatory on 1 January 2027
+  (verified 2026-07-15 from Opgroeien's official kindratio special, archived in
+  docs/integrations/opgroeien/regulation/): baby-only leefgroep (≤12 months) 1:5, only >12
+  months 1:8, mixed leefgroep 1:7; rest-moment and 18-cap unchanged; ratio assessed at location
+  level; early adoption allowed per location and subsidy-linked. Regulatory thresholds must
+  therefore be treated as effective-dated configuration, not constants — BACKLOG feature
+  041-bkr-2027-ruleset implements the versioning; until it ships, the current thresholds remain
+  the only enforced regime and this clause is informational for planning.
+- Added a pointer that docs/integrations/opgroeien/ is the authoritative in-repo source library
+  for government/regulatory contracts (XSDs, Swagger JSON, official document models) — specs for
+  features 015/019/033–041 must cite those files rather than re-deriving rules from memory.
+
+Trigger: 2026-07-15 market/regulatory research pass (Opgroeien crawl + official documents
+supplied by the product owner) added features 033–041 and 014a to BACKLOG.md and surfaced the
+2027 kindratio change, which contradicts a literal reading of Principle II's threshold list as
+timeless.
+
+Added sections: none (additive clause within an existing principle)
+
+Removed sections: none
+
+Templates requiring updates:
+- .specify/templates/plan-template.md — ✅ compatible as-is (Constitution Check reads gates
+  dynamically from this file)
+
+Follow-up TODOs: none. RATIFICATION_DATE unchanged; LAST_AMENDED_DATE updated.
+-->
+
+<!--
+Sync Impact Report (previous)
+==================
 Version change: 1.2.1 → 1.3.0 (MINOR — existing guidance materially expanded)
 
 Modified sections:
@@ -207,6 +243,21 @@ not implement the leefgroep cap. This exemption ends the moment a future
 feature adds a group-type distinction to the data model — at that point
 the leefgroep cap MUST be enforced for any group flagged as such.
 
+**Regulation is time-versioned**: The thresholds listed above are the
+CURRENT (pre-2027) regime. A lower kindratio becomes mandatory on
+1 January 2027 (baby-only leefgroep ≤12m 1:5; only >12m 1:8; mixed
+leefgroep 1:7; rest-moment max 14 and the 18-cap unchanged; assessed at
+location level; per-location early adoption allowed and subsidy-linked —
+source: docs/integrations/opgroeien/regulation/kindratio-kinderopvang_special.pdf).
+Regulatory thresholds are therefore effective-dated configuration, not
+constants; feature `041-bkr-2027-ruleset` implements the versioning.
+Until 041 ships, the current thresholds above remain the only enforced
+regime — this clause changes planning posture, not today's gates. More
+broadly, `docs/integrations/opgroeien/` (see its README) is the
+authoritative in-repo source library for government contracts and
+official document models; specs for features 015/019/033–041 MUST cite
+those files rather than re-derive regulatory rules from memory.
+
 **Rationale**: Erkenning (the operating licence) depends on these ratios
 being genuinely enforced. UI-only checks can be bypassed by direct API
 calls or bugs, risking the customer's licence. The leefgroep carve-out
@@ -392,4 +443,4 @@ checked against Principles I (tenant isolation) and II (regulatory
 compliance) explicitly, since these are the two categories most likely
 to cause customer-facing (licensing or data-leak) harm if violated.
 
-**Version**: 1.3.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-09
+**Version**: 1.4.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-15

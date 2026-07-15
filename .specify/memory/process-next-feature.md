@@ -39,6 +39,21 @@ in-progress work from wherever it left off.
   The design-compliance step below is a static code review, not rendered visual QA — don't
   attempt to run a simulator or capture screenshots mid-loop; that's a deliberate future
   decision, not something to improvise.
+- **✅ Done features are immutable in BACKLOG.md.** Never edit a shipped feature's prompt
+  block, row description, or scope — new needs become a new letter-suffixed follow-up feature
+  (precedent: 014's payment-link/reminders scope became `014a` when 014 shipped mid-research on
+  2026-07-15). Shipped-notes under a done block may still be appended (they're history, not
+  scope).
+- **Government/compliance features carry verified regulatory contracts — don't re-derive or
+  invent.** Features 015, 019, 033–041 (and any future Opgroeien/FOD work) have prompt blocks
+  whose regulatory facts were verified 2026-07-15 against official documents archived in
+  `docs/integrations/opgroeien/` (XSDs, the AARON Swagger JSON, official .docx models, the
+  kindratio special — see that folder's README.md for the file→feature map and source URLs).
+  During specify/plan for those features: cite the archived file, not memory. Several of those
+  prompt blocks also contain an explicit "Open questions (do NOT invent)" section — treat every
+  item there as the pause-and-ask category above (they need the product owner or
+  software-ontwikkeling@kindengezin.be, not a guessed default). Two recurring examples: the PSP
+  choice in 014a, and AARON production-token onboarding in 033.
 
 ## The prompt
 
@@ -56,6 +71,13 @@ spec/implementation this loop produces must follow them:
 - reference-products.md
 - design-decisions.md
 - workflows.md
+
+Additionally, if the picked feature is one of 015, 019, 033–041 or 014a (government
+integration / Flemish regulatory compliance / PSP payments): read
+docs/integrations/opgroeien/README.md first and open the specific source files it maps to the
+feature (XSD / Swagger JSON / official .docx model / PDF). The prompt blocks embed verified
+contract facts and explicit "do NOT invent" open questions — resolve those questions with the
+product owner before /speckit-plan, and cite the archived source files in the spec.
 
 Each invocation:
 
@@ -439,6 +461,21 @@ use the static code review instead.
   013g) yet again. T049 (granting the real `dgormez@gmail.com` production account) is a manual
   post-merge step — no production DB access from this session, and per this codebase's convention
   that production data changes are run manually, not autonomously.
+- 2026-07-15: research pass (not a feature run) — full opgroeien.be crawl, official documents
+  supplied by the product owner (XSDs, AARON Swagger JSON, kindratio special, meldingsfiche,
+  document models), and a bitcare.com/D-Care competitor scan. BACKLOG.md gained features
+  033–041 + 014a (government reporting, safety/compliance, retention, migration/onboarding,
+  occupancy planning, BKR-2027 versioning, invoice payments) with verified contract facts
+  embedded in their prompt blocks; PROJECT-BRIEF.md gained the integration-surface table,
+  expanded regulatory context and competitor snapshot; the source documents were committed
+  under `docs/integrations/opgroeien/` (see its README.md); constitution amended to 1.4.0
+  (Principle II: regulation is time-versioned — 2027 kindratio). 014 shipped the same day this
+  research amended it, so its additions were extracted into `014a` and 014's block restored —
+  origin of the "done features are immutable" standing rule above. A broader corpus of ~60
+  markdown-converted official documents lives OUTSIDE the repo in the product owner's
+  `Claude-markdown` folder (Belcotax/BOW set, verwerkersovereenkomst templates, subsidy
+  procedures) — BACKLOG.md's Notes section indexes it; ask the product owner for a file if a
+  spec needs one that isn't in docs/integrations/opgroeien/.
 - 014 (`014-invoicing`): ✅ Done, merged 2026-07-15 (PR #33, squash-merged after green CI —
   716/716 backend + 175/175 web + 79/79 parent-mobile tests). Resumed mid-flight: backend
   (US1-US4) and most of director-web were already implemented in a prior session with zero
