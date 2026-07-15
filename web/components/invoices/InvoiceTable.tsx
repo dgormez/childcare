@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { CheckCircle2, AlertTriangle, FileEdit, Clock } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
@@ -18,8 +18,11 @@ function formatDate(value: string | null): string {
   return value ? new Date(value).toLocaleDateString() : "—";
 }
 
+/** platform-rules.md director-web: full-row click affordance rather than a small inline icon
+ * button, since the row itself represents one record (mirrors LocationsTable/IncidentReportsTable). */
 export function InvoiceTable({ invoices }: InvoiceTableProps) {
   const t = useTranslations("invoices");
+  const router = useRouter();
 
   return (
     <Table>
@@ -33,12 +36,8 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
       </TableHeader>
       <TableBody>
         {invoices.map((invoice) => (
-          <TableRow key={invoice.id} className="cursor-pointer">
-            <TableCell className="font-medium">
-              <Link href={`/invoices/${invoice.id}`} className="block">
-                {invoice.childName}
-              </Link>
-            </TableCell>
+          <TableRow key={invoice.id} className="cursor-pointer" onClick={() => router.push(`/invoices/${invoice.id}`)}>
+            <TableCell className="font-medium">{invoice.childName}</TableCell>
             <TableCell className="tabular-nums">{formatCents(invoice.totalCents)}</TableCell>
             <TableCell>
               {invoice.status === "draft" && (

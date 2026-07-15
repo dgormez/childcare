@@ -11,6 +11,11 @@ vi.mock("../lib/apiClient", () => ({
   apiClient: { GET: vi.fn(), POST: vi.fn() },
 }));
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
+
 function renderPage() {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
@@ -89,6 +94,7 @@ function errorResponse(status: number) {
 beforeEach(() => {
   vi.mocked(apiClient.GET).mockReset();
   vi.mocked(apiClient.POST).mockReset();
+  push.mockReset();
 });
 
 describe("InvoicesPage", () => {
@@ -120,6 +126,18 @@ describe("InvoicesPage", () => {
       "/api/locations/{locationId}/invoices/generate",
       expect.objectContaining({ params: { path: { locationId: "loc-1" } } }),
     );
+  });
+
+  it("navigates to the invoice detail page from anywhere in the row (full-row click affordance)", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
+      if (path === "/api/locations") return Promise.resolve(okResponse([location])) as ReturnType<typeof apiClient.GET>;
+      return Promise.resolve(okResponse([makeInvoice()])) as ReturnType<typeof apiClient.GET>;
+    });
+    renderPage();
+
+    await userEvent.click(await screen.findByText("€450.00"));
+
+    expect(push).toHaveBeenCalledWith("/invoices/inv-1");
   });
 
   it("shows an error state when loading invoices fails", async () => {
