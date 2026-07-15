@@ -42,6 +42,13 @@ public class Location
     // storage" decision). The JSON wire contract (string[]) is unaffected either way.
     public List<string> MenuVariantPriorityOrder { get; set; } = [];
 
+    // Feature 014 — per-location invoicing details. Erkenningsnummer/BankAccountNumber are
+    // per-location (not per-organisation) because a multi-location organisation can have a
+    // distinct childcare license and bank account per physical site (spec.md Clarifications).
+    public string? Erkenningsnummer  { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public int      InvoiceDueDays   { get; set; } = 14;
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

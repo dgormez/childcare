@@ -52,7 +52,8 @@
       "reportSick": "Mijn kind is ziek",
       "requestExtra": "Extra dag aanvragen",
       "requestExchange": "Dagwissel aanvragen",
-      "myRequests": "Mijn aanvragen"
+      "myRequests": "Mijn aanvragen",
+      "viewInvoices": "Mijn facturen"
     }
   },
   "messages": {
@@ -193,6 +194,21 @@
     "loadFailed": "Kon het menu niet laden.",
     "sectionTitle": "{{child}} · {{location}}",
     "variantLabel": "{{type}}-menu"
+  },
+  "invoices": {
+    "title": "Facturen",
+    "noInvoices": "Nog geen facturen om te tonen.",
+    "loadFailed": "Kon je facturen niet laden.",
+    "statusSent": "Wacht op betaling",
+    "statusOverdue": "Achterstallig",
+    "statusPaid": "Betaald",
+    "amount": "Bedrag",
+    "dueDate": "Vervalt op {{date}}",
+    "paidOn": "Betaald op {{date}}",
+    "downloadPdf": "PDF downloaden",
+    "downloadFailed": "Kon de PDF niet downloaden. Probeer het opnieuw.",
+    "ogmReference": "Betalingsreferentie",
+    "period": "{{month}} {{year}}"
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Maaltijdvoorkeuren",

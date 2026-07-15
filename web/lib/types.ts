@@ -21,6 +21,7 @@ export interface AuthResponse {
 
 export interface OrganisationResponse {
   name: string;
+  kboNumber: string | null;
 }
 
 export interface StaffResponse {
@@ -63,6 +64,47 @@ export interface LocationResponse {
   requiresCaregiverPin: boolean;
   menuVariantPriorityOrder: string[];
   menuVariantsWithPublishedContent: string[];
+  erkenningsnummer: string | null;
+  bankAccountNumber: string | null;
+  invoiceDueDays: number;
+}
+
+export interface InvoiceExtraChargeResponse {
+  label: string;
+  amountCents: number;
+}
+
+export interface InvoiceLineItemsResponse {
+  presentDays: number;
+  unjustifiedAbsentDays: number;
+  dailyRateCents: number;
+  closureDaysExcluded: number;
+  daysMin5u: number;
+  daysMin11u: number;
+  extraCharges: InvoiceExtraChargeResponse[];
+}
+
+export type InvoiceStatus = "draft" | "sent" | "paid";
+
+export interface InvoiceResponse {
+  id: string;
+  childId: string;
+  childName: string;
+  contractId: string;
+  locationId: string;
+  locationName: string;
+  periodMonth: string;
+  status: InvoiceStatus;
+  isOverdue: boolean;
+  subtotalCents: number;
+  totalCents: number;
+  lineItems: InvoiceLineItemsResponse;
+  ogmReference: string;
+  dueDate: string | null;
+  sentAt: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DeviceSummaryResponse {

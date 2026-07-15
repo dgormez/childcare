@@ -52,7 +52,8 @@
       "reportSick": "Mon enfant est malade",
       "requestExtra": "Demander un jour supplémentaire",
       "requestExchange": "Demander un échange de jour",
-      "myRequests": "Mes demandes"
+      "myRequests": "Mes demandes",
+      "viewInvoices": "Mes factures"
     }
   },
   "messages": {
@@ -193,6 +194,21 @@
     "loadFailed": "Impossible de charger le menu.",
     "sectionTitle": "{{child}} · {{location}}",
     "variantLabel": "Menu {{type}}"
+  },
+  "invoices": {
+    "title": "Factures",
+    "noInvoices": "Aucune facture à afficher pour le moment.",
+    "loadFailed": "Impossible de charger vos factures.",
+    "statusSent": "En attente de paiement",
+    "statusOverdue": "En retard",
+    "statusPaid": "Payée",
+    "amount": "Montant",
+    "dueDate": "Échéance le {{date}}",
+    "paidOn": "Payée le {{date}}",
+    "downloadPdf": "Télécharger le PDF",
+    "downloadFailed": "Impossible de télécharger le PDF. Veuillez réessayer.",
+    "ogmReference": "Référence de paiement",
+    "period": "{{month}} {{year}}"
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Préférences alimentaires",

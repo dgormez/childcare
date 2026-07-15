@@ -101,6 +101,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<MealPreferenceChangeRequest> MealPreferenceChangeRequests => Set<MealPreferenceChangeRequest>();
 
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -279,6 +281,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             l.Property(x => x.MenuVariantPriorityOrder)
               .HasColumnType("text[]")
               .HasDefaultValueSql("'{}'");
+            // Feature 014 — per-location invoicing details (spec.md Clarifications).
+            l.Property(x => x.Erkenningsnummer).HasMaxLength(50);
+            l.Property(x => x.BankAccountNumber).HasMaxLength(50);
+            l.Property(x => x.InvoiceDueDays).HasDefaultValue(14).IsRequired();
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -893,6 +899,30 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             mpcr.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             mpcr.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.DecidedBy);
             mpcr.HasIndex(x => new { x.ChildId, x.Status });
+        });
+
+        modelBuilder.Entity<Invoice>(inv =>
+        {
+            inv.ToTable("invoices");
+            inv.HasKey(x => x.Id);
+            // Feature 014 — identity column, distinct from the GUID Id primary key. Feeds only
+            // the OGM base number (research.md R3); never used as a foreign key or exposed as
+            // "the" invoice identifier anywhere else.
+            inv.Property(x => x.SequenceNumber).UseIdentityAlwaysColumn();
+            inv.HasIndex(x => x.SequenceNumber).IsUnique();
+            inv.Property(x => x.Status)
+              .HasConversion(
+                  v => v.ToString().ToLowerInvariant(),
+                  v => (InvoiceStatus)Enum.Parse(typeof(InvoiceStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            inv.Property(x => x.LineItems).HasColumnType("jsonb").IsRequired();
+            inv.Property(x => x.OgmReference).HasMaxLength(30).IsRequired();
+            inv.HasIndex(x => x.OgmReference).IsUnique();
+            inv.HasIndex(x => new { x.ChildId, x.ContractId, x.LocationId, x.PeriodMonth }).IsUnique();
+            inv.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            inv.HasOne<Contract>().WithMany().HasForeignKey(x => x.ContractId);
+            inv.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
         });
     }
 }

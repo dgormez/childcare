@@ -92,7 +92,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// needs no separate step since monthly_menus is already dropped wholesale above, but unlike
     /// that, locations is never dropped in this test (only ALTERed), so its new
     /// MenuVariantPriorityOrder column needs its own explicit DROP COLUMN, same as 008b's
-    /// RequiresCaregiverPin right above it.
+    /// RequiresCaregiverPin right above it. Feature 014's "AddInvoices" is the next one — its
+    /// invoices table (never referenced by anything this test also drops) needs its own DROP
+    /// TABLE, and its three new locations columns (Erkenningsnummer, BankAccountNumber,
+    /// InvoiceDueDays) need their own explicit DROP COLUMNs, same reason as
+    /// MenuVariantPriorityOrder above.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -100,6 +104,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."invoices";
             DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."meal_preference_change_requests";
             DROP TABLE "{schemaName}"."monthly_menu_days";
@@ -123,11 +128,14 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "PediatricianPhone";
             ALTER TABLE "{schemaName}"."locations"
                 DROP COLUMN "RequiresCaregiverPin",
-                DROP COLUMN "MenuVariantPriorityOrder";
+                DROP COLUMN "MenuVariantPriorityOrder",
+                DROP COLUMN "Erkenningsnummer",
+                DROP COLUMN "BankAccountNumber",
+                DROP COLUMN "InvoiceDueDays";
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "IsPlatformAdmin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices';
             """);
     }
 

@@ -18,6 +18,6 @@ public class GetCurrentOrganisationQueryHandler(IPublicDbContext publicDb, ICurr
     public async Task<OrganisationResponse> Handle(GetCurrentOrganisationQuery request, CancellationToken cancellationToken)
     {
         var tenant = await publicDb.Tenants.FirstAsync(t => t.Id == currentTenant.TenantId, cancellationToken);
-        return new OrganisationResponse(tenant.Name);
+        return new OrganisationResponse(tenant.Name, tenant.KboNumber);
     }
 }

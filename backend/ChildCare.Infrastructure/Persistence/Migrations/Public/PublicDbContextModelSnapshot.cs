@@ -60,6 +60,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                     b.Property<Guid>("CreatedFromInvitationId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("KboNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)

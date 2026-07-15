@@ -10,10 +10,11 @@ import { ErrorState } from "../../../../components/ErrorState";
 import { ReservationSettingsForm } from "../../../../components/ReservationSettingsForm";
 import { CheckInSettingsForm } from "../../../../components/CheckInSettingsForm";
 import { MenuVariantSettingsForm } from "../../../../components/MenuVariantSettingsForm";
+import { InvoiceSettingsForm } from "../../../../components/InvoiceSettingsForm";
 import type { LocationResponse } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
-type Tab = "general" | "reservationSettings" | "checkInSettings" | "menuVariants";
+type Tab = "general" | "reservationSettings" | "checkInSettings" | "menuVariants" | "invoiceSettings";
 
 /**
  * "Algemeen" tab is deliberately minimal — the core editable fields only. The Opgroeien
@@ -166,12 +167,23 @@ export default function LocationDetailPage() {
         >
           {t("tabMenuVariants")}
         </button>
+        <button
+          onClick={() => setTab("invoiceSettings")}
+          className={`px-4 py-2 text-sm font-medium ${
+            tab === "invoiceSettings"
+              ? "border-b-2 border-primary text-primary-hover dark:border-primary-dark dark:text-primary-hover-dark"
+              : "text-text-soft dark:text-text-soft-dark"
+          }`}
+        >
+          {t("tabInvoiceSettings")}
+        </button>
       </div>
 
       {tab === "general" && <GeneralLocationForm location={location} onSaved={setLocation} />}
       {tab === "reservationSettings" && <ReservationSettingsForm location={location} onSaved={setLocation} />}
       {tab === "checkInSettings" && <CheckInSettingsForm location={location} onSaved={setLocation} />}
       {tab === "menuVariants" && <MenuVariantSettingsForm location={location} onSaved={setLocation} />}
+      {tab === "invoiceSettings" && <InvoiceSettingsForm location={location} onSaved={setLocation} />}
     </div>
   );
 }

@@ -15,5 +15,9 @@ public class Tenant
     // source of truth for "already used" (FR-004) — see research.md R10.
     public Guid   CreatedFromInvitationId { get; set; }
 
+    // Feature 014 — Belgian company registration number, org-wide (one legal entity regardless
+    // of location count), printed on every invoice PDF.
+    public string? KboNumber             { get; set; }
+
     public DateTime CreatedAt            { get; set; } = DateTime.UtcNow;
 }

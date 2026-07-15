@@ -21,4 +21,7 @@ public record LocationResponse(
     int ReservationNoticeHours,
     bool RequiresCaregiverPin,
     IReadOnlyList<string> MenuVariantPriorityOrder,
-    IReadOnlyList<string> MenuVariantsWithPublishedContent);
+    IReadOnlyList<string> MenuVariantsWithPublishedContent,
+    string? Erkenningsnummer,
+    string? BankAccountNumber,
+    int InvoiceDueDays);

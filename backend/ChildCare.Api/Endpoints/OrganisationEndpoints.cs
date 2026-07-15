@@ -19,6 +19,13 @@ public static class OrganisationEndpoints
             return Results.Ok(result);
         }).RequireAuthorization("DirectorOnly");
 
+        // Feature 014 — contracts/014-invoicing/invoicing-api.md. First PUT on this resource.
+        group.MapPut("/me", async (UpdateOrganisationRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateOrganisationCommand(req.KboNumber));
+            return Results.Ok(result);
+        }).RequireAuthorization("DirectorOnly");
+
         group.MapPost("/register", async (RegisterOrganisationRequest req, IMediator mediator) =>
         {
             // FluentValidation.ValidationException (RegisterOrganisationCommandValidator) is

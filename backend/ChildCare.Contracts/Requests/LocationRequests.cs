@@ -33,3 +33,9 @@ public record UpdateLocationCheckInSettingsRequest(bool RequiresCaregiverPin);
 public record UpdateLocationMenuVariantSettingsRequest(
     IReadOnlyList<string> MenuVariantPriorityOrder,
     bool ConfirmDespiteRemovingPublished);
+
+// Feature 014 — contracts/014-invoicing/invoicing-api.md.
+public record UpdateLocationInvoiceSettingsRequest(
+    string? Erkenningsnummer,
+    string? BankAccountNumber,
+    int InvoiceDueDays);

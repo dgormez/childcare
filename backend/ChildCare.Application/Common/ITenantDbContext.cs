@@ -57,6 +57,7 @@ public interface ITenantDbContext
     DbSet<MonthlyMenu> MonthlyMenus { get; }
     DbSet<MonthlyMenuDay> MonthlyMenuDays { get; }
     DbSet<MealPreferenceChangeRequest> MealPreferenceChangeRequests { get; }
+    DbSet<Invoice> Invoices { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
