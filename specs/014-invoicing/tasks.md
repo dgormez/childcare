@@ -174,7 +174,8 @@ it paid and confirm the status updates.
 ### Tests for User Story 2
 
 - [ ] T041 [P] [US2] Integration test: `PUT .../extra-charges` on a draft invoice updates
-  `lineItems.extraCharges` and recomputes `totalCents`; rejected (`422`) on a non-draft invoice
+  `lineItems.extraCharges` and recomputes `totalCents` as exactly `subtotalCents` plus the sum
+  of extra charges; rejected (`422`) on a non-draft invoice and on a zero/negative charge amount
   (FR-006, US2/AC1) in `backend/ChildCare.Api.Tests/Invoices/InvoiceLifecycleTests.cs`
 - [ ] T042 [P] [US2] Integration test: `POST /api/invoices/send` transitions one or many draft
   invoices to `sent`, sets `sentAt`/`dueDate`, generates the OGM reference if not already
@@ -237,10 +238,12 @@ reference and every other required field.
   invoices (never `draft`) for the requesting parent's own children, correctly attributed to
   each child (FR-008, US3/AC1, AC3) in `backend/ChildCare.Api.Tests/Invoices/GetParentInvoicesTests.cs`
 - [ ] T054 [P] [US3] Integration test: a parent with two children (same or different locations)
-  sees every invoice for every child, not just one (US3/AC2) in the same file
-- [ ] T055 [P] [US3] Integration test: `GET /api/parent/invoices/{id}/pdf` is rejected (`404`)
-  for an invoice that doesn't belong to one of the requesting parent's children, or is still
-  `draft` (Security considerations) in the same file
+  sees every invoice for every child, not just one (US3/AC2); a second contact linked to the
+  same child sees the same invoices as the first (Assumptions) in the same file
+- [ ] T055 [P] [US3] Integration test: `GET /api/parent/invoices/{id}/pdf` returns the identical
+  `404` response both for an invoice that doesn't belong to one of the requesting parent's
+  children and for one that does but is still `draft` — the two cases must be indistinguishable
+  to the caller (Security considerations) in the same file
 
 ### Implementation for User Story 3
 
@@ -279,7 +282,8 @@ invoice rejects the same attempt.
 - [ ] T061 [P] [US4] Integration test: regenerating a `draft` invoice recomputes line items with
   no parent notification (US4/AC1) in `backend/ChildCare.Api.Tests/Invoices/RegenerateInvoiceTests.cs`
 - [ ] T062 [P] [US4] Integration test: regenerating a `sent` invoice recomputes line items/total,
-  keeps the same `ogmReference`, and re-notifies the parent (FR-011, US4/AC2) in the same file
+  keeps the same `ogmReference`/`sentAt`/`dueDate` unchanged, and re-notifies the parent
+  (FR-011, US4/AC2) in the same file
 - [ ] T063 [P] [US4] Integration test: attempting to regenerate a `paid` invoice is rejected
   (`422 errors.invoice.paid_immutable`) and the invoice is byte-for-byte unchanged (FR-012,
   US4/AC3, SC-005) in the same file

@@ -146,7 +146,11 @@ invoicing only reads them.
 **Security considerations**: No new authorization boundary beyond the existing `DirectorOnly`/
 parent-contact-resolution model, both already tenant-scoped. A parent must never be able to
 read another family's invoice, or a `draft` invoice belonging to their own child (drafts are
-director-only until sent).
+director-only until sent, across every parent-facing read path — list, detail, and PDF alike).
+A parent request for an invoice that doesn't exist, or exists but isn't visible to them (wrong
+family, or still `draft`), MUST return the same not-found response in both cases — matching this
+codebase's existing pattern for every other parent-scoped resource, so a caller can't
+distinguish "doesn't exist" from "exists but isn't yours" by probing.
 
 **Performance considerations**: Bulk generation for a location/month is bounded by that
 location's active-contract count (a few dozen to a few hundred children) — not a hot path, runs
@@ -298,6 +302,18 @@ the same (it identifies this invoice, not this specific PDF revision).
   can only be recorded on a `sent` or overdue invoice.
 - The OGM checksum computation must be deterministic and produce a different reference for every
   invoice (collision would break bank payment matching).
+- A contracted day with no attendance record at all (nobody checked the child in or marked them
+  absent) is neither present nor unjustified-absent — it is simply not billed. This is not a
+  gap this feature fills; an attendance-record backfill/reminder mechanism is feature 010's
+  concern, not invoicing's.
+- A director publishes, removes, or edits a closure day, or corrects attendance, after an
+  invoice was already generated: the existing invoice is not automatically recomputed —
+  invoicing only reads the relevant data at the moment of generation or an explicit regenerate
+  (FR-011); it never reactively updates on its own.
+- A child appears to have two contracts with overlapping active date ranges at the same
+  location: this relies on 007's own existing one-active-contract-per-location invariant, which
+  this feature assumes rather than re-validates — invoicing is not the place to detect a
+  contract-lifecycle inconsistency that shouldn't be able to exist upstream.
 
 ## Requirements *(mandatory)*
 
@@ -309,13 +325,23 @@ the same (it identifies this invoice, not this specific PDF revision).
   plus unjustified-absence days, minus any day that is a published closure day for that
   location, restricted to the portion of the month the contract was actually active (mid-month
   start/end honored) — billed at the contract's `daily_rate_cents`. Justified absences (per
-  013a's day-reservation records) are never billed.
+  013a's day-reservation records) are never billed. Billing is always in whole-day units — there
+  is no partial-day or hourly proration in this phase. Each day has exactly one classification
+  (present, justified absence, unjustified absence, or closure) — a day is never billed under
+  more than one rule, and a day recorded as absent always has its justified/unjustified status
+  decided at the moment it's recorded (never left undecided) — see Edge Cases for the day with
+  no attendance record at all.
 - **FR-003**: The system MUST NOT create more than one invoice per (child, contract, location,
   month) — regenerating an already-generated `draft` invoice updates it in place rather than
   creating a duplicate.
-- **FR-004**: The system MUST generate a unique, checksum-valid Belgian OGM structured payment
-  reference (`+++XXX/XXXX/XXXXX+++` format, 12 digits, modulo-97 checksum) for every invoice at
-  creation time, and MUST NOT reuse a reference across invoices.
+- **FR-004**: The system MUST generate a Belgian OGM structured payment reference for every
+  invoice at creation time, in the exact format `+++XXX/XXXX/XXXXX+++`: the first 10 digits are
+  a base reference number unique to that invoice, and the final 2 digits are that 10-digit
+  number modulo 97 — except when the remainder is 0, in which case the check digits MUST be `97`
+  (a base number's checksum is never `00`). No two invoices may ever share the same reference.
+  An invoice's `OgmReference` MUST be assigned exactly once, at its first creation, and MUST
+  NEVER change afterward — not when its `draft` line items are recomputed by a repeated
+  generation call (FR-003), and not when it is regenerated (FR-011).
 - **FR-005**: The system MUST render an invoice PDF (QuestPDF) containing: the KDV's name,
   address, KBO/ondernemingsnummer (org-wide, if set), erkenningsnummer (per-location, if set),
   the parent's name, the child's name, the billing period (month + year), the line-item
@@ -324,26 +350,41 @@ the same (it identifies this invoice, not this specific PDF revision).
 - **FR-005a**: The system MUST let a director configure a location's invoice due date offset
   (`InvoiceDueDays`, default 14) and MUST compute each invoice's `DueDate` as its generation
   date plus that location's configured offset.
-- **FR-006**: The system MUST let a director add manual extra-charge line items (a label and an
-  amount in cents) to a `draft` invoice before sending; extra charges MUST be included in the
-  invoice's total.
-- **FR-007**: The system MUST let a director send one or more `draft` invoices, which MUST: set
-  status to `sent`, make the invoice visible to the parent, generate/store its PDF, and notify
-  the parent via the existing notification channel(s).
-- **FR-008**: The system MUST NOT make a `draft` invoice visible to any parent — only `sent`,
-  `paid`, or overdue invoices are parent-visible.
+- **FR-006**: The system MUST let a director add manual extra-charge line items (a label and a
+  positive amount in cents — zero or negative amounts are rejected, extra charges are
+  additive-only in this phase, never a discount) to a `draft` invoice before sending. The
+  invoice's `TotalCents` MUST always equal `SubtotalCents` plus the sum of all extra-charge
+  amounts, exactly.
+- **FR-007**: The system MUST let a director send one or more `draft` invoices in a single
+  request, which MUST: set status to `sent`, make the invoice visible to the parent,
+  generate/store its PDF, and notify the parent via the existing notification channel(s). If any
+  invoice in the request is not currently `draft`, the system MUST reject the entire request
+  (no partial send) and change nothing.
+- **FR-008**: The system MUST NOT make a `draft` invoice visible to any parent through any
+  read path (list, detail, or PDF download alike) — only `sent`, `paid`, or overdue invoices are
+  parent-visible.
 - **FR-009**: The system MUST let a director manually record payment (with a payment date) on a
-  `sent` (including overdue) invoice, setting its status to `paid`.
+  `sent` (including overdue) invoice, setting its status to `paid`. Marking an invoice paid is a
+  one-way transition in this phase — the system provides no "unmark paid" action; correcting a
+  mistaken payment record is out of scope (a candidate future backlog item, not built here, same
+  as the credit-note mechanism noted in Assumptions).
 - **FR-010**: The system MUST treat a `sent` invoice whose due date has passed with no recorded
   payment as overdue for display/filtering purposes, without requiring a separate stored status
-  transition or any new background-job infrastructure.
+  transition or any new background-job infrastructure (an invoice's overdue state is entirely a
+  function of its current `Status` and `DueDate` at read time — nothing else affects it, and it
+  stops applying the instant `Status` becomes `paid`).
 - **FR-011**: The system MUST let a director regenerate a `draft` or `sent` invoice's line items
   and PDF after underlying attendance/absence data changes; regenerating a `sent` invoice MUST
-  re-notify the parent. The OGM reference MUST NOT change on regeneration.
+  re-notify the parent. The OGM reference, `SentAt`, and `DueDate` MUST NOT change on
+  regeneration — only `LineItems`/`SubtotalCents`/`TotalCents` are recomputed, so a parent's
+  payment deadline is never silently extended or shortened by a correction.
 - **FR-012**: The system MUST reject any attempt to regenerate, edit, or otherwise alter a
-  `paid` invoice.
+  `paid` invoice; a rejected attempt MUST leave every field of the invoice — including
+  `UpdatedAt` — completely unchanged (the rejection MUST happen before any write is attempted).
 - **FR-013**: The system MUST reject sending an invoice that is not currently `draft`, and MUST
-  reject marking an invoice paid unless it is currently `sent` (or overdue).
+  reject marking an invoice paid unless it is currently `sent` (or overdue). Status only ever
+  moves forward (`draft` → `sent` → `paid`); no operation in this feature MUST ever move an
+  invoice's status backward.
 - **FR-014**: A child holding active contracts at more than one location MUST receive one
   independent invoice per location for the same month — never a single combined invoice.
 - **FR-015**: The system MUST let a director view a filterable/sortable list of invoices for a
@@ -415,3 +456,11 @@ the same (it identifies this invoice, not this specific PDF revision).
   erkenningsnummer, bank account number) are assumed to already exist or be addable as simple
   nullable fields; if any is missing from the current data model, adding it is in scope for this
   feature (it's required PDF content per the feature's own prompt).
+- Invoice visibility for a child who has since departed (contract ended) is not time-limited —
+  a parent who was linked to that child continues to see that child's historical invoices
+  indefinitely, matching how this codebase already keeps contract/attendance history visible
+  after a contract ends rather than hiding it.
+- Every contact linked to a child (not just the one who originally registered) sees that same
+  child's invoices — invoice visibility is scoped by "which children is this contact linked to,"
+  the same resolution `GetParentMonthlyMenuQuery` (013j) already uses, not by which contact
+  triggered a particular action.
