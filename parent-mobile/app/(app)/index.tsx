@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks } from "lucide-react-native";
+import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks, Receipt } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getReservationAvailability } from "../../services/locations";
 import { useColors } from "../../hooks/useColors";
@@ -136,6 +136,14 @@ export default function HomeScreen() {
           >
             <ListChecks color={colors.text} size={20} strokeWidth={2} />
             <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.myRequests")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/invoices")}
+            className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+            style={{ minHeight: 48 }}
+          >
+            <Receipt color={colors.text} size={20} strokeWidth={2} />
+            <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.viewInvoices")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

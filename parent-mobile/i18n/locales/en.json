@@ -52,7 +52,8 @@
       "reportSick": "My child is sick",
       "requestExtra": "Request an extra day",
       "requestExchange": "Request a day exchange",
-      "myRequests": "My requests"
+      "myRequests": "My requests",
+      "viewInvoices": "My invoices"
     }
   },
   "messages": {

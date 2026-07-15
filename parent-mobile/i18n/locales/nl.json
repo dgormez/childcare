@@ -52,7 +52,8 @@
       "reportSick": "Mijn kind is ziek",
       "requestExtra": "Extra dag aanvragen",
       "requestExchange": "Dagwissel aanvragen",
-      "myRequests": "Mijn aanvragen"
+      "myRequests": "Mijn aanvragen",
+      "viewInvoices": "Mijn facturen"
     }
   },
   "messages": {

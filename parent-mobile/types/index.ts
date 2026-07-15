@@ -204,3 +204,42 @@ export interface MealPreferenceChangeRequestResponse {
   notes:    string | null;
   createdAt: string;
 }
+
+// ── Invoices (feature 014) ────────────────────────────────────────────────────────
+export type InvoiceStatus = "draft" | "sent" | "paid";
+
+export interface InvoiceExtraChargeResponse {
+  label:       string;
+  amountCents: number;
+}
+
+export interface InvoiceLineItemsResponse {
+  presentDays:          number;
+  unjustifiedAbsentDays: number;
+  dailyRateCents:       number;
+  closureDaysExcluded:  number;
+  daysMin5u:            number;
+  daysMin11u:           number;
+  extraCharges:         InvoiceExtraChargeResponse[];
+}
+
+export interface ParentInvoiceEntry {
+  id:            string;
+  childId:       string;
+  childName:     string;
+  contractId:    string;
+  locationId:    string;
+  locationName:  string;
+  periodMonth:   string;
+  status:        InvoiceStatus;
+  isOverdue:     boolean;
+  subtotalCents: number;
+  totalCents:    number;
+  lineItems:     InvoiceLineItemsResponse;
+  ogmReference:  string;
+  dueDate:       string | null;
+  sentAt:        string | null;
+  paidAt:        string | null;
+  createdAt:     string;
+  updatedAt:     string;
+}

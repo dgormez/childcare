@@ -52,7 +52,8 @@
       "reportSick": "Mon enfant est malade",
       "requestExtra": "Demander un jour supplémentaire",
       "requestExchange": "Demander un échange de jour",
-      "myRequests": "Mes demandes"
+      "myRequests": "Mes demandes",
+      "viewInvoices": "Mes factures"
     }
   },
   "messages": {
