@@ -26,6 +26,7 @@ function draftMenu(): MonthlyMenuResponse {
     exists: true,
     isPublished: false,
     publishedAt: null,
+    variant: null,
     days: [{ date: "2027-06-01", soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: null }],
   };
 }
