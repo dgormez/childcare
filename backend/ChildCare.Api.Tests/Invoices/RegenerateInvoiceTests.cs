@@ -78,7 +78,11 @@ public class RegenerateInvoiceTests(OrganisationOnboardingWebAppFactory factory)
         var regenerated = (await response.Content.ReadFromJsonAsync<InvoiceResponse>())!;
         Assert.Equal("sent", regenerated.Status);
         Assert.Equal(sent.OgmReference, regenerated.OgmReference);
-        Assert.Equal(sent.SentAt, regenerated.SentAt);
+        // Tolerant, not exact, equality — PostgreSQL's timestamptz round-trip precision can differ
+        // from .NET's in-memory DateTime by a few ticks (same recurring class of flakiness this
+        // codebase's other timestamp-equality assertions already work around, e.g.
+        // IncidentReportImmutabilityTests/DeactivateVaccineTypeTests).
+        Assert.True(Math.Abs((sent.SentAt!.Value - regenerated.SentAt!.Value).TotalMilliseconds) < 1);
         Assert.Equal(sent.DueDate, regenerated.DueDate);
         Assert.Equal(1, regenerated.LineItems.PresentDays);
     }
