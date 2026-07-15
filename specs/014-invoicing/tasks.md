@@ -313,14 +313,27 @@ invoice rejects the same attempt.
 
 **Purpose**: Improvements that span all stories.
 
-- [ ] T068 [P] Accessibility pass: invoice table, detail actions, and settings forms fully
+- [x] T068 [P] Accessibility pass: invoice table, detail actions, and settings forms fully
   keyboard-operable, focus-visible, per `platform-rules.md`'s Director Web section, in
   `web/components/invoices/InvoiceTable.tsx`, `InvoiceDetail.tsx`, `InvoiceSettingsForm.tsx`
-- [ ] T069 Run `quickstart.md`'s four scenarios manually/via integration tests and confirm each
-  expected outcome
-- [ ] T070 Confirm SC-004 explicitly: run 007/009/010/011/013a's own existing test suites
+  — found and fixed one real gap: `InvoiceTable` only made the child-name cell clickable via a
+  nested `Link`, inconsistent with the full-row click affordance every sibling table
+  (`LocationsTable`, `IncidentReportsTable`) already follows; switched to the same
+  onClick-on-row pattern with a regression test. Spacing/nested-cards/gradient/shared-component
+  review of the rest found no other issues.
+- [x] T069 Run `quickstart.md`'s four scenarios manually/via integration tests and confirm each
+  expected outcome — Scenarios 1-3 fully covered by existing integration tests
+  (`GenerateInvoicesTests`, `LocationInvoiceSettingsTests`, `InvoiceLifecycleTests`,
+  `InvoicePdfTests`, `RegenerateInvoiceTests`). Scenario 4's director half was already covered
+  (`Generate_ChildAtTwoLocations_ProducesTwoIndependentInvoices`) but its parent-facing claim
+  ("parent's invoice list shows both, clearly attributed to the correct location") had no test —
+  added `GetInvoices_ChildAtTwoLocations_ReturnsBothInvoices_AttributedToCorrectLocation` to
+  `GetParentInvoicesTests.cs` to close the gap rather than assume it from the director-side test.
+- [x] T070 Confirm SC-004 explicitly: run 007/009/010/011/013a's own existing test suites
   unmodified against the new schema and confirm 100% still pass with zero changes needed — the
   strongest possible evidence invoicing only reads existing data and never writes to it
+  — confirmed: full `dotnet test ChildCare.Api.Tests` run, 715/715 passed, zero modifications
+  needed to any pre-existing test file.
 
 ---
 

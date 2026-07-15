@@ -77,6 +77,28 @@ public class GetParentInvoicesTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     [Fact]
+    public async Task GetInvoices_ChildAtTwoLocations_ReturnsBothInvoices_AttributedToCorrectLocation()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Parent Invoices Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var firstLocation = await CreateLocationAsync(client, org.AccessToken, "First");
+        var secondLocation = await CreateLocationAsync(client, org.AccessToken, "Second");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+
+        var invoiceAtFirst = await CreateDraftInvoiceAsync(client, org.AccessToken, firstLocation.Id, child.Id, 2027, 11, DayOfWeek.Monday);
+        var invoiceAtSecond = await CreateDraftInvoiceAsync(client, org.AccessToken, secondLocation.Id, child.Id, 2027, 11, DayOfWeek.Tuesday);
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/invoices/send", org.AccessToken, new SendInvoicesRequest([invoiceAtFirst.Id, invoiceAtSecond.Id])));
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/parent/invoices", parentToken));
+        var invoices = (await response.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!;
+
+        Assert.Equal(2, invoices.Count);
+        Assert.Contains(invoices, i => i.LocationId == firstLocation.Id && i.LocationName == "First");
+        Assert.Contains(invoices, i => i.LocationId == secondLocation.Id && i.LocationName == "Second");
+    }
+
+    [Fact]
     public async Task GetPdf_ForInvoiceNotBelongingToParent_Returns404()
     {
         var client = factory.CreateClient();
