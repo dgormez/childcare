@@ -17,6 +17,6 @@ public class ListLocationsQueryHandler(ITenantDbContext db)
             query = query.Where(l => l.DeactivatedAt == null);
 
         var locations = await query.ToListAsync(cancellationToken);
-        return locations.Select(LocationMapper.ToResponse).ToList();
+        return locations.Select(l => LocationMapper.ToResponse(l)).ToList();
     }
 }

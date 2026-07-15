@@ -190,7 +190,9 @@
     "notAvailable": "Menu not available yet",
     "closed": "Closed",
     "noLocations": "No menu to show yet.",
-    "loadFailed": "Could not load the menu."
+    "loadFailed": "Could not load the menu.",
+    "sectionTitle": "{{child}} · {{location}}",
+    "variantLabel": "{{type}} menu"
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Meal preferences",

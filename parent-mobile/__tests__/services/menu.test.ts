@@ -8,7 +8,7 @@ jest.mock("../../services/apiClient", () => ({
 const { apiClient } = require("../../services/apiClient");
 
 const entries: ParentMonthlyMenuEntry[] = [
-  { locationId: "loc-1", locationName: "KDV Zonnebloem", isPublished: true, days: [], closureDates: [] },
+  { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: null, isPublished: true, days: [], closureDates: [] },
 ];
 
 beforeEach(() => {

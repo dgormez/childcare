@@ -39,6 +39,9 @@ it("renders a published menu's day entries", async () => {
     {
       locationId: "loc-1",
       locationName: "KDV Zonnebloem",
+      childId: "c1",
+      childName: "Timmy",
+      resolvedVariant: null,
       isPublished: true,
       days: [{ date: todayIso(), soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: null }],
       closureDates: [],
@@ -54,7 +57,7 @@ it("renders a published menu's day entries", async () => {
 
 it("shows the not-available placeholder for a location with no published menu", async () => {
   const entries: ParentMonthlyMenuEntry[] = [
-    { locationId: "loc-1", locationName: "KDV Zonnebloem", isPublished: false, days: [], closureDates: [] },
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: null, isPublished: false, days: [], closureDates: [] },
   ];
   getMonthlyMenu.mockResolvedValue({ status: "loaded", entries });
 
@@ -65,7 +68,7 @@ it("shows the not-available placeholder for a location with no published menu", 
 
 it("renders a day with no entries as a dash, not blank", async () => {
   const entries: ParentMonthlyMenuEntry[] = [
-    { locationId: "loc-1", locationName: "KDV Zonnebloem", isPublished: true, days: [], closureDates: [] },
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: null, isPublished: true, days: [], closureDates: [] },
   ];
   getMonthlyMenu.mockResolvedValue({ status: "loaded", entries });
 
@@ -76,7 +79,7 @@ it("renders a day with no entries as a dash, not blank", async () => {
 
 it("labels a closure day distinctly, not just by color", async () => {
   const entries: ParentMonthlyMenuEntry[] = [
-    { locationId: "loc-1", locationName: "KDV Zonnebloem", isPublished: true, days: [], closureDates: [todayIso()] },
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: null, isPublished: true, days: [], closureDates: [todayIso()] },
   ];
   getMonthlyMenu.mockResolvedValue({ status: "loaded", entries });
 
@@ -91,6 +94,32 @@ it("shows a load-failed state when the service reports unavailable", async () =>
   const { findByText } = await render(<MenuScreen />);
 
   expect(await findByText("menu.loadFailed")).toBeTruthy();
+});
+
+it("renders one section per (location, child) pair, labeling the child and the resolved variant when two children share a location (FR-010/FR-011)", async () => {
+  const entries: ParentMonthlyMenuEntry[] = [
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: "halal", isPublished: true, days: [], closureDates: [] },
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c2", childName: "Anna", resolvedVariant: null, isPublished: true, days: [], closureDates: [] },
+  ];
+  getMonthlyMenu.mockResolvedValue({ status: "loaded", entries });
+
+  const { findAllByText, queryAllByText } = await render(<MenuScreen />);
+
+  expect((await findAllByText("menu.sectionTitle")).length).toBe(2);
+  expect(queryAllByText("menu.variantLabel").length).toBe(1);
+});
+
+it("shows no variant or fallback messaging for a child resolving to the base menu (FR-011: no visible fallback messaging)", async () => {
+  const entries: ParentMonthlyMenuEntry[] = [
+    { locationId: "loc-1", locationName: "KDV Zonnebloem", childId: "c1", childName: "Timmy", resolvedVariant: null, isPublished: true, days: [], closureDates: [] },
+  ];
+  getMonthlyMenu.mockResolvedValue({ status: "loaded", entries });
+
+  const { findByText, queryByText } = await render(<MenuScreen />);
+
+  expect(await findByText("KDV Zonnebloem")).toBeTruthy();
+  expect(queryByText("menu.variantLabel")).toBeNull();
+  expect(queryByText("menu.sectionTitle")).toBeNull();
 });
 
 it("shows both texture and dietary tags in the child's preference indicator, not texture alone (FR-010)", async () => {

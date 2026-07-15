@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Application.MonthlyMenus;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,11 @@ public class GetLocationByIdQueryHandler(ITenantDbContext db) : IRequestHandler<
         if (location is null)
             return LocationResult.Fail(LocationFailure.NotFound);
 
-        return LocationResult.Success(LocationMapper.ToResponse(location));
+        // FR-014 — lets the settings UI warn before a removal that would affect a real,
+        // currently-visible-to-parents menu, without a separate round-trip.
+        var menuVariantsWithPublishedContent = await MonthlyMenuVariantHelper.GetVariantsWithPublishedContentAsync(
+            db, location.Id, location.MenuVariantPriorityOrder, cancellationToken);
+
+        return LocationResult.Success(LocationMapper.ToResponse(location, menuVariantsWithPublishedContent));
     }
 }

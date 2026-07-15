@@ -19,4 +19,6 @@ public record LocationResponse(
     string ReservationExtrasMode,
     string ReservationSwapsMode,
     int ReservationNoticeHours,
-    bool RequiresCaregiverPin);
+    bool RequiresCaregiverPin,
+    IReadOnlyList<string> MenuVariantPriorityOrder,
+    IReadOnlyList<string> MenuVariantsWithPublishedContent);

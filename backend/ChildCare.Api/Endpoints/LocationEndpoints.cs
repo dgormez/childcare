@@ -61,6 +61,13 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        group.MapPut("/{id:guid}/menu-variant-settings", async (Guid id, UpdateLocationMenuVariantSettingsRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationMenuVariantSettingsCommand(
+                id, req.MenuVariantPriorityOrder.ToList(), req.ConfirmDespiteRemovingPublished));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateLocationCommand(id));
@@ -97,6 +104,10 @@ public static class LocationEndpoints
 
             LocationFailure.PendingRequestsWarning => Results.Json(
                 new { errorKey = "errors.location.reservation_settings.pending_requests_warning", pendingCounts = result.PendingCounts },
+                statusCode: StatusCodes.Status409Conflict),
+
+            LocationFailure.MenuVariantRemovalWarning => Results.Json(
+                new { errorKey = "errors.location.menu_variant_settings.removing_published_warning", variants = result.VariantsRequiringConfirmation },
                 statusCode: StatusCodes.Status409Conflict),
 
             _ => throw new InvalidOperationException($"Unhandled {nameof(LocationFailure)}: {result.Failure}"),

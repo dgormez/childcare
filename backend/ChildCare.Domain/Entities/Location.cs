@@ -30,6 +30,18 @@ public class Location
     // director explicitly opts out.
     public bool RequiresCaregiverPin { get; set; } = true;
 
+    // Feature 013j — ordered set of DietaryType wire strings this location offers alongside the
+    // base monthly menu. Order IS the priority order used to resolve a child matching more than
+    // one enabled type (spec.md FR-002/FR-008) — not just set membership, unlike
+    // MealPreference.DietaryType. Empty by default so a location that predates this feature
+    // behaves identically to before (FR-012). Deliberately List<string> (wire strings, parsed
+    // where needed via DietaryTypeExtensions.TryParseWireString), not List<DietaryType> — a
+    // second List<DietaryType>-shaped EF value converter in the same model as MonthlyMenu.
+    // Variant's DietaryType? converter triggers a Npgsql.EntityFrameworkCore.PostgreSQL provider
+    // bug in its array-conversion machinery (research.md: "Location.MenuVariantPriorityOrder
+    // storage" decision). The JSON wire contract (string[]) is unaffected either way.
+    public List<string> MenuVariantPriorityOrder { get; set; } = [];
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

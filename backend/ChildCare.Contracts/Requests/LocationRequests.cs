@@ -27,3 +27,9 @@ public record UpdateLocationReservationSettingsRequest(
     bool ConfirmDespitePending);
 
 public record UpdateLocationCheckInSettingsRequest(bool RequiresCaregiverPin);
+
+// Feature 013j — contracts/013j-monthly-menu-variants/monthly-menu-variants-api.md.
+// ConfirmDespiteRemovingPublished mirrors 013f's ConfirmDespitePending shape (FR-014).
+public record UpdateLocationMenuVariantSettingsRequest(
+    IReadOnlyList<string> MenuVariantPriorityOrder,
+    bool ConfirmDespiteRemovingPublished);

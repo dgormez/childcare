@@ -993,6 +993,12 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<int>("MaxCapacity")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<List<string>>("MenuVariantPriorityOrder")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
                     b.Property<string>("NaamLocatie")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -1249,6 +1255,12 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Variant")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("base");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
@@ -1256,7 +1268,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("CreatedBy");
 
-                    b.HasIndex("LocationId", "Year", "Month")
+                    b.HasIndex("LocationId", "Year", "Month", "Variant")
                         .IsUnique();
 
                     b.ToTable("monthly_menus", "tenant_template", t =>

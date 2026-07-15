@@ -25,7 +25,8 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     email: "loc@test.com", maxCapacity: 20, naamLocatie: null, dossiernummer: null,
     verantwoordelijke: null, flexPermission: false, boPermission: false,
     reservationAbsencesMode: "approval", reservationExtrasMode: "approval",
-    reservationSwapsMode: "disabled", reservationNoticeHours: 0, requiresCaregiverPin: true, deactivatedAt: null,
+    reservationSwapsMode: "disabled", reservationNoticeHours: 0, requiresCaregiverPin: true,
+    menuVariantPriorityOrder: [], menuVariantsWithPublishedContent: [], deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };

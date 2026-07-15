@@ -45,6 +45,8 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     reservationSwapsMode: "disabled",
     reservationNoticeHours: 0,
     requiresCaregiverPin: true,
+    menuVariantPriorityOrder: [],
+    menuVariantsWithPublishedContent: [],
     deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",

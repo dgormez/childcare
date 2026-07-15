@@ -1196,6 +1196,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/menu-variant-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationMenuVariantSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/deactivate": {
         parameters: {
             query?: never;
@@ -5488,7 +5527,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    variant?: string;
+                };
                 header?: never;
                 path: {
                     locationId: string;
@@ -5510,7 +5551,9 @@ export interface paths {
         };
         put: {
             parameters: {
-                query?: never;
+                query?: {
+                    variant?: string;
+                };
                 header?: never;
                 path: {
                     locationId: string;
@@ -5552,7 +5595,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    variant?: string;
+                };
                 header?: never;
                 path: {
                     locationId: string;
@@ -5589,7 +5634,9 @@ export interface paths {
         put?: never;
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    variant?: string;
+                };
                 header?: never;
                 path: {
                     locationId: string;
@@ -6384,6 +6431,10 @@ export interface components {
         };
         UpdateLocationCheckInSettingsRequest: {
             requiresCaregiverPin: boolean;
+        };
+        UpdateLocationMenuVariantSettingsRequest: {
+            menuVariantPriorityOrder: string[];
+            confirmDespiteRemovingPublished: boolean;
         };
         UpdateLocationRequest: {
             name: string;

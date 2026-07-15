@@ -2,26 +2,30 @@ using ChildCare.Application.Common;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.MonthlyMenus;
 
-// Find-or-create the MonthlyMenu row (as a draft) for LocationId/Year/Month, then replace the
-// full MonthlyMenuDay set (whole-month replace on write, contracts/monthly-menu-api.md). Never
-// changes publish state — publish/unpublish are separate commands so a draft correction to a
-// published menu doesn't accidentally unpublish it (FR-001, FR-005).
+// Find-or-create the MonthlyMenu row (as a draft) for LocationId/Year/Month/Variant, then replace
+// the full MonthlyMenuDay set (whole-month replace on write, contracts/monthly-menu-api.md).
+// Never changes publish state — publish/unpublish are separate commands so a draft correction to
+// a published menu doesn't accidentally unpublish it (FR-001, FR-005). Variant added feature
+// 013j: null = the base menu (013e's unchanged behavior); a real value = that DietaryType's
+// variant, rejected unless currently enabled for the location (FR-006).
 public record UpsertMonthlyMenuCommand(
     Guid LocationId,
     int Year,
     int Month,
+    DietaryType? Variant,
     List<UpsertMonthlyMenuDayRequest> Days,
     Guid UpdatedBy) : IRequest<MonthlyMenuResponse>;
 
 public class UpsertMonthlyMenuCommandValidator : AbstractValidator<UpsertMonthlyMenuCommand>
 {
-    public UpsertMonthlyMenuCommandValidator()
+    public UpsertMonthlyMenuCommandValidator(ITenantDbContext db)
     {
         RuleFor(x => x.LocationId).NotEmpty();
         RuleFor(x => x.Month).InclusiveBetween(1, 12).WithMessage("errors.monthly_menu.invalid_month");
@@ -45,6 +49,14 @@ public class UpsertMonthlyMenuCommandValidator : AbstractValidator<UpsertMonthly
         RuleFor(x => x.Days)
             .Must(days => days.Select(d => d.Date).Distinct().Count() == days.Count)
             .WithMessage("errors.monthly_menu.duplicate_date");
+
+        // FR-006 — a director cannot author a variant that isn't currently enabled for this
+        // location, including via a direct API call after later disabling it. The base menu
+        // (Variant == null) is always allowed, mirroring CreateParentInvitationCommandValidator's
+        // MustAsync precedent for cross-entity validation.
+        RuleFor(x => x)
+            .MustAsync(async (cmd, ct) => cmd.Variant is null || await MonthlyMenuVariantHelper.IsEnabledAsync(db, cmd.LocationId, cmd.Variant.Value, ct))
+            .WithMessage("errors.monthly_menu.variant_not_enabled");
     }
 }
 
@@ -52,10 +64,11 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
 {
     public async Task<MonthlyMenuResponse> Handle(UpsertMonthlyMenuCommand request, CancellationToken cancellationToken)
     {
+        var variantWire = MonthlyMenuVariantHelper.ToStorageWire(request.Variant);
         var menu = await db.MonthlyMenus
             .Include(m => m.Days)
             .FirstOrDefaultAsync(
-                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month,
+                m => m.LocationId == request.LocationId && m.Year == request.Year && m.Month == request.Month && m.Variant == variantWire,
                 cancellationToken);
 
         if (menu is null)
@@ -65,6 +78,7 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
                 LocationId = request.LocationId,
                 Year = request.Year,
                 Month = request.Month,
+                Variant = variantWire,
                 CreatedBy = request.UpdatedBy,
             };
             db.MonthlyMenus.Add(menu);

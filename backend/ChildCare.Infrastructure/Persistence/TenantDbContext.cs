@@ -137,7 +137,17 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
                 $"Pending migration SQL for '{SchemaName}' still references the placeholder schema " +
                 $"'{PlaceholderSchema}' after substitution — refusing to run it.");
 
-        await Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        // ExecuteSqlRawAsync treats its `sql` argument as a composite format string internally
+        // (RawSqlCommandBuilder.Build) regardless of whether any parameters are supplied — a
+        // migration whose generated DDL contains a literal '{' or '}' (e.g. Postgres's '{}'
+        // empty-array default literal, first hit by feature 013j's AddMonthlyMenuVariants
+        // migration) throws a FormatException instead of running. Braces must be escaped by
+        // doubling, the standard .NET composite-format-string escape, before executing — found
+        // by TenantMigrationRolloutTests/LegacyVaccinationMigrationTests actually failing, not by
+        // inspection. TenantProvisioningService's baseline-script path is unaffected: it runs its
+        // SQL through a raw NpgsqlCommand directly, never through this EF Core helper.
+        var escapedSql = sql.Replace("{", "{{").Replace("}", "}}");
+        await Database.ExecuteSqlRawAsync(escapedSql, cancellationToken);
     }
 
     public async Task<bool> HasPendingMigrationsAsync(CancellationToken cancellationToken = default)
@@ -261,6 +271,14 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
               .HasDefaultValue(ReservationRequestMode.Disabled)
               .IsRequired();
             l.Property(x => x.ReservationNoticeHours).HasDefaultValue(0).IsRequired();
+            // Feature 013j — plain text[] of wire strings, no enum HasConversion (unlike
+            // MealPreference.DietaryType above) — see Location.cs's field comment for why: a
+            // second List<DietaryType>-shaped converter here collides with MonthlyMenu.Variant's
+            // DietaryType? converter in a Npgsql provider bug. Same simple pattern
+            // MealPreferenceChangeRequest.NewDietaryType already uses below.
+            l.Property(x => x.MenuVariantPriorityOrder)
+              .HasColumnType("text[]")
+              .HasDefaultValueSql("'{}'");
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -824,8 +842,20 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             mm.Property(x => x.Year).IsRequired();
             mm.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             mm.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.CreatedBy);
-            // FR-005: at most one menu per location/year/month — editing updates this row.
-            mm.HasIndex(x => new { x.LocationId, x.Year, x.Month }).IsUnique();
+            // Feature 013j — plain string, "base" sentinel default (matches
+            // MonthlyMenuVariantHelper.BaseSentinel and the AddMonthlyMenuVariants migration's
+            // hand-corrected AddColumn default — all three must stay in sync). Not a nullable
+            // column (Postgres unique indexes treat NULL as distinct from every other NULL,
+            // which would silently allow more than one base-menu row per location/year/month)
+            // and not a DietaryType? HasConversion (collides with MealPreference.DietaryType's
+            // List<DietaryType> converter in a Npgsql provider bug) — see MonthlyMenu.cs's field
+            // comment and research.md.
+            mm.Property(x => x.Variant)
+              .HasColumnType("text")
+              .HasDefaultValue("base")
+              .IsRequired();
+            // FR-005: at most one menu per location/year/month/variant — editing updates this row.
+            mm.HasIndex(x => new { x.LocationId, x.Year, x.Month, x.Variant }).IsUnique();
             mm.HasMany(x => x.Days).WithOne().HasForeignKey(d => d.MenuId).OnDelete(DeleteBehavior.Cascade);
         });
 

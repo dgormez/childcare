@@ -190,7 +190,9 @@
     "notAvailable": "Menu pas encore disponible",
     "closed": "Fermé",
     "noLocations": "Aucun menu à afficher pour le moment.",
-    "loadFailed": "Impossible de charger le menu."
+    "loadFailed": "Impossible de charger le menu.",
+    "sectionTitle": "{{child}} · {{location}}",
+    "variantLabel": "Menu {{type}}"
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Préférences alimentaires",

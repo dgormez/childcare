@@ -3490,6 +3490,128 @@ pipeline; see this section's own opening note for how that gap was resolved.
 
 ---
 
+### 013j — Monthly Menu Variants
+
+**Prompt block synthesized 2026-07-14**, same situation as 013i above — no dedicated prompt ever
+existed, only the one-line BACKLOG row and 013e's deferral note. Unlike 013i (pure frontend
+plumbing), this one raised a genuinely new, no-precedent product-shape question with no clear
+default: `MealPreference.DietaryType` (013d) is a **list** — a child can be Halal *and*
+GlutenFree at once — and the row's own example ("allergen-free") isn't actually one of 013d's 5
+enum values (allergies are a separate, severity-based concept, 013c, with no enum precedent).
+Confirmed directly with the product owner before specifying, per the standing rule for
+no-precedent scope questions:
+
+- **Variant dimension**: the existing `DietaryType` enum only (Halal/Kosher/Vegetarian/Vegan/
+  GlutenFree). No new allergen-based variant concept — allergy info stays shown alongside the
+  menu exactly as it already is today (013e), not as a selectable variant.
+- **Multi-type resolution**: a director-configured priority order among a location's enabled
+  variants. A child with multiple qualifying `DietaryType`s sees the highest-priority variant
+  that has a published menu that month; falls back to the base menu if none of their types has
+  one.
+- **Authoring model**: a full parallel day-grid per variant — the same `MonthlyMenu`/
+  `MonthlyMenuDay` shape 013e already built, just tagged with an optional `DietaryType`. Not a
+  diff/override model (that would need new merge-resolution logic nothing else in this codebase
+  has).
+
+```
+Let a director optionally publish an alternative monthly menu per dietary
+restriction (vegetarian, halal, vegan, kosher, gluten-free — the existing
+013d `DietaryType` enum), separate from the location's base menu, so a
+child with a matching dietary preference sees the right variant instead of
+the base menu.
+
+Context: raised mid-implementation of 013e, deliberately deferred to keep
+that feature's MVP to a single base menu per location/month. See this
+section's own note above for the three scope decisions already confirmed
+with the product owner (variant dimension, multi-type resolution, authoring
+model) — implement exactly those, do not re-litigate them.
+
+What to build:
+- Extend `MonthlyMenu` (tenant schema) with a nullable `Variant DietaryType?`
+  column. `null` = the existing base menu, unchanged. A non-null value is a
+  variant menu for that `DietaryType`. Change the existing unique constraint
+  from `(LocationId, Year, Month)` to `(LocationId, Year, Month, Variant)` so
+  a location can hold one base menu plus one menu per variant, per month.
+  `MonthlyMenuDay` and its whole-month-replace write model (013e) are
+  otherwise unchanged — a variant menu is just another `MonthlyMenu` row
+  with its own set of days.
+- Add `MenuVariantPriorityOrder List<DietaryType>` to `Location` (ordered,
+  Postgres `text[]`, mirrors `MealPreference.DietaryType`'s existing
+  `List<DietaryType>` storage convention). Empty list (the default) means no
+  variants are enabled for that location — existing locations are
+  unaffected until a director explicitly configures this. The order in the
+  list *is* the priority order for resolution.
+- Director-web location settings: extend the existing per-location settings
+  area (same "Algemeen"/tabs pattern 007a's location detail page and 013f's
+  `ReservationSettingsForm` already established) with a control to select
+  which `DietaryType`s are enabled as variants for this location and drag/
+  reorder their priority.
+- Director-web Menu section: add a variant selector (tabs or a dropdown)
+  alongside the existing location/month selectors on `/menu`. Selecting a
+  variant loads/edits that variant's `MonthlyMenu` through the exact same
+  `MonthlyMenuDayGrid` component and CSV import (013i) already built for the
+  base menu — both are variant-agnostic once the endpoint is parameterized.
+  Only variants enabled in that location's `MenuVariantPriorityOrder` are
+  selectable.
+- Backend read/write endpoints: extend the existing
+  `GET/PUT/POST(publish)/POST(unpublish) /api/locations/{locationId}/
+  monthly-menus/{year}/{month}` family with an optional `variant` query
+  parameter (absent = base menu, present = that `DietaryType`'s variant).
+  Reject a `variant` value not enabled in the location's
+  `MenuVariantPriorityOrder`.
+- Parent-facing resolution (`GetParentMonthlyMenuQuery`): today this
+  returns one entry **per location** (shared across every child a parent
+  has enrolled there) — has no child dimension at all. This must become
+  one entry **per (location, child)** pair, since variant resolution is
+  inherently per-child: for each of the parent's children with an active
+  contract at a location, read that child's `MealPreference.DietaryType`
+  list, walk the location's `MenuVariantPriorityOrder`, and resolve to the
+  first variant in that order that (a) the child qualifies for and (b) has
+  a *published* menu that month — falling back to the base (`Variant ==
+  null`) menu if no match. `ParentMonthlyMenuEntry` needs a `ChildId`/
+  `ChildName` added, and the parent-mobile Menu screen needs to render one
+  section per child (not just per location) when a parent has more than
+  one child at the same location.
+- Parent-mobile: surface which variant (if any) is being shown, in plain
+  language (e.g. "Vegetarisch menu voor Emma"), not the raw enum name.
+
+Key constraints:
+- The base menu (`Variant == null`) behaves exactly as 013e/013i already
+  built it — zero behavior change for any location that never configures a
+  variant.
+- A director cannot publish a variant `DietaryType` that isn't in the
+  location's `MenuVariantPriorityOrder` — configuring the variant as
+  enabled is a prerequisite to authoring it, not the other way around.
+- No merge/diff logic between a variant and the base menu — a variant menu
+  is authored completely independently, per the confirmed authoring-model
+  decision.
+
+Edge cases:
+- A location has variants enabled but a director never actually publishes
+  one for a given month: every child falls back to the base menu, same as
+  if variants didn't exist.
+- A child qualifies for a variant, but that variant's menu for the month is
+  still a draft (not published): treated as "no published variant" — falls
+  back to the base menu (or the next-lower-priority variant that IS
+  published), consistent with 013e's existing "only published menus are
+  parent-visible" rule.
+- A director removes a `DietaryType` from `MenuVariantPriorityOrder` after
+  menus already exist for it: those `MonthlyMenu` rows are untouched (not
+  deleted), simply no longer selectable/resolvable going forward — a
+  director can re-enable the type later and the old menus are still there.
+- A child has zero `DietaryType`s set (no meal preference recorded yet):
+  always sees the base menu, same as today.
+
+Out of scope:
+- Allergen-based variants (see the variant-dimension decision above).
+- A parent-facing variant picker/override — resolution is fully automatic
+  from the child's recorded dietary preference, per the confirmed
+  multi-type-resolution decision.
+- Per-dish overrides within a variant (see the authoring-model decision).
+```
+
+---
+
 ### 030 — Family Siblings
 
 ```
