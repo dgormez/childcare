@@ -190,7 +190,9 @@
     "notAvailable": "Menu nog niet beschikbaar",
     "closed": "Gesloten",
     "noLocations": "Nog geen menu om te tonen.",
-    "loadFailed": "Kon het menu niet laden."
+    "loadFailed": "Kon het menu niet laden.",
+    "sectionTitle": "{{child}} · {{location}}",
+    "variantLabel": "{{type}}-menu"
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Maaltijdvoorkeuren",

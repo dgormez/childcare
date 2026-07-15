@@ -103,9 +103,18 @@ export default function MenuScreen() {
         )}
 
         {!unavailable &&
-          entries.map((entry) => (
-            <View key={entry.locationId} style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-              <Text className="text-text dark:text-text-dark text-lg font-semibold mb-3">{entry.locationName}</Text>
+          entries.map((entry) => {
+            const locationSharedByMultipleChildren = entries.filter((e) => e.locationId === entry.locationId).length > 1;
+            return (
+            <View key={`${entry.locationId}-${entry.childId}`} style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+              <Text className={`text-text dark:text-text-dark text-lg font-semibold ${entry.resolvedVariant ? "mb-1" : "mb-3"}`}>
+                {locationSharedByMultipleChildren ? t("menu.sectionTitle", { child: entry.childName, location: entry.locationName }) : entry.locationName}
+              </Text>
+              {entry.resolvedVariant && (
+                <Text className="text-text-soft dark:text-text-soft-dark text-xs mb-3">
+                  {t("menu.variantLabel", { type: t(`mealPreferenceRequests.dietaryType.${entry.resolvedVariant}`) })}
+                </Text>
+              )}
 
               {!entry.isPublished ? (
                 <View className="bg-surface-soft dark:bg-surface-soft-dark" style={{ borderRadius: 12, padding: 16, marginBottom: 16 }}>
@@ -119,7 +128,8 @@ export default function MenuScreen() {
                 </View>
               )}
             </View>
-          ))}
+            );
+          })}
       </ScrollView>
     </ScreenContainer>
   );

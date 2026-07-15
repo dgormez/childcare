@@ -177,11 +177,14 @@ export interface MonthlyMenuDayEntry {
 }
 
 export interface ParentMonthlyMenuEntry {
-  locationId:   string;
-  locationName: string;
-  isPublished:  boolean;
-  days:         MonthlyMenuDayEntry[];
-  closureDates: string[];
+  locationId:     string;
+  locationName:   string;
+  childId:        string;
+  childName:      string;
+  resolvedVariant: string | null;
+  isPublished:    boolean;
+  days:           MonthlyMenuDayEntry[];
+  closureDates:   string[];
 }
 
 export type MealTexture = "pureed" | "mixed" | "pieces" | "normal";
