@@ -84,6 +84,19 @@ public static class InvoiceEndpoints
             return Results.File(result.Bytes, "application/pdf", $"invoice-{id}.pdf");
         });
 
+        director.MapPost("/invoices/{id:guid}/regenerate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new RegenerateInvoiceCommand(id));
+            if (result.Succeeded)
+                return Results.Ok(result.Response);
+            return result.Failure switch
+            {
+                RegenerateInvoiceFailure.NotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                RegenerateInvoiceFailure.PaidImmutable => Results.Json(new { errorKey = "errors.invoice.paid_immutable" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(RegenerateInvoiceFailure)}: {result.Failure}"),
+            };
+        });
+
         var parent = app.MapGroup("/api/parent").WithTags("Invoices").RequireAuthorization("ParentOnly");
 
         parent.MapGet("/invoices", async (HttpContext ctx, IMediator mediator) =>
