@@ -439,3 +439,25 @@ use the static code review instead.
   013g) yet again. T049 (granting the real `dgormez@gmail.com` production account) is a manual
   post-merge step — no production DB access from this session, and per this codebase's convention
   that production data changes are run manually, not autonomously.
+- 014 (`014-invoicing`): ✅ Done, merged 2026-07-15 (PR #33, squash-merged after green CI —
+  716/716 backend + 175/175 web + 79/79 parent-mobile tests). Resumed mid-flight: backend
+  (US1-US4) and most of director-web were already implemented in a prior session with zero
+  tests for the web layer and the parent-mobile side entirely unbuilt; this session verified the
+  existing work (ran the full backend suite before touching anything), wrote the missing web
+  component tests (T038-T040, T052, T067), and built parent-mobile's invoices feature from
+  scratch (list, detail, PDF download) — the first PDF download in either mobile app, since no
+  prior precedent existed anywhere in the monorepo for it (director-web's blob-download approach
+  has no React Native equivalent); added `expo-file-system`/`expo-sharing` and extended
+  `jest.config.js`'s transform allowlist for both. `/speckit-converge` found and fixed two real
+  gaps after implementation: FR-020's nullable IKT-subsidy placeholder field was never added to
+  `InvoiceLineItems` anywhere, and FR-015's backend status filter (`ListInvoicesQuery`'s `status`
+  param) was fully implemented but never exposed in the director-web invoice list UI — both
+  fixed, not deferred, same standing rule as every prior feature. The polish-phase accessibility
+  pass (T068) also caught a real inconsistency: `InvoiceTable` only made the child-name cell
+  clickable via a nested `Link`, unlike every sibling table's full-row `onClick`+`router.push`
+  pattern (`LocationsTable`, `IncidentReportsTable`) — switched to match. CI caught one flaky
+  test neither local run reproduced: `RegenerateInvoiceTests`' `Assert.Equal(sent.SentAt,
+  regenerated.SentAt)` compared an in-memory `DateTime` against one round-tripped through
+  PostgreSQL's `timestamptz` column, differing by a few ticks — fixed with the same
+  millisecond-tolerant comparison this codebase's `IncidentReportImmutabilityTests`/
+  `DeactivateVaccineTypeTests` already established for exactly this precision class.

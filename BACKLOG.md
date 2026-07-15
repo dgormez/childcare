@@ -49,7 +49,7 @@
 | 013e | `013e-monthly-menu` | Monthly menu management by director + parent view in parent app; per-child meal personalisation (texture, dietary: halal/kosher/vegan/allergen); parent change requests | 013d, 013 | ✅ Done |
 | 013i | `013i-monthly-menu-csv-import` | Bulk-populate a month's menu via CSV upload (parse rows, map to days, validate, preview before save) as an alternative to 013e's manual day-grid entry — raised mid-implementation of 013e, deferred to keep that feature's MVP to the manual grid only | 013e | ✅ Done |
 | 013j | `013j-monthly-menu-variants` | Optional alternative menu per dietary restriction (e.g. vegetarian/halal/allergen-free), separate from a location's base monthly menu, defaulting to the base menu when no variant is set — a real data-model change (variant dimension on MonthlyMenu, variant resolution on the parent read) raised mid-implementation of 013e, deferred to keep that feature's MVP to a single base menu | 013e | ✅ Done |
-| 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | 🔲 Not started |
+| 014 | `014-invoicing` | Monthly invoice generation (QuestPDF), payment tracking, sibling family bundling option | 007, 011 | ✅ Done |
 
 ### Phase 2 (after Phase 1 is stable)
 
