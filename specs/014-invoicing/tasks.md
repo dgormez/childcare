@@ -15,25 +15,25 @@ testing.
 
 **Purpose**: Contracts DTOs and i18n scaffolding shared across all stories.
 
-- [ ] T001 [P] Add `InvoiceResponse` (per contracts/invoicing-api.md's response shape) and request
+- [x] T001 [P] Add `InvoiceResponse` (per contracts/invoicing-api.md's response shape) and request
   DTOs (`GenerateInvoicesRequest`, `UpdateInvoiceExtraChargesRequest`, `SendInvoicesRequest`,
   `MarkInvoicePaidRequest`) in `backend/ChildCare.Contracts/Responses/InvoiceResponse.cs` and
   `backend/ChildCare.Contracts/Requests/InvoiceRequests.cs`
-- [ ] T002 [P] Add `UpdateLocationInvoiceSettingsRequest` and extend `LocationResponse` with
+- [x] T002 [P] Add `UpdateLocationInvoiceSettingsRequest` and extend `LocationResponse` with
   `erkenningsnummer`/`bankAccountNumber`/`invoiceDueDays` in
   `backend/ChildCare.Contracts/Requests/LocationRequests.cs` and
   `backend/ChildCare.Contracts/Responses/LocationResponse.cs`
-- [ ] T003 [P] Add `UpdateOrganisationRequest` (`kboNumber`) and extend the organisation-profile
+- [x] T003 [P] Add `UpdateOrganisationRequest` (`kboNumber`) and extend the organisation-profile
   response with `kboNumber` in `backend/ChildCare.Contracts/Requests/OrganisationRequests.cs`
   and the response type `GetCurrentOrganisationQuery` returns
-- [ ] T004 [P] Add director-web `invoices.*` i18n keys (list columns, status labels in plain
+- [x] T004 [P] Add director-web `invoices.*` i18n keys (list columns, status labels in plain
   language, generate/send/mark-paid/regenerate actions, extra-charge editor, empty/error states)
   to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
-- [ ] T005 [P] Add director-web `locations.invoiceSettings.*` i18n keys (erkenningsnummer, bank
+- [x] T005 [P] Add director-web `locations.invoiceSettings.*` i18n keys (erkenningsnummer, bank
   account number, invoice due days, save action) to the same three locale files
-- [ ] T006 [P] Add director-web `organisationSettings.*` i18n keys (KBO number field + save) to
+- [x] T006 [P] Add director-web `organisationSettings.*` i18n keys (KBO number field + save) to
   the same three locale files
-- [ ] T007 [P] Add parent-mobile `invoices.*` i18n keys (list, detail, plain-language statuses,
+- [x] T007 [P] Add parent-mobile `invoices.*` i18n keys (list, detail, plain-language statuses,
   download action, empty/error states) to `parent-mobile/i18n/locales/en.json`,
   `parent-mobile/i18n/locales/fr.json`, `parent-mobile/i18n/locales/nl.json`
 
@@ -46,30 +46,30 @@ story depends on.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T008 Add `Invoice` entity + `InvoiceStatus` enum (`Draft`/`Sent`/`Paid`) in
+- [x] T008 Add `Invoice` entity + `InvoiceStatus` enum (`Draft`/`Sent`/`Paid`) in
   `backend/ChildCare.Domain/Entities/Invoice.cs` and `backend/ChildCare.Domain/Enums/InvoiceStatus.cs`
   per data-model.md
-- [ ] T009 [P] Add `Erkenningsnummer`/`BankAccountNumber`/`InvoiceDueDays` (default 14) to
+- [x] T009 [P] Add `Erkenningsnummer`/`BankAccountNumber`/`InvoiceDueDays` (default 14) to
   `backend/ChildCare.Domain/Entities/Location.cs`
-- [ ] T010 [P] Add `KboNumber` to `backend/ChildCare.Domain/Entities/Tenant.cs`
-- [ ] T011 Configure `Invoice` in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
+- [x] T010 [P] Add `KboNumber` to `backend/ChildCare.Domain/Entities/Tenant.cs`
+- [x] T011 Configure `Invoice` in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`
   — `LineItems` as `jsonb` (System.Text.Json conversion, mirrors `ChildEvent`'s existing JSONB
   pattern), `SequenceNumber` as an identity column (`ValueGeneratedOnAdd`, research.md R3), unique
   index on `(ChildId, ContractId, LocationId, PeriodMonth)`, and the new `Location` columns
   (depends on T008, T009)
-- [ ] T012 Configure `Tenant.KboNumber` in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
+- [x] T012 Configure `Tenant.KboNumber` in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
   (depends on T010)
-- [ ] T013 Add tenant migration `AddInvoices` (new `invoices` table, new `Location` columns) in
+- [x] T013 Add tenant migration `AddInvoices` (new `invoices` table, new `Location` columns) in
   `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T011)
-- [ ] T014 Add public migration `AddTenantKboNumber` in
+- [x] T014 Add public migration `AddTenantKboNumber` in
   `backend/ChildCare.Infrastructure/Persistence/Migrations/Public/` (depends on T012)
-- [ ] T015 [P] Implement `BillableDayCalculator` per data-model.md's algorithm in
+- [x] T015 [P] Implement `BillableDayCalculator` per data-model.md's algorithm in
   `backend/ChildCare.Application/Invoices/BillableDayCalculator.cs` (depends on T008)
-- [ ] T016 [P] Implement `OgmReferenceGenerator` (modulo-97 checksum, `0`→`97` special case) in
+- [x] T016 [P] Implement `OgmReferenceGenerator` (modulo-97 checksum, `0`→`97` special case) in
   `backend/ChildCare.Application/Invoices/OgmReferenceGenerator.cs`
-- [ ] T017 [P] Implement `InvoiceMapper.ToResponse` (including computed `isOverdue`) in
+- [x] T017 [P] Implement `InvoiceMapper.ToResponse` (including computed `isOverdue`) in
   `backend/ChildCare.Application/Invoices/InvoiceMapper.cs` (depends on T008)
-- [ ] T018 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new `invoices` table
+- [x] T018 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new `invoices` table
   and `Location` columns (the recurring pattern every migration-adding feature since 003 has
   needed) in `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs` (depends on T013)
 
@@ -91,69 +91,74 @@ duplicate anything.
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] Integration test: `BillableDayCalculator` computes present/unjustified/
+- [x] T019 [P] [US1] Integration test: `BillableDayCalculator` computes present/unjustified/
   closure counts correctly against a range of `AttendanceRecord` fixtures, including a
   contracted day with no `AttendanceRecord` row at all (not billed, research.md R2) and mid-month
   contract start/end restricting the range, in `backend/ChildCare.Api.Tests/Invoices/BillableDayCalculatorTests.cs`
-- [ ] T020 [P] [US1] Integration test: `OgmReferenceGenerator`/generated invoices produce a
+  — deviation: no standalone `BillableDayCalculatorTests.cs` file exists; every scenario listed
+  (present/unjustified/closure counts, the no-attendance-row case via
+  `Generate_ZeroBillableDays_StillGeneratesInvoiceWithZeroTotal`, and mid-month start/end) is
+  covered at the integration level in `GenerateInvoicesTests.cs` instead — verified by reading
+  that file's test bodies, not assumed from its name.
+- [x] T020 [P] [US1] Integration test: `OgmReferenceGenerator`/generated invoices produce a
   unique, checksum-valid reference for every invoice, including the `remainder == 0` → `97`
   special case, in `backend/ChildCare.Api.Tests/Invoices/OgmReferenceGeneratorTests.cs`
-- [ ] T021 [P] [US1] Integration test: generating invoices for a location/month creates exactly
+- [x] T021 [P] [US1] Integration test: generating invoices for a location/month creates exactly
   one draft invoice per child with a contract active that month, with the correct computed
   breakdown and total (FR-001/FR-002, US1/AC1) in `backend/ChildCare.Api.Tests/Invoices/GenerateInvoicesTests.cs`
-- [ ] T022 [P] [US1] Integration test: a contract that started or ended mid-month restricts the
+- [x] T022 [P] [US1] Integration test: a contract that started or ended mid-month restricts the
   invoice to only the active portion (US1/AC2, AC3) in the same file
-- [ ] T023 [P] [US1] Integration test: a child with active contracts at two locations gets two
+- [x] T023 [P] [US1] Integration test: a child with active contracts at two locations gets two
   independent invoices, one per location, when generated separately (FR-014, US1/AC4) in the
   same file
-- [ ] T024 [P] [US1] Integration test: generating twice for the same location/month does not
+- [x] T024 [P] [US1] Integration test: generating twice for the same location/month does not
   duplicate invoices — the existing draft is recomputed in place (FR-003, US1/AC5) in the same
   file
-- [ ] T025 [P] [US1] Integration test: a contract that exists for the month but was never active
+- [x] T025 [P] [US1] Integration test: a contract that exists for the month but was never active
   (e.g. cancelled before its start date) produces no invoice (Edge Cases) in the same file
 
 ### Implementation for User Story 1
 
-- [ ] T026 [US1] Implement `GenerateInvoicesCommand` (bulk, per location/month; idempotent
+- [x] T026 [US1] Implement `GenerateInvoicesCommand` (bulk, per location/month; idempotent
   recompute of existing drafts) in `backend/ChildCare.Application/Invoices/GenerateInvoicesCommand.cs`
   (depends on T015, T016, T017)
-- [ ] T027 [US1] Implement `ListInvoicesQuery` and `GetInvoiceByIdQuery` (director) in
+- [x] T027 [US1] Implement `ListInvoicesQuery` and `GetInvoiceByIdQuery` (director) in
   `backend/ChildCare.Application/Invoices/ListInvoicesQuery.cs` and `GetInvoiceByIdQuery.cs`
   (depends on T017)
-- [ ] T028 [US1] Wire `POST /api/locations/{locationId}/invoices/generate`,
+- [x] T028 [US1] Wire `POST /api/locations/{locationId}/invoices/generate`,
   `GET /api/locations/{locationId}/invoices`, and `GET /api/invoices/{id}` in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T026, T027)
-- [ ] T029 [US1] Implement `UpdateLocationInvoiceSettingsCommand` (mirrors
+- [x] T029 [US1] Implement `UpdateLocationInvoiceSettingsCommand` (mirrors
   `UpdateLocationReservationSettingsCommand`, 013f) + wire
   `PUT /api/locations/{id}/invoice-settings` in
   `backend/ChildCare.Application/Locations/UpdateLocationInvoiceSettingsCommand.cs` and
   `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` (depends on T009, T011)
-- [ ] T030 [US1] Implement `UpdateOrganisationCommand` (`KboNumber`) + wire
+- [x] T030 [US1] Implement `UpdateOrganisationCommand` (`KboNumber`) + wire
   `PUT /api/organisations/me` in `backend/ChildCare.Application/Organisations/UpdateOrganisationCommand.cs`
   and `backend/ChildCare.Api/Endpoints/OrganisationEndpoints.cs` (depends on T010, T012)
-- [ ] T031 [P] [US1] Integration test: `PUT .../invoice-settings` persists erkenningsnummer/bank
+- [x] T031 [P] [US1] Integration test: `PUT .../invoice-settings` persists erkenningsnummer/bank
   account number/invoice-due-days and leaves other locations unchanged; non-`DirectorOnly`
   callers rejected in `backend/ChildCare.Api.Tests/Invoices/LocationInvoiceSettingsTests.cs`
-- [ ] T032 [P] [US1] Integration test: `PUT /api/organisations/me` persists `kboNumber`; non-
+- [x] T032 [P] [US1] Integration test: `PUT /api/organisations/me` persists `kboNumber`; non-
   `DirectorOnly` callers rejected in `backend/ChildCare.Api.Tests/Invoices/OrganisationSettingsTests.cs`
-- [ ] T033 [US1] Regenerate and commit `web/lib/generated/api-types.ts` against the new endpoints
-- [ ] T034 [US1] Create `InvoiceSettingsForm.tsx` (mirrors `ReservationSettingsForm.tsx`) in
+- [x] T033 [US1] Regenerate and commit `web/lib/generated/api-types.ts` against the new endpoints
+- [x] T034 [US1] Create `InvoiceSettingsForm.tsx` (mirrors `ReservationSettingsForm.tsx`) in
   `web/components/InvoiceSettingsForm.tsx` (depends on T033)
-- [ ] T035 [US1] Add an "Invoicing" tab to the location detail page in
+- [x] T035 [US1] Add an "Invoicing" tab to the location detail page in
   `web/app/(app)/locations/[id]/page.tsx` (depends on T034)
-- [ ] T036 [US1] Create a minimal organisation-profile settings page (KBO number field, save
+- [x] T036 [US1] Create a minimal organisation-profile settings page (KBO number field, save
   action — no existing org-settings screen exists in `web/` yet, so this is a new, deliberately
   small page, not a full settings dashboard) in `web/app/(app)/settings/page.tsx` (depends on
   T033)
-- [ ] T037 [US1] Create `web/components/invoices/InvoiceTable.tsx` (filterable/sortable list —
+- [x] T037 [US1] Create `web/components/invoices/InvoiceTable.tsx` (filterable/sortable list —
   status, month — high-density table per `platform-rules.md`'s Director Web section) and
   `web/app/(app)/invoices/page.tsx` (location/month picker + "Generate invoices" action + the
   table) (depends on T033)
-- [ ] T038 [P] [US1] Web component test: the invoice settings tab loads/saves erkenningsnummer/
+- [x] T038 [P] [US1] Web component test: the invoice settings tab loads/saves erkenningsnummer/
   bank account/due-days in `web/__tests__/invoiceSettings.test.tsx`
-- [ ] T039 [P] [US1] Web component test: the organisation settings page loads/saves the KBO
+- [x] T039 [P] [US1] Web component test: the organisation settings page loads/saves the KBO
   number in `web/__tests__/organisationSettings.test.tsx`
-- [ ] T040 [P] [US1] Web component test: selecting a location/month and clicking "Generate
+- [x] T040 [P] [US1] Web component test: selecting a location/month and clicking "Generate
   invoices" renders the resulting table rows with correct amounts/statuses in
   `web/__tests__/invoiceGeneration.test.tsx`
 
@@ -173,21 +178,21 @@ it paid and confirm the status updates.
 
 ### Tests for User Story 2
 
-- [ ] T041 [P] [US2] Integration test: `PUT .../extra-charges` on a draft invoice updates
+- [x] T041 [P] [US2] Integration test: `PUT .../extra-charges` on a draft invoice updates
   `lineItems.extraCharges` and recomputes `totalCents` as exactly `subtotalCents` plus the sum
   of extra charges; rejected (`422`) on a non-draft invoice and on a zero/negative charge amount
   (FR-006, US2/AC1) in `backend/ChildCare.Api.Tests/Invoices/InvoiceLifecycleTests.cs`
-- [ ] T042 [P] [US2] Integration test: `POST /api/invoices/send` transitions one or many draft
+- [x] T042 [P] [US2] Integration test: `POST /api/invoices/send` transitions one or many draft
   invoices to `sent`, sets `sentAt`/`dueDate`, generates the OGM reference if not already
   present, and notifies each parent; rejects the whole batch (no partial send) if any id isn't
   currently `draft` (FR-007, FR-013, US2/AC2, AC3) in the same file
-- [ ] T043 [P] [US2] Integration test: a `sent` invoice whose `dueDate` has passed with no
+- [x] T043 [P] [US2] Integration test: a `sent` invoice whose `dueDate` has passed with no
   payment reads as `isOverdue: true` in list/detail responses, with no stored status change
   (FR-010, US2/AC4) in the same file
-- [ ] T044 [P] [US2] Integration test: `POST /api/invoices/{id}/mark-paid` on a `sent` (or
+- [x] T044 [P] [US2] Integration test: `POST /api/invoices/{id}/mark-paid` on a `sent` (or
   overdue) invoice sets `status: paid` and `paidAt`, and is rejected (`422`) on a `draft` invoice
   (FR-009, FR-013, US2/AC5, Edge Cases) in the same file
-- [ ] T045 [P] [US2] Integration test: `GET /api/invoices/{id}/pdf` renders a PDF containing the
+- [x] T045 [P] [US2] Integration test: `GET /api/invoices/{id}/pdf` renders a PDF containing the
   KDV name/address/KBO/erkenningsnummer (if set), parent/child name, period, line-item
   breakdown, total, due date, OGM reference, and bank account number (if set) (FR-005, US3/AC4 —
   shared PDF-content assertion reused by the parent-facing test too) in
@@ -195,27 +200,27 @@ it paid and confirm the status updates.
 
 ### Implementation for User Story 2
 
-- [ ] T046 [US2] Implement `UpdateInvoiceExtraChargesCommand` in
+- [x] T046 [US2] Implement `UpdateInvoiceExtraChargesCommand` in
   `backend/ChildCare.Application/Invoices/UpdateInvoiceExtraChargesCommand.cs` (depends on T017)
-- [ ] T047 [US2] Implement `SendInvoicesCommand` (batch, all-or-nothing; computes `DueDate` from
+- [x] T047 [US2] Implement `SendInvoicesCommand` (batch, all-or-nothing; computes `DueDate` from
   the location's `InvoiceDueDays`, generates the OGM reference, sends the existing
   email/push notification per child's linked parent(s)) in
   `backend/ChildCare.Application/Invoices/SendInvoicesCommand.cs` (depends on T009, T016, T017)
-- [ ] T048 [US2] Implement `MarkInvoicePaidCommand` in
+- [x] T048 [US2] Implement `MarkInvoicePaidCommand` in
   `backend/ChildCare.Application/Invoices/MarkInvoicePaidCommand.cs` (depends on T017)
-- [ ] T049 [US2] Implement `QuestPdfInvoiceGenerator`/`IInvoicePdfGenerator` (mirrors
+- [x] T049 [US2] Implement `QuestPdfInvoiceGenerator`/`IInvoicePdfGenerator` (mirrors
   `QuestPdfContractGenerator`'s per-locale `Labels` dictionary pattern exactly) in
   `backend/ChildCare.Application/Common/IInvoicePdfGenerator.cs` and
   `backend/ChildCare.Infrastructure/Pdf/QuestPdfInvoiceGenerator.cs`, and
   `GenerateInvoicePdfQuery` (mirrors `GenerateContractPdfQuery` — on-demand render, research.md
   R1) in `backend/ChildCare.Application/Invoices/GenerateInvoicePdfQuery.cs`
-- [ ] T050 [US2] Wire `PUT /api/invoices/{id}/extra-charges`, `POST /api/invoices/send`,
+- [x] T050 [US2] Wire `PUT /api/invoices/{id}/extra-charges`, `POST /api/invoices/send`,
   `POST /api/invoices/{id}/mark-paid`, and `GET /api/invoices/{id}/pdf` in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T046, T047, T048, T049)
-- [ ] T051 [US2] Create `web/components/invoices/InvoiceDetail.tsx` (breakdown, extra-charge
+- [x] T051 [US2] Create `web/components/invoices/InvoiceDetail.tsx` (breakdown, extra-charge
   editor, send/mark-paid actions, PDF download link) and
   `web/app/(app)/invoices/[id]/page.tsx` (depends on T033)
-- [ ] T052 [P] [US2] Web component test: adding an extra charge and sending updates the total and
+- [x] T052 [P] [US2] Web component test: adding an extra charge and sending updates the total and
   status; the mark-paid action updates status/paid date in `web/__tests__/invoiceDetail.test.tsx`
 
 **Checkpoint**: A director can fully review, send, and track payment for any generated invoice,
@@ -234,30 +239,30 @@ reference and every other required field.
 
 ### Tests for User Story 3
 
-- [ ] T053 [P] [US3] Integration test: `GET /api/parent/invoices` returns only `sent`/`paid`
+- [x] T053 [P] [US3] Integration test: `GET /api/parent/invoices` returns only `sent`/`paid`
   invoices (never `draft`) for the requesting parent's own children, correctly attributed to
   each child (FR-008, US3/AC1, AC3) in `backend/ChildCare.Api.Tests/Invoices/GetParentInvoicesTests.cs`
-- [ ] T054 [P] [US3] Integration test: a parent with two children (same or different locations)
+- [x] T054 [P] [US3] Integration test: a parent with two children (same or different locations)
   sees every invoice for every child, not just one (US3/AC2); a second contact linked to the
   same child sees the same invoices as the first (Assumptions) in the same file
-- [ ] T055 [P] [US3] Integration test: `GET /api/parent/invoices/{id}/pdf` returns the identical
+- [x] T055 [P] [US3] Integration test: `GET /api/parent/invoices/{id}/pdf` returns the identical
   `404` response both for an invoice that doesn't belong to one of the requesting parent's
   children and for one that does but is still `draft` — the two cases must be indistinguishable
   to the caller (Security considerations) in the same file
 
 ### Implementation for User Story 3
 
-- [ ] T056 [US3] Implement `GetParentInvoicesQuery` (mirrors `GetParentMonthlyMenuQuery`'s
+- [x] T056 [US3] Implement `GetParentInvoicesQuery` (mirrors `GetParentMonthlyMenuQuery`'s
   parent-contact-resolution + per-child-entry pattern, 013j) in
   `backend/ChildCare.Application/Invoices/GetParentInvoicesQuery.cs` (depends on T017)
-- [ ] T057 [US3] Wire `GET /api/parent/invoices` and `GET /api/parent/invoices/{id}/pdf` in
+- [x] T057 [US3] Wire `GET /api/parent/invoices` and `GET /api/parent/invoices/{id}/pdf` in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T056, T049)
-- [ ] T058 [US3] Create `parent-mobile/services/invoices.ts` (fetch pattern, mirrors
+- [x] T058 [US3] Create `parent-mobile/services/invoices.ts` (fetch pattern, mirrors
   `services/menu.ts`) in `parent-mobile/services/invoices.ts`
-- [ ] T059 [US3] Create `parent-mobile/app/(app)/invoices/index.tsx` (list, plain-language
+- [x] T059 [US3] Create `parent-mobile/app/(app)/invoices/index.tsx` (list, plain-language
   status) and `parent-mobile/app/(app)/invoices/[id].tsx` (detail + PDF download) (depends on
   T058)
-- [ ] T060 [P] [US3] Parent-mobile component test: the invoice list shows only sent/paid
+- [x] T060 [P] [US3] Parent-mobile component test: the invoice list shows only sent/paid
   invoices for the parent's own children, correctly attributed, with plain-language status in
   `parent-mobile/__tests__/invoices.test.tsx`
 
@@ -279,25 +284,25 @@ invoice rejects the same attempt.
 
 ### Tests for User Story 4
 
-- [ ] T061 [P] [US4] Integration test: regenerating a `draft` invoice recomputes line items with
+- [x] T061 [P] [US4] Integration test: regenerating a `draft` invoice recomputes line items with
   no parent notification (US4/AC1) in `backend/ChildCare.Api.Tests/Invoices/RegenerateInvoiceTests.cs`
-- [ ] T062 [P] [US4] Integration test: regenerating a `sent` invoice recomputes line items/total,
+- [x] T062 [P] [US4] Integration test: regenerating a `sent` invoice recomputes line items/total,
   keeps the same `ogmReference`/`sentAt`/`dueDate` unchanged, and re-notifies the parent
   (FR-011, US4/AC2) in the same file
-- [ ] T063 [P] [US4] Integration test: attempting to regenerate a `paid` invoice is rejected
+- [x] T063 [P] [US4] Integration test: attempting to regenerate a `paid` invoice is rejected
   (`422 errors.invoice.paid_immutable`) and the invoice is byte-for-byte unchanged (FR-012,
   US4/AC3, SC-005) in the same file
 
 ### Implementation for User Story 4
 
-- [ ] T064 [US4] Implement `RegenerateInvoiceCommand` in
+- [x] T064 [US4] Implement `RegenerateInvoiceCommand` in
   `backend/ChildCare.Application/Invoices/RegenerateInvoiceCommand.cs` (depends on T015, T017,
   T047)
-- [ ] T065 [US4] Wire `POST /api/invoices/{id}/regenerate` in
+- [x] T065 [US4] Wire `POST /api/invoices/{id}/regenerate` in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T064)
-- [ ] T066 [US4] Add a "Regenerate" action to `web/components/invoices/InvoiceDetail.tsx`,
+- [x] T066 [US4] Add a "Regenerate" action to `web/components/invoices/InvoiceDetail.tsx`,
   disabled/hidden for a `paid` invoice (depends on T051, T065)
-- [ ] T067 [P] [US4] Web component test: the regenerate action is available on draft/sent
+- [x] T067 [P] [US4] Web component test: the regenerate action is available on draft/sent
   invoices and absent/disabled on a paid invoice in `web/__tests__/invoiceDetail.test.tsx`
 
 **Checkpoint**: All four user stories are independently functional end to end.
