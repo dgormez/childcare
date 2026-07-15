@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { apiClient } from "../../../lib/apiClient";
 import { ErrorState } from "../../../components/ErrorState";
 import { MonthlyMenuDayGrid, type MonthlyMenuDaySave } from "../../../components/menu/MonthlyMenuDayGrid";
+import { MonthlyMenuVariantSelector } from "../../../components/menu/MonthlyMenuVariantSelector";
 import { MealPreferenceRequestQueue } from "../../../components/menu/MealPreferenceRequestQueue";
 import type { LocationResponse, MonthlyMenuResponse, MonthlyMenuPublishStateResponse, MealPreferenceChangeRequestResponse } from "../../../lib/types";
 
@@ -19,10 +20,14 @@ export default function MonthlyMenuPage() {
   const [locations, setLocations] = useState<LocationResponse[]>([]);
   const [locationId, setLocationId] = useState<string>("");
   const [{ year, month }, setYearMonth] = useState(currentYearMonth());
+  const [variant, setVariant] = useState<string | null>(null);
   const [menu, setMenu] = useState<MonthlyMenuResponse | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [saving, setSaving] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<MealPreferenceChangeRequestResponse[]>([]);
+
+  const selectedLocation = locations.find((loc) => loc.id === locationId);
+  const availableVariants = selectedLocation?.menuVariantPriorityOrder ?? [];
 
   useEffect(() => {
     apiClient.GET("/api/locations").then((result) => {
@@ -60,7 +65,7 @@ export default function MonthlyMenuPage() {
     setState("loading");
     try {
       const result = await apiClient.GET("/api/locations/{locationId}/monthly-menus/{year}/{month}", {
-        params: { path: { locationId, year, month } },
+        params: { path: { locationId, year, month }, query: { variant: variant ?? undefined } },
       });
       if (!result.response.ok) {
         setState("error");
@@ -71,7 +76,7 @@ export default function MonthlyMenuPage() {
     } catch {
       setState("error");
     }
-  }, [locationId, year, month]);
+  }, [locationId, year, month, variant]);
 
   useEffect(() => {
     load();
@@ -81,7 +86,7 @@ export default function MonthlyMenuPage() {
     setSaving(true);
     try {
       const result = await apiClient.PUT("/api/locations/{locationId}/monthly-menus/{year}/{month}", {
-        params: { path: { locationId, year, month } },
+        params: { path: { locationId, year, month }, query: { variant: variant ?? undefined } },
         body: { days },
       });
       if (result.response.ok) setMenu(result.data as unknown as MonthlyMenuResponse);
@@ -94,7 +99,7 @@ export default function MonthlyMenuPage() {
     setSaving(true);
     try {
       const result = await apiClient.POST("/api/locations/{locationId}/monthly-menus/{year}/{month}/publish", {
-        params: { path: { locationId, year, month } },
+        params: { path: { locationId, year, month }, query: { variant: variant ?? undefined } },
       });
       if (result.response.ok) {
         const publishState = result.data as unknown as MonthlyMenuPublishStateResponse;
@@ -109,7 +114,7 @@ export default function MonthlyMenuPage() {
     setSaving(true);
     try {
       const result = await apiClient.POST("/api/locations/{locationId}/monthly-menus/{year}/{month}/unpublish", {
-        params: { path: { locationId, year, month } },
+        params: { path: { locationId, year, month }, query: { variant: variant ?? undefined } },
       });
       if (result.response.ok) {
         const publishState = result.data as unknown as MonthlyMenuPublishStateResponse;
@@ -130,7 +135,10 @@ export default function MonthlyMenuPage() {
           {locations.length > 1 && (
             <select
               value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
+              onChange={(e) => {
+                setLocationId(e.target.value);
+                setVariant(null);
+              }}
               aria-label={t("locationLabel")}
               className="h-10 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark"
             >
@@ -141,6 +149,7 @@ export default function MonthlyMenuPage() {
               ))}
             </select>
           )}
+          <MonthlyMenuVariantSelector availableVariants={availableVariants} value={variant} onChange={setVariant} />
           <input
             type="month"
             value={monthInputValue}

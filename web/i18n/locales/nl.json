@@ -439,6 +439,7 @@
     "tabGeneral": "Algemeen",
     "tabReservationSettings": "Reserveringsinstellingen",
     "tabCheckInSettings": "Inchecken",
+    "tabMenuVariants": "Menuvarianten",
     "general": {
       "nameLabel": "Naam",
       "addressLabel": "Adres",
@@ -479,6 +480,22 @@
       "saveButton": "Wijzigingen opslaan",
       "saveSuccess": "Incheckinstellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "menuVariants": {
+      "description": "Bied een alternatief maandmenu aan per dieetbeperking, naast het basismenu van deze locatie. Schakel in wat je aanbiedt en bepaal de volgorde van prioriteit voor een kind dat voor meerdere in aanmerking komt.",
+      "enableLabel": "Ingeschakeld",
+      "priorityLabel": "Prioriteitsvolgorde",
+      "moveUp": "Omhoog",
+      "moveDown": "Omlaag",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Menuvariant-instellingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw.",
+      "invalidDietaryType": "Onbekend dieettype.",
+      "duplicateDietaryType": "Elk dieettype kan maar één keer ingeschakeld worden.",
+      "warningTitle": "Deze variant is momenteel zichtbaar voor gezinnen",
+      "warningBody": "Verwijderen schakelt betrokken kinderen over naar hun volgende optie (een andere ingeschakelde variant, of het basismenu) bij hun volgende weergave.",
+      "warningConfirm": "Toch verwijderen",
+      "warningCancel": "Annuleren"
     }
   },
   "incidents": {
@@ -793,6 +810,10 @@
         "duplicate_date": "Dubbele datum in dit bestand",
         "field_too_long": "Een veld overschrijdt 500 tekens"
       }
+    },
+    "variantSelector": {
+      "label": "Menu",
+      "base": "Basismenu"
     }
   },
   "mealPreferenceRequests": {

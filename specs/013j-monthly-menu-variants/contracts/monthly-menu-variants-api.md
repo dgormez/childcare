@@ -29,17 +29,25 @@ versa.
 
 ### `PUT /api/locations/{locationId}/menu-variant-settings`
 
-**New endpoint**, mirrors 013f's `PUT /api/locations/{id}/reservation-settings`.
+**New endpoint**, mirrors 013f's `PUT /api/locations/{id}/reservation-settings` — including its
+"confirm despite a real consequence" shape (`ConfirmDespitePending` there, FR-014 here).
 
 **Request**:
 
 ```jsonc
-{ "menuVariantPriorityOrder": ["halal", "vegetarian"] }
+{ "menuVariantPriorityOrder": ["halal", "vegetarian"], "confirmDespiteRemovingPublished": false }
 ```
 
 Order is significant — index 0 is highest priority (FR-002). An empty array disables all
 variants for the location (FR-001's "no variant enabled by default" is this endpoint's own
 default state, not a separate flag).
+
+**Removal warning (FR-014)**: if the new array omits any `DietaryType` currently in
+`menuVariantsWithPublishedContent` (see below) and `confirmDespiteRemovingPublished` is `false`,
+the request fails with `409` and `errorKey: "errors.location.menu_variant_settings.
+removing_published_warning"` plus the affected wire strings — mirroring 013f's
+`PendingRequestsWarning` shape exactly. Retrying with `confirmDespiteRemovingPublished: true`
+proceeds.
 
 **Response 200**: the updated `LocationResponse`, now including `menuVariantPriorityOrder`.
 

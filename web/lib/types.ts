@@ -61,6 +61,8 @@ export interface LocationResponse {
   reservationSwapsMode: ReservationRequestMode;
   reservationNoticeHours: number;
   requiresCaregiverPin: boolean;
+  menuVariantPriorityOrder: string[];
+  menuVariantsWithPublishedContent: string[];
 }
 
 export interface DeviceSummaryResponse {
@@ -80,6 +82,8 @@ export interface ApiErrorBody {
   fieldErrors?: Record<string, string>;
   // Feature 013f FR-014 — present only on errors.location.reservation_settings.pending_requests_warning.
   pendingCounts?: Partial<Record<"absence" | "extra" | "exchange", number>>;
+  // Feature 013j FR-014 — present only on errors.location.menu_variant_settings.removing_published_warning.
+  variants?: string[];
 }
 
 // ── Attendance (feature 010) ─────────────────────────────────────────────────────
@@ -518,6 +522,7 @@ export interface MonthlyMenuDayEntry {
 
 export interface MonthlyMenuResponse {
   exists:      boolean;
+  variant:     string | null;
   isPublished: boolean;
   publishedAt: string | null;
   days:        MonthlyMenuDayEntry[];

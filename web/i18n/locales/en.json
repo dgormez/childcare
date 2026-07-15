@@ -439,6 +439,7 @@
     "tabGeneral": "General",
     "tabReservationSettings": "Reservation Settings",
     "tabCheckInSettings": "Check-In",
+    "tabMenuVariants": "Menu Variants",
     "general": {
       "nameLabel": "Name",
       "addressLabel": "Address",
@@ -479,6 +480,22 @@
       "saveButton": "Save changes",
       "saveSuccess": "Check-in settings saved.",
       "saveError": "Couldn't save changes. Please try again."
+    },
+    "menuVariants": {
+      "description": "Offer an alternative monthly menu per dietary restriction, alongside this location's base menu. Enable the ones you offer, and order them by priority for a child who qualifies for more than one.",
+      "enableLabel": "Enabled",
+      "priorityLabel": "Priority order",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "saveButton": "Save changes",
+      "saveSuccess": "Menu variant settings saved.",
+      "saveError": "Couldn't save changes. Please try again.",
+      "invalidDietaryType": "Unrecognized dietary type.",
+      "duplicateDietaryType": "Each dietary type can only be enabled once.",
+      "warningTitle": "This variant is currently visible to families",
+      "warningBody": "Removing this will switch affected children back to their next resolution option (another enabled variant, or the base menu) the next time they view it.",
+      "warningConfirm": "Remove anyway",
+      "warningCancel": "Cancel"
     }
   },
   "incidents": {
@@ -793,6 +810,10 @@
         "duplicate_date": "Duplicate date in this file",
         "field_too_long": "A field exceeds 500 characters"
       }
+    },
+    "variantSelector": {
+      "label": "Menu",
+      "base": "Base menu"
     }
   },
   "mealPreferenceRequests": {

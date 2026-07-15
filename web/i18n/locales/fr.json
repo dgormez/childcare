@@ -439,6 +439,7 @@
     "tabGeneral": "Général",
     "tabReservationSettings": "Paramètres des demandes",
     "tabCheckInSettings": "Enregistrement",
+    "tabMenuVariants": "Variantes de menu",
     "general": {
       "nameLabel": "Nom",
       "addressLabel": "Adresse",
@@ -479,6 +480,22 @@
       "saveButton": "Enregistrer les modifications",
       "saveSuccess": "Paramètres d'enregistrement enregistrés.",
       "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+    },
+    "menuVariants": {
+      "description": "Proposez un menu mensuel alternatif par restriction alimentaire, en plus du menu de base de ce site. Activez ceux que vous proposez et classez-les par priorité pour un enfant concerné par plusieurs.",
+      "enableLabel": "Activé",
+      "priorityLabel": "Ordre de priorité",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "saveButton": "Enregistrer les modifications",
+      "saveSuccess": "Paramètres des variantes de menu enregistrés.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+      "invalidDietaryType": "Type de régime non reconnu.",
+      "duplicateDietaryType": "Chaque type de régime ne peut être activé qu'une seule fois.",
+      "warningTitle": "Cette variante est actuellement visible par les familles",
+      "warningBody": "La supprimer basculera les enfants concernés vers leur prochaine option de résolution (une autre variante activée, ou le menu de base) lors de leur prochaine consultation.",
+      "warningConfirm": "Supprimer quand même",
+      "warningCancel": "Annuler"
     }
   },
   "incidents": {
@@ -793,6 +810,10 @@
         "duplicate_date": "Date en double dans ce fichier",
         "field_too_long": "Un champ dépasse 500 caractères"
       }
+    },
+    "variantSelector": {
+      "label": "Menu",
+      "base": "Menu de base"
     }
   },
   "mealPreferenceRequests": {
