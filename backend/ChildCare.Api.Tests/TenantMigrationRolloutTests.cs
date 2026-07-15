@@ -146,7 +146,11 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// of gap as 008b's "AddLocationRequiresCaregiverPin"/013f's "AddLocationReservationSettings"
     /// — it only adds columns to two already-dropped tables (monthly_menus.Variant,
     /// locations.MenuVariantPriorityOrder), so no separate DROP COLUMN step is needed, but it
-    /// still needs its own history-removal entry.
+    /// still needs its own history-removal entry. Feature 014's "AddInvoices" migration adds a
+    /// new invoices table (FKs to children, contracts, and locations, so it must drop before all
+    /// three) plus three columns on the already-dropped locations table (Erkenningsnummer,
+    /// BankAccountNumber, InvoiceDueDays) that need no separate DROP COLUMN step for the same
+    /// reason as 013j's MenuVariantPriorityOrder above.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -166,6 +170,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."group_activity_photos";
             DROP TABLE "{schemaName}"."group_activities";
             DROP TABLE "{schemaName}"."device_pairings";
+            DROP TABLE "{schemaName}"."invoices";
             DROP TABLE "{schemaName}"."contracts";
             DROP TABLE "{schemaName}"."child_contacts";
             DROP TABLE "{schemaName}"."child_group_assignments";
@@ -203,7 +208,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices';
             """);
     }
 
@@ -222,6 +227,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             _ = await db.RefreshTokens.CountAsync();
             _ = await db.MonthlyMenus.CountAsync();
             _ = await db.MealPreferenceChangeRequests.CountAsync();
+            _ = await db.Invoices.CountAsync();
+            _ = await db.Locations.Select(l => l.InvoiceDueDays).FirstOrDefaultAsync();
             return true;
         }
         catch

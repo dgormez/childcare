@@ -41,6 +41,8 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
                  v => (ProvisioningStatus)Enum.Parse(typeof(ProvisioningStatus), v, ignoreCase: true))
              .HasMaxLength(20)
              .IsRequired();
+            // Feature 014 — org-wide Belgian company registration number.
+            t.Property(x => x.KboNumber).HasMaxLength(20);
         });
 
         modelBuilder.Entity<Invitation>(i =>

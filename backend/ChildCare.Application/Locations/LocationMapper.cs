@@ -20,5 +20,8 @@ internal static class LocationMapper
         l.ReservationNoticeHours,
         l.RequiresCaregiverPin,
         l.MenuVariantPriorityOrder,
-        menuVariantsWithPublishedContent ?? []);
+        menuVariantsWithPublishedContent ?? [],
+        l.Erkenningsnummer,
+        l.BankAccountNumber,
+        l.InvoiceDueDays);
 }
