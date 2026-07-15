@@ -13,6 +13,21 @@ a Belgian OGM structured payment reference and a QuestPDF PDF. Directors generat
 mark invoices paid; parents view and download their invoices. Phase 1 = private KDVs only, no
 IKT subsidy lines."
 
+## Clarifications
+
+### Session 2026-07-15
+
+- Q: Where do the KBO/ondernemingsnummer, erkenningsnummer, and bank account number required on
+  the invoice PDF live in the data model? → A: KBO/ondernemingsnummer is org-wide (one legal
+  entity per `Tenant`, added as a nullable field there); erkenningsnummer and bank account
+  number are per-`Location`, alongside the existing `NaamLocatie`/`Dossiernummer`/
+  `Verantwoordelijke` Opgroeien-reporting fields — a multi-location organisation can have a
+  distinct license number and bank account per physical site.
+- Q: Is an invoice's due date fixed or per-location configurable? → A: Per-location
+  configurable (`Location.InvoiceDueDays`, an integer), mirroring 013f's
+  `ReservationNoticeHours` precedent for per-location numeric policy settings. Defaults to 14
+  days so a location that never configures it gets sensible due dates with zero setup.
+
 ## Product Context
 
 ### Feature Type
@@ -122,9 +137,11 @@ parent's own children's invoices.
 
 **Data-model impact**: New `Invoice` entity (tenant schema) — `ChildId`, `ContractId`,
 `LocationId`, `PeriodMonth` (first-of-month date), `Status`, `SubtotalCents`, `TotalCents`,
-`LineItems` (JSONB), `OgmReference`, `SentAt`, `PaidAt`, `DueDate`, `CreatedAt`, `UpdatedAt`. No
-changes to `Contract`, `Attendance`, `DayReservation`, or `ClosureDay` — invoicing only reads
-them.
+`LineItems` (JSONB), `OgmReference`, `SentAt`, `PaidAt`, `DueDate`, `CreatedAt`, `UpdatedAt`.
+`Tenant` (public schema) gains a nullable `KboNumber`. `Location` gains nullable
+`Erkenningsnummer`/`BankAccountNumber` and an `InvoiceDueDays` int (default 14) — see
+Clarifications. No changes to `Contract`, `AttendanceRecord`, `DayReservation`, or `ClosureDay` —
+invoicing only reads them.
 
 **Security considerations**: No new authorization boundary beyond the existing `DirectorOnly`/
 parent-contact-resolution model, both already tenant-scoped. A parent must never be able to
@@ -300,10 +317,13 @@ the same (it identifies this invoice, not this specific PDF revision).
   reference (`+++XXX/XXXX/XXXXX+++` format, 12 digits, modulo-97 checksum) for every invoice at
   creation time, and MUST NOT reuse a reference across invoices.
 - **FR-005**: The system MUST render an invoice PDF (QuestPDF) containing: the KDV's name,
-  address, KBO/ondernemingsnummer (if set on the location/organisation), erkenningsnummer (if
-  set), the parent's name, the child's name, the billing period (month + year), the line-item
-  breakdown, the total due, the due date, the OGM reference (visually prominent), and the KDV's
-  bank account number.
+  address, KBO/ondernemingsnummer (org-wide, if set), erkenningsnummer (per-location, if set),
+  the parent's name, the child's name, the billing period (month + year), the line-item
+  breakdown, the total due, the due date, the OGM reference (visually prominent), and the
+  location's bank account number (if set).
+- **FR-005a**: The system MUST let a director configure a location's invoice due date offset
+  (`InvoiceDueDays`, default 14) and MUST compute each invoice's `DueDate` as its generation
+  date plus that location's configured offset.
 - **FR-006**: The system MUST let a director add manual extra-charge line items (a label and an
   amount in cents) to a `draft` invoice before sending; extra charges MUST be included in the
   invoice's total.
@@ -350,8 +370,14 @@ the same (it identifies this invoice, not this specific PDF revision).
   `DueDate`, `CreatedAt`, `UpdatedAt`.
 - **`Contract`** (existing, 007, unchanged): source of `daily_rate_cents` and the contracted
   date range/weekdays an invoice's billable-day computation reads.
-- **`Attendance`**/**`DayReservation`**/**`ClosureDay`** (existing, 009/013a/011, unchanged):
+- **`AttendanceRecord`**/**`DayReservation`**/**`ClosureDay`** (existing, 009/013a/011, unchanged):
   read-only inputs to the billable-day computation.
+- **`Tenant`** (existing, public schema, extended): gains a nullable `KboNumber` (Belgian
+  company registration number) — org-wide, one legal entity regardless of location count.
+- **`Location`** (existing, extended): gains nullable `Erkenningsnummer`, nullable
+  `BankAccountNumber`, and `InvoiceDueDays` (int, default 14) — alongside the existing
+  `NaamLocatie`/`Dossiernummer`/`Verantwoordelijke` Opgroeien-reporting fields, since license
+  number and bank account are per-physical-site for a multi-location organisation.
 
 ## Success Criteria *(mandatory)*
 
@@ -370,9 +396,6 @@ the same (it identifies this invoice, not this specific PDF revision).
 
 ## Assumptions
 
-- Invoice due date defaults to a fixed number of days after generation unless
-  `/speckit-clarify` surfaces a stronger precedent for a per-location configurable setting (the
-  013f `ReservationSettingsForm` pattern) — resolved during clarification, not guessed here.
 - A zero-total invoice (no billable days that month) is still generated, for the audit trail, per
   the feature's own prompt language — not skipped.
 - Invoice generation is a manual director-initiated action, not an automatic scheduled job — no
