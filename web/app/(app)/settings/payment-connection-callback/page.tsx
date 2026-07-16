@@ -43,7 +43,7 @@ export default function PaymentConnectionCallbackPage() {
   }, [state, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
       {state === "processing" && (
         <>
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
