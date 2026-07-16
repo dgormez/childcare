@@ -4,25 +4,24 @@ This is the exact prompt used to process one `BACKLOG.md` feature through the fu
 pipeline (specify → clarify → plan → tasks → checklist → analyze → implement → converge → PR
 → merge). It's saved here so a fresh session (or a teammate) can resume without retyping it.
 
-**This is single-pass, not a loop.** One invocation processes one feature (or resumes whatever
-is in progress) to completion or to a clean stopping point, then the turn ends — it does not
-reschedule itself and will not chain on to the next backlog item on its own. When you want the
-next feature processed, run this prompt again yourself. This was a deliberate choice — see
-"Why single-pass" below. (It was previously invoked via `/loop` in dynamic mode; that's no
-longer necessary or recommended — see below.)
+**This now runs unattended on a schedule.** A cron trigger invokes this prompt every 3 hours;
+each invocation processes one feature (or resumes whatever is in progress) to completion, then
+the turn ends — the next scheduled trigger picks up the next backlog item. This is a deliberate
+reversal of the prior single-pass-only design (see "History" below): the user has explicitly
+authorized full autonomy for this pipeline, including unattended `gh pr merge` to `master`,
+across scheduled runs with no human checkpoint in between.
 
-## Why single-pass
+## History
 
-Earlier versions of this prompt ran in `/loop`'s dynamic self-paced mode, which calls
-`ScheduleWakeup` at the end of every turn to continue automatically — chaining through the
-whole backlog (spec → implement → PR → merge → next feature) with no human checkpoint in
-between. That's a lot of unattended autonomy for a pipeline that ends in `gh pr merge`. The
-prompt below now explicitly refuses to call `ScheduleWakeup`, so it behaves as one-shot
-regardless of how it's invoked — pasting it directly, or via `/loop <prompt>`, are now
-equivalent. Just don't use an interval prefix (`/loop 30m ...`), since a cron re-fire would
-recreate the same unattended-merge problem this change is meant to avoid. If a run stops
-mid-flow (error, blocked question, crashed session), invoke it again — step 0 resumes
-in-progress work from wherever it left off.
+Earlier versions of this prompt ran in `/loop`'s dynamic self-paced mode, then were changed to
+single-pass only (refusing `ScheduleWakeup`) over concern about unattended `gh pr merge` with no
+human checkpoint. That concern still applies in general — this pipeline can pick a government/
+compliance-regulated backlog item and merge to master with no review — but the user has weighed
+that risk and explicitly asked (2026-07-16) for this specific pipeline to run fully unattended
+every 3h regardless, including through the merge step. The "pause and ask" standing rule below
+for genuinely novel scope questions still applies and is the remaining human checkpoint for
+anything this loop can't resolve from precedent — it should ask more readily, not less, given
+the reduced supervision.
 
 ## Standing process rules (apply regardless of how this is invoked)
 
@@ -58,11 +57,15 @@ in-progress work from wherever it left off.
 ## The prompt
 
 ```text
-Process the next eligible feature from the ChildCare SpecKit backlog. This is a SINGLE-PASS
-run: do exactly one feature (or resume whatever is already in progress), then STOP. Do not
-call ScheduleWakeup. Do not pick up another backlog item afterward. When you finish — or reach
-a clean stopping point (blocked question, failing build after retries, red CI) — report status
-and end the turn. I will manually run /loop again for the next feature.
+Process the next eligible feature from the ChildCare SpecKit backlog. Do exactly one feature (or
+resume whatever is already in progress), then STOP — do not pick up another backlog item within
+this same invocation. When you finish — or reach a clean stopping point (blocked question,
+failing build after retries, red CI) — report status and end the turn. This prompt is triggered
+externally on a 3-hour cron schedule, so the next backlog item is picked up automatically by the
+next scheduled run, not by a manual re-invocation. Full pipeline autonomy is authorized for
+scheduled runs, including `git push` and `gh pr merge` without pausing for confirmation — the
+only pauses are the "pause and ask" cases the standing rules above define (genuinely novel
+scope questions, government/compliance open questions marked "do NOT invent").
 
 Before starting, read these — they define UX, visual, and platform constraints, and every
 spec/implementation this loop produces must follow them:
@@ -575,3 +578,9 @@ use the static code review instead.
   established a millisecond-tolerant comparison pattern for — applied the same fix. Real
   regulatory/legal content (the Opgroeien declaration wording, exact PDF layout) is sourced from
   the official template at implementation time per spec.md's own Assumptions, not fabricated.
+- 2026-07-16: prompt reworked from single-pass-only back to scheduled/unattended (see "History"
+  above) — the user explicitly requested a 3-hour cron trigger, including unattended `gh pr
+  merge` to master, reversing the 2026-07-07 single-pass change. The "pause and ask" standing
+  rule is now this pipeline's only remaining human checkpoint; watch progress-log entries below
+  for whether that rule is actually catching novel scope/compliance questions under reduced
+  supervision, or silently guessing instead.
