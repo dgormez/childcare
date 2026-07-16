@@ -1878,10 +1878,20 @@ What to build:
 1. Optional payment link per invoice: the link opens the PSP's hosted
    payment page from the invoice email / parent app; a webhook marks the
    invoice paid (reusing 014's existing paid transition + OGM/audit trail).
-   PSP candidates: Stripe, Mollie, POM — all support Bancontact.
-   NOTE (product-owner decision 2026-07-15): the PSP choice must be
-   investigated and decided BEFORE implementation — do not hardcode a
-   provider; design the integration behind an abstraction.
+   PSP DECISION (product-owner decision 2026-07-16, investigated per the
+   2026-07-15 note below): use Mollie Connect for Platforms — OAuth-based
+   sub-merchant onboarding + payment splitting, so each organisation's
+   invoice payments land in that organisation's own bank account rather
+   than a central platform account. Chosen over Stripe (equally viable,
+   Accounts v2 Connect, but no added benefit here) and POM (no self-serve
+   developer API surfaced during investigation — its integration model
+   looks partner/sales-led, not something an unattended implementation
+   pass can build against). Still design the PSP integration behind an
+   abstraction (a `IPaymentProvider`-style seam) so Stripe or POM can be
+   added later without a rewrite — do not hardcode Mollie-specific types
+   past that boundary. Each organisation completes Mollie's own hosted
+   onboarding (OAuth) from director-web; do not build a custom KYC/PII
+   collection flow for this.
 2. Automatic payment reminders for overdue invoices (configurable delay
    and cadence per location; respects 020's email infrastructure if built,
    otherwise in-app/push via 013).
