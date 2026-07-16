@@ -14,6 +14,10 @@
 #   STRIPE_SECRET_KEY              → Stripe secret key (sk_live_...)
 #   STRIPE_WEBHOOK_SECRET          → Stripe webhook signing secret (whsec_...)
 #   STRIPE_PRICE_ID                → Stripe recurring Price ID (price_...)
+#   MOLLIE_CLIENT_ID               → Mollie OAuth client ID (my.mollie.com → Developers → OAuth clients)
+#   MOLLIE_CLIENT_SECRET           → Mollie OAuth client secret
+#   MOLLIE_REDIRECT_URI            → director-web's OAuth callback, e.g. https://YOUR_WEB_DOMAIN/settings/payment-connection-callback
+#   APP_API_BASE_URL               → this API's own public base URL (terraform output service_url)
 
 name: Deploy backend to GCP Cloud Run
 
@@ -86,6 +90,10 @@ jobs:
             Stripe__PriceId=${{ secrets.STRIPE_PRICE_ID }}
             Stripe__SuccessUrl=childcare://payment-success
             Stripe__CancelUrl=childcare://payment-cancel
+            Mollie__ClientId=${{ secrets.MOLLIE_CLIENT_ID }}
+            Mollie__ClientSecret=${{ secrets.MOLLIE_CLIENT_SECRET }}
+            Mollie__RedirectUri=${{ secrets.MOLLIE_REDIRECT_URI }}
+            App__ApiBaseUrl=${{ secrets.APP_API_BASE_URL }}
 
       - name: Print service URL
         run: echo "Deployed to ${{ steps.deploy.outputs.url }}"

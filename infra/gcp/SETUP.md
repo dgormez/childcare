@@ -34,6 +34,14 @@ Fill in your values. Get your project ID with:
 gcloud config get project
 ```
 
+> **Mollie OAuth credentials (feature 014a — invoice payments):** before filling in
+> `mollie_client_id`/`mollie_client_secret`, register an OAuth app at
+> [my.mollie.com](https://my.mollie.com) → **Developers → OAuth clients** (or **Apps** if
+> you're a registered Mollie Connect partner). Set `mollie_redirect_uri` to your director-web
+> domain's `/settings/payment-connection-callback` path and register that exact same URL as
+> the app's allowed redirect URL in Mollie's dashboard — the OAuth flow fails if they don't
+> match. Use Mollie's test-mode credentials until you're ready to accept real payments.
+
 **Run Terraform:**
 ```bash
 cd infra/gcp
@@ -70,6 +78,10 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions → New 
 | `GOOGLE_IOS_CLIENT_ID` | Google OAuth iOS client ID |
 | `GOOGLE_WEB_CLIENT_ID` | Google OAuth Web client ID |
 | `APPLE_BUNDLE_ID` | Your iOS bundle identifier |
+| `MOLLIE_CLIENT_ID` | Mollie OAuth client ID (see the Mollie note above) |
+| `MOLLIE_CLIENT_SECRET` | Mollie OAuth client secret |
+| `MOLLIE_REDIRECT_URI` | Same value as `mollie_redirect_uri` in `terraform.tfvars` |
+| `APP_API_BASE_URL` | Same value as `app_api_base_url` in `terraform.tfvars` (`service_url` from Terraform output) |
 
 ---
 

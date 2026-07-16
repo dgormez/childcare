@@ -8,6 +8,15 @@ google_android_client_id = "YOUR_GOOGLE_ANDROID_CLIENT_ID"
 google_ios_client_id     = "YOUR_GOOGLE_IOS_CLIENT_ID"
 google_web_client_id     = "YOUR_GOOGLE_WEB_CLIENT_ID"
 apple_bundle_id          = "YOUR_BUNDLE_ID"
+
+# Feature 014a — Mollie Connect for Platforms (online invoice payment).
+# Register an OAuth app in the Mollie Dashboard: log in at https://my.mollie.com,
+# then go to Developers > OAuth clients (or "Apps" if you're onboarded as a Mollie
+# Connect partner) and create a new client. That page gives you the client ID and
+# client secret below. Register mollie_redirect_uri (below) there too as the app's
+# allowed redirect URL — Mollie rejects the OAuth flow if it doesn't match exactly.
+# Test in Mollie's own test mode before using live credentials (my.mollie.com lets
+# you toggle test/live per profile).
 mollie_client_id         = "YOUR_MOLLIE_OAUTH_CLIENT_ID"
 mollie_client_secret     = "YOUR_MOLLIE_OAUTH_CLIENT_SECRET"
 mollie_redirect_uri      = "https://YOUR_WEB_DOMAIN/settings/payment-connection-callback"
