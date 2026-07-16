@@ -80,7 +80,9 @@ public class GenerateFiscalAttestationsCommandTests(OrganisationOnboardingWebApp
 
         var secondListResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/fiscal-attestations?taxYear=2027", org.AccessToken));
         var secondList = (await secondListResponse.Content.ReadFromJsonAsync<List<FiscalAttestationResponse>>())!;
-        Assert.Equal(originalGeneratedAt, secondList.Single(a => a.ChildId == childA.Id).GeneratedAt);
+        // Millisecond-tolerant: a DateTime round-tripped through PostgreSQL's timestamptz twice
+        // can differ by a few ticks (same precision class as RegenerateInvoiceTests, 014).
+        Assert.True(Math.Abs((originalGeneratedAt!.Value - secondList.Single(a => a.ChildId == childA.Id).GeneratedAt!.Value).TotalMilliseconds) < 1);
     }
 
     [Fact]
@@ -166,7 +168,10 @@ public class GenerateFiscalAttestationsCommandTests(OrganisationOnboardingWebApp
         var afterBulkRerun = (await listResponse.Content.ReadFromJsonAsync<List<FiscalAttestationResponse>>())!.Single();
 
         Assert.Equal(corrected.TotalAmountCents, afterBulkRerun.TotalAmountCents);
-        Assert.Equal(corrected.GeneratedAt, afterBulkRerun.GeneratedAt);
+        // Millisecond-tolerant: a DateTime round-tripped through PostgreSQL's timestamptz twice
+        // can differ by a few ticks (same precision class as RegenerateInvoiceTests, 014) — this
+        // is the exact assertion that flaked in CI, confirming the class of bug.
+        Assert.True(Math.Abs((corrected.GeneratedAt!.Value - afterBulkRerun.GeneratedAt!.Value).TotalMilliseconds) < 1);
     }
 
     [Fact]

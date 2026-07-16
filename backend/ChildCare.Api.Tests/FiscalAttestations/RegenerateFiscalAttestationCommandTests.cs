@@ -70,7 +70,9 @@ public class RegenerateFiscalAttestationCommandTests(OrganisationOnboardingWebAp
         var childBAfter = afterList.Single(a => a.ChildId == childB.Id);
 
         Assert.Equal(childBBefore.TotalAmountCents, childBAfter.TotalAmountCents);
-        Assert.Equal(childBBefore.GeneratedAt, childBAfter.GeneratedAt);
+        // Millisecond-tolerant: a DateTime round-tripped through PostgreSQL's timestamptz twice
+        // can differ by a few ticks (same precision class as RegenerateInvoiceTests, 014).
+        Assert.True(Math.Abs((childBBefore.GeneratedAt!.Value - childBAfter.GeneratedAt!.Value).TotalMilliseconds) < 1);
     }
 
     [Fact]
