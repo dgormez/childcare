@@ -25,6 +25,16 @@ the reduced supervision.
 
 ## Standing process rules (apply regardless of how this is invoked)
 
+- **Never background a long-running command and end the turn assuming you'll "check back later."**
+  Each scheduled invocation is a one-shot headless process (`claude -p`) — when the turn ends,
+  the process exits completely and there is no later within that invocation to resume from. A
+  backgrounded test suite/build left running when the turn ends is simply abandoned: nothing
+  commits it, pushes it, or opens the PR. Any long-running command (test suite, build) must be
+  run synchronously and waited on to completion before ending the turn. (Established
+  2026-07-16 after a scheduled run implemented feature 016 in full — dozens of files — then
+  ended the turn saying it would "resume once the background test suite finishes," leaving
+  everything uncommitted with no process left to actually resume it. The next scheduled
+  invocation's step 0 recovers the work from disk, but the run itself never converged.)
 - **Fix every `/speckit-checklist`/`/speckit-analyze`/`/speckit-converge` finding**, even ones
   marked LOW/advisory — don't just log them as debt. (Established after an explicit correction
   mid-backlog; see feature 005/006/007's shipped-notes for examples of findings that were fixed
@@ -177,8 +187,9 @@ Each invocation:
 8. Run speckit-converge to close out anything implementation missed, and fix every finding it
    surfaces (same standing rule as checklist/analyze — no LOW-severity items left as debt).
 
-9. Build and run the test suite. If something fails, attempt fixes up to ~3 times. If still
-   failing: stop, leave the branch pushed, report what's broken. Never merge broken code.
+9. Build and run the test suite **synchronously — wait for it to finish, do not background it**.
+   If something fails, attempt fixes up to ~3 times. If still failing: stop, leave the branch
+   pushed, report what's broken. Never merge broken code.
 
 10. Commit as you go with real messages. Push the branch.
 
@@ -584,3 +595,12 @@ use the static code review instead.
   rule is now this pipeline's only remaining human checkpoint; watch progress-log entries below
   for whether that rule is actually catching novel scope/compliance questions under reduced
   supervision, or silently guessing instead.
+- 2026-07-16: first scheduled cron run (016-developmental-milestones) fully implemented the
+  feature — backend entities/migrations/endpoints, mobile/web/parent-mobile UI, tests, dozens of
+  files — but ended the turn deferring to a backgrounded test suite it assumed it could "check
+  back on later," which doesn't exist in a one-shot headless `claude -p` invocation: the process
+  exited, nothing was committed/pushed, no PR opened. Everything was still intact on disk on the
+  branch (nothing lost), and the next scheduled run's step 0 can resume it, but the run itself
+  never converged. Added the "never background a long-running command" standing rule above and
+  made step 9 explicit about running the test suite synchronously, to prevent this recurring
+  every 3h indefinitely without ever committing.
