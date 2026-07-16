@@ -13,11 +13,8 @@ namespace ChildCare.Api.Tests.Payments;
 
 /// <summary>
 /// Feature 014a — spec.md User Story 3 (automatic payment reminders). FR-012 (settings,
-/// defaults), FR-013 (cadence/cap/enabled-gate), FR-014 (dedicated notification copy),
-/// Technical Requirements (per-tenant failure isolation is exercised by
-/// ChildCare.Api.Cli.SendPaymentRemindersCommand's own try/catch loop — not separately testable
-/// through this single-tenant test host, mirrors MigrateTenantsCommand's own test coverage
-/// posture).
+/// defaults), FR-013 (cadence/cap/enabled-gate), FR-014 (dedicated notification copy, push
+/// dispatch), Technical Requirements (per-tenant failure isolation).
 /// </summary>
 public class PaymentReminderTests(OrganisationOnboardingWebAppFactory factory) : IClassFixture<OrganisationOnboardingWebAppFactory>
 {
@@ -153,5 +150,105 @@ public class PaymentReminderTests(OrganisationOnboardingWebAppFactory factory) :
         var db = resolver.ForSchema(tenant.SchemaName);
         var reloaded = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
         Assert.Equal(0, reloaded.ReminderCount);
+    }
+
+    [Fact]
+    public async Task ReminderJob_SendsPushToContactWithToken()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Reminder Push Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await EnableRemindersAsync(client, org.AccessToken, location.Id);
+        var (child, contact, _) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await SetContactPushTokenAsync(org.Organisation.Slug, contact.Id, "ExponentPushToken[reminder-test]");
+
+        var invoiceRequest = new CreateContractRequest(
+            location.Id, new DateOnly(2027, 3, 1), null,
+            [new ContractedDayRequest(DayOfWeek.Monday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/contracts", org.AccessToken, invoiceRequest));
+        var contract = (await createResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract.Id}/activate", org.AccessToken));
+        var generateResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/locations/{location.Id}/invoices/generate", org.AccessToken, new GenerateInvoicesRequest(2027, 3)));
+        var invoice = (await generateResponse.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!.Single(i => i.ChildId == child.Id);
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/invoices/send", org.AccessToken, new SendInvoicesRequest([invoice.Id])));
+        await BackdateDueDateAsync(factory, org.Organisation.Slug, invoice.Id, daysAgo: 10);
+
+        var pushSender = factory.Services.GetRequiredService<FakeExpoPushSender>();
+        await ChildCare.Api.Cli.SendPaymentRemindersCommand.RunAsync(factory.Services);
+
+        Assert.Contains(pushSender.Sent, p => p.PushToken == "ExponentPushToken[reminder-test]");
+    }
+
+    [Fact]
+    public async Task ReminderJob_OneTenantFailing_StillProcessesOtherTenants()
+    {
+        var client = factory.CreateClient();
+
+        // A healthy organisation with an eligible reminder.
+        var healthyOrg = await RegisterOrgAsync(client, $"Healthy Reminder Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var healthyLocation = await CreateLocationAsync(client, healthyOrg.AccessToken, "Main");
+        await EnableRemindersAsync(client, healthyOrg.AccessToken, healthyLocation.Id);
+        var (healthyChild, _, _) = await InviteAndLoginParentAsync(client, factory, healthyOrg.Organisation.Slug, healthyOrg.AccessToken);
+        var invoiceRequest = new CreateContractRequest(
+            healthyLocation.Id, new DateOnly(2027, 4, 1), null,
+            [new ContractedDayRequest(DayOfWeek.Monday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{healthyChild.Id}/contracts", healthyOrg.AccessToken, invoiceRequest));
+        var contract = (await createResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract.Id}/activate", healthyOrg.AccessToken));
+        var generateResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/locations/{healthyLocation.Id}/invoices/generate", healthyOrg.AccessToken, new GenerateInvoicesRequest(2027, 4)));
+        var healthyInvoice = (await generateResponse.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!.Single(i => i.ChildId == healthyChild.Id);
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/invoices/send", healthyOrg.AccessToken, new SendInvoicesRequest([healthyInvoice.Id])));
+        await BackdateDueDateAsync(factory, healthyOrg.Organisation.Slug, healthyInvoice.Id, daysAgo: 10);
+
+        // A second organisation whose schema is deliberately broken (mirrors
+        // BackfillGrowthCheckCommandTests' pattern of dropping a table this command reads).
+        var brokenOrg = await RegisterOrgAsync(client, $"Broken Reminder Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        using (var scope = factory.Services.CreateScope())
+        {
+            var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+            var brokenTenant = publicDb.Tenants.Single(t => t.Slug == brokenOrg.Organisation.Slug);
+            await publicDb.Database.ExecuteSqlRawAsync($"""DROP TABLE "{brokenTenant.SchemaName}"."invoices";""");
+        }
+
+        try
+        {
+            var exitCode = await ChildCare.Api.Cli.SendPaymentRemindersCommand.RunAsync(factory.Services);
+
+            Assert.Equal(1, exitCode); // the broken tenant's failure is reported...
+
+            using var healthyScope = factory.Services.CreateScope();
+            var healthyPublicDb = healthyScope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+            var healthyTenant = healthyPublicDb.Tenants.Single(t => t.Slug == healthyOrg.Organisation.Slug);
+            var resolver = healthyScope.ServiceProvider.GetRequiredService<ChildCare.Application.Common.ITenantDbContextResolver>();
+            var healthyDb = resolver.ForSchema(healthyTenant.SchemaName);
+            var reloadedHealthyInvoice = await healthyDb.Invoices.FirstAsync(i => i.Id == healthyInvoice.Id);
+            Assert.Equal(1, reloadedHealthyInvoice.ReminderCount); // ...but the healthy tenant still got processed
+        }
+        finally
+        {
+            // This test host's factory/database is shared across every test in this class
+            // (IClassFixture) — the deliberately-broken schema above would otherwise fail
+            // every subsequent RunAsync call in the whole class. Exclude it from future runs
+            // the same way a real broken tenant would eventually be handled operationally.
+            using var cleanupScope = factory.Services.CreateScope();
+            var cleanupPublicDb = cleanupScope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+            var brokenTenantToDisable = await cleanupPublicDb.Tenants.SingleAsync(t => t.Slug == brokenOrg.Organisation.Slug);
+            brokenTenantToDisable.ProvisioningStatus = ChildCare.Domain.Enums.ProvisioningStatus.Failed;
+            await cleanupPublicDb.SaveChangesAsync();
+        }
+    }
+
+    private async Task SetContactPushTokenAsync(string tenantSlug, Guid contactId, string pushToken)
+    {
+        using var scope = factory.Services.CreateScope();
+        var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+        var tenant = publicDb.Tenants.Single(t => t.Slug == tenantSlug);
+        var resolver = scope.ServiceProvider.GetRequiredService<ChildCare.Application.Common.ITenantDbContextResolver>();
+        var db = resolver.ForSchema(tenant.SchemaName);
+        var contact = await db.Contacts.SingleAsync(c => c.Id == contactId);
+        contact.PushToken = pushToken;
+        await db.SaveChangesAsync();
     }
 }

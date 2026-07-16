@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
 using ChildCare.Domain.Enums;
@@ -15,7 +17,11 @@ namespace ChildCare.Application.Payments;
 // child's invoice.
 public record CreatePaymentLinkCommand(Guid TenantUserId, Guid InvoiceId) : IRequest<CreatePaymentLinkResult>;
 
-public enum CreatePaymentLinkFailure { InvoiceNotFound, InvoiceNotSent, ProviderNotConnected }
+// ProviderConnectionInvalid: the stored OAuth token was rejected by Mollie (revoked/expired,
+// spec.md Edge Cases — "reconnect" case) — distinct from ProviderNotConnected (no connection
+// row at all) only in the failure copy shown; both drive the same parent-facing not-available
+// state (contracts/014a-invoice-payments-plus/payments-api.md).
+public enum CreatePaymentLinkFailure { InvoiceNotFound, InvoiceNotSent, ProviderNotConnected, ProviderConnectionInvalid }
 
 public class CreatePaymentLinkResult
 {
@@ -69,40 +75,54 @@ public class CreatePaymentLinkCommandHandler(
 
         var credentials = new PaymentProviderCredentials(tokenProtector.Unprotect(connection.EncryptedAccessToken));
 
-        if (existing is not null && existing.ProviderPaymentId is not null)
+        try
         {
-            // Re-check live status rather than trusting our own stored Open flag — Mollie's
-            // payment may have expired/failed/been cancelled since we last touched it.
-            var status = await paymentProvider.GetPaymentStatusAsync(credentials, existing.ProviderPaymentId, cancellationToken);
-            if (status.Status == "open" && status.CheckoutUrl is not null)
-                return CreatePaymentLinkResult.Success(status.CheckoutUrl);
+            if (existing is not null && existing.ProviderPaymentId is not null)
+            {
+                // Re-check live status rather than trusting our own stored Open flag — Mollie's
+                // payment may have expired/failed/been cancelled since we last touched it.
+                var status = await paymentProvider.GetPaymentStatusAsync(credentials, existing.ProviderPaymentId, cancellationToken);
+                if (status.Status == "open" && status.CheckoutUrl is not null)
+                    return CreatePaymentLinkResult.Success(status.CheckoutUrl);
 
-            // No longer active on Mollie's side — mark it terminal locally so a future lookup
-            // doesn't keep re-checking a dead payment, then fall through to create a new one.
-            existing.Status = ParsePaymentStatus(status.Status);
-            existing.UpdatedAt = DateTime.UtcNow;
+                // No longer active on Mollie's side — mark it terminal locally so a future lookup
+                // doesn't keep re-checking a dead payment, then fall through to create a new one.
+                existing.Status = ParsePaymentStatus(status.Status);
+                existing.UpdatedAt = DateTime.UtcNow;
+                await publicDb.SaveChangesAsync(cancellationToken);
+            }
+
+            var payment = new Payment
+            {
+                TenantId = currentTenant.TenantId,
+                InvoiceId = invoice.Id,
+                AmountCents = invoice.TotalCents,
+                Status = PaymentStatus.Open,
+            };
+            publicDb.Payments.Add(payment);
             await publicDb.SaveChangesAsync(cancellationToken);
+
+            var result = await paymentProvider.CreatePaymentAsync(
+                credentials, payment.PaymentReference, payment.AmountCents,
+                $"Invoice {invoice.OgmReference}", BuildWebhookUrl(payment.PaymentReference), cancellationToken);
+
+            payment.ProviderPaymentId = result.ProviderPaymentId;
+            payment.UpdatedAt = DateTime.UtcNow;
+            await publicDb.SaveChangesAsync(cancellationToken);
+
+            return CreatePaymentLinkResult.Success(result.CheckoutUrl);
         }
-
-        var payment = new Payment
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
-            TenantId = currentTenant.TenantId,
-            InvoiceId = invoice.Id,
-            AmountCents = invoice.TotalCents,
-            Status = PaymentStatus.Open,
-        };
-        publicDb.Payments.Add(payment);
-        await publicDb.SaveChangesAsync(cancellationToken);
-
-        var result = await paymentProvider.CreatePaymentAsync(
-            credentials, payment.PaymentReference, payment.AmountCents,
-            $"Invoice {invoice.OgmReference}", BuildWebhookUrl(payment.PaymentReference), cancellationToken);
-
-        payment.ProviderPaymentId = result.ProviderPaymentId;
-        payment.UpdatedAt = DateTime.UtcNow;
-        await publicDb.SaveChangesAsync(cancellationToken);
-
-        return CreatePaymentLinkResult.Success(result.CheckoutUrl);
+            // spec.md Edge Cases — a revoked/expired OAuth token must surface a "reconnect"
+            // state to the director, not a silent broken link to the parent or an unhandled
+            // 500. Any other transport/transient failure is left to the global exception
+            // handler (constitution VI), which already returns a generic, safe error.
+            connection.Status = PaymentConnectionStatus.Disconnected;
+            connection.DisconnectedAt = DateTime.UtcNow;
+            await publicDb.SaveChangesAsync(cancellationToken);
+            return CreatePaymentLinkResult.Fail(CreatePaymentLinkFailure.ProviderConnectionInvalid);
+        }
     }
 
     private string BuildWebhookUrl(Guid paymentReference)

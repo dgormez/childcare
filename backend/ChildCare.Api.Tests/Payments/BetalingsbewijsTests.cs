@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
@@ -110,5 +112,35 @@ public class BetalingsbewijsTests(OrganisationOnboardingWebAppFactory factory) :
         var firstBytes = await first.Content.ReadAsByteArrayAsync();
         var secondBytes = await second.Content.ReadAsByteArrayAsync();
         Assert.Equal(firstBytes.Length, secondBytes.Length);
+    }
+
+    [Fact]
+    public async Task MarkPaidManually_SendsReceiptPushToContactWithToken()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Receipt Push Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var (child, contact, _) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await SetContactPushTokenAsync(org.Organisation.Slug, contact.Id, "ExponentPushToken[receipt-manual]");
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, location.Id, child.Id, 2027, 10);
+
+        var pushSender = factory.Services.GetRequiredService<FakeExpoPushSender>();
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/invoices/{invoice.Id}/mark-paid", org.AccessToken,
+            new MarkInvoicePaidRequest(DateOnly.FromDateTime(DateTime.UtcNow))));
+
+        Assert.Contains(pushSender.Sent, p => p.PushToken == "ExponentPushToken[receipt-manual]");
+    }
+
+    private async Task SetContactPushTokenAsync(string tenantSlug, Guid contactId, string pushToken)
+    {
+        using var scope = factory.Services.CreateScope();
+        var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+        var tenant = publicDb.Tenants.Single(t => t.Slug == tenantSlug);
+        var resolver = scope.ServiceProvider.GetRequiredService<ChildCare.Application.Common.ITenantDbContextResolver>();
+        var db = resolver.ForSchema(tenant.SchemaName);
+        var contact = await db.Contacts.SingleAsync(c => c.Id == contactId);
+        contact.PushToken = pushToken;
+        await db.SaveChangesAsync();
     }
 }

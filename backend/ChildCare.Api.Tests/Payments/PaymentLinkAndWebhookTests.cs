@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
@@ -110,7 +111,8 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         var org = await RegisterOrgAsync(client, $"Webhook Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
         await ConnectMollieAsync(client, org.AccessToken);
         var location = await CreateLocationAsync(client, org.AccessToken, "Main");
-        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var (child, contact, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        await SetContactPushTokenAsync(org.Organisation.Slug, contact.Id, "ExponentPushToken[webhook-receipt]");
         var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, location.Id, child.Id, 2027, 9);
 
         await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/parent/invoices/{invoice.Id}/payment-link", parentToken));
@@ -134,6 +136,13 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         Assert.Equal("paid", status.InvoiceStatus);
         Assert.Equal("paid", status.PaymentStatus);
 
+        // FR-015 — the receipt notification fires for the webhook path too, not just manual
+        // mark-paid (BetalingsbewijsTests covers the manual path). Filtered by title, not just
+        // token — the same contact already received 014's own "invoice sent" push earlier in
+        // this flow, on the same token.
+        var pushSender = factory.Services.GetRequiredService<FakeExpoPushSender>();
+        Assert.Contains(pushSender.Sent, p => p.PushToken == "ExponentPushToken[webhook-receipt]" && p.Title == "Betalingsbewijs beschikbaar");
+
         // Duplicate delivery — idempotent no-op.
         var webhookResponse2 = await client.PostAsync($"/api/webhooks/mollie/{paymentReference}", null);
         Assert.Equal(HttpStatusCode.OK, webhookResponse2.StatusCode);
@@ -141,6 +150,21 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         var statusAfterDuplicate = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/parent/invoices/{invoice.Id}/payment-status", parentToken));
         var statusAfterDuplicateBody = (await statusAfterDuplicate.Content.ReadFromJsonAsync<PaymentStatusResponse>())!;
         Assert.Equal("paid", statusAfterDuplicateBody.InvoiceStatus);
+
+        // Idempotent means no duplicate receipt notification either — exactly one receipt push.
+        Assert.Single(pushSender.Sent, p => p.PushToken == "ExponentPushToken[webhook-receipt]" && p.Title == "Betalingsbewijs beschikbaar");
+    }
+
+    private async Task SetContactPushTokenAsync(string tenantSlug, Guid contactId, string pushToken)
+    {
+        using var scope = factory.Services.CreateScope();
+        var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+        var tenant = publicDb.Tenants.Single(t => t.Slug == tenantSlug);
+        var resolver = scope.ServiceProvider.GetRequiredService<ChildCare.Application.Common.ITenantDbContextResolver>();
+        var db = resolver.ForSchema(tenant.SchemaName);
+        var contact = await db.Contacts.SingleAsync(c => c.Id == contactId);
+        contact.PushToken = pushToken;
+        await db.SaveChangesAsync();
     }
 
     [Fact]
@@ -189,11 +213,81 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task PaymentLink_RevokedMollieToken_SurfacesReconnectStateAndDisconnects()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Revoked Token Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        await ConnectMollieAsync(client, org.AccessToken);
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, location.Id, child.Id, 2027, 9);
+
+        var fakeProvider = factory.Services.GetRequiredService<FakePaymentProvider>();
+        fakeProvider.ThrowUnauthorizedOnCreatePayment = true;
+        try
+        {
+            var response = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/parent/invoices/{invoice.Id}/payment-link", parentToken));
+
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+
+            // No silent broken link — the connection itself is flagged so the director sees
+            // "not connected" / reconnect, not a false "connected" state (spec.md Edge Cases).
+            var statusResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/organisations/me/payment-connection", org.AccessToken));
+            var status = await statusResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal("disconnected", status.GetProperty("status").GetString());
+        }
+        finally
+        {
+            fakeProvider.ThrowUnauthorizedOnCreatePayment = false;
+        }
+    }
+
+    [Fact]
+    public async Task Webhook_AfterConcurrentManualMarkPaid_IsNoOp_OnlyOneTransitionWins()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Race Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        await ConnectMollieAsync(client, org.AccessToken);
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, location.Id, child.Id, 2027, 9);
+
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/parent/invoices/{invoice.Id}/payment-link", parentToken));
+        var (providerPaymentId, paymentReference) = await GetPaymentForInvoiceAsync(invoice.Id);
+        var fakeProvider = factory.Services.GetRequiredService<FakePaymentProvider>();
+        fakeProvider.Payments[providerPaymentId].Status = "paid";
+
+        // Director marks it paid manually before Mollie's webhook lands.
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/invoices/{invoice.Id}/mark-paid", org.AccessToken,
+            new MarkInvoicePaidRequest(DateOnly.FromDateTime(DateTime.UtcNow))));
+
+        // Webhook arrives afterward — must be a no-op, not a second transition/exception.
+        var webhookResponse = await client.PostAsync($"/api/webhooks/mollie/{paymentReference}", null);
+        Assert.Equal(HttpStatusCode.OK, webhookResponse.StatusCode);
+
+        var invoiceResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice.Id}", org.AccessToken));
+        var invoiceAfter = (await invoiceResponse.Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        Assert.Equal("paid", invoiceAfter.Status);
+    }
+
     private async Task<Guid> GetPaymentReferenceAsync(string providerPaymentId)
     {
         using var scope = factory.Services.CreateScope();
         var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
         var payment = publicDb.Payments.Single(p => p.ProviderPaymentId == providerPaymentId);
         return payment.PaymentReference;
+    }
+
+    // Looks up the Payment row by InvoiceId directly, rather than assuming it's the only entry
+    // in FakePaymentProvider.Payments — that dictionary is a Singleton shared across every test
+    // in this class (IClassFixture), so other tests' payments accumulate in it too.
+    private async Task<(string ProviderPaymentId, Guid PaymentReference)> GetPaymentForInvoiceAsync(Guid invoiceId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+        var payment = publicDb.Payments.Single(p => p.InvoiceId == invoiceId);
+        return (payment.ProviderPaymentId!, payment.PaymentReference);
     }
 }

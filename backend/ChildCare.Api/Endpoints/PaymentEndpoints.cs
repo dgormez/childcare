@@ -54,6 +54,7 @@ public static class PaymentEndpoints
                 CreatePaymentLinkFailure.InvoiceNotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
                 CreatePaymentLinkFailure.InvoiceNotSent => Results.Json(new { errorKey = "errors.invoice.not_sent" }, statusCode: StatusCodes.Status422UnprocessableEntity),
                 CreatePaymentLinkFailure.ProviderNotConnected => Results.Json(new { errorKey = "errors.paymentConnection.not_connected" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                CreatePaymentLinkFailure.ProviderConnectionInvalid => Results.Json(new { errorKey = "errors.paymentConnection.reconnect_required" }, statusCode: StatusCodes.Status422UnprocessableEntity),
                 _ => throw new InvalidOperationException($"Unhandled {nameof(CreatePaymentLinkFailure)}: {result.Failure}"),
             };
         });

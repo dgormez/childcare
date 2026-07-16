@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using ChildCare.Application.Common;
 
 namespace ChildCare.Api.Tests;
@@ -23,6 +24,9 @@ public class FakePaymentProvider : IPaymentProvider
     public string OAuthAccountId { get; set; } = "org_fake_1";
     public string OAuthAccountLabel { get; set; } = "Fake Test Organisation";
 
+    // Simulates a revoked/expired Mollie OAuth token (spec.md Edge Cases — "reconnect" case).
+    public bool ThrowUnauthorizedOnCreatePayment { get; set; }
+
     public string GetOAuthAuthorizationUrl(string state) => $"https://fake-mollie.test/oauth2/authorize?state={state}";
 
     public Task<PaymentProviderOAuthResult> CompleteOAuthConnectionAsync(string authorizationCode, CancellationToken cancellationToken = default)
@@ -38,6 +42,9 @@ public class FakePaymentProvider : IPaymentProvider
         PaymentProviderCredentials credentials, Guid paymentReference, int amountCents, string description,
         string webhookUrl, CancellationToken cancellationToken = default)
     {
+        if (ThrowUnauthorizedOnCreatePayment)
+            throw new HttpRequestException("Simulated Mollie 401 (revoked token).", null, HttpStatusCode.Unauthorized);
+
         var providerPaymentId = $"tr_fake_{Guid.NewGuid():N}";
         var checkoutUrl = $"https://fake-mollie.test/checkout/{providerPaymentId}";
         Payments[providerPaymentId] = new FakePayment(providerPaymentId, checkoutUrl, amountCents);
