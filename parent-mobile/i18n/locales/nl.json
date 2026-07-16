@@ -208,7 +208,13 @@
     "downloadPdf": "PDF downloaden",
     "downloadFailed": "Kon de PDF niet downloaden. Probeer het opnieuw.",
     "ogmReference": "Betalingsreferentie",
-    "period": "{{month}} {{year}}"
+    "period": "{{month}} {{year}}",
+    "payNow": "Nu betalen",
+    "confirmingPayment": "Je betaling wordt bevestigd…",
+    "payNotAvailable": "Online betalen is nog niet ingesteld — betaal via overschrijving met de referentie hierboven.",
+    "payLinkFailed": "Kon de betaling niet starten. Probeer het opnieuw.",
+    "viewReceipt": "Betalingsbewijs bekijken",
+    "receiptDownloadFailed": "Kon het betalingsbewijs niet downloaden. Probeer het opnieuw."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Maaltijdvoorkeuren",
