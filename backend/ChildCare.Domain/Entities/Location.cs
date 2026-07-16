@@ -49,6 +49,13 @@ public class Location
     public string? BankAccountNumber { get; set; }
     public int      InvoiceDueDays   { get; set; } = 14;
 
+    // Feature 014a — per-location automatic payment-reminder settings (spec.md FR-012).
+    // Disabled by default so a location that never configures this sees no behavior change
+    // (spec.md Assumptions/SC-005). Delay/cadence default to 3/7 days once enabled.
+    public bool PaymentRemindersEnabled    { get; set; } = false;
+    public int  PaymentReminderDelayDays   { get; set; } = 3;
+    public int  PaymentReminderCadenceDays { get; set; } = 7;
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Application.Payments;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Enums;
 using FluentValidation;
@@ -25,7 +26,11 @@ public class MarkInvoicePaidResult
 
 public class MarkInvoicePaidCommandValidator : AbstractValidator<MarkInvoicePaidCommand> { }
 
-public class MarkInvoicePaidCommandHandler(ITenantDbContext db) : IRequestHandler<MarkInvoicePaidCommand, MarkInvoicePaidResult>
+// Feature 014a — also triggers PaymentReceiptNotificationService (spec.md FR-015): a receipt
+// is generated identically whether an invoice reaches Paid via this manual path or the
+// online-payment webhook.
+public class MarkInvoicePaidCommandHandler(ITenantDbContext db, PaymentReceiptNotificationService receiptNotificationService)
+    : IRequestHandler<MarkInvoicePaidCommand, MarkInvoicePaidResult>
 {
     public async Task<MarkInvoicePaidResult> Handle(MarkInvoicePaidCommand request, CancellationToken cancellationToken)
     {
@@ -39,6 +44,8 @@ public class MarkInvoicePaidCommandHandler(ITenantDbContext db) : IRequestHandle
         invoice.PaidAt = request.PaidAt.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         invoice.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+
+        await receiptNotificationService.NotifyAsync(db, invoice, cancellationToken);
 
         var child = await db.Children.FirstAsync(c => c.Id == invoice.ChildId, cancellationToken);
         var location = await db.Locations.FirstAsync(l => l.Id == invoice.LocationId, cancellationToken);

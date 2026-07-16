@@ -96,7 +96,14 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// invoices table (never referenced by anything this test also drops) needs its own DROP
     /// TABLE, and its three new locations columns (Erkenningsnummer, BankAccountNumber,
     /// InvoiceDueDays) need their own explicit DROP COLUMNs, same reason as
-    /// MenuVariantPriorityOrder above.
+    /// MenuVariantPriorityOrder above. Feature 014a's
+    /// "AddInvoiceRemindersAndLocationPaymentSettings" is the next one — its two new invoices
+    /// columns (ReminderCount, LastReminderSentAt) need no separate step since invoices is
+    /// already dropped wholesale above, but its three new locations columns
+    /// (PaymentRemindersEnabled, PaymentReminderDelayDays, PaymentReminderCadenceDays) need
+    /// their own explicit DROP COLUMNs, same reason as InvoiceDueDays above — confirms this
+    /// pattern (012a, 013c, 006a, 013d, 013g, 014) applies to every tenant-schema migration,
+    /// not just the ones usually named.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -131,11 +138,14 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "MenuVariantPriorityOrder",
                 DROP COLUMN "Erkenningsnummer",
                 DROP COLUMN "BankAccountNumber",
-                DROP COLUMN "InvoiceDueDays";
+                DROP COLUMN "InvoiceDueDays",
+                DROP COLUMN "PaymentRemindersEnabled",
+                DROP COLUMN "PaymentReminderDelayDays",
+                DROP COLUMN "PaymentReminderCadenceDays";
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "IsPlatformAdmin";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings';
             """);
     }
 

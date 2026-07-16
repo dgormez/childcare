@@ -24,4 +24,7 @@ public record LocationResponse(
     IReadOnlyList<string> MenuVariantsWithPublishedContent,
     string? Erkenningsnummer,
     string? BankAccountNumber,
-    int InvoiceDueDays);
+    int InvoiceDueDays,
+    bool PaymentRemindersEnabled,
+    int PaymentReminderDelayDays,
+    int PaymentReminderCadenceDays);

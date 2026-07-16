@@ -41,6 +41,12 @@ public class Invoice
     public DateTime? SentAt { get; set; }
     public DateTime? PaidAt { get; set; }
 
+    // Feature 014a — capped automatic payment-reminder tracking (spec.md FR-013). Frozen once
+    // Paid; unaffected by regenerate (spec.md Edge Cases, mirrors DueDate's own regenerate
+    // invariant).
+    public int ReminderCount { get; set; }
+    public DateTime? LastReminderSentAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

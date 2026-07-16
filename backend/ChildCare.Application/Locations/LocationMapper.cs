@@ -23,5 +23,8 @@ internal static class LocationMapper
         menuVariantsWithPublishedContent ?? [],
         l.Erkenningsnummer,
         l.BankAccountNumber,
-        l.InvoiceDueDays);
+        l.InvoiceDueDays,
+        l.PaymentRemindersEnabled,
+        l.PaymentReminderDelayDays,
+        l.PaymentReminderCadenceDays);
 }

@@ -80,6 +80,7 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             {
                 ["SuperAdmin:ApiKey"]                    = SuperAdminApiKey,
                 ["ConnectionStrings:DefaultConnection"]  = _postgres.GetConnectionString(),
+                ["App:ApiBaseUrl"]                       = "https://test.childcare.local",
             });
         });
 
@@ -128,6 +129,10 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             // Feature 009 — never call the real Expo push service in tests.
             services.AddSingleton<FakeExpoPushSender>();
             services.AddSingleton<IExpoPushSender>(sp => sp.GetRequiredService<FakeExpoPushSender>());
+
+            // Feature 014a — never call the real Mollie API in tests.
+            services.AddSingleton<FakePaymentProvider>();
+            services.AddSingleton<IPaymentProvider>(sp => sp.GetRequiredService<FakePaymentProvider>());
         });
     }
 }

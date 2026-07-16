@@ -25,6 +25,7 @@ using ChildCare.Application.RoomShifts;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Concurrency;
 using ChildCare.Infrastructure.Pdf;
+using ChildCare.Infrastructure.Payments;
 using ChildCare.Infrastructure.Persistence;
 using ChildCare.Infrastructure.Push;
 using ChildCare.Infrastructure.Storage;
@@ -82,6 +83,27 @@ if (args.Length > 0 && args[0] == "grant-platform-admin")
     using var cliHost = cliBuilder.Build();
     using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
     var exitCode = await GrantPlatformAdminCommand.RunAsync(cliScope.ServiceProvider, args[1]);
+    Environment.Exit(exitCode);
+}
+
+// send-payment-reminders CLI subcommand (feature 014a-invoice-payments-plus, research.md R4) —
+// same early-exit shape as migrate-tenants/backfill-growth-check/grant-platform-admin above.
+// This codebase's first scheduled-job entrypoint: triggered daily by a Cloud Scheduler + Cloud
+// Run Job execution of this container (infra/gcp/payment-reminders-scheduler.tf), never an
+// in-process timer (Cloud Run scale-to-zero makes those unreliable).
+if (args.Length > 0 && args[0] == "send-payment-reminders")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+    cliBuilder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+    cliBuilder.Services.AddHttpClient();
+    cliBuilder.Services.AddScoped<IExpoPushSender, ExpoPushSender>();
+    cliBuilder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotificationService>();
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await ChildCare.Api.Cli.SendPaymentRemindersCommand.RunAsync(cliScope.ServiceProvider);
     Environment.Exit(exitCode);
 }
 
@@ -225,6 +247,16 @@ builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPoli
 builder.Services.AddScoped<ChildCare.Application.Invoices.BillableDayCalculator>();
 builder.Services.AddScoped<ChildCare.Application.Invoices.InvoiceNotificationService>();
 builder.Services.AddScoped<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
+
+// ── Invoice Payments Plus (feature 014a) ─────────────────────────────────────
+// IDataProtector-backed OAuth-token encryption (research.md R3) — the first per-tenant
+// third-party credential this codebase stores.
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<IPaymentTokenProtector, PaymentTokenProtector>();
+builder.Services.AddScoped<IPaymentProvider, MolliePaymentProvider>();
+builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotificationService>();
+builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReceiptNotificationService>();
+builder.Services.AddScoped<IBetalingsbewijsGenerator, QuestPdfBetalingsbewijsGenerator>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
@@ -703,6 +735,7 @@ app.MapMealListEndpoints();
 app.MapMonthlyMenuEndpoints();
 app.MapMealPreferenceRequestEndpoints();
 app.MapInvoiceEndpoints();
+app.MapPaymentEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

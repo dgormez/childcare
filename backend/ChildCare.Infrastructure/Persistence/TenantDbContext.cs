@@ -285,6 +285,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             l.Property(x => x.Erkenningsnummer).HasMaxLength(50);
             l.Property(x => x.BankAccountNumber).HasMaxLength(50);
             l.Property(x => x.InvoiceDueDays).HasDefaultValue(14).IsRequired();
+            // Feature 014a — per-location automatic payment-reminder settings.
+            l.Property(x => x.PaymentRemindersEnabled).HasDefaultValue(false).IsRequired();
+            l.Property(x => x.PaymentReminderDelayDays).HasDefaultValue(3).IsRequired();
+            l.Property(x => x.PaymentReminderCadenceDays).HasDefaultValue(7).IsRequired();
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -923,6 +927,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             inv.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             inv.HasOne<Contract>().WithMany().HasForeignKey(x => x.ContractId);
             inv.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            // Feature 014a — capped automatic payment-reminder tracking.
+            inv.Property(x => x.ReminderCount).HasDefaultValue(0).IsRequired();
         });
     }
 }
