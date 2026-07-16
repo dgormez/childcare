@@ -509,6 +509,17 @@
       "saveButton": "Wijzigingen opslaan",
       "saveSuccess": "Facturatie-instellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "paymentReminderSettings": {
+      "title": "Betalingsherinneringen",
+      "description": "Herinner ouders automatisch aan openstaande facturen.",
+      "enabledLabel": "Automatische betalingsherinneringen versturen",
+      "delayDaysLabel": "Eerste herinnering na (dagen te laat)",
+      "cadenceDaysLabel": "Herhaal elke (dagen)",
+      "capHint": "Herinneringen stoppen automatisch nadat er 3 zijn verstuurd voor een factuur.",
+      "saveButton": "Herinneringsinstellingen opslaan",
+      "saveSuccess": "Herinneringsinstellingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
     }
   },
   "organisationSettings": {
@@ -518,7 +529,19 @@
     "saveSuccess": "Organisatie-instellingen opgeslagen.",
     "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw.",
     "loadError": "Kan de organisatie-instellingen niet laden. Probeer het opnieuw.",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "paymentConnection": {
+      "title": "Betalingen",
+      "connected": "Verbonden",
+      "connect": "Mollie koppelen",
+      "connecting": "Verbinden…",
+      "disconnect": "Loskoppelen",
+      "notConnectedDescription": "Koppel het Mollie-account van je organisatie zodat ouders facturen online kunnen betalen.",
+      "oauthFailed": "Kan niet verbinden met Mollie. Probeer het opnieuw.",
+      "loadError": "Kan de betaalverbindingsstatus niet laden. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen",
+      "backToSettings": "Terug naar instellingen"
+    }
   },
   "invoices": {
     "title": "Facturen",

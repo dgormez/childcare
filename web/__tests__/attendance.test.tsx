@@ -28,6 +28,7 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     reservationSwapsMode: "disabled", reservationNoticeHours: 0, requiresCaregiverPin: true,
     menuVariantPriorityOrder: [], menuVariantsWithPublishedContent: [], deactivatedAt: null,
     erkenningsnummer: null, bankAccountNumber: null, invoiceDueDays: 14,
+    paymentRemindersEnabled: false, paymentReminderDelayDays: 3, paymentReminderCadenceDays: 7,
     createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };

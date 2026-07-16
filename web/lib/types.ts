@@ -67,6 +67,20 @@ export interface LocationResponse {
   erkenningsnummer: string | null;
   bankAccountNumber: string | null;
   invoiceDueDays: number;
+  paymentRemindersEnabled: boolean;
+  paymentReminderDelayDays: number;
+  paymentReminderCadenceDays: number;
+}
+
+// Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
+export interface PaymentConnectionResponse {
+  status: "connected" | "disconnected";
+  providerAccountLabel: string | null;
+  connectedAt: string | null;
+}
+
+export interface PaymentAuthorizationUrlResponse {
+  authorizationUrl: string;
 }
 
 export interface InvoiceExtraChargeResponse {
