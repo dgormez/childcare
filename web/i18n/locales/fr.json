@@ -41,6 +41,7 @@
     "menu": "Menu",
     "vaccineTypes": "Catalogue des vaccins",
     "invoices": "Factures",
+    "fiscalAttestations": "Attestations fiscales",
     "organisationSettings": "Organisation"
   },
   "session": {
@@ -593,6 +594,30 @@
     "downloadPdfError": "Impossible de télécharger le PDF. Veuillez réessayer.",
     "ogmReference": "Référence de paiement (OGM)",
     "dueDate": "Échéance"
+  },
+  "fiscalAttestations": {
+    "title": "Attestations fiscales",
+    "taxYearLabel": "Année fiscale",
+    "generateButton": "Générer les attestations",
+    "generateSuccess": "{count} {count, plural, one {attestation générée} other {attestations générées}}.",
+    "generateError": "Impossible de générer les attestations. Veuillez réessayer.",
+    "emptyState": "Aucune attestation générée pour cette année fiscale.",
+    "loadError": "Impossible de charger les attestations. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "columnChild": "Enfant",
+    "columnLocation": "Site",
+    "columnAmount": "Montant",
+    "columnStatus": "Statut",
+    "columnGeneratedAt": "Générée",
+    "columnActions": "Actions",
+    "statusGenerated": "Générée",
+    "statusNotYetGenerated": "Aucune facture payée cette année",
+    "statusFailed": "Échec",
+    "regenerateButton": "Régénérer",
+    "regenerateSuccess": "Attestation régénérée.",
+    "regenerateError": "Impossible de régénérer l'attestation. Veuillez réessayer.",
+    "downloadPdf": "Télécharger le PDF",
+    "downloadPdfError": "Impossible de télécharger le PDF. Veuillez réessayer."
   },
   "incidents": {
     "title": "Incidents",

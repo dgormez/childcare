@@ -603,3 +603,42 @@ export interface MealPreferenceChangeRequestResponse {
   decisionNotes:       string | null;
   activeHealthRecords: { id: string; recordType: string; title: string; validFrom: string | null; validUntil: string | null }[];
 }
+
+export type FiscalAttestationStatus = "generated" | "notYetGenerated" | "failed";
+
+export interface FiscalAttestationPeriodResponse {
+  periodStart:    string;
+  periodEnd:      string;
+  days:           number;
+  amountCents:    number;
+  dailyRateCents: number | null;
+}
+
+export interface FiscalAttestationResponse {
+  id:               string | null;
+  childId:          string;
+  childName:        string;
+  locationId:       string;
+  locationName:     string;
+  taxYear:          number;
+  totalAmountCents: number | null;
+  status:           FiscalAttestationStatus;
+  periods:          FiscalAttestationPeriodResponse[] | null;
+  generatedAt:      string | null;
+}
+
+export interface GenerateFiscalAttestationsResultItem {
+  childId:    string;
+  locationId: string;
+  status:     "generated" | "alreadyExists" | "noPaidInvoices" | "failed";
+}
+
+export interface GenerateFiscalAttestationsResponse {
+  taxYear: number;
+  results: GenerateFiscalAttestationsResultItem[];
+}
+
+export interface FiscalAttestationDownloadUrlResponse {
+  downloadUrl: string;
+  expiresAt:   string;
+}
