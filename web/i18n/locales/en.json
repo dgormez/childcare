@@ -41,6 +41,7 @@
     "menu": "Menu",
     "vaccineTypes": "Vaccine Catalog",
     "invoices": "Invoices",
+    "fiscalAttestations": "Fiscal Attestations",
     "organisationSettings": "Organisation"
   },
   "session": {
@@ -593,6 +594,30 @@
     "downloadPdfError": "Couldn't download the PDF. Please try again.",
     "ogmReference": "Payment reference (OGM)",
     "dueDate": "Due date"
+  },
+  "fiscalAttestations": {
+    "title": "Fiscal Attestations",
+    "taxYearLabel": "Tax year",
+    "generateButton": "Generate attestations",
+    "generateSuccess": "{count} {count, plural, one {attestation} other {attestations}} generated.",
+    "generateError": "Couldn't generate attestations. Please try again.",
+    "emptyState": "No attestations generated yet for this tax year.",
+    "loadError": "Couldn't load attestations. Please try again.",
+    "retry": "Retry",
+    "columnChild": "Child",
+    "columnLocation": "Location",
+    "columnAmount": "Amount",
+    "columnStatus": "Status",
+    "columnGeneratedAt": "Generated",
+    "columnActions": "Actions",
+    "statusGenerated": "Generated",
+    "statusNotYetGenerated": "No paid invoices this year",
+    "statusFailed": "Failed",
+    "regenerateButton": "Regenerate",
+    "regenerateSuccess": "Attestation regenerated.",
+    "regenerateError": "Couldn't regenerate the attestation. Please try again.",
+    "downloadPdf": "Download PDF",
+    "downloadPdfError": "Couldn't download the PDF. Please try again."
   },
   "incidents": {
     "title": "Incidents",

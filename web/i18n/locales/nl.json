@@ -41,6 +41,7 @@
     "menu": "Menu",
     "vaccineTypes": "Vaccinatiecatalogus",
     "invoices": "Facturen",
+    "fiscalAttestations": "Fiscale attesten",
     "organisationSettings": "Organisatie"
   },
   "session": {
@@ -593,6 +594,30 @@
     "downloadPdfError": "Kon de PDF niet downloaden. Probeer het opnieuw.",
     "ogmReference": "Betalingsreferentie (OGM)",
     "dueDate": "Vervaldatum"
+  },
+  "fiscalAttestations": {
+    "title": "Fiscale attesten",
+    "taxYearLabel": "Belastingjaar",
+    "generateButton": "Attesten genereren",
+    "generateSuccess": "{count} {count, plural, one {attest} other {attesten}} gegenereerd.",
+    "generateError": "Kan de attesten niet genereren. Probeer het opnieuw.",
+    "emptyState": "Nog geen attesten gegenereerd voor dit belastingjaar.",
+    "loadError": "Kan de attesten niet laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "columnChild": "Kind",
+    "columnLocation": "Locatie",
+    "columnAmount": "Bedrag",
+    "columnStatus": "Status",
+    "columnGeneratedAt": "Gegenereerd",
+    "columnActions": "Acties",
+    "statusGenerated": "Gegenereerd",
+    "statusNotYetGenerated": "Geen betaalde facturen dit jaar",
+    "statusFailed": "Mislukt",
+    "regenerateButton": "Opnieuw genereren",
+    "regenerateSuccess": "Attest opnieuw gegenereerd.",
+    "regenerateError": "Kan het attest niet opnieuw genereren. Probeer het opnieuw.",
+    "downloadPdf": "PDF downloaden",
+    "downloadPdfError": "Kon de PDF niet downloaden. Probeer het opnieuw."
   },
   "incidents": {
     "title": "Incidenten",

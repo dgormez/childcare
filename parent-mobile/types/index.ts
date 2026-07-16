@@ -117,7 +117,17 @@ export interface ParentAnnouncementResponse {
   readAt:  string | null;
 }
 
-export type NotificationType = "newmessage" | "announcement" | "temperaturealert" | "dayreservationdecided" | "mealpreferencerequestdecided";
+export type NotificationType =
+  | "newmessage"
+  | "announcement"
+  | "temperaturealert"
+  | "dayreservationdecided"
+  | "mealpreferencerequestdecided"
+  // Features 014/014a — previously missing from this union (pre-existing gap fixed by 015).
+  | "invoicesent"
+  | "paymentreminder"
+  | "invoicepaid"
+  | "fiscalattestationgenerated";
 
 export interface NotificationResponse {
   id:            string;
@@ -254,4 +264,33 @@ export type MolliePaymentStatus = "open" | "paid" | "failed" | "cancelled" | "ex
 export interface PaymentStatusResponse {
   invoiceStatus:  "sent" | "paid";
   paymentStatus:  MolliePaymentStatus | null;
+}
+
+// ── Fiscal Attestations (feature 015) ─────────────────────────────────────────────
+export type FiscalAttestationStatus = "generated" | "notYetGenerated" | "failed";
+
+export interface FiscalAttestationPeriodResponse {
+  periodStart:    string;
+  periodEnd:      string;
+  days:           number;
+  amountCents:    number;
+  dailyRateCents: number | null;
+}
+
+export interface FiscalAttestationResponse {
+  id:               string | null;
+  childId:          string;
+  childName:        string;
+  locationId:       string;
+  locationName:     string;
+  taxYear:          number;
+  totalAmountCents: number | null;
+  status:           FiscalAttestationStatus;
+  periods:          FiscalAttestationPeriodResponse[] | null;
+  generatedAt:      string | null;
+}
+
+export interface FiscalAttestationDownloadUrlResponse {
+  downloadUrl: string;
+  expiresAt:   string;
 }

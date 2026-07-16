@@ -103,6 +103,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<Invoice> Invoices => Set<Invoice>();
 
+    public DbSet<FiscalAttestation> FiscalAttestations => Set<FiscalAttestation>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -929,6 +931,19 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             inv.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             // Feature 014a — capped automatic payment-reminder tracking.
             inv.Property(x => x.ReminderCount).HasDefaultValue(0).IsRequired();
+        });
+
+        // Feature 015 — one row per (ChildId, LocationId, TaxYear); regenerating overwrites this
+        // same row in place (spec.md FR-008/FR-009), never a new one for the same key.
+        modelBuilder.Entity<FiscalAttestation>(fa =>
+        {
+            fa.ToTable("fiscal_attestations");
+            fa.HasKey(x => x.Id);
+            fa.Property(x => x.Periods).HasColumnType("jsonb").IsRequired();
+            fa.Property(x => x.PdfObjectPath).IsRequired();
+            fa.HasIndex(x => new { x.ChildId, x.LocationId, x.TaxYear }).IsUnique();
+            fa.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            fa.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
         });
     }
 }

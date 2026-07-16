@@ -43,6 +43,16 @@ const notifications: NotificationResponse[] = [
     titleKey: "parent.notifications.temperature_alert.title", bodyKey: "parent.notifications.temperature_alert.body",
     argumentsJson: JSON.stringify({ celsius: 38.5 }), createdAt: "2026-07-10T10:00:00Z", readAt: null,
   },
+  {
+    id: "n4", type: "invoicesent", sourceId: "i1",
+    titleKey: "parent.notifications.invoice_sent.title", bodyKey: "parent.notifications.invoice_sent.body",
+    argumentsJson: "null", createdAt: "2026-07-10T09:00:00Z", readAt: null,
+  },
+  {
+    id: "n5", type: "fiscalattestationgenerated", sourceId: "f1",
+    titleKey: "parent.notifications.fiscal_attestation_ready.title", bodyKey: "parent.notifications.fiscal_attestation_ready.body",
+    argumentsJson: "null", createdAt: "2026-07-10T08:00:00Z", readAt: null,
+  },
 ];
 
 beforeEach(() => {
@@ -50,7 +60,7 @@ beforeEach(() => {
   useRouter.mockReturnValue({ push: jest.fn(), replace: jest.fn(), back: jest.fn() });
 });
 
-it("renders all three notification types, each correctly typed", async () => {
+it("renders all notification types, each correctly typed and iconed", async () => {
   getMock.mockResolvedValueOnce(jsonResponse(200, notifications));
 
   const { findByText } = await render(<NotificationsScreen />);
@@ -59,6 +69,33 @@ it("renders all three notification types, each correctly typed", async () => {
   expect(await findByText("parent.notifications.announcement.title")).toBeTruthy();
   expect(await findByText("parent.notifications.temperature_alert.title")).toBeTruthy();
   expect(await findByText("parent.notifications.temperature_alert.body:38.5")).toBeTruthy();
+  // Features 014/014a's invoice notification types and 015's fiscal-attestation type previously
+  // had no ICON_BY_TYPE entry (undefined icon component) — this asserts they now render without
+  // throwing, not just that the title text is present.
+  expect(await findByText("parent.notifications.invoice_sent.title")).toBeTruthy();
+  expect(await findByText("parent.notifications.fiscal_attestation_ready.title")).toBeTruthy();
+});
+
+it("tapping an invoice-sent notification navigates to the invoice (previously broken — no icon/nav entry existed)", async () => {
+  getMock.mockResolvedValueOnce(jsonResponse(200, notifications));
+  const push = jest.fn();
+  useRouter.mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
+
+  const { findByText } = await render(<NotificationsScreen />);
+  fireEvent.press(await findByText("parent.notifications.invoice_sent.title"));
+
+  expect(push).toHaveBeenCalledWith("/(app)/invoices/i1");
+});
+
+it("tapping a fiscal-attestation-ready notification navigates to the fiscal attestations list", async () => {
+  getMock.mockResolvedValueOnce(jsonResponse(200, notifications));
+  const push = jest.fn();
+  useRouter.mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
+
+  const { findByText } = await render(<NotificationsScreen />);
+  fireEvent.press(await findByText("parent.notifications.fiscal_attestation_ready.title"));
+
+  expect(push).toHaveBeenCalledWith("/(app)/fiscal-attestations");
 });
 
 it("tapping a new-message notification marks it read and navigates to its thread", async () => {
@@ -89,9 +126,9 @@ it("marking one notification read does not affect another's read state (FR-011)"
 
   const { findByText, getAllByTestId } = await render(<NotificationsScreen />);
   await findByText("parent.notifications.new_message.title");
-  expect(getAllByTestId("unread-dot")).toHaveLength(3);
+  expect(getAllByTestId("unread-dot")).toHaveLength(5);
 
   fireEvent.press(await findByText("parent.notifications.new_message.title"));
 
-  await waitFor(() => expect(getAllByTestId("unread-dot")).toHaveLength(2));
+  await waitFor(() => expect(getAllByTestId("unread-dot")).toHaveLength(4));
 });

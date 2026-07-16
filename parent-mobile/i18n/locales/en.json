@@ -53,7 +53,8 @@
       "requestExtra": "Request an extra day",
       "requestExchange": "Request a day exchange",
       "myRequests": "My requests",
-      "viewInvoices": "My invoices"
+      "viewInvoices": "My invoices",
+      "viewFiscalAttestations": "Fiscal attestations"
     }
   },
   "messages": {
@@ -114,6 +115,22 @@
         "rejected_title": "Request rejected",
         "rejected_body": "Your request has been rejected.",
         "rejected_body_with_note": "Your request has been rejected: {{decisionNotes}}"
+      },
+      "invoice_sent": {
+        "title": "New invoice",
+        "body": "A new invoice is ready for you."
+      },
+      "payment_reminder": {
+        "title": "Invoice still unpaid",
+        "body": "You have an outstanding invoice."
+      },
+      "invoice_paid": {
+        "title": "Receipt available",
+        "body": "Your payment receipt is ready."
+      },
+      "fiscal_attestation_ready": {
+        "title": "Fiscal attestation ready",
+        "body": "Your fiscal attestation is ready."
       }
     }
   },
@@ -215,6 +232,15 @@
     "payLinkFailed": "Couldn't start the payment. Please try again.",
     "viewReceipt": "View receipt",
     "receiptDownloadFailed": "Could not download the receipt. Please try again."
+  },
+  "fiscalAttestations": {
+    "title": "Fiscal Attestations",
+    "noAttestations": "No attestations to show yet.",
+    "loadFailed": "Could not load your fiscal attestations.",
+    "notAvailableYet": "Not available yet — check back after your KDV generates this year's tax certificates.",
+    "taxYear": "Tax year {{year}}",
+    "downloadPdf": "Download PDF",
+    "downloadFailed": "Could not download the PDF. Please try again."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Meal preferences",

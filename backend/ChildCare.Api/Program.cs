@@ -258,6 +258,13 @@ builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotific
 builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReceiptNotificationService>();
 builder.Services.AddScoped<IBetalingsbewijsGenerator, QuestPdfBetalingsbewijsGenerator>();
 
+// ── Fiscal Attestations (feature 015) ────────────────────────────────────────
+builder.Services.AddScoped<ChildCare.Application.FiscalAttestations.FiscalAttestationAggregator>();
+builder.Services.AddScoped<ChildCare.Application.FiscalAttestations.FiscalAttestationWriter>();
+builder.Services.AddScoped<ChildCare.Application.FiscalAttestations.FiscalAttestationNotificationService>();
+builder.Services.AddScoped<IFiscalAttestationPdfGenerator, QuestPdfFiscalAttestationGenerator>();
+builder.Services.AddScoped<IFiscalAttestationStorage, GcsFiscalAttestationStorage>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -736,6 +743,7 @@ app.MapMonthlyMenuEndpoints();
 app.MapMealPreferenceRequestEndpoints();
 app.MapInvoiceEndpoints();
 app.MapPaymentEndpoints();
+app.MapFiscalAttestationEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

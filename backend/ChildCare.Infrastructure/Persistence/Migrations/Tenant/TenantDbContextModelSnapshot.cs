@@ -642,6 +642,51 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("device_pairings", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.FiscalAttestation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PdfObjectPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Periods")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("TaxYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalAmountCents")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("ChildId", "LocationId", "TaxYear")
+                        .IsUnique();
+
+                    b.ToTable("fiscal_attestations", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Group", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2270,6 +2315,21 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
                         .WithMany()
                         .HasForeignKey("PairedByTenantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.FiscalAttestation", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

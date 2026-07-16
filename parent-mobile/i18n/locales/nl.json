@@ -53,7 +53,8 @@
       "requestExtra": "Extra dag aanvragen",
       "requestExchange": "Dagwissel aanvragen",
       "myRequests": "Mijn aanvragen",
-      "viewInvoices": "Mijn facturen"
+      "viewInvoices": "Mijn facturen",
+      "viewFiscalAttestations": "Fiscale attesten"
     }
   },
   "messages": {
@@ -114,6 +115,22 @@
         "rejected_title": "Aanvraag afgewezen",
         "rejected_body": "Je aanvraag is afgewezen.",
         "rejected_body_with_note": "Je aanvraag is afgewezen: {{decisionNotes}}"
+      },
+      "invoice_sent": {
+        "title": "Nieuwe factuur",
+        "body": "Er staat een nieuwe factuur voor je klaar."
+      },
+      "payment_reminder": {
+        "title": "Factuur nog niet betaald",
+        "body": "Je hebt nog een openstaande factuur."
+      },
+      "invoice_paid": {
+        "title": "Betalingsbewijs beschikbaar",
+        "body": "Je betalingsbewijs staat klaar."
+      },
+      "fiscal_attestation_ready": {
+        "title": "Fiscaal attest klaar",
+        "body": "Je fiscaal attest staat klaar."
       }
     }
   },
@@ -215,6 +232,15 @@
     "payLinkFailed": "Kon de betaling niet starten. Probeer het opnieuw.",
     "viewReceipt": "Betalingsbewijs bekijken",
     "receiptDownloadFailed": "Kon het betalingsbewijs niet downloaden. Probeer het opnieuw."
+  },
+  "fiscalAttestations": {
+    "title": "Fiscale attesten",
+    "noAttestations": "Nog geen attesten om te tonen.",
+    "loadFailed": "Kon je fiscale attesten niet laden.",
+    "notAvailableYet": "Nog niet beschikbaar — kom later terug nadat je opvang de attesten van dit jaar heeft gegenereerd.",
+    "taxYear": "Belastingjaar {{year}}",
+    "downloadPdf": "PDF downloaden",
+    "downloadFailed": "Kon de PDF niet downloaden. Probeer het opnieuw."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Maaltijdvoorkeuren",

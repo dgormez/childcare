@@ -10,4 +10,5 @@ public enum NotificationType
     InvoiceSent,
     PaymentReminder,
     InvoicePaid,
+    FiscalAttestationGenerated,
 }
