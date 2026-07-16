@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicat
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import { MessageCircle, Megaphone, Thermometer, Inbox, UtensilsCrossed } from "lucide-react-native";
+import { MessageCircle, Megaphone, Thermometer, Inbox, UtensilsCrossed, Receipt, FileCheck2 } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { useColors } from "../../hooks/useColors";
 import { ScreenContainer } from "../../components/ScreenContainer";
@@ -15,6 +15,11 @@ const ICON_BY_TYPE: Record<NotificationType, typeof MessageCircle> = {
   temperaturealert: Thermometer,
   dayreservationdecided: Inbox,
   mealpreferencerequestdecided: UtensilsCrossed,
+  // Features 014/014a — previously missing from this map (pre-existing gap fixed by 015).
+  invoicesent: Receipt,
+  paymentreminder: Receipt,
+  invoicepaid: Receipt,
+  fiscalattestationgenerated: FileCheck2,
 };
 
 export default function NotificationsScreen() {
@@ -66,6 +71,14 @@ export default function NotificationsScreen() {
       router.push("/(app)/requests");
     } else if (notification.type === "mealpreferencerequestdecided") {
       router.push("/(app)/menu");
+    } else if (
+      notification.type === "invoicesent" ||
+      notification.type === "paymentreminder" ||
+      notification.type === "invoicepaid"
+    ) {
+      router.push(`/(app)/invoices/${notification.sourceId}`);
+    } else if (notification.type === "fiscalattestationgenerated") {
+      router.push("/(app)/fiscal-attestations");
     }
     // temperaturealert: no navigation target makes sense (the underlying child-event has no
     // parent-facing detail screen) — marking read is the whole interaction.

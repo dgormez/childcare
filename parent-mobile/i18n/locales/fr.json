@@ -53,7 +53,8 @@
       "requestExtra": "Demander un jour supplémentaire",
       "requestExchange": "Demander un échange de jour",
       "myRequests": "Mes demandes",
-      "viewInvoices": "Mes factures"
+      "viewInvoices": "Mes factures",
+      "viewFiscalAttestations": "Attestations fiscales"
     }
   },
   "messages": {
@@ -114,6 +115,22 @@
         "rejected_title": "Demande refusée",
         "rejected_body": "Votre demande a été refusée.",
         "rejected_body_with_note": "Votre demande a été refusée : {{decisionNotes}}"
+      },
+      "invoice_sent": {
+        "title": "Nouvelle facture",
+        "body": "Une nouvelle facture est disponible pour vous."
+      },
+      "payment_reminder": {
+        "title": "Facture non payée",
+        "body": "Vous avez une facture impayée."
+      },
+      "invoice_paid": {
+        "title": "Preuve de paiement disponible",
+        "body": "Votre preuve de paiement est disponible."
+      },
+      "fiscal_attestation_ready": {
+        "title": "Attestation fiscale prête",
+        "body": "Votre attestation fiscale est disponible."
       }
     }
   },
@@ -215,6 +232,15 @@
     "payLinkFailed": "Impossible de démarrer le paiement. Veuillez réessayer.",
     "viewReceipt": "Voir la preuve de paiement",
     "receiptDownloadFailed": "Impossible de télécharger la preuve de paiement. Veuillez réessayer."
+  },
+  "fiscalAttestations": {
+    "title": "Attestations fiscales",
+    "noAttestations": "Aucune attestation à afficher pour le moment.",
+    "loadFailed": "Impossible de charger vos attestations fiscales.",
+    "notAvailableYet": "Pas encore disponible — revenez une fois que votre crèche aura généré les attestations fiscales de cette année.",
+    "taxYear": "Année fiscale {{year}}",
+    "downloadPdf": "Télécharger le PDF",
+    "downloadFailed": "Impossible de télécharger le PDF. Veuillez réessayer."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Préférences alimentaires",
