@@ -541,3 +541,37 @@ use the static code review instead.
   Cloud Scheduler + Cloud Run Job (`infra/gcp/payment-reminders-scheduler.tf`) was authored but
   deliberately not applied, and real Mollie OAuth credentials were not provisioned — both are
   manual post-merge steps, per this loop's standing infra-caution rule.
+- 015 (`015-fiscal-attestations`): ✅ Done, merged 2026-07-16 (PR #35, squash-merged after green
+  CI — 767/767 backend + 187/187 web + 92/92 parent-mobile tests). Full pipeline run from a clean
+  `master` in a single session, scheduled via a one-shot session-local cron. Annual Belgian fiscal
+  attestation PDFs (childcare cost certificates) per (child, location, tax year), aggregated from
+  that year's `Paid` invoices into up to 4 daily-rate periods (>4 consolidates the oldest overflow
+  into the earliest retained one); director-web bulk-generate/regenerate; parent-mobile
+  list+download via a signed GCS URL. Deliberate, explicitly-reasoned departure from 014/014a's
+  on-demand PDF rendering: the attestation is rendered once and persisted to GCS (mirrors
+  `GcsGroupActivityPhotoStorage`'s server-side-write pattern, not the client-signed-upload one),
+  since a document a parent files with the tax authority needs a stable snapshot — regenerate
+  explicitly re-renders and overwrites in place rather than silently drifting if unrelated invoice
+  data changes later. `/speckit-clarify` self-answered its one real ambiguity (does
+  generate/regenerate notify parents?) against clear 014/014a precedent, per this loop's standing
+  rule for autonomous runs with no product owner present. `/speckit-checklist`'s safety/compliance
+  pass and `/speckit-analyze` each found one real gap (FR-004's ambiguous "day count" needing to
+  specify billable vs. calendar days; SC-004's unquantified "a few taps") — both fixed in spec.md.
+  `/speckit-converge` found two real test-coverage gaps on explicitly-named acceptance scenarios
+  (US1/AC4 "child left mid-year", US3/AC3 "parent sees the corrected version, not stale") — both
+  fixed with dedicated tests, not left as debt. Found and fixed a real pre-existing bug while
+  extending shared code: `NotificationType`'s union and the parent-mobile notifications screen's
+  icon/nav map were never updated for 014/014a's `invoicesent`/`paymentreminder`/`invoicepaid`
+  types, so any parent receiving one hit an undefined icon component — extended for those three
+  plus this feature's own type, with regression tests. Confirms the recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern (012a,
+  013c, 006a, 013d, 013g, 013h, 014, 014a) yet again — and this time the second file's *own* doc
+  comment already explained exactly why it would break (`MigrateAsync()`'s computed "pending"
+  range goes empty if the newest migration is left marked-applied while an earlier one is
+  reverted), yet it was still missed on the first pass and only caught by actually running the
+  full suite before opening the PR, not by inspection. CI then caught a second, different issue
+  the full local run didn't reproduce: three `GeneratedAt` equality assertions hit the same
+  PostgreSQL `timestamptz` round-trip precision flake `RegenerateInvoiceTests` (014) had already
+  established a millisecond-tolerant comparison pattern for — applied the same fix. Real
+  regulatory/legal content (the Opgroeien declaration wording, exact PDF layout) is sourced from
+  the official template at implementation time per spec.md's own Assumptions, not fabricated.
