@@ -498,3 +498,46 @@ use the static code review instead.
   PostgreSQL's `timestamptz` column, differing by a few ticks — fixed with the same
   millisecond-tolerant comparison this codebase's `IncidentReportImmutabilityTests`/
   `DeactivateVaccineTypeTests` already established for exactly this precision class.
+- 014a (`014a-invoice-payments-plus`): ✅ Done, merged 2026-07-16 (PR #34, squash-merged after
+  green CI — 741/741 backend + 182/182 web + 85/85 parent-mobile tests). Full pipeline run from
+  a clean `master` in a single session: the PSP decision (Mollie Connect for Platforms) was
+  already resolved in BACKLOG.md's prompt block from a prior product-owner conversation, so no
+  pause was needed there. `IPaymentProvider` mirrors `IExpoPushSender`'s existing port/adapter
+  shape; two new public-schema tables (`payment_provider_connections`, `payments`) resolve the
+  public webhook to a tenant/invoice from a system-generated `PaymentReference` alone, never a
+  client-supplied claim; OAuth tokens are the first per-tenant third-party credential this
+  codebase stores, encrypted via ASP.NET Core Data Protection. `send-payment-reminders` (a new
+  CLI subcommand, mirrors `MigrateTenantsCommand`'s per-tenant loop) is this codebase's first
+  scheduled-job entrypoint — two prior features (008a, 014 itself) had each deferred building
+  this exact infrastructure with a note to "revisit... and fold this in then"; this was that
+  feature. Corrected one BACKLOG-prompt-adjacent assumption during planning: the spec's first
+  draft assumed the betalingsbewijs needed a stored/signed-URL pattern, but 014's own invoice
+  PDF turned out to already be on-demand-rendered (research.md R1) — fixed before implementation
+  rather than carried through. `/speckit-checklist`'s security/regulatory pass found five real
+  spec gaps (token-expiry edge case, reminder-cap persistence across settings changes,
+  reminder-progress across regenerate, receipt PII scope, per-tenant job failure isolation) —
+  all fixed in spec.md. `/speckit-converge` found four real implementation gaps the first pass
+  missed: a revoked Mollie token propagated as an unhandled 500 instead of the spec's required
+  graceful reconnect state (the connection now flips to `Disconnected` and the parent sees a
+  clean not-available state, not a broken link); no test exercised `FakeExpoPushSender` despite
+  two new notification types; the reminder job's per-tenant failure isolation existed in code
+  (same try/catch shape as `MigrateTenantsCommand`) but was never tested — worth remembering
+  generally: a comment claiming something "isn't testable" is itself a claim to verify, not
+  assume, especially when a near-identical existing test (`BackfillGrowthCheckCommandTests`)
+  already proves the pattern is testable; and the concurrent-payment race (online payment vs.
+  manual mark-paid at the same instant) had a correctness guard but no test. Writing those tests
+  surfaced two test-isolation bugs of this session's own making, both fixed: `FakePaymentProvider`
+  is registered Singleton (mirroring `FakeExpoPushSender`'s established pattern) and so its
+  `Payments` dictionary accumulates across every test in a class sharing one `IClassFixture` —
+  assertions must scope by `InvoiceId`, not assume a fresh/empty collection; and a deliberately
+  broken tenant schema (used to prove failure isolation) must be cleaned up afterward
+  (`ProvisioningStatus = Failed`) or it permanently breaks every later test in the same shared
+  fixture that calls the same cross-tenant command. Confirms the recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern (012a,
+  013c, 006a, 013d, 013g, 013h, 014) applies yet again, with a reminder of the two files' actual
+  difference: `TenantMigrationRolloutTests` drops `locations` wholesale so new `Location` columns
+  need no separate step there, but `LegacyVaccinationMigrationTests` never drops `locations` and
+  needed explicit `DROP COLUMN`s for this feature's three new fields. The Terraform for the new
+  Cloud Scheduler + Cloud Run Job (`infra/gcp/payment-reminders-scheduler.tf`) was authored but
+  deliberately not applied, and real Mollie OAuth credentials were not provisioned — both are
+  manual post-merge steps, per this loop's standing infra-caution rule.

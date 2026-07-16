@@ -55,7 +55,7 @@
 
 | # | Branch | Feature | Depends on | Status |
 |---|---|---|---|---|
-| 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | 🔲 Not started |
+| 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | ✅ Done |
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | 🔲 Not started |
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
@@ -1911,6 +1911,44 @@ Out of scope:
 - Partial payments / payment plans — decide at plan time if trivial,
   otherwise defer.
 ```
+
+**Shipped 2026-07-16** — `specs/014a-invoice-payments-plus/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → design-compliance review → converge → PR #34, squash-merged
+after green CI — 741/741 backend + 182/182 web + 85/85 parent-mobile tests). Mollie Connect for
+Platforms behind a new `IPaymentProvider` abstraction (mirrors `IExpoPushSender`'s existing
+port/adapter shape) — OAuth connect/disconnect on director web, a parent-mobile "Pay now" action
+opening Mollie's hosted checkout, and a tenant-resolving public webhook (`TenantExempt`) that
+confirms payment via two new public-schema tables (`payment_provider_connections`, `payments`)
+resolved solely from a system-generated `PaymentReference`, never a client-supplied tenant claim.
+OAuth tokens encrypted at rest via ASP.NET Core Data Protection (`IPaymentTokenProtector`) — the
+first per-tenant third-party credential this codebase stores. The `send-payment-reminders` CLI
+subcommand (mirrors `MigrateTenantsCommand`'s per-tenant loop, including failure isolation) is
+this codebase's first scheduled-job entrypoint, wired to a new Cloud Scheduler + Cloud Run Job in
+`infra/gcp/payment-reminders-scheduler.tf` — authored but deliberately not applied (manual
+post-merge step, same convention as every other production/infra change here). Betalingsbewijs
+(payment receipt) renders on-demand from the invoice's `Paid`-state fields, matching 014's own
+invoice-PDF pattern discovered during planning to already be on-demand rather than the
+stored/signed-URL pattern this feature's spec first assumed — corrected before implementation.
+`/speckit-checklist`'s security/regulatory-focused pass found five genuine spec gaps (OAuth
+token-expiry handling, reminder-cap persistence across settings changes, reminder-progress
+across regenerate, receipt PII scope, per-tenant reminder-job failure isolation) — all fixed in
+spec.md, not deferred. `/speckit-converge` found four real implementation gaps after the first
+pass: a revoked/expired Mollie token propagated as an unhandled 500 instead of the spec's
+required graceful "reconnect" state (fixed — the connection now flips to `Disconnected` and
+returns a distinct failure); no payment test actually exercised `FakeExpoPushSender` despite two
+new notification types; the reminder job's per-tenant failure isolation existed in code but was
+never tested (a prior comment incorrectly claimed it wasn't testable through the shared test
+host — it is); and the concurrent-payment race (online payment vs. manual mark-paid at the same
+moment) had a correctness guard but no test. Fixing those surfaced two test-isolation bugs of
+this pass's own making: `FakePaymentProvider.Payments` is a Singleton shared across every test
+in a class (assertions must scope by `InvoiceId`, not assume it's the only entry), and a
+deliberately-broken tenant schema needs cleanup (`ProvisioningStatus = Failed`) so it doesn't
+fail every subsequent test sharing the same `IClassFixture`. Confirms the recurring
+`TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern (012a,
+013c, 006a, 013d, 013g, 013h, 014) yet again — this time both files needed extending, and
+`LegacyVaccinationMigrationTests` specifically needed explicit `DROP COLUMN`s for the new
+`Location` fields since (unlike `TenantMigrationRolloutTests`) it never drops `locations`
+wholesale.
 
 ---
 
