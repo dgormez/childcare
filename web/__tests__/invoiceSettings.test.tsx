@@ -33,6 +33,9 @@ const location: LocationResponse = {
   erkenningsnummer: "KDV12345",
   bankAccountNumber: "BE68 5390 0754 7034",
   invoiceDueDays: 14,
+  paymentRemindersEnabled: false,
+  paymentReminderDelayDays: 3,
+  paymentReminderCadenceDays: 7,
   deactivatedAt: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
@@ -97,5 +100,48 @@ describe("InvoiceSettingsForm", () => {
 
     expect(await screen.findByText("Couldn't save changes. Please try again.")).toBeInTheDocument();
     expect(onSaved).not.toHaveBeenCalled();
+  });
+});
+
+describe("InvoiceSettingsForm — payment reminder settings", () => {
+  it("loads the current reminder settings (disabled, default delay/cadence)", () => {
+    renderForm();
+    expect(screen.getByLabelText("Send automatic payment reminders")).not.toBeChecked();
+    expect(screen.getByLabelText("First reminder after (days overdue)")).toHaveValue(3);
+    expect(screen.getByLabelText("Repeat every (days)")).toHaveValue(7);
+  });
+
+  it("saves reminder settings independently of the invoice-settings fields", async () => {
+    const updated = { ...location, paymentRemindersEnabled: true, paymentReminderDelayDays: 5, paymentReminderCadenceDays: 10 };
+    vi.mocked(apiClient.PUT).mockResolvedValue(okResponse(updated) as never);
+    const onSaved = renderForm();
+
+    await userEvent.click(screen.getByLabelText("Send automatic payment reminders"));
+    await userEvent.clear(screen.getByLabelText("First reminder after (days overdue)"));
+    await userEvent.type(screen.getByLabelText("First reminder after (days overdue)"), "5");
+    await userEvent.clear(screen.getByLabelText("Repeat every (days)"));
+    await userEvent.type(screen.getByLabelText("Repeat every (days)"), "10");
+    await userEvent.click(screen.getByRole("button", { name: "Save reminder settings" }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));
+    expect(apiClient.PUT).toHaveBeenCalledWith(
+      "/api/locations/{id}/payment-reminder-settings",
+      expect.objectContaining({
+        params: { path: { id: "loc-1" } },
+        body: { enabled: true, delayDays: 5, cadenceDays: 10 },
+      }),
+    );
+    expect(screen.getByText("Reminder settings saved.")).toBeInTheDocument();
+  });
+
+  it("shows an error notice and reverts the toggle on a failed reminder-settings save", async () => {
+    vi.mocked(apiClient.PUT).mockResolvedValue(errorResponse(404) as never);
+    renderForm();
+
+    await userEvent.click(screen.getByLabelText("Send automatic payment reminders"));
+    await userEvent.click(screen.getByRole("button", { name: "Save reminder settings" }));
+
+    expect(await screen.findByText("Couldn't save changes. Please try again.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Send automatic payment reminders")).not.toBeChecked();
   });
 });

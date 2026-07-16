@@ -75,6 +75,14 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
+        group.MapPut("/{id:guid}/payment-reminder-settings", async (Guid id, UpdateLocationPaymentReminderSettingsRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationPaymentReminderSettingsCommand(
+                id, req.Enabled, req.DelayDays, req.CadenceDays));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateLocationCommand(id));

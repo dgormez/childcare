@@ -208,7 +208,13 @@
     "downloadPdf": "Télécharger le PDF",
     "downloadFailed": "Impossible de télécharger le PDF. Veuillez réessayer.",
     "ogmReference": "Référence de paiement",
-    "period": "{{month}} {{year}}"
+    "period": "{{month}} {{year}}",
+    "payNow": "Payer maintenant",
+    "confirmingPayment": "Confirmation de votre paiement…",
+    "payNotAvailable": "Le paiement en ligne n'est pas encore configuré — payez par virement bancaire avec la référence ci-dessus.",
+    "payLinkFailed": "Impossible de démarrer le paiement. Veuillez réessayer.",
+    "viewReceipt": "Voir la preuve de paiement",
+    "receiptDownloadFailed": "Impossible de télécharger la preuve de paiement. Veuillez réessayer."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Préférences alimentaires",

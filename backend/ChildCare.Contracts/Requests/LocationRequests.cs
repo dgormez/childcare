@@ -39,3 +39,9 @@ public record UpdateLocationInvoiceSettingsRequest(
     string? Erkenningsnummer,
     string? BankAccountNumber,
     int InvoiceDueDays);
+
+// Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
+public record UpdateLocationPaymentReminderSettingsRequest(
+    bool Enabled,
+    int DelayDays,
+    int CadenceDays);

@@ -893,6 +893,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateOnly?>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("LastReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("LineItems")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -910,6 +913,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.Property<DateOnly>("PeriodMonth")
                         .HasColumnType("date");
+
+                    b.Property<int>("ReminderCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp with time zone");
@@ -1097,6 +1105,21 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PaymentReminderCadenceDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(7);
+
+                    b.Property<int>("PaymentReminderDelayDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(3);
+
+                    b.Property<bool>("PaymentRemindersEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Phone")
                         .IsRequired()

@@ -243,3 +243,15 @@ export interface ParentInvoiceEntry {
   createdAt:     string;
   updatedAt:     string;
 }
+
+// Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
+export interface PaymentLinkResponse {
+  checkoutUrl: string;
+}
+
+export type MolliePaymentStatus = "open" | "paid" | "failed" | "cancelled" | "expired";
+
+export interface PaymentStatusResponse {
+  invoiceStatus:  "sent" | "paid";
+  paymentStatus:  MolliePaymentStatus | null;
+}

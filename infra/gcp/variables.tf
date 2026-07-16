@@ -85,3 +85,24 @@ variable "superadmin_api_key" {
   sensitive   = true
   description = "Gates POST /api/admin/invitations (research.md R11) — a temporary Phase 1 measure until proper super-admin auth exists (Phase 2)."
 }
+
+# Feature 014a — Mollie Connect for Platforms (research.md R1/R3).
+variable "mollie_client_id" {
+  type        = string
+  description = "Mollie OAuth app client ID (Connect for Platforms)"
+}
+
+variable "mollie_client_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "mollie_redirect_uri" {
+  type        = string
+  description = "director-web's OAuth callback page, e.g. https://app.example.com/settings/payment-connection-callback"
+}
+
+variable "app_api_base_url" {
+  type        = string
+  description = "This API's own public base URL — used to build the Mollie webhook URL (research.md R2)"
+}

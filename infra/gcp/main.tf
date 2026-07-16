@@ -267,6 +267,24 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "Stripe__CancelUrl"
         value = "childcare://payment-cancel"
       }
+      # Feature 014a — Mollie Connect for Platforms. Client secret follows this file's existing
+      # Stripe__SecretKey precedent (plain sensitive var, not Secret Manager) for consistency.
+      env {
+        name  = "Mollie__ClientId"
+        value = var.mollie_client_id
+      }
+      env {
+        name  = "Mollie__ClientSecret"
+        value = var.mollie_client_secret
+      }
+      env {
+        name  = "Mollie__RedirectUri"
+        value = var.mollie_redirect_uri
+      }
+      env {
+        name  = "App__ApiBaseUrl"
+        value = var.app_api_base_url
+      }
     }
   }
 

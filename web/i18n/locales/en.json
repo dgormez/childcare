@@ -509,6 +509,17 @@
       "saveButton": "Save changes",
       "saveSuccess": "Invoicing settings saved.",
       "saveError": "Couldn't save changes. Please try again."
+    },
+    "paymentReminderSettings": {
+      "title": "Payment reminders",
+      "description": "Automatically remind parents about overdue invoices.",
+      "enabledLabel": "Send automatic payment reminders",
+      "delayDaysLabel": "First reminder after (days overdue)",
+      "cadenceDaysLabel": "Repeat every (days)",
+      "capHint": "Reminders stop automatically after 3 have been sent for an invoice.",
+      "saveButton": "Save reminder settings",
+      "saveSuccess": "Reminder settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
     }
   },
   "organisationSettings": {
@@ -518,7 +529,19 @@
     "saveSuccess": "Organisation settings saved.",
     "saveError": "Couldn't save changes. Please try again.",
     "loadError": "Couldn't load organisation settings. Please try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "paymentConnection": {
+      "title": "Payments",
+      "connected": "Connected",
+      "connect": "Connect Mollie",
+      "connecting": "Connecting…",
+      "disconnect": "Disconnect",
+      "notConnectedDescription": "Connect your organisation's Mollie account so parents can pay invoices online.",
+      "oauthFailed": "Couldn't connect to Mollie. Please try again.",
+      "loadError": "Couldn't load payment connection status. Please try again.",
+      "retry": "Retry",
+      "backToSettings": "Back to settings"
+    }
   },
   "invoices": {
     "title": "Invoices",

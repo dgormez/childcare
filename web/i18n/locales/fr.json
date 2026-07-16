@@ -509,6 +509,17 @@
       "saveButton": "Enregistrer les modifications",
       "saveSuccess": "Paramètres de facturation enregistrés.",
       "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+    },
+    "paymentReminderSettings": {
+      "title": "Rappels de paiement",
+      "description": "Rappeler automatiquement aux parents les factures en retard.",
+      "enabledLabel": "Envoyer des rappels de paiement automatiques",
+      "delayDaysLabel": "Premier rappel après (jours de retard)",
+      "cadenceDaysLabel": "Répéter tous les (jours)",
+      "capHint": "Les rappels s'arrêtent automatiquement après l'envoi de 3 rappels pour une facture.",
+      "saveButton": "Enregistrer les rappels",
+      "saveSuccess": "Paramètres de rappel enregistrés.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
     }
   },
   "organisationSettings": {
@@ -518,7 +529,19 @@
     "saveSuccess": "Paramètres de l'organisation enregistrés.",
     "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
     "loadError": "Impossible de charger les paramètres de l'organisation. Veuillez réessayer.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "paymentConnection": {
+      "title": "Paiements",
+      "connected": "Connecté",
+      "connect": "Connecter Mollie",
+      "connecting": "Connexion…",
+      "disconnect": "Déconnecter",
+      "notConnectedDescription": "Connectez le compte Mollie de votre organisation pour que les parents puissent payer les factures en ligne.",
+      "oauthFailed": "Impossible de se connecter à Mollie. Veuillez réessayer.",
+      "loadError": "Impossible de charger le statut de la connexion de paiement. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "backToSettings": "Retour aux paramètres"
+    }
   },
   "invoices": {
     "title": "Factures",

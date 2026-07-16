@@ -16,6 +16,8 @@ public interface IPublicDbContext
     DbSet<Tenant> Tenants { get; }
     DbSet<Invitation> Invitations { get; }
     DbSet<VaccineType> VaccineTypes { get; }
+    DbSet<PaymentProviderConnection> PaymentProviderConnections { get; }
+    DbSet<Payment> Payments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

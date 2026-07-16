@@ -208,7 +208,13 @@
     "downloadPdf": "Download PDF",
     "downloadFailed": "Could not download the PDF. Please try again.",
     "ogmReference": "Payment reference",
-    "period": "{{month}} {{year}}"
+    "period": "{{month}} {{year}}",
+    "payNow": "Pay now",
+    "confirmingPayment": "Confirming your payment…",
+    "payNotAvailable": "Online payment isn't set up yet — pay by bank transfer using the reference above.",
+    "payLinkFailed": "Couldn't start the payment. Please try again.",
+    "viewReceipt": "View receipt",
+    "receiptDownloadFailed": "Could not download the receipt. Please try again."
   },
   "mealPreferenceRequests": {
     "sectionTitle": "Meal preferences",
