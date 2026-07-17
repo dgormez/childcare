@@ -57,7 +57,7 @@
 |---|---|---|---|---|
 | 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | ✅ Done |
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | ✅ Done |
-| 016 | `016-developmental-milestones` | Child development tracking | 006 | 🔲 Not started |
+| 016 | `016-developmental-milestones` | Child development tracking | 006 | ✅ Done |
 | 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
