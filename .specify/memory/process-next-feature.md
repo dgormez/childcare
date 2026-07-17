@@ -25,20 +25,23 @@ the reduced supervision.
 
 ## Standing process rules (apply regardless of how this is invoked)
 
-- **Never call Bash with `run_in_background: true` for the test suite, build, or any other step
-  in this pipeline — always run it as a normal blocking call and wait for the result before
-  continuing.** This is not a style preference; it will silently break the run. Backgrounding a
-  Bash call relies on a later turn in the same conversation to receive the completion
-  notification and act on it. A scheduled invocation of this prompt runs as a one-shot headless
-  `claude -p` process with exactly one turn — there is no later turn for that notification to
-  arrive in. If you background the test suite and end your turn expecting to "check back" or
-  "pick this up automatically once it completes," the process exits immediately, the
-  notification has nowhere to land, and everything you built goes uncommitted and unpushed with
-  nothing left running to finish the job. (Established 2026-07-16 after this happened twice in a
-  row on feature 016 — once before this rule existed, once *after* an earlier, softer version of
-  this rule ["run synchronously, don't background it"] was already in place. The softer wording
-  wasn't enough to override the habit of backgrounding slow commands, which is normally correct
-  practice in an interactive session. Naming the specific tool parameter explicitly is the fix.)
+- **This rule applies to every wait in this pipeline, not just the test suite — test suite, CI
+  checks, builds, deployments, or anything else that finishes asynchronously.** Never call Bash
+  with `run_in_background: true` and never end the turn assuming you'll be notified, re-invoked,
+  or able to "check back" when the thing finishes — always wait on it with a **blocking
+  foreground call in the same turn** (e.g. `gh pr checks <N> --watch` for CI, not a bare
+  `gh pr checks` plus a plan to look again later). This is not a style preference; it will
+  silently break the run. Backgrounding relies on a later turn in the same conversation to
+  receive the completion signal and act on it. A scheduled invocation of this prompt runs as a
+  one-shot headless `claude -p` process with exactly one turn — there is no later turn for any
+  notification to arrive in. If you background something and end your turn expecting to "check
+  back" or "pick this up automatically," the process exits immediately, nothing is watching
+  anymore, and any work not yet committed/pushed/merged is simply abandoned. (Established
+  2026-07-16 after this happened on feature 016's test suite step, patched with a rule scoped
+  only to that step; recurred 2026-07-17 in the very next step — waiting on CI checks after the
+  PR was opened — because the rule was written narrowly around "test suite" instead of the
+  general pattern. Written generally this time; if a third async-wait spot turns up, that's a
+  sign the pattern needs enforcing structurally, not with another one-off callout.)
 - **Fix every `/speckit-checklist`/`/speckit-analyze`/`/speckit-converge` finding**, even ones
   marked LOW/advisory — don't just log them as debt. (Established after an explicit correction
   mid-backlog; see feature 005/006/007's shipped-notes for examples of findings that were fixed
@@ -202,8 +205,12 @@ Each invocation:
 
 11. gh pr create targeting master.
 
-12. Wait for gh pr checks to go green. Red CI is handled like step 9 — fix, retry, or stop and
-    report. Never merge on red.
+12. Wait for gh pr checks to go green using a **blocking foreground call**
+    (`gh pr checks <N> --watch`, which polls internally and only returns once checks finish) —
+    do not end the turn assuming you'll be notified or re-invoked when CI completes; nothing
+    will re-invoke you within this run (see the standing rule above — it applies to any
+    asynchronous wait, not just the test suite). Red CI is handled like step 9 — fix, retry, or
+    stop and report. Never merge on red.
 
 13. gh pr merge --squash once CI passes.
 
@@ -621,3 +628,14 @@ use the static code review instead.
   anyone tuning the 3h interval: one run in this window was wiped out entirely by hitting the
   account's session usage limit (a single heavy run can exhaust it), so not every scheduled tick
   is guaranteed to do real work.
+- 2026-07-17: the run_in_background fix held for step 9 — a subsequent run implemented 016 in
+  full (789 backend + 162 mobile + 96 parent-mobile + 193 web tests passing), committed in 3
+  logical commits, pushed, and opened PR #36. But the identical pattern recurred one step later:
+  it ended the turn waiting on CI checks, saying it would "be notified automatically" with a
+  "20-minute fallback check scheduled" — that mechanism doesn't exist here either. Lower-stakes
+  than the step-9 recurrence since the work was already committed/pushed/PR'd (nothing to lose),
+  and a later run picked the open PR back up per step 0 and completed the merge — PR #36 merged
+  2026-07-17T09:34:44Z, 016 done. Rewrote the standing rule to be general (any async wait, not
+  just "test suite") and step 12 to require `gh pr checks --watch` as a blocking foreground call,
+  rather than patching this one spot narrowly again.
+- 2026-07-17: cron interval changed from 3h to 4h at the user's request.
