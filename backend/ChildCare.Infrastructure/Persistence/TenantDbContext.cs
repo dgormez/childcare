@@ -105,6 +105,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<FiscalAttestation> FiscalAttestations => Set<FiscalAttestation>();
 
+    public DbSet<ChildMilestoneObservation> ChildMilestoneObservations => Set<ChildMilestoneObservation>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -204,6 +206,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         DietaryTypeExtensions.TryParseWireString(value, out var parsed)
             ? parsed
             : throw new FormatException($"Unknown DietaryType: {value}");
+
+    private static MilestoneObservationStatus ParseMilestoneObservationStatus(string value) =>
+        MilestoneObservationStatusExtensions.TryParseWireString(value, out var parsed)
+            ? parsed
+            : throw new FormatException($"Unknown MilestoneObservationStatus: {value}");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -944,6 +951,26 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             fa.HasIndex(x => new { x.ChildId, x.LocationId, x.TaxYear }).IsUnique();
             fa.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             fa.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        modelBuilder.Entity<ChildMilestoneObservation>(o =>
+        {
+            o.ToTable("child_milestone_observations");
+            o.HasKey(x => x.Id);
+            o.Property(x => x.Status)
+             .HasConversion(
+                 v => v.ToWireString(),
+                 v => ParseMilestoneObservationStatus(v))
+             .HasMaxLength(20)
+             .IsRequired();
+            // Feature 016 — same uuid[] shape as ChildEvent.RecordedBy (research.md, data-model.md).
+            o.Property(x => x.ObservedBy).HasColumnType("uuid[]");
+            o.Property(x => x.Notes).HasMaxLength(2000);
+            o.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
+            // No DB FK on MilestoneId — DevelopmentalMilestone lives in the public schema
+            // (research.md R1, same precedent as VaccineRecord.VaccineTypeId).
+            o.HasIndex(x => new { x.ChildId, x.MilestoneId, x.CreatedAt });
+            o.HasIndex(x => x.ChildId);
         });
     }
 }

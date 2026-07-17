@@ -18,6 +18,8 @@ public interface IPublicDbContext
     DbSet<VaccineType> VaccineTypes { get; }
     DbSet<PaymentProviderConnection> PaymentProviderConnections { get; }
     DbSet<Payment> Payments { get; }
+    DbSet<DevelopmentalDomain> DevelopmentalDomains { get; }
+    DbSet<DevelopmentalMilestone> DevelopmentalMilestones { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
