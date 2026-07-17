@@ -25,16 +25,20 @@ the reduced supervision.
 
 ## Standing process rules (apply regardless of how this is invoked)
 
-- **Never background a long-running command and end the turn assuming you'll "check back later."**
-  Each scheduled invocation is a one-shot headless process (`claude -p`) — when the turn ends,
-  the process exits completely and there is no later within that invocation to resume from. A
-  backgrounded test suite/build left running when the turn ends is simply abandoned: nothing
-  commits it, pushes it, or opens the PR. Any long-running command (test suite, build) must be
-  run synchronously and waited on to completion before ending the turn. (Established
-  2026-07-16 after a scheduled run implemented feature 016 in full — dozens of files — then
-  ended the turn saying it would "resume once the background test suite finishes," leaving
-  everything uncommitted with no process left to actually resume it. The next scheduled
-  invocation's step 0 recovers the work from disk, but the run itself never converged.)
+- **Never call Bash with `run_in_background: true` for the test suite, build, or any other step
+  in this pipeline — always run it as a normal blocking call and wait for the result before
+  continuing.** This is not a style preference; it will silently break the run. Backgrounding a
+  Bash call relies on a later turn in the same conversation to receive the completion
+  notification and act on it. A scheduled invocation of this prompt runs as a one-shot headless
+  `claude -p` process with exactly one turn — there is no later turn for that notification to
+  arrive in. If you background the test suite and end your turn expecting to "check back" or
+  "pick this up automatically once it completes," the process exits immediately, the
+  notification has nowhere to land, and everything you built goes uncommitted and unpushed with
+  nothing left running to finish the job. (Established 2026-07-16 after this happened twice in a
+  row on feature 016 — once before this rule existed, once *after* an earlier, softer version of
+  this rule ["run synchronously, don't background it"] was already in place. The softer wording
+  wasn't enough to override the habit of backgrounding slow commands, which is normally correct
+  practice in an interactive session. Naming the specific tool parameter explicitly is the fix.)
 - **Fix every `/speckit-checklist`/`/speckit-analyze`/`/speckit-converge` finding**, even ones
   marked LOW/advisory — don't just log them as debt. (Established after an explicit correction
   mid-backlog; see feature 005/006/007's shipped-notes for examples of findings that were fixed
@@ -187,7 +191,10 @@ Each invocation:
 8. Run speckit-converge to close out anything implementation missed, and fix every finding it
    surfaces (same standing rule as checklist/analyze — no LOW-severity items left as debt).
 
-9. Build and run the test suite **synchronously — wait for it to finish, do not background it**.
+9. Build and run the test suite as a normal blocking Bash call — **do not pass
+   `run_in_background: true`**, even though it's slow. Wait for the actual tool result in this
+   same turn before continuing; do not end the turn early expecting to resume when a backgrounded
+   run finishes (see the standing rule above — there is no later turn in a scheduled invocation).
    If something fails, attempt fixes up to ~3 times. If still failing: stop, leave the branch
    pushed, report what's broken. Never merge broken code.
 
@@ -604,3 +611,13 @@ use the static code review instead.
   never converged. Added the "never background a long-running command" standing rule above and
   made step 9 explicit about running the test suite synchronously, to prevent this recurring
   every 3h indefinitely without ever committing.
+- 2026-07-17: the 2026-07-16 fix above didn't hold — a later scheduled run (still on 016) hit the
+  identical bug: backgrounded the test suite and ended the turn expecting to "pick this back up
+  automatically once it completes." The softer "run synchronously, don't background it" wording
+  wasn't strong enough to override backgrounding a slow command, which is normally correct
+  practice in an interactive session. Reworded both the standing rule and step 9 to name the
+  actual mechanism explicitly — forbidding Bash's `run_in_background: true` by name for this
+  pipeline — rather than describing the desired behavior abstractly. Also worth noting for
+  anyone tuning the 3h interval: one run in this window was wiped out entirely by hitting the
+  account's session usage limit (a single heavy run can exhaust it), so not every scheduled tick
+  is guaranteed to do real work.
