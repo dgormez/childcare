@@ -22,6 +22,82 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.DevelopmentalDomain", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameNl")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("developmental_domains", (string)null);
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.DevelopmentalMilestone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AgeFromMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AgeToMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DescriptionEn")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DescriptionFr")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DescriptionNl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DomainId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgeFromMonths", "AgeToMonths");
+
+                    b.HasIndex("DomainId", "SortOrder");
+
+                    b.ToTable("developmental_milestones", (string)null);
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Invitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -252,6 +328,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                     b.HasIndex("Category", "SortOrder");
 
                     b.ToTable("vaccine_types", (string)null);
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.DevelopmentalMilestone", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.DevelopmentalDomain", null)
+                        .WithMany()
+                        .HasForeignKey("DomainId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

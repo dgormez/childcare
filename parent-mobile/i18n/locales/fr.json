@@ -54,7 +54,8 @@
       "requestExchange": "Demander un échange de jour",
       "myRequests": "Mes demandes",
       "viewInvoices": "Mes factures",
-      "viewFiscalAttestations": "Attestations fiscales"
+      "viewFiscalAttestations": "Attestations fiscales",
+      "viewMilestones": "Développement"
     }
   },
   "messages": {
@@ -305,5 +306,19 @@
     },
     "notAvailableForChild": "Ce type de demande n'est pas disponible pour {childName} pour le moment.",
     "loadAvailabilityFailed": "Impossible de vérifier la disponibilité. Veuillez réessayer."
+  },
+  "milestones": {
+    "title": "Développement",
+    "downloadPdf": "Télécharger le PDF",
+    "downloadFailed": "Impossible de télécharger le PDF. Veuillez réessayer.",
+    "loadFailed": "Impossible de charger les étapes de développement.",
+    "emptyState": "Rien n'a encore été enregistré — revenez bientôt.",
+    "currentFocus": "Focus actuel",
+    "noObservations": "Pas encore enregistré",
+    "status": {
+      "achieved": "Atteint",
+      "emerging": "En émergence",
+      "not_yet": "Pas encore"
+    }
   }
 }

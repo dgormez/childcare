@@ -12,6 +12,8 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
     public DbSet<VaccineType> VaccineTypes => Set<VaccineType>();
     public DbSet<PaymentProviderConnection> PaymentProviderConnections => Set<PaymentProviderConnection>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<DevelopmentalDomain> DevelopmentalDomains => Set<DevelopmentalDomain>();
+    public DbSet<DevelopmentalMilestone> DevelopmentalMilestones => Set<DevelopmentalMilestone>();
 
     public void Detach(object entity) => Entry(entity).State = EntityState.Detached;
 
@@ -110,6 +112,31 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
                   v => (PaymentStatus)Enum.Parse(typeof(PaymentStatus), v, ignoreCase: true))
               .HasMaxLength(20)
               .IsRequired();
+        });
+        // Feature 016 — shared, platform-wide developmental-milestone catalog (research.md R1,
+        // mirrors VaccineType's precedent). Seed data lives in the migration itself
+        // (AddDevelopmentalMilestoneCatalog), not here.
+        modelBuilder.Entity<DevelopmentalDomain>(d =>
+        {
+            d.ToTable("developmental_domains");
+            d.HasKey(x => x.Id);
+            d.Property(x => x.Code).IsRequired().HasMaxLength(30);
+            d.Property(x => x.NameNl).IsRequired().HasMaxLength(100);
+            d.Property(x => x.NameFr).IsRequired().HasMaxLength(100);
+            d.Property(x => x.NameEn).IsRequired().HasMaxLength(100);
+            d.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<DevelopmentalMilestone>(m =>
+        {
+            m.ToTable("developmental_milestones");
+            m.HasKey(x => x.Id);
+            m.Property(x => x.DescriptionNl).IsRequired();
+            m.Property(x => x.DescriptionFr).IsRequired();
+            m.Property(x => x.DescriptionEn).IsRequired();
+            m.HasOne<DevelopmentalDomain>().WithMany().HasForeignKey(x => x.DomainId);
+            m.HasIndex(x => new { x.DomainId, x.SortOrder });
+            m.HasIndex(x => new { x.AgeFromMonths, x.AgeToMonths });
         });
     }
 

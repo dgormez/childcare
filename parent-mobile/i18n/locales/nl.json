@@ -54,7 +54,8 @@
       "requestExchange": "Dagwissel aanvragen",
       "myRequests": "Mijn aanvragen",
       "viewInvoices": "Mijn facturen",
-      "viewFiscalAttestations": "Fiscale attesten"
+      "viewFiscalAttestations": "Fiscale attesten",
+      "viewMilestones": "Ontwikkeling"
     }
   },
   "messages": {
@@ -305,5 +306,19 @@
     },
     "notAvailableForChild": "Dit type verzoek is momenteel niet beschikbaar voor {childName}.",
     "loadAvailabilityFailed": "Kan de beschikbaarheid niet controleren. Probeer het opnieuw."
+  },
+  "milestones": {
+    "title": "Ontwikkeling",
+    "downloadPdf": "PDF downloaden",
+    "downloadFailed": "Kon de PDF niet downloaden. Probeer opnieuw.",
+    "loadFailed": "Kon de mijlpalen niet laden.",
+    "emptyState": "Nog niets geregistreerd — kom later terug.",
+    "currentFocus": "Huidige focus",
+    "noObservations": "Nog niet geregistreerd",
+    "status": {
+      "achieved": "Bereikt",
+      "emerging": "In opkomst",
+      "not_yet": "Nog niet"
+    }
   }
 }

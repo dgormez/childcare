@@ -367,6 +367,46 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("child_group_assignments", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.ChildMilestoneObservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MilestoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateOnly>("ObservedAt")
+                        .HasColumnType("date");
+
+                    b.PrimitiveCollection<List<Guid>>("ObservedBy")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("ChildId", "MilestoneId", "CreatedAt");
+
+                    b.ToTable("child_milestone_observations", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.ClosureNotificationDelivery", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2172,6 +2212,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.Group", null)
                         .WithMany()
                         .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.ChildMilestoneObservation", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Child", null)
+                        .WithMany()
+                        .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

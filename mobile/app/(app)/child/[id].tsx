@@ -2,18 +2,21 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Plus, AlertTriangle, Syringe, HeartPulse, Clock } from "lucide-react-native";
+import { Plus, AlertTriangle, Syringe, HeartPulse, Clock, Sparkles } from "lucide-react-native";
 import { getCached } from "../../../services/readCache";
 import { getPending } from "../../../services/offlineQueue";
 import { listChildEvents, deleteChildEvent, updateChildEvent } from "../../../services/childEvents";
 import { getChildHealthSummary, type HealthSummaryLoadResult } from "../../../services/healthSummary";
+import { fetchMilestonePortfolio } from "../../../services/milestones";
 import { useColors } from "../../../hooks/useColors";
 import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
 import { QuickActionSheet } from "../../../components/QuickActionSheet";
 import { EventTimeline, type EventSyncStatus } from "../../../components/EventTimeline";
 import { EditEventModal } from "../../../components/EditEventModal";
 import { IncidentReportForm } from "../../../components/IncidentReportForm";
-import type { ChildResponse, ChildEventResponse, IncidentReportResponse } from "../../../types";
+import { MilestoneEntrySheet } from "../../../components/milestones/MilestoneEntrySheet";
+import { MilestoneTimeline, type MilestoneTimelineEntry } from "../../../components/milestones/MilestoneTimeline";
+import type { ChildResponse, ChildEventResponse, IncidentReportResponse, MilestoneObservationResponse } from "../../../types";
 import { CHILDREN_CACHE_KEY } from "../index";
 
 /** Reconstructs a queued (not-yet-synced) child_event `create` row into a displayable event —
@@ -38,7 +41,7 @@ function toOptimisticEvent(payload: Record<string, unknown>): ChildEventResponse
 
 export default function ChildDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useColors();
   const { isConnected } = useNetworkStatus();
 
@@ -60,6 +63,9 @@ export default function ChildDetailScreen() {
   const [incidentFormVisible, setIncidentFormVisible] = useState(false);
 
   const [healthSummary, setHealthSummary] = useState<HealthSummaryLoadResult | null>(null);
+
+  const [milestoneEntries, setMilestoneEntries] = useState<MilestoneTimelineEntry[]>([]);
+  const [milestoneSheetVisible, setMilestoneSheetVisible] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -124,6 +130,31 @@ export default function ChildDetailScreen() {
     setIncidentPendingIds(stillPendingIds);
 
     setHealthSummary(await getChildHealthSummary(id));
+
+    try {
+      const domains = await fetchMilestonePortfolio(id);
+      const flattened: MilestoneTimelineEntry[] = domains
+        .flatMap((domain) => domain.milestones)
+        .flatMap((milestone) =>
+          (milestone.history ?? []).map((observation) => ({
+            observationId: observation.id,
+            milestoneDescription: i18n.language.startsWith("fr")
+              ? milestone.descriptionFr
+              : i18n.language.startsWith("en")
+                ? milestone.descriptionEn
+                : milestone.descriptionNl,
+            status: observation.status,
+            observedAt: observation.observedAt,
+            createdAt: observation.createdAt,
+          }))
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 20);
+      setMilestoneEntries(flattened);
+    } catch {
+      // Offline or request failed — leave whatever was last loaded (no offline read-cache for
+      // this feed yet, matching child_events' own timeline precedent above).
+    }
   }, [id]);
 
   useEffect(() => {
@@ -148,6 +179,30 @@ export default function ChildDetailScreen() {
   const handleIncidentSaved = (report: IncidentReportResponse) => {
     setIncidentReports((prev) => [report, ...prev]);
     setIncidentFormVisible(false);
+    load();
+  };
+
+  // Optimistic prepend, mirroring handleIncidentSaved above — required so an offline recording
+  // is visible immediately (matches EventTimeline's pending-sync pattern), since load()'s
+  // portfolio refetch below silently no-ops while offline.
+  const handleMilestoneSaved = (
+    observation: MilestoneObservationResponse,
+    milestoneDescription: string,
+    isPending: boolean
+  ) => {
+    setMilestoneEntries((prev) =>
+      [
+        {
+          observationId: observation.id,
+          milestoneDescription,
+          status: observation.status,
+          observedAt: observation.observedAt,
+          createdAt: observation.createdAt,
+          pending: isPending,
+        },
+        ...prev,
+      ].slice(0, 20)
+    );
     load();
   };
 
@@ -280,6 +335,17 @@ export default function ChildDetailScreen() {
           onEdit={setEditingEvent}
           onDelete={handleDelete}
         />
+
+        <TouchableOpacity
+          onPress={() => setMilestoneSheetVisible(true)}
+          style={{ minHeight: 48 }}
+          className="flex-row items-center rounded-xl bg-surface-soft dark:bg-surface-soft-dark px-4 mt-3 mb-3 active:opacity-60"
+        >
+          <Sparkles size={20} strokeWidth={2} color={colors.primaryHover} />
+          <Text className="text-text dark:text-text-dark font-semibold ml-2">{t("milestones.entryPoint")}</Text>
+        </TouchableOpacity>
+
+        <MilestoneTimeline entries={milestoneEntries} />
       </ScrollView>
 
       <IncidentReportForm
@@ -311,6 +377,14 @@ export default function ChildDetailScreen() {
         isConnected={isConnected}
         onClose={() => setEditingEvent(null)}
         onSaved={load}
+      />
+
+      <MilestoneEntrySheet
+        visible={milestoneSheetVisible}
+        childId={child.id}
+        isConnected={isConnected}
+        onClose={() => setMilestoneSheetVisible(false)}
+        onSaved={handleMilestoneSaved}
       />
     </View>
   );

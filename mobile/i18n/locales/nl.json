@@ -41,6 +41,14 @@
       "photo_limit_reached": "Deze activiteit heeft al 10 foto's.",
       "photo_too_large": "Deze foto is te groot (max. 10MB).",
       "timeline_failed": "Kon de tijdlijn niet laden."
+    },
+    "milestones": {
+      "catalog_failed": "Kon mijlpalen niet laden.",
+      "portfolio_failed": "Kon de mijlpalen van dit kind niet laden.",
+      "save_failed": "Kon deze observatie niet opslaan. Probeer opnieuw.",
+      "invalid_status": "Die status is niet geldig.",
+      "milestone_not_found": "Deze mijlpaal kon niet gevonden worden.",
+      "forbidden": "Je hebt geen toegang tot de mijlpalen van dit kind."
     }
   },
   "session": {
@@ -341,5 +349,20 @@
       "mild_moderate": "Lichte/matige allergie",
       "none": "Geen bekende allergie"
     }
+  },
+  "milestones": {
+    "entryPoint": "Ontwikkelingsmijlpalen",
+    "currentFocus": "Huidige focus",
+    "status": {
+      "achieved": "Bereikt",
+      "emerging": "In opkomst",
+      "not_yet": "Nog niet"
+    },
+    "notesPlaceholder": "Notitie toevoegen (optioneel)",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "empty": "Nog niets geregistreerd",
+    "catalog_failed": "Kon mijlpalen niet laden",
+    "pendingSync": "Synchronisatie in behandeling"
   }
 }

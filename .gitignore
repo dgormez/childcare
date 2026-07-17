@@ -28,6 +28,7 @@ backend/**/*.sql
 .DS_Store
 *.log
 .env
+.idea/
 
 # Claude Code — local settings contain personal permission rules and machine paths
 .claude/settings.json

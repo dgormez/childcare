@@ -78,6 +78,12 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="milestones"
+        options={{
+          href: null, // reached only via Home's quick actions, not a tab of its own
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: t("settings.title"),
