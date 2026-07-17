@@ -16,6 +16,7 @@ import { ChildMealPreferenceForm } from "../../../../components/children/ChildMe
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
+import { MilestonePortfolioView } from "../../../../components/milestones/MilestonePortfolioView";
 import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
@@ -257,6 +258,7 @@ export default function ChildDetailPage() {
         <TabsList>
           <TabsTrigger value="profile">{tc("tabProfile")}</TabsTrigger>
           <TabsTrigger value="health">{tc("tabHealth")}</TabsTrigger>
+          <TabsTrigger value="milestones">{tc("tabMilestones")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -438,6 +440,10 @@ export default function ChildDetailPage() {
           </table>
         )}
       </div>
+        </TabsContent>
+
+        <TabsContent value="milestones">
+          <MilestonePortfolioView childId={child.id} />
         </TabsContent>
       </Tabs>
 

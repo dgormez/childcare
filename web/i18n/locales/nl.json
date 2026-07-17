@@ -830,6 +830,23 @@
           "tooLarge": "Bestand is te groot (max. 10MB)."
         }
       }
+    },
+    "tabMilestones": "Mijlpalen",
+    "milestones": {
+      "title": "Ontwikkelingsportfolio",
+      "downloadPdf": "PDF downloaden",
+      "downloadPdfError": "Kon de PDF niet downloaden. Probeer opnieuw.",
+      "loadError": "Kon de mijlpalen niet laden. Probeer opnieuw.",
+      "retry": "Opnieuw proberen",
+      "emptyState": "Nog geen mijlpalen geregistreerd voor dit kind.",
+      "ageMonths": "maanden",
+      "currentFocus": "Huidige focus",
+      "noObservations": "Nog niet geregistreerd",
+      "status": {
+        "achieved": "Bereikt",
+        "emerging": "In opkomst",
+        "not_yet": "Nog niet"
+      }
     }
   },
   "dashboard": {

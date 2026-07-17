@@ -830,6 +830,23 @@
           "tooLarge": "Le fichier est trop volumineux (max 10 Mo)."
         }
       }
+    },
+    "tabMilestones": "Étapes de développement",
+    "milestones": {
+      "title": "Portfolio de développement",
+      "downloadPdf": "Télécharger le PDF",
+      "downloadPdfError": "Impossible de télécharger le PDF. Veuillez réessayer.",
+      "loadError": "Impossible de charger les étapes de développement. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "emptyState": "Aucune étape de développement enregistrée pour cet enfant.",
+      "ageMonths": "mois",
+      "currentFocus": "Focus actuel",
+      "noObservations": "Pas encore enregistré",
+      "status": {
+        "achieved": "Atteint",
+        "emerging": "En émergence",
+        "not_yet": "Pas encore"
+      }
     }
   },
   "dashboard": {

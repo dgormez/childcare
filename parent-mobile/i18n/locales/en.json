@@ -54,7 +54,8 @@
       "requestExchange": "Request a day exchange",
       "myRequests": "My requests",
       "viewInvoices": "My invoices",
-      "viewFiscalAttestations": "Fiscal attestations"
+      "viewFiscalAttestations": "Fiscal attestations",
+      "viewMilestones": "Development"
     }
   },
   "messages": {
@@ -305,5 +306,19 @@
     },
     "notAvailableForChild": "This request type isn't available for {childName} right now.",
     "loadAvailabilityFailed": "Couldn't check request availability. Please try again."
+  },
+  "milestones": {
+    "title": "Development",
+    "downloadPdf": "Download PDF",
+    "downloadFailed": "Could not download the PDF. Please try again.",
+    "loadFailed": "Could not load milestones.",
+    "emptyState": "Nothing recorded yet — check back soon.",
+    "currentFocus": "Current focus",
+    "noObservations": "Not recorded yet",
+    "status": {
+      "achieved": "Achieved",
+      "emerging": "Emerging",
+      "not_yet": "Not yet"
+    }
   }
 }

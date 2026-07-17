@@ -642,3 +642,37 @@ export interface FiscalAttestationDownloadUrlResponse {
   downloadUrl: string;
   expiresAt:   string;
 }
+
+// ── Developmental Milestones (feature 016) ──────────────────────────────────────────────────
+export type MilestoneObservationStatus = "emerging" | "achieved" | "not_yet";
+
+export interface MilestoneObservationResponse {
+  id:         string;
+  status:     MilestoneObservationStatus;
+  observedAt: string;
+  notes:      string | null;
+  createdAt:  string;
+}
+
+export interface DevelopmentalMilestoneResponse {
+  id:             string;
+  ageFromMonths:  number;
+  ageToMonths:    number;
+  descriptionNl:  string;
+  descriptionFr:  string;
+  descriptionEn:  string;
+  sortOrder:      number;
+  currentStatus:  MilestoneObservationStatus | null;
+  isCurrentFocus: boolean;
+  history:        MilestoneObservationResponse[] | null;
+}
+
+export interface DevelopmentalDomainResponse {
+  id:         string;
+  code:       string;
+  nameNl:     string;
+  nameFr:     string;
+  nameEn:     string;
+  sortOrder:  number;
+  milestones: DevelopmentalMilestoneResponse[];
+}

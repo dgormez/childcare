@@ -41,6 +41,14 @@
       "photo_limit_reached": "Cette activité a déjà 10 photos.",
       "photo_too_large": "Cette photo est trop volumineuse (max. 10 Mo).",
       "timeline_failed": "Impossible de charger la chronologie."
+    },
+    "milestones": {
+      "catalog_failed": "Impossible de charger les étapes de développement.",
+      "portfolio_failed": "Impossible de charger les étapes de développement de cet enfant.",
+      "save_failed": "Impossible d'enregistrer cette observation. Veuillez réessayer.",
+      "invalid_status": "Ce statut n'est pas valide.",
+      "milestone_not_found": "Cette étape de développement est introuvable.",
+      "forbidden": "Vous n'avez pas accès aux étapes de développement de cet enfant."
     }
   },
   "session": {
@@ -341,5 +349,20 @@
       "mild_moderate": "Allergie légère/modérée",
       "none": "Aucune allergie connue"
     }
+  },
+  "milestones": {
+    "entryPoint": "Étapes de développement",
+    "currentFocus": "Focus actuel",
+    "status": {
+      "achieved": "Atteint",
+      "emerging": "En émergence",
+      "not_yet": "Pas encore"
+    },
+    "notesPlaceholder": "Ajouter une note (facultatif)",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "empty": "Rien n'a encore été enregistré",
+    "catalog_failed": "Impossible de charger les étapes de développement",
+    "pendingSync": "Synchronisation en attente"
   }
 }

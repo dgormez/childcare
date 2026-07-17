@@ -41,6 +41,14 @@
       "photo_limit_reached": "This activity already has 10 photos.",
       "photo_too_large": "This photo is too large (max 10MB).",
       "timeline_failed": "Could not load the timeline."
+    },
+    "milestones": {
+      "catalog_failed": "Could not load milestones.",
+      "portfolio_failed": "Could not load this child's milestones.",
+      "save_failed": "Could not save this observation. Please try again.",
+      "invalid_status": "That status isn't valid.",
+      "milestone_not_found": "This milestone could not be found.",
+      "forbidden": "You don't have access to this child's milestones."
     }
   },
   "session": {
@@ -341,5 +349,20 @@
       "mild_moderate": "Mild/moderate allergy",
       "none": "No known allergy"
     }
+  },
+  "milestones": {
+    "entryPoint": "Milestones",
+    "currentFocus": "Current focus",
+    "status": {
+      "achieved": "Achieved",
+      "emerging": "Emerging",
+      "not_yet": "Not yet"
+    },
+    "notesPlaceholder": "Add a note (optional)",
+    "cancel": "Cancel",
+    "save": "Save",
+    "empty": "Nothing recorded yet",
+    "catalog_failed": "Could not load milestones",
+    "pendingSync": "Pending sync"
   }
 }

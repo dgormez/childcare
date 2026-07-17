@@ -830,6 +830,23 @@
           "tooLarge": "File is too large (max 10MB)."
         }
       }
+    },
+    "tabMilestones": "Milestones",
+    "milestones": {
+      "title": "Development Portfolio",
+      "downloadPdf": "Download PDF",
+      "downloadPdfError": "Could not download the PDF. Please try again.",
+      "loadError": "Could not load milestones. Please try again.",
+      "retry": "Retry",
+      "emptyState": "No milestones recorded yet for this child.",
+      "ageMonths": "months",
+      "currentFocus": "Current focus",
+      "noObservations": "Not recorded yet",
+      "status": {
+        "achieved": "Achieved",
+        "emerging": "Emerging",
+        "not_yet": "Not yet"
+      }
     }
   },
   "dashboard": {
