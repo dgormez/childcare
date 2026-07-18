@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import messages from "../i18n/locales/en.json";
 import DashboardPage from "../app/(app)/dashboard/page";
@@ -117,6 +118,10 @@ describe("DashboardPage — occupancy section", () => {
     expect(screen.getByText("Over capacity")).toBeInTheDocument();
     // Group with no capacity set shows a plain headcount, no status badge.
     expect(screen.getByText("3")).toBeInTheDocument();
+
+    // Clicking a group row navigates to its existing screen (convergence finding F1).
+    await userEvent.click(screen.getByText("Toddlers"));
+    expect(push).toHaveBeenCalledWith("/groups");
   });
 });
 
@@ -134,6 +139,10 @@ describe("DashboardPage — BKR compliance section", () => {
 
     expect(await screen.findByText("Present: 9 — Qualified staff: 1")).toBeInTheDocument();
     expect(screen.getByText("No breaches in this period.")).toBeInTheDocument();
+
+    // Clicking the breaching group's row navigates to its existing screen (convergence finding F1).
+    await userEvent.click(screen.getByText("Present: 9 — Qualified staff: 1"));
+    expect(push).toHaveBeenCalledWith("/groups");
   });
 
   it("renders a known breach window's start and end", async () => {

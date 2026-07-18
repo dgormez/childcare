@@ -318,6 +318,15 @@ clear reason and link; confirm a tenant with none of them shows the empty state.
 
 ---
 
+## Phase 9: Convergence
+
+- [X] T061 Make an over-capacity group row in `OccupancySection.tsx` and a breaching-BKR group
+  row in `BkrComplianceSection.tsx` navigable to that group's existing screen (`/groups`), per
+  spec.md's UX Requirements ("reach that record's own detail screen in one click") — currently
+  only the invoice and data-completeness drill-ins are clickable (missing)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

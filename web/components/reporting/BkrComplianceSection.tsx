@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { History } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
@@ -19,10 +20,13 @@ function defaultDateRange() {
 }
 
 /** FR-004/FR-005: live per-group BKR ratio plus, for a director-chosen date range (default last
- * 30 days per spec.md Clarifications), the history of breach windows. */
+ * 30 days per spec.md Clarifications), the history of breach windows. Each live-ratio row links
+ * to `/groups` (its existing screen — matches spec.md's "reach that record's own detail screen
+ * in one click"). */
 export function BkrComplianceSection({ locationId }: { locationId: string }) {
   const t = useTranslations("dashboard.reporting.bkr");
   const tShared = useTranslations("dashboard.reporting");
+  const router = useRouter();
   const [ratio, setRatio] = useState<BkrRatioOverviewResponse | null>(null);
   const [ratioState, setRatioState] = useState<LoadState>("loading");
 
@@ -75,7 +79,19 @@ export function BkrComplianceSection({ locationId }: { locationId: string }) {
       {ratioState === "loaded" && ratio && (
         <ul className="divide-y divide-border rounded-xl border border-border dark:divide-border-dark dark:border-border-dark">
           {ratio.groups.map((group) => (
-            <li key={group.groupId} className="flex h-10 items-center justify-between px-4">
+            <li
+              key={group.groupId}
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push("/groups")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  router.push("/groups");
+                }
+              }}
+              className="flex h-10 cursor-pointer items-center justify-between px-4 hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:hover:bg-surface-soft-dark"
+            >
               <span className="tabular-nums text-sm text-text dark:text-text-dark">
                 {t("presentLabel")}: {group.presentCount} — {t("qualifiedStaffLabel")}: {group.qualifiedStaffCount}
               </span>
