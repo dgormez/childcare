@@ -14,7 +14,17 @@ namespace ChildCare.Api.Tests.MealList;
 public class MealListAggregationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    // Contract creation only allows Monday-Friday weekdays (CreateContractCommandValidator), and
+    // two tests below use Today.DayOfWeek as the contract's sole contracted day — so on a
+    // weekend, snap forward to the following Monday rather than failing contract creation.
+    private static readonly DateOnly Today = SnapToWeekday(DateOnly.FromDateTime(DateTime.UtcNow));
+
+    private static DateOnly SnapToWeekday(DateOnly date) => date.DayOfWeek switch
+    {
+        DayOfWeek.Saturday => date.AddDays(2),
+        DayOfWeek.Sunday => date.AddDays(1),
+        _ => date,
+    };
 
     [Fact]
     public async Task GetMealList_DeviceScopedToOneGroup_ReturnsOnlyThatGroupsPresentChildren()
