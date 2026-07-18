@@ -405,6 +405,8 @@
     "locationLabel": "Locatie",
     "groupLabel": "Groep",
     "dateLabel": "Datum",
+    "capacityLabel": "Capaciteit",
+    "saveCapacity": "Opslaan",
     "loadError": "Kon de tijdlijn niet laden.",
     "retry": "Opnieuw proberen",
     "emptyState": "Nog geen gebeurtenissen of activiteiten voor deze groep en datum.",
@@ -858,6 +860,76 @@
       "retry": "Opnieuw proberen",
       "overdue": "Verlopen",
       "dueSoon": "Binnenkort"
+    },
+    "reporting": {
+      "locationFilter": {
+        "label": "Locatie",
+        "allLocations": "Alle locaties"
+      },
+      "status": {
+        "green": "Binnen capaciteit",
+        "amber": "Op volle capaciteit",
+        "red": "Capaciteit overschreden"
+      },
+      "loadError": "Kan dit onderdeel niet laden. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen",
+      "occupancy": {
+        "title": "Bezetting",
+        "todayLabel": "Vandaag",
+        "weekAheadLabel": "Komende week",
+        "capacityUnset": "Geen capaciteit ingesteld voor deze groep",
+        "presentOfCapacity": "{present} / {capacity}",
+        "closedLabel": "Gesloten"
+      },
+      "bkr": {
+        "title": "BKR-naleving",
+        "liveRatioLabel": "Live ratio",
+        "presentLabel": "Aanwezig",
+        "qualifiedStaffLabel": "Gekwalificeerd personeel",
+        "napTimeLabel": "Slaapmoment",
+        "breachHistory": {
+          "title": "Geschiedenis van overschrijdingen",
+          "fromLabel": "Van",
+          "toLabel": "Tot",
+          "emptyState": "Geen overschrijdingen in deze periode.",
+          "startedAt": "Gestart",
+          "endedAt": "Geëindigd",
+          "ongoing": "Nog bezig"
+        }
+      },
+      "attendanceSummary": {
+        "title": "Maandelijks aanwezigheidsoverzicht",
+        "monthLabel": "Maand",
+        "childLabel": "Kind",
+        "presentDays": "Aanwezige dagen",
+        "absentJustifiedDays": "Afwezig (gewettigd)",
+        "absentUnjustifiedDays": "Afwezig (ongewettigd)",
+        "closureDays": "Sluitingsdagen",
+        "exportCsv": "Exporteren als CSV",
+        "exportPdf": "Exporteren als PDF",
+        "exportError": "Kan dit rapport niet exporteren. Probeer het opnieuw.",
+        "groupTotalsLabel": "Per groep",
+        "locationTotalsLabel": "Per locatie"
+      },
+      "invoiceStatus": {
+        "title": "Factuurstatus",
+        "paid": "Betaald",
+        "outstanding": "Openstaand",
+        "overdue": "Achterstallig",
+        "totalInvoiced": "Totaal gefactureerd",
+        "totalCollected": "Totaal geïnd",
+        "overdueListTitle": "Achterstallige facturen",
+        "daysOverdue": "{days} dagen achterstallig",
+        "emptyState": "Geen achterstallige facturen."
+      },
+      "dataCompleteness": {
+        "title": "Volledigheid van gegevens",
+        "emptyState": "Niets te melden.",
+        "missingPickupContact": "Geen bevoegde ophaalcontactpersoon",
+        "overdueVaccine": "Achterstallig vaccin",
+        "missingQualification": "Kwalificatieniveau ontbreekt",
+        "missingPin": "Geen PIN-code ingesteld"
+      }
     }
   },
   "mealList": {

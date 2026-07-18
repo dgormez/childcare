@@ -8,7 +8,7 @@ import { apiClient } from "../lib/apiClient";
 import type { GroupTimelineResponse, LocationResponse, GroupResponse } from "../lib/types";
 
 vi.mock("../lib/apiClient", () => ({
-  apiClient: { GET: vi.fn(), DELETE: vi.fn() },
+  apiClient: { GET: vi.fn(), DELETE: vi.fn(), PATCH: vi.fn() },
 }));
 
 function renderGroupsPage() {
@@ -24,7 +24,7 @@ function okResponse(data: unknown) {
 }
 
 const location: LocationResponse = { id: "loc-1", name: "Sunshine House" } as LocationResponse;
-const group: GroupResponse = { id: "group-1", name: "Ducklings", locationId: "loc-1" };
+const group: GroupResponse = { id: "group-1", name: "Ducklings", locationId: "loc-1", capacity: null };
 
 const timelineWithActivity: GroupTimelineResponse = {
   entries: [
@@ -50,6 +50,7 @@ const timelineWithActivity: GroupTimelineResponse = {
 beforeEach(() => {
   vi.mocked(apiClient.GET).mockReset();
   vi.mocked(apiClient.DELETE).mockReset();
+  vi.mocked(apiClient.PATCH).mockReset();
 });
 
 function mockDefaultGets(timeline: GroupTimelineResponse) {
@@ -110,5 +111,23 @@ describe("GroupsPage", () => {
     renderGroupsPage();
 
     expect(await screen.findByText("No events or activities yet for this group and date.")).toBeInTheDocument();
+  });
+
+  it("saves a group's capacity (feature 018 FR-001)", async () => {
+    mockDefaultGets({ entries: [] });
+    vi.mocked(apiClient.PATCH).mockResolvedValue(okResponse({ ...group, capacity: 12 }) as never);
+
+    renderGroupsPage();
+    await screen.findByText("No events or activities yet for this group and date.");
+
+    const capacityInput = screen.getByLabelText("Capacity") as HTMLInputElement;
+    await userEvent.clear(capacityInput);
+    await userEvent.type(capacityInput, "12");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(apiClient.PATCH).toHaveBeenCalledWith(
+      "/api/groups/{id}/capacity",
+      expect.objectContaining({ params: { path: { id: "group-1" } }, body: { capacity: 12 } }),
+    );
   });
 });

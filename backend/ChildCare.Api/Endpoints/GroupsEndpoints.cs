@@ -37,6 +37,14 @@ public static class GroupsEndpoints
             return MapGroupResult(result, onSuccess: r => Results.Created($"/api/groups/{r.Id}", r));
         });
 
+        // Feature 018 — FR-001: lets a director set/change a group's capacity for occupancy
+        // colour-coding.
+        groups.MapPatch("/{id:guid}/capacity", async (Guid id, UpdateGroupCapacityRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateGroupCapacityCommand(id, req.Capacity));
+            return MapGroupResult(result, onSuccess: Results.Ok);
+        });
+
         var childGroups = app.MapGroup("/api/children/{childId:guid}/groups")
             .WithTags("Groups")
             .RequireAuthorization("DirectorOnly");

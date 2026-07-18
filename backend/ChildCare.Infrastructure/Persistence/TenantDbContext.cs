@@ -938,6 +938,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             inv.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             // Feature 014a — capped automatic payment-reminder tracking.
             inv.Property(x => x.ReminderCount).HasDefaultValue(0).IsRequired();
+            // Feature 018 — invoice status overview's current-month-per-location scan and
+            // overdue-list computation (Status == Sent && DueDate < today).
+            inv.HasIndex(x => new { x.LocationId, x.PeriodMonth });
+            inv.HasIndex(x => new { x.Status, x.DueDate });
         });
 
         // Feature 015 — one row per (ChildId, LocationId, TaxYear); regenerating overwrites this

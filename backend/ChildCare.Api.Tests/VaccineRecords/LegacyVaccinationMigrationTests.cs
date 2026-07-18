@@ -111,7 +111,12 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// same class of gap 013d's/013h's own notes above already predicted for "any future
     /// migration." Feature 016's "AddChildMilestoneObservations" is the next one after that —
     /// same recurring gap, this time with child_milestone_observations (FK to children only, no
-    /// dependents) as the newly-added table.
+    /// dependents) as the newly-added table. Feature 018's "AddGroupCapacity" is the next one —
+    /// groups is never dropped in this test (only referenced), so its new nullable Capacity
+    /// column needs its own explicit DROP COLUMN, same reason as MenuVariantPriorityOrder above;
+    /// its "AddReportingIndexes" migration only adds/replaces indexes on invoices (already
+    /// dropped wholesale above), so it needs no schema change, just its own history-removal
+    /// entry, same reasoning as everything else in this note.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -154,8 +159,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "PaymentReminderCadenceDays";
             ALTER TABLE "{schemaName}"."users"
                 DROP COLUMN "IsPlatformAdmin";
+            ALTER TABLE "{schemaName}"."groups"
+                DROP COLUMN "Capacity";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes';
             """);
     }
 

@@ -733,6 +733,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1031,13 +1034,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("ContractId");
 
-                    b.HasIndex("LocationId");
-
                     b.HasIndex("OgmReference")
                         .IsUnique();
 
                     b.HasIndex("SequenceNumber")
                         .IsUnique();
+
+                    b.HasIndex("LocationId", "PeriodMonth");
+
+                    b.HasIndex("Status", "DueDate");
 
                     b.HasIndex("ChildId", "ContractId", "LocationId", "PeriodMonth")
                         .IsUnique();

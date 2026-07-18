@@ -7,6 +7,8 @@ import { GroupTimeline } from "../../../components/GroupTimeline";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import type { GroupActivityResponse, GroupResponse, GroupTimelineResponse, LocationResponse } from "../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
@@ -31,6 +33,8 @@ export default function GroupsPage() {
   const [state, setState] = useState<LoadState>("loading");
   const [deleteTarget, setDeleteTarget] = useState<GroupActivityResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [capacityInput, setCapacityInput] = useState("");
+  const [savingCapacity, setSavingCapacity] = useState(false);
 
   useEffect(() => {
     apiClient.GET("/api/locations").then((result) => {
@@ -73,6 +77,29 @@ export default function GroupsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const selected = groups.find((g) => g.id === groupId);
+    setCapacityInput(selected?.capacity != null ? String(selected.capacity) : "");
+  }, [groupId, groups]);
+
+  // Feature 018 (FR-001) — the only place a director can set the capacity FR-001's occupancy
+  // colour-coding depends on; groups themselves are created on the caregiver tablet during
+  // room-setup, not on director web (spec.md's own director-web-only scope, so this stays a
+  // small addition here rather than a new mobile screen).
+  const handleSaveCapacity = async () => {
+    if (!groupId) return;
+    setSavingCapacity(true);
+    const capacity = capacityInput.trim() === "" ? null : Number(capacityInput);
+    const result = await apiClient.PATCH("/api/groups/{id}/capacity", {
+      params: { path: { id: groupId } },
+      body: { capacity },
+    });
+    setSavingCapacity(false);
+    if (result.response.ok) {
+      setGroups((current) => current.map((g) => (g.id === groupId ? { ...g, capacity } : g)));
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -126,6 +153,27 @@ export default function GroupsPage() {
           </div>
         </div>
       </div>
+
+      {groupId && (
+        <div className="mb-6 flex items-end gap-3">
+          <div className="space-y-1">
+            <label htmlFor="group-capacity" className="text-sm font-medium text-text dark:text-text-dark">
+              {t("capacityLabel")}
+            </label>
+            <Input
+              id="group-capacity"
+              type="number"
+              min={1}
+              value={capacityInput}
+              onChange={(e) => setCapacityInput(e.target.value)}
+              className="h-10 w-28"
+            />
+          </div>
+          <Button variant="secondary" onClick={handleSaveCapacity} disabled={savingCapacity}>
+            {t("saveCapacity")}
+          </Button>
+        </div>
+      )}
 
       {state === "loading" && (
         <div className="h-64 animate-pulse rounded-xl bg-surface-soft dark:bg-surface-soft-dark" />
