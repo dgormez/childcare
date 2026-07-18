@@ -188,7 +188,8 @@ live BKR ratio per group, with a multi-location director able to filter to one l
    paired with an icon, not colour alone.
 3. **Given** a group where the present-children-to-qualified-staff ratio exceeds the legal BKR
    threshold right now, **When** the director opens the dashboard, **Then** that group's BKR
-   status shows red with the live ratio numbers (present count, qualified staff count).
+   status shows red (paired with the same alert icon FR-018 requires for any red status) with
+   the live ratio numbers (present count, qualified staff count).
 4. **Given** a multi-location director, **When** they select one location in the shared filter,
    **Then** every dashboard section narrows to that location only.
 5. **Given** a location fully closed today (KDV closure day), **When** the director opens the
@@ -324,6 +325,10 @@ are flagged with a clear reason and a link to fix them.
 - A very long BKR breach-history date range: the query still returns correctly, though see
   Assumptions on why performance validation of the on-demand reconstruction approach is a plan
   concern, not a scope concern.
+- A director generates the monthly attendance summary for a month with zero attendance records
+  at all (e.g. a location that wasn't yet operating that month): the summary, its CSV export, and
+  its PDF export all still produce a valid, correctly empty result (an empty child list, zero
+  totals), never an error.
 
 ## Requirements *(mandatory)*
 
@@ -363,7 +368,9 @@ are flagged with a clear reason and a link to fix them.
   director's own tenant, with no cross-tenant data ever visible.
 - **FR-013**: System MUST let a multi-location director filter every dashboard section down to
   a single location; the default (no filter applied) MUST show the aggregate across all their
-  locations.
+  locations. A location filter value that does not belong to the viewing director's own tenant
+  MUST be treated as if no valid location were selected (no other tenant's data is ever returned
+  for it), never silently substituted or leaked.
 - **FR-014**: System MUST render every user-facing string in this feature via i18n keys, with
   NL/FR/EN translations provided.
 - **FR-015**: System MUST show a clean `0 / capacity` state (not an error) for a location or
@@ -374,9 +381,23 @@ are flagged with a clear reason and a link to fix them.
   zero-valued table) for each section when there is nothing to report (no breaches, no overdue
   invoices, no data-completeness flags).
 - **FR-018**: System MUST convey every colour-coded status (occupancy, BKR) with a paired icon,
-  never colour alone.
+  never colour alone, using the same fixed colour→icon pairing `design-system.md` already
+  defines for these semantics: green (success) → check-circle, amber (warning) → clock, red
+  (danger) → alert-triangle.
 - **FR-019**: System MUST log the full error server-side and show a human-readable message
   (never a raw stack trace) if any report query or export fails.
+- **FR-020**: System MUST colour-code occupancy as green when the present count is under
+  capacity, amber when it exactly equals capacity, and red when it exceeds capacity — for both
+  per-group and per-location occupancy (matches the BKR green/amber/red convention feature 010
+  already uses, per Assumptions).
+- **FR-021**: Every interactive element this feature introduces (location filter, CSV/PDF export
+  actions, breach-history date-range control, and every drill-in link/row) MUST be reachable via
+  keyboard alone and MUST show a visible focus ring, per `platform-rules.md`'s Director Web App
+  section.
+- **FR-022**: Every export (CSV or PDF) MUST be computed fresh from current data at request time,
+  never cached or served from a stored copy — an export requested after an attendance correction
+  MUST reflect that correction immediately, matching this feature's on-demand, unstored export
+  approach (research.md R5).
 
 ### Key Entities
 
