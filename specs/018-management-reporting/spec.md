@@ -153,6 +153,16 @@ computation, 014's `InvoiceStatus`/overdue-by-`DueDate` convention, 013c's vacci
 `NextDueDate`) supplied reasonable defaults for every real ambiguity. See Assumptions below for
 the handful of scope calls those defaults required.
 
+### Session 2026-07-18
+
+- Q: What's the default date range for the BKR breach-history view when the director hasn't
+  picked one? → A: last 30 days, matching the recency window a director would actually
+  investigate (a staffing gap noticed this week, not a multi-year audit); the director can widen
+  it explicitly. Self-resolved per this project's standing rule of picking the recommended
+  default rather than blocking a scheduled run on an unanswered question — no comparable
+  precedent existed to reuse directly, but the choice is low-impact (a UI default, not an
+  architectural one) and easily changed later.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Director checks today's occupancy and BKR compliance at a glance (Priority: P1)
@@ -332,7 +342,8 @@ are flagged with a clear reason and a link to fix them.
   (feature 010) to group scope.
 - **FR-005**: System MUST show, for a director-selected date range, the history of BKR breaches
   (periods where the ratio exceeded the legal threshold) per group, including each breach's
-  start time, end time, and group/location.
+  start time, end time, and group/location. When the director has not picked a range, the
+  default is the last 30 days.
 - **FR-006**: System MUST generate a monthly attendance summary for a director-selected month,
   showing total present days, total absent days (split justified/unjustified), and total
   closure days, per child, rolled up per group and per location.
