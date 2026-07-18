@@ -177,7 +177,13 @@ Includes:
 
 ## Reporting & Management
 
-No detail file yet.
+Detail: `Workflows/reporting.md` (feature 018 — director dashboard: occupancy, BKR compliance,
+monthly attendance summary, invoice status overview, data-completeness monitor; the first
+feature in this workflow).
+
+Change note (per governance rules): added because feature 018 is the first implementation in
+this workflow, which previously had no detail file; no existing implementation needs review,
+since no earlier feature built anything here.
 
 Supports director decision making.
 
