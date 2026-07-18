@@ -54,6 +54,12 @@ Parent Mobile:
 
 - Device (paired tablet): tenant, location, group, device token state, revocation status.
 - Room shift: caregiver, location, group, check-in time, check-out time (nullable).
+- Group capacity (feature 018): a director sets/changes a group's capacity from the existing
+  director-web Groups screen (`PATCH /api/groups/{id}/capacity`) — the only consumer is the
+  Reporting & Management workflow's occupancy colour-coding (`Workflows/reporting.md`); groups
+  themselves are still created only from the caregiver tablet's room-setup flow (008a), not web.
+  Change note: added mid-implementation of feature 018 — the reporting spec needed a way to set
+  the new `Group.Capacity` field director-side, and none existed for any group field before this.
 
 ### Flow — weekly staff rota (feature 012)
 

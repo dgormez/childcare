@@ -405,6 +405,8 @@
     "locationLabel": "Location",
     "groupLabel": "Group",
     "dateLabel": "Date",
+    "capacityLabel": "Capacity",
+    "saveCapacity": "Save",
     "loadError": "Could not load the timeline.",
     "retry": "Retry",
     "emptyState": "No events or activities yet for this group and date.",
@@ -858,6 +860,76 @@
       "retry": "Retry",
       "overdue": "Overdue",
       "dueSoon": "Due soon"
+    },
+    "reporting": {
+      "locationFilter": {
+        "label": "Location",
+        "allLocations": "All locations"
+      },
+      "status": {
+        "green": "Within capacity",
+        "amber": "At capacity",
+        "red": "Over capacity"
+      },
+      "loadError": "Could not load this section. Please try again.",
+      "retry": "Retry",
+      "occupancy": {
+        "title": "Occupancy",
+        "todayLabel": "Today",
+        "weekAheadLabel": "Week ahead",
+        "capacityUnset": "No capacity set for this group",
+        "presentOfCapacity": "{present} / {capacity}",
+        "closedLabel": "Closed"
+      },
+      "bkr": {
+        "title": "BKR compliance",
+        "liveRatioLabel": "Live ratio",
+        "presentLabel": "Present",
+        "qualifiedStaffLabel": "Qualified staff",
+        "napTimeLabel": "Nap time",
+        "breachHistory": {
+          "title": "Breach history",
+          "fromLabel": "From",
+          "toLabel": "To",
+          "emptyState": "No breaches in this period.",
+          "startedAt": "Started",
+          "endedAt": "Ended",
+          "ongoing": "Ongoing"
+        }
+      },
+      "attendanceSummary": {
+        "title": "Monthly attendance summary",
+        "monthLabel": "Month",
+        "childLabel": "Child",
+        "presentDays": "Present days",
+        "absentJustifiedDays": "Absent (justified)",
+        "absentUnjustifiedDays": "Absent (unjustified)",
+        "closureDays": "Closure days",
+        "exportCsv": "Export CSV",
+        "exportPdf": "Export PDF",
+        "exportError": "Could not export this report. Please try again.",
+        "groupTotalsLabel": "By group",
+        "locationTotalsLabel": "By location"
+      },
+      "invoiceStatus": {
+        "title": "Invoice status",
+        "paid": "Paid",
+        "outstanding": "Outstanding",
+        "overdue": "Overdue",
+        "totalInvoiced": "Total invoiced",
+        "totalCollected": "Total collected",
+        "overdueListTitle": "Overdue invoices",
+        "daysOverdue": "{days} days overdue",
+        "emptyState": "No overdue invoices."
+      },
+      "dataCompleteness": {
+        "title": "Data completeness",
+        "emptyState": "Nothing to flag.",
+        "missingPickupContact": "No authorised pickup contact",
+        "overdueVaccine": "Overdue vaccine",
+        "missingQualification": "Missing qualification level",
+        "missingPin": "No check-in PIN set"
+      }
     }
   },
   "mealList": {

@@ -3,7 +3,8 @@ namespace ChildCare.Contracts.Responses;
 public record GroupResponse(
     Guid Id,
     string Name,
-    Guid LocationId);
+    Guid LocationId,
+    int? Capacity);
 
 public record ChildGroupAssignmentResponse(
     Guid GroupId,

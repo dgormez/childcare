@@ -405,6 +405,8 @@
     "locationLabel": "Emplacement",
     "groupLabel": "Groupe",
     "dateLabel": "Date",
+    "capacityLabel": "Capacité",
+    "saveCapacity": "Enregistrer",
     "loadError": "Impossible de charger la chronologie.",
     "retry": "Réessayer",
     "emptyState": "Aucun événement ou activité pour ce groupe et cette date.",
@@ -858,6 +860,76 @@
       "retry": "Réessayer",
       "overdue": "En retard",
       "dueSoon": "Bientôt"
+    },
+    "reporting": {
+      "locationFilter": {
+        "label": "Site",
+        "allLocations": "Tous les sites"
+      },
+      "status": {
+        "green": "Dans la capacité",
+        "amber": "À pleine capacité",
+        "red": "Capacité dépassée"
+      },
+      "loadError": "Impossible de charger cette section. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "occupancy": {
+        "title": "Occupation",
+        "todayLabel": "Aujourd'hui",
+        "weekAheadLabel": "Semaine à venir",
+        "capacityUnset": "Aucune capacité définie pour ce groupe",
+        "presentOfCapacity": "{present} / {capacity}",
+        "closedLabel": "Fermé"
+      },
+      "bkr": {
+        "title": "Conformité BKR",
+        "liveRatioLabel": "Ratio en direct",
+        "presentLabel": "Présents",
+        "qualifiedStaffLabel": "Personnel qualifié",
+        "napTimeLabel": "Sieste",
+        "breachHistory": {
+          "title": "Historique des dépassements",
+          "fromLabel": "Du",
+          "toLabel": "Au",
+          "emptyState": "Aucun dépassement sur cette période.",
+          "startedAt": "Début",
+          "endedAt": "Fin",
+          "ongoing": "En cours"
+        }
+      },
+      "attendanceSummary": {
+        "title": "Résumé mensuel des présences",
+        "monthLabel": "Mois",
+        "childLabel": "Enfant",
+        "presentDays": "Jours présents",
+        "absentJustifiedDays": "Absences justifiées",
+        "absentUnjustifiedDays": "Absences injustifiées",
+        "closureDays": "Jours de fermeture",
+        "exportCsv": "Exporter en CSV",
+        "exportPdf": "Exporter en PDF",
+        "exportError": "Impossible d'exporter ce rapport. Veuillez réessayer.",
+        "groupTotalsLabel": "Par groupe",
+        "locationTotalsLabel": "Par site"
+      },
+      "invoiceStatus": {
+        "title": "Statut des factures",
+        "paid": "Payées",
+        "outstanding": "En attente",
+        "overdue": "En retard",
+        "totalInvoiced": "Total facturé",
+        "totalCollected": "Total encaissé",
+        "overdueListTitle": "Factures en retard",
+        "daysOverdue": "{days} jours de retard",
+        "emptyState": "Aucune facture en retard."
+      },
+      "dataCompleteness": {
+        "title": "Complétude des données",
+        "emptyState": "Rien à signaler.",
+        "missingPickupContact": "Aucun contact autorisé pour la reprise",
+        "overdueVaccine": "Vaccin en retard",
+        "missingQualification": "Niveau de qualification manquant",
+        "missingPin": "Aucun code PIN configuré"
+      }
     }
   },
   "mealList": {

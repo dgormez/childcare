@@ -55,7 +55,8 @@ Returns the live per-group ratio (FR-004):
 
 Query: `locationId?`, `from?` (date, default: 30 days before `to`), `to?` (date, default: today).
 Range MUST NOT exceed 366 days (matches `GetOccupancyQuery`'s existing range-validation
-precedent) — 400 `errors.validation` otherwise.
+precedent) — 422 `errors.validation` otherwise (this codebase's standard FluentValidation
+pipeline status code, not 400).
 
 Returns (FR-005):
 

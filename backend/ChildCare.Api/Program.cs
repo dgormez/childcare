@@ -268,6 +268,10 @@ builder.Services.AddScoped<IFiscalAttestationStorage, GcsFiscalAttestationStorag
 // ── Developmental Milestones (feature 016) ───────────────────────────────────
 builder.Services.AddScoped<IMilestonePortfolioPdfGenerator, QuestPdfMilestonePortfolioGenerator>();
 
+// ── Management Reporting (feature 018) ───────────────────────────────────────
+builder.Services.AddScoped<IAttendanceSummaryCsvWriter, ChildCare.Infrastructure.Reporting.CsvAttendanceSummaryWriter>();
+builder.Services.AddScoped<IAttendanceSummaryPdfGenerator, QuestPdfAttendanceSummaryGenerator>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -748,6 +752,7 @@ app.MapInvoiceEndpoints();
 app.MapPaymentEndpoints();
 app.MapFiscalAttestationEndpoints();
 app.MapDevelopmentalMilestoneEndpoints();
+app.MapReportingEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.

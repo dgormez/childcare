@@ -63,6 +63,8 @@ public record CreateGroupRequest(
     string Name,
     Guid LocationId);
 
+public record UpdateGroupCapacityRequest(int? Capacity);
+
 public record AssignChildToGroupRequest(
     Guid GroupId,
     DateOnly StartDate);

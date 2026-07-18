@@ -80,7 +80,7 @@ function makeStaff(overrides: Partial<StaffResponse> = {}): StaffResponse {
 }
 
 function makeGroup(overrides: Partial<GroupResponse> = {}): GroupResponse {
-  return { id: "group-1", name: "Baby Room", locationId: "loc-1", ...overrides };
+  return { id: "group-1", name: "Baby Room", locationId: "loc-1", capacity: null, ...overrides };
 }
 
 function makeEntry(overrides: Partial<StaffScheduleResponse> = {}): StaffScheduleResponse {

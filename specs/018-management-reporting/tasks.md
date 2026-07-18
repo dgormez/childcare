@@ -14,12 +14,12 @@ testing.
 
 **Purpose**: Response contracts and i18n scaffolding shared across all five report sections.
 
-- [ ] T001 [P] Add response DTOs per contracts/management-reporting-api.md
+- [X] T001 [P] Add response DTOs per contracts/management-reporting-api.md
   (`OccupancyLocationSummaryResponse`, `OccupancyGroupSummaryResponse`, `BkrGroupRatioResponse`,
   `BkrBreachResponse`, `AttendanceSummaryRowResponse`, `AttendanceSummaryResponse`,
   `InvoiceStatusOverviewResponse`, `OverdueInvoiceResponse`, `DataCompletenessFlagResponse`) in
   `backend/ChildCare.Contracts/Responses/ReportingResponses.cs`
-- [ ] T002 [P] Add director-web `dashboard.reporting.*` i18n keys (section titles, status labels
+- [X] T002 [P] Add director-web `dashboard.reporting.*` i18n keys (section titles, status labels
   green/amber/red with their paired icon names per design-system.md, empty states — "no overdue
   invoices," "no breaches in this period," "nothing to flag" — location filter label, CSV/PDF
   export actions) to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`,
@@ -34,28 +34,28 @@ scaffolding.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T003 Add `Capacity` (`int?`) to `Group` in `backend/ChildCare.Domain/Entities/Group.cs`
+- [X] T003 Add `Capacity` (`int?`) to `Group` in `backend/ChildCare.Domain/Entities/Group.cs`
   per data-model.md
-- [ ] T004 Map `Group.Capacity` (nullable column) in
+- [X] T004 Map `Group.Capacity` (nullable column) in
   `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` (depends on T003)
-- [ ] T005 Add tenant migration `AddGroupCapacity` in
+- [X] T005 Add tenant migration `AddGroupCapacity` in
   `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T004)
-- [ ] T006 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new column (the
+- [X] T006 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new column (the
   recurring pattern every migration-adding feature since 003 has needed) in
   `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs` (depends on T005)
-- [ ] T007 [P] Add indexes needed for efficient date-range aggregation if not already present —
+- [X] T007 [P] Add indexes needed for efficient date-range aggregation if not already present —
   `AttendanceRecord (LocationId, Date)` and `Invoice (Status, DueDate)` — in a tenant migration
   `AddReportingIndexes` in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`
   (check existing indexes first; only add what's missing)
-- [ ] T008 [P] Add `ReportingMapper` (shared response-mapping helpers: BKR status
+- [X] T008 [P] Add `ReportingMapper` (shared response-mapping helpers: BKR status
   green/amber/red, occupancy status, days-overdue calculation) in
   `backend/ChildCare.Application/Reporting/ReportingMapper.cs`
-- [ ] T009 [P] Add `ReportingEndpoints.cs` skeleton (route group, `DirectorOnly` policy per
+- [X] T009 [P] Add `ReportingEndpoints.cs` skeleton (route group, `DirectorOnly` policy per
   contracts/management-reporting-api.md, no handlers yet) in
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs`
-- [ ] T010 Register `app.MapReportingEndpoints()` in `backend/ChildCare.Api/Program.cs` (depends
+- [X] T010 Register `app.MapReportingEndpoints()` in `backend/ChildCare.Api/Program.cs` (depends
   on T009)
-- [ ] T011 [P] Add `LocationFilter.tsx` shared component (single-select location dropdown,
+- [X] T011 [P] Add `LocationFilter.tsx` shared component (single-select location dropdown,
   narrows every dashboard section, per FR-013) in `web/components/reporting/LocationFilter.tsx`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin in parallel.
@@ -73,47 +73,47 @@ per group/location and accurate live BKR ratios, filterable to one location.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T012 [P] [US1] Integration test: `GET /api/reports/occupancy` returns correct
+- [X] T012 [P] [US1] Integration test: `GET /api/reports/occupancy` returns correct
   green/amber/red per group against `Group.Capacity` and per location against
   `Location.MaxCapacity`, `0/capacity` (not an error) for a location with a published closure
   today, and a `weekAhead` array matching `GetOccupancyQuery`'s existing contract-based
   projection for the same location (FR-003), in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
-- [ ] T013 [P] [US1] Integration test: a group with no `Capacity` set returns `capacity: null`,
+- [X] T013 [P] [US1] Integration test: a group with no `Capacity` set returns `capacity: null`,
   `status: null` (no divide-by-zero) in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
-- [ ] T014 [P] [US1] Integration test: `GET /api/reports/bkr` returns the correct live ratio per
+- [X] T014 [P] [US1] Integration test: `GET /api/reports/bkr` returns the correct live ratio per
   group (present count, qualified staff count excluding `StudentVolunteer`, nap-time inference,
   threshold, status), matching `GetBkrRatioQuery`'s existing rules scoped down to one group, in
   `backend/ChildCare.Api.Tests/Reporting/BkrRatioEndpointsTests.cs`
-- [ ] T015 [P] [US1] Integration test: a director from tenant A cannot see tenant B's occupancy
+- [X] T015 [P] [US1] Integration test: a director from tenant A cannot see tenant B's occupancy
   or BKR data via either endpoint, and a `locationId` belonging to another tenant is treated as
   no valid selection rather than leaking or substituting data (FR-013), in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
-- [ ] T016 [P] [US1] Integration test: "today" resolves via `BelgianCalendarDay`, not a rolling
+- [X] T016 [P] [US1] Integration test: "today" resolves via `BelgianCalendarDay`, not a rolling
   24h window, for both endpoints (FR-016) in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement `GetOccupancySummaryQuery` (today actual per group/location via
+- [X] T017 [US1] Implement `GetOccupancySummaryQuery` (today actual per group/location via
   `AttendanceRecord` + `ChildGroupAssignment`; week-ahead via `GetOccupancyQuery` reuse per
   research.md R1) in `backend/ChildCare.Application/Reporting/GetOccupancySummaryQuery.cs`
   (depends on T003, T008)
-- [ ] T018 [US1] Implement `GetGroupBkrRatioQuery` (per-group live ratio extending
+- [X] T018 [US1] Implement `GetGroupBkrRatioQuery` (per-group live ratio extending
   `GetBkrRatioQuery`'s pattern per research.md R2) in
   `backend/ChildCare.Application/Reporting/GetGroupBkrRatioQuery.cs` (depends on T008)
-- [ ] T019 [US1] Wire `GET /api/reports/occupancy` and `GET /api/reports/bkr` handlers (with
+- [X] T019 [US1] Wire `GET /api/reports/occupancy` and `GET /api/reports/bkr` handlers (with
   `locationId` optional filter) in `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs`
   (depends on T017, T018, T009)
-- [ ] T020 [P] [US1] Implement `OccupancySection.tsx` (per-location + per-group colour-coded
+- [X] T020 [P] [US1] Implement `OccupancySection.tsx` (per-location + per-group colour-coded
   cards/rows with paired icon per status, week-ahead strip, per design-system.md's Status
   Indicators and spacing scale) in `web/components/reporting/OccupancySection.tsx`
-- [ ] T021 [P] [US1] Implement `BkrComplianceSection.tsx` (per-group live ratio, colour-coded
+- [X] T021 [P] [US1] Implement `BkrComplianceSection.tsx` (per-group live ratio, colour-coded
   with paired icon) in `web/components/reporting/BkrComplianceSection.tsx`
-- [ ] T022 [US1] Wire `OccupancySection`/`BkrComplianceSection`/`LocationFilter` into
+- [X] T022 [US1] Wire `OccupancySection`/`BkrComplianceSection`/`LocationFilter` into
   `web/app/(app)/dashboard/page.tsx` (depends on T011, T020, T021)
-- [ ] T023 [P] [US1] Component test: `OccupancySection` renders green/amber/red using the exact
+- [X] T023 [P] [US1] Component test: `OccupancySection` renders green/amber/red using the exact
   check-circle/clock/alert-triangle icon mapping FR-018 specifies (never colour alone) and a
   clean `0/capacity` empty state in `web/__tests__/dashboard.test.tsx` (extends the existing
   file)
@@ -134,26 +134,26 @@ for a range with no breaches.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T024 [P] [US2] Integration test: `GET /api/reports/bkr/breaches` correctly reconstructs a
+- [X] T024 [P] [US2] Integration test: `GET /api/reports/bkr/breaches` correctly reconstructs a
   known breach window's start/end from seeded `AttendanceRecord`/`RoomShift` timestamps, in
   `backend/ChildCare.Api.Tests/Reporting/BkrBreachHistoryEndpointsTests.cs`
-- [ ] T025 [P] [US2] Integration test: a range with no breaches returns an empty `breaches` array;
+- [X] T025 [P] [US2] Integration test: a range with no breaches returns an empty `breaches` array;
   the default range (no `from`/`to` supplied) is the last 30 days; a range exceeding 366 days
-  returns 400 `errors.validation` in
+  returns 422 `errors.validation` (this codebase's standard FluentValidation status code) in
   `backend/ChildCare.Api.Tests/Reporting/BkrBreachHistoryEndpointsTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Implement `GetBkrBreachHistoryQuery` (on-demand reconstruction from
+- [X] T026 [US2] Implement `GetBkrBreachHistoryQuery` (on-demand reconstruction from
   `AttendanceRecord`/`RoomShift` check-in/out timestamps per research.md R3, default 30-day
   range, 366-day max per contracts/management-reporting-api.md) in
   `backend/ChildCare.Application/Reporting/GetBkrBreachHistoryQuery.cs` (depends on T008)
-- [ ] T027 [US2] Wire `GET /api/reports/bkr/breaches` handler in
+- [X] T027 [US2] Wire `GET /api/reports/bkr/breaches` handler in
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs` (depends on T026)
-- [ ] T028 [US2] Extend `BkrComplianceSection.tsx` with a breach-history sub-section (date-range
+- [X] T028 [US2] Extend `BkrComplianceSection.tsx` with a breach-history sub-section (date-range
   picker, empty state "no breaches in this period") in
   `web/components/reporting/BkrComplianceSection.tsx` (depends on T021)
-- [ ] T029 [P] [US2] Component test: breach-history sub-section renders seeded breaches and the
+- [X] T029 [P] [US2] Component test: breach-history sub-section renders seeded breaches and the
   empty state correctly in `web/__tests__/dashboard.test.tsx`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently.
@@ -171,21 +171,21 @@ the boundary.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T030 [P] [US3] Integration test: `GET /api/reports/attendance-summary` aggregates
+- [X] T030 [P] [US3] Integration test: `GET /api/reports/attendance-summary` aggregates
   present/absent-justified/absent-unjustified/closure days correctly per child, and rolls up
   correctly per group and per location, in
   `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryEndpointsTests.cs`
-- [ ] T031 [P] [US3] Integration test: a child whose location/group changes mid-month has each
+- [X] T031 [P] [US3] Integration test: a child whose location/group changes mid-month has each
   day attributed to the location/group actually active that day, with no day dropped or
   double-counted (data-model.md's Edge Case), in
   `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryEndpointsTests.cs`
-- [ ] T032 [P] [US3] Integration test: CSV export (`format=csv`) totals match the on-screen JSON
+- [X] T032 [P] [US3] Integration test: CSV export (`format=csv`) totals match the on-screen JSON
   response exactly, UTF-8 BOM encoded, in
   `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryExportTests.cs`
-- [ ] T033 [P] [US3] Integration test: PDF export (`format=pdf`) renders a valid PDF stream whose
+- [X] T033 [P] [US3] Integration test: PDF export (`format=pdf`) renders a valid PDF stream whose
   totals match the on-screen JSON response exactly in
   `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryExportTests.cs`
-- [ ] T033a [P] [US3] Integration test: a director from tenant A cannot retrieve tenant B's
+- [X] T033a [P] [US3] Integration test: a director from tenant A cannot retrieve tenant B's
   attendance summary or export via either endpoint (FR-012), and re-requesting an export after
   correcting an underlying `AttendanceRecord` reflects that correction immediately — never a
   cached/stale result (FR-022) — in
@@ -193,29 +193,29 @@ the boundary.
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Implement `GetAttendanceSummaryQuery` (shared aggregation per data-model.md's
+- [X] T034 [US3] Implement `GetAttendanceSummaryQuery` (shared aggregation per data-model.md's
   `AttendanceSummaryRow`, feeds JSON/CSV/PDF per research.md R5) in
   `backend/ChildCare.Application/Reporting/GetAttendanceSummaryQuery.cs` (depends on T008)
-- [ ] T035 [P] [US3] Implement `CsvAttendanceSummaryWriter` (RFC 4180, UTF-8 BOM, comma-delimited
+- [X] T035 [P] [US3] Implement `CsvAttendanceSummaryWriter` (RFC 4180, UTF-8 BOM, comma-delimited
   per research.md R8) in `backend/ChildCare.Infrastructure/Reporting/CsvAttendanceSummaryWriter.cs`
-- [ ] T036 [P] [US3] Define `IAttendanceSummaryPdfGenerator` port + implement
+- [X] T036 [P] [US3] Define `IAttendanceSummaryPdfGenerator` port + implement
   `QuestPdfAttendanceSummaryGenerator` (on-demand/unstored, mirrors `QuestPdfInvoiceGenerator`,
   per-locale labels per Constitution IV) in
   `backend/ChildCare.Application/Common/IAttendanceSummaryPdfGenerator.cs` and
   `backend/ChildCare.Infrastructure/Pdf/QuestPdfAttendanceSummaryGenerator.cs`
-- [ ] T037 [US3] Implement `ExportAttendanceSummaryQuery` (reuses `GetAttendanceSummaryQuery`'s
+- [X] T037 [US3] Implement `ExportAttendanceSummaryQuery` (reuses `GetAttendanceSummaryQuery`'s
   result, dispatches to CSV writer or PDF generator by `format`) in
   `backend/ChildCare.Application/Reporting/ExportAttendanceSummaryQuery.cs` (depends on T034,
   T035, T036)
-- [ ] T038 [US3] Wire `GET /api/reports/attendance-summary` and
+- [X] T038 [US3] Wire `GET /api/reports/attendance-summary` and
   `GET /api/reports/attendance-summary/export` handlers in
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs` (depends on T034, T037)
-- [ ] T039 [P] [US3] Implement `AttendanceSummarySection.tsx` (month picker, on-screen totals
+- [X] T039 [P] [US3] Implement `AttendanceSummarySection.tsx` (month picker, on-screen totals
   table per group/location, CSV/PDF export buttons per design-system.md's high-density director
   table conventions) in `web/components/reporting/AttendanceSummarySection.tsx`
-- [ ] T040 [US3] Wire `AttendanceSummarySection` into `web/app/(app)/dashboard/page.tsx` (depends
+- [X] T040 [US3] Wire `AttendanceSummarySection` into `web/app/(app)/dashboard/page.tsx` (depends
   on T022, T039)
-- [ ] T041 [P] [US3] Component test: `AttendanceSummarySection` renders totals and triggers
+- [X] T041 [P] [US3] Component test: `AttendanceSummarySection` renders totals and triggers
   CSV/PDF export requests correctly in `web/__tests__/dashboard.test.tsx`
 
 **Checkpoint**: User Stories 1, 2, and 3 should now all work independently.
@@ -232,29 +232,29 @@ some Sent past due date; confirm the overview buckets and totals them correctly.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T042 [P] [US4] Integration test: `GET /api/reports/invoices` correctly buckets
+- [X] T042 [P] [US4] Integration test: `GET /api/reports/invoices` correctly buckets
   paid/outstanding/overdue using the existing `Status`/`DueDate` convention (research.md R6) and
   computes correct revenue totals, in
   `backend/ChildCare.Api.Tests/Reporting/InvoiceStatusOverviewEndpointsTests.cs`
-- [ ] T043 [P] [US4] Integration test: overdue list shows correct `daysOverdue` per invoice; an
+- [X] T043 [P] [US4] Integration test: overdue list shows correct `daysOverdue` per invoice; an
   empty overdue list returns an empty array in
   `backend/ChildCare.Api.Tests/Reporting/InvoiceStatusOverviewEndpointsTests.cs`
-- [ ] T043a [P] [US4] Integration test: a director from tenant A cannot retrieve tenant B's
+- [X] T043a [P] [US4] Integration test: a director from tenant A cannot retrieve tenant B's
   invoice status overview via this endpoint (FR-012) in
   `backend/ChildCare.Api.Tests/Reporting/InvoiceStatusOverviewEndpointsTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Implement `GetInvoiceStatusOverviewQuery` in
+- [X] T044 [US4] Implement `GetInvoiceStatusOverviewQuery` in
   `backend/ChildCare.Application/Reporting/GetInvoiceStatusOverviewQuery.cs` (depends on T008)
-- [ ] T045 [US4] Wire `GET /api/reports/invoices` handler in
+- [X] T045 [US4] Wire `GET /api/reports/invoices` handler in
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs` (depends on T044)
-- [ ] T046 [P] [US4] Implement `InvoiceStatusSection.tsx` (bucket counts/totals, overdue list
+- [X] T046 [P] [US4] Implement `InvoiceStatusSection.tsx` (bucket counts/totals, overdue list
   linking to `web/app/(app)/invoices/[id]/page.tsx`, empty state) in
   `web/components/reporting/InvoiceStatusSection.tsx`
-- [ ] T047 [US4] Wire `InvoiceStatusSection` into `web/app/(app)/dashboard/page.tsx` (depends on
+- [X] T047 [US4] Wire `InvoiceStatusSection` into `web/app/(app)/dashboard/page.tsx` (depends on
   T040, T046)
-- [ ] T048 [P] [US4] Component test: `InvoiceStatusSection` renders correct buckets, overdue list,
+- [X] T048 [P] [US4] Component test: `InvoiceStatusSection` renders correct buckets, overdue list,
   and empty state in `web/__tests__/dashboard.test.tsx`
 
 **Checkpoint**: User Stories 1–4 should now all work independently.
@@ -271,28 +271,28 @@ clear reason and link; confirm a tenant with none of them shows the empty state.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T049 [P] [US5] Integration test: `GET /api/reports/data-completeness` flags a child with no
+- [X] T049 [P] [US5] Integration test: `GET /api/reports/data-completeness` flags a child with no
   `CanPickup` contact, a child with an overdue `VaccineRecord` (`NextDueDate` passed, no newer
   record), a staff member missing `QualificationLevel`, and a staff member with no `PinHash`, per
   research.md R7, in `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
-- [ ] T050 [P] [US5] Integration test: a tenant with none of the four gaps returns an empty
+- [X] T050 [P] [US5] Integration test: a tenant with none of the four gaps returns an empty
   `flags` array in `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
-- [ ] T050a [P] [US5] Integration test: a director from tenant A cannot retrieve tenant B's
+- [X] T050a [P] [US5] Integration test: a director from tenant A cannot retrieve tenant B's
   data-completeness flags via this endpoint (FR-012) in
   `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T051 [US5] Implement `GetDataCompletenessQuery` (four checks per research.md R7) in
+- [X] T051 [US5] Implement `GetDataCompletenessQuery` (four checks per research.md R7) in
   `backend/ChildCare.Application/Reporting/GetDataCompletenessQuery.cs` (depends on T008)
-- [ ] T052 [US5] Wire `GET /api/reports/data-completeness` handler in
+- [X] T052 [US5] Wire `GET /api/reports/data-completeness` handler in
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs` (depends on T051)
-- [ ] T053 [P] [US5] Implement `DataCompletenessSection.tsx` (flat flagged list, each linking to
+- [X] T053 [P] [US5] Implement `DataCompletenessSection.tsx` (flat flagged list, each linking to
   the child's or staff member's existing detail screen, empty state) in
   `web/components/reporting/DataCompletenessSection.tsx`
-- [ ] T054 [US5] Wire `DataCompletenessSection` into `web/app/(app)/dashboard/page.tsx` (depends
+- [X] T054 [US5] Wire `DataCompletenessSection` into `web/app/(app)/dashboard/page.tsx` (depends
   on T047, T053)
-- [ ] T055 [P] [US5] Component test: `DataCompletenessSection` renders all four flag types with
+- [X] T055 [P] [US5] Component test: `DataCompletenessSection` renders all four flag types with
   correct links, and the empty state, in `web/__tests__/dashboard.test.tsx`
 
 **Checkpoint**: All five user stories should now be independently functional.
@@ -303,17 +303,17 @@ clear reason and link; confirm a tenant with none of them shows the empty state.
 
 **Purpose**: Cross-story correctness, error handling, and final validation.
 
-- [ ] T056 [P] Verify every new endpoint returns a locale-aware error key (never a raw stack
+- [X] T056 [P] Verify every new endpoint returns a locale-aware error key (never a raw stack
   trace) on failure, with the full error logged server-side (FR-019, Constitution VI) across
   `backend/ChildCare.Api/Endpoints/ReportingEndpoints.cs`
-- [ ] T057 [P] Verify each dashboard section loads independently (one section's failure/slow
+- [X] T057 [P] Verify each dashboard section loads independently (one section's failure/slow
   query never blocks another) with its own loading skeleton in
   `web/app/(app)/dashboard/page.tsx`
-- [ ] T058 [P] Verify every interactive element (filter, export button, drill-in row) is
+- [X] T058 [P] Verify every interactive element (filter, export button, drill-in row) is
   keyboard-reachable with a visible focus ring, per platform-rules.md's Director Web App section,
   across `web/components/reporting/`
-- [ ] T059 Run `quickstart.md` validation end-to-end against a local seeded tenant
-- [ ] T060 Update `Workflows/reporting.md` and `workflows.md` if implementation surfaced any
+- [X] T059 Run `quickstart.md` validation end-to-end against a local seeded tenant
+- [X] T060 Update `Workflows/reporting.md` and `workflows.md` if implementation surfaced any
   discrepancy from what was documented during planning (governance rule — only if needed)
 
 ---

@@ -218,6 +218,7 @@ export interface GroupResponse {
   id: string;
   name: string;
   locationId: string;
+  capacity: number | null;
 }
 
 // ── Staff scheduling (feature 012) ──────────────────────────────────────────────
@@ -675,4 +676,128 @@ export interface DevelopmentalDomainResponse {
   nameEn:     string;
   sortOrder:  number;
   milestones: DevelopmentalMilestoneResponse[];
+}
+
+// ── Management Reporting (feature 018) ──────────────────────────────────────────────────────
+export type OccupancyStatus = "green" | "amber" | "red";
+
+export interface OccupancyDayResponse {
+  date:         string;
+  freeCapacity: number | null;
+  closed:       boolean;
+}
+
+export interface OccupancyGroupSummaryResponse {
+  groupId:      string;
+  groupName:    string;
+  presentCount: number;
+  capacity:     number | null;
+  status:       OccupancyStatus | null;
+}
+
+export interface OccupancyLocationSummaryResponse {
+  locationId:   string;
+  locationName: string;
+  presentCount: number;
+  capacity:     number;
+  status:       OccupancyStatus;
+  groups:       OccupancyGroupSummaryResponse[];
+  weekAhead:    OccupancyDayResponse[];
+}
+
+export interface OccupancySummaryResponse {
+  asOf:      string;
+  locations: OccupancyLocationSummaryResponse[];
+}
+
+export interface BkrGroupRatioResponse {
+  groupId:            string;
+  locationId:         string;
+  presentCount:       number;
+  qualifiedStaffCount: number;
+  isNapTime:          boolean;
+  threshold:          number;
+  status:             OccupancyStatus;
+}
+
+export interface BkrRatioOverviewResponse {
+  asOf:   string;
+  groups: BkrGroupRatioResponse[];
+}
+
+export interface BkrBreachResponse {
+  groupId:    string;
+  locationId: string;
+  startedAt:  string;
+  endedAt:    string | null;
+}
+
+export interface BkrBreachHistoryResponse {
+  from:     string;
+  to:       string;
+  breaches: BkrBreachResponse[];
+}
+
+export interface AttendanceSummaryRowResponse {
+  childId:               string;
+  childName:             string;
+  groupId:               string | null;
+  locationId:            string;
+  presentDays:           number;
+  absentJustifiedDays:   number;
+  absentUnjustifiedDays: number;
+  closureDays:           number;
+}
+
+export interface AttendanceSummaryTotalResponse {
+  id:                    string;
+  presentDays:           number;
+  absentJustifiedDays:   number;
+  absentUnjustifiedDays: number;
+  closureDays:           number;
+}
+
+export interface AttendanceSummaryResponse {
+  month:          string;
+  children:       AttendanceSummaryRowResponse[];
+  groupTotals:    AttendanceSummaryTotalResponse[];
+  locationTotals: AttendanceSummaryTotalResponse[];
+}
+
+export interface OverdueInvoiceResponse {
+  invoiceId:   string;
+  childName:   string;
+  dueDate:     string;
+  daysOverdue: number;
+  totalCents:  number;
+}
+
+export interface InvoiceStatusOverviewResponse {
+  month:                 string;
+  paidCount:             number;
+  paidTotalCents:        number;
+  outstandingCount:      number;
+  outstandingTotalCents: number;
+  overdueCount:          number;
+  overdueTotalCents:     number;
+  totalInvoicedCents:    number;
+  overdueInvoices:       OverdueInvoiceResponse[];
+}
+
+export type DataCompletenessFlagType =
+  | "missing_pickup_contact"
+  | "overdue_vaccine"
+  | "missing_qualification"
+  | "missing_pin";
+
+export interface DataCompletenessFlagResponse {
+  type:        DataCompletenessFlagType;
+  subjectType: "child" | "staff";
+  subjectId:   string;
+  subjectName: string;
+  detail:      string | null;
+}
+
+export interface DataCompletenessResponse {
+  flags: DataCompletenessFlagResponse[];
 }
