@@ -58,7 +58,7 @@
 | 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | ✅ Done |
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | ✅ Done |
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | ✅ Done |
-| 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
+| 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | ✅ Done |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
 | 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | 🔲 Not started |
 | 031 | `031-photo-lifecycle-governance` | Photo retention/archiving on child departure, GCS storage-class cost tiering, explicit staff/admin/director photo-action RBAC, parent original-download support | 006, 009b, 013b | 🔲 Not started |
