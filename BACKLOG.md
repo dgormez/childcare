@@ -58,7 +58,6 @@
 | 014a | `014a-invoice-payments-plus` | Follow-up on shipped 014: optional PSP payment link per invoice (Stripe/Mollie/POM — all support Bancontact; provider must be investigated & decided before implementation, design behind an abstraction), automatic payment reminders for overdue invoices, automatic payment receipt (betalingsbewijs) on paid — competitive parity with D-Care (POM) and Bitcare (Mollie) | 014, 013 | ✅ Done |
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | ✅ Done |
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | ✅ Done |
-| 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) | 004, 005 | 🔲 Not started |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | 🔲 Not started |
 | 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
 | 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | 🔲 Not started |
@@ -81,6 +80,7 @@
 | 039 | `039-tenant-onboarding-migration` | Productised KDV onboarding & supplier-switch migration: guided setup wizard, bulk import of children/parents/contracts/staff from CSV/Excel (as exported by D-Care/Bitcare/spreadsheets), dry-run validation + preview, shadow-run mode, and a full tenant data export (data portability / no lock-in) | 001, 006, 007 | 🔲 Not started |
 | 040 | `040-occupancy-placement-planning` | Forward occupancy & placement planning: available places per day/week/month/year per group, BKR-aware "can this child be placed on these days?" simulation for enquiries, and doorstroom (age-based group-transition) planning to avoid occupancy gaps | 007, 010, 012a | 🔲 Not started |
 | 041 | `041-bkr-2027-ruleset` | Date-versioned BKR rulesets: the lower Flemish kindratio becomes mandatory 1 Jan 2027 (transition period until 31 Dec 2026, early adoption allowed per location); includes new countable staffing profiles (AKT trainees, logistieke medewerkers under conditions) and an average-over-staffing-hours ratio report at location level (how Opgroeien assesses the linked subsidy) | 010, 012 | 🔲 Not started |
+| 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) — **blocked: no official Opgroeien MeMoQ instrument document (dimension/item/scale content) exists anywhere in this repo; a 2026-07-17 scheduled run correctly refused to fabricate a government self-evaluation instrument and paused rather than guess.** Moved to the end of the queue on 2026-07-18 pending either the source document or an explicit decision to scope this down to infrastructure-only (evaluation lifecycle, versioned instrument table) with real content deferred as a follow-up feature, mirroring how 013g/013h split the vaccine catalog. | 004, 005 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
