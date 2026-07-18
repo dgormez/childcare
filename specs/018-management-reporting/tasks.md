@@ -75,8 +75,10 @@ per group/location and accurate live BKR ratios, filterable to one location.
 
 - [ ] T012 [P] [US1] Integration test: `GET /api/reports/occupancy` returns correct
   green/amber/red per group against `Group.Capacity` and per location against
-  `Location.MaxCapacity`, and `0/capacity` (not an error) for a location with a published closure
-  today, in `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
+  `Location.MaxCapacity`, `0/capacity` (not an error) for a location with a published closure
+  today, and a `weekAhead` array matching `GetOccupancyQuery`'s existing contract-based
+  projection for the same location (FR-003), in
+  `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
 - [ ] T013 [P] [US1] Integration test: a group with no `Capacity` set returns `capacity: null`,
   `status: null` (no divide-by-zero) in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
@@ -85,7 +87,8 @@ per group/location and accurate live BKR ratios, filterable to one location.
   threshold, status), matching `GetBkrRatioQuery`'s existing rules scoped down to one group, in
   `backend/ChildCare.Api.Tests/Reporting/BkrRatioEndpointsTests.cs`
 - [ ] T015 [P] [US1] Integration test: a director from tenant A cannot see tenant B's occupancy
-  or BKR data via either endpoint in
+  or BKR data via either endpoint, and a `locationId` belonging to another tenant is treated as
+  no valid selection rather than leaking or substituting data (FR-013), in
   `backend/ChildCare.Api.Tests/Reporting/OccupancyEndpointsTests.cs`
 - [ ] T016 [P] [US1] Integration test: "today" resolves via `BelgianCalendarDay`, not a rolling
   24h window, for both endpoints (FR-016) in
@@ -110,9 +113,10 @@ per group/location and accurate live BKR ratios, filterable to one location.
   with paired icon) in `web/components/reporting/BkrComplianceSection.tsx`
 - [ ] T022 [US1] Wire `OccupancySection`/`BkrComplianceSection`/`LocationFilter` into
   `web/app/(app)/dashboard/page.tsx` (depends on T011, T020, T021)
-- [ ] T023 [P] [US1] Component test: `OccupancySection` renders green/amber/red with icons (never
-  colour alone) and a clean `0/capacity` empty state in `web/__tests__/dashboard.test.tsx`
-  (extends the existing file)
+- [ ] T023 [P] [US1] Component test: `OccupancySection` renders green/amber/red using the exact
+  check-circle/clock/alert-triangle icon mapping FR-018 specifies (never colour alone) and a
+  clean `0/capacity` empty state in `web/__tests__/dashboard.test.tsx` (extends the existing
+  file)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable
 independently — the MVP.
@@ -181,6 +185,11 @@ the boundary.
 - [ ] T033 [P] [US3] Integration test: PDF export (`format=pdf`) renders a valid PDF stream whose
   totals match the on-screen JSON response exactly in
   `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryExportTests.cs`
+- [ ] T033a [P] [US3] Integration test: a director from tenant A cannot retrieve tenant B's
+  attendance summary or export via either endpoint (FR-012), and re-requesting an export after
+  correcting an underlying `AttendanceRecord` reflects that correction immediately — never a
+  cached/stale result (FR-022) — in
+  `backend/ChildCare.Api.Tests/Reporting/AttendanceSummaryExportTests.cs`
 
 ### Implementation for User Story 3
 
@@ -230,6 +239,9 @@ some Sent past due date; confirm the overview buckets and totals them correctly.
 - [ ] T043 [P] [US4] Integration test: overdue list shows correct `daysOverdue` per invoice; an
   empty overdue list returns an empty array in
   `backend/ChildCare.Api.Tests/Reporting/InvoiceStatusOverviewEndpointsTests.cs`
+- [ ] T043a [P] [US4] Integration test: a director from tenant A cannot retrieve tenant B's
+  invoice status overview via this endpoint (FR-012) in
+  `backend/ChildCare.Api.Tests/Reporting/InvoiceStatusOverviewEndpointsTests.cs`
 
 ### Implementation for User Story 4
 
@@ -265,6 +277,9 @@ clear reason and link; confirm a tenant with none of them shows the empty state.
   research.md R7, in `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
 - [ ] T050 [P] [US5] Integration test: a tenant with none of the four gaps returns an empty
   `flags` array in `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
+- [ ] T050a [P] [US5] Integration test: a director from tenant A cannot retrieve tenant B's
+  data-completeness flags via this endpoint (FR-012) in
+  `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
 
 ### Implementation for User Story 5
 
