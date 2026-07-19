@@ -42,7 +42,8 @@
     "vaccineTypes": "Vaccinatiecatalogus",
     "invoices": "Facturen",
     "fiscalAttestations": "Fiscale attesten",
-    "organisationSettings": "Organisatie"
+    "organisationSettings": "Organisatie",
+    "communications": "E-mail"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -1082,5 +1083,31 @@
     "retry": "Opnieuw proberen",
     "genericError": "Kon deze vaccinatie niet opslaan. Probeer opnieuw.",
     "reorderBoundaryError": "Deze vaccinatie staat al aan de rand van zijn categorie."
+  },
+  "communications": {
+    "title": "E-mailcommunicatie",
+    "compose": "Nieuwe e-mail",
+    "locationLabel": "Locatie",
+    "groupLabel": "Groep (optioneel)",
+    "groupAllOption": "Hele locatie",
+    "subjectLabel": "Onderwerp",
+    "bodyLabel": "Bericht",
+    "attachmentLabel": "Bijlage (optioneel)",
+    "attachmentUpload": "Bijlage toevoegen",
+    "attachmentUploading": "Uploaden…",
+    "attachmentRemove": "Verwijderen",
+    "attachmentTooLarge": "Dit bestand is groter dan 10MB. Kies een kleiner bestand.",
+    "invalidContentType": "Alleen PDF-, JPEG- of PNG-bestanden worden ondersteund.",
+    "recipientCount": "{count, plural, =0 {Geen gezinnen binnen dit bereik} one {# gezin ontvangt deze e-mail} other {# gezinnen ontvangen deze e-mail}}",
+    "send": "E-mail versturen",
+    "sending": "Verzenden…",
+    "subjectRequired": "Vul een onderwerp in.",
+    "subjectTooLong": "Onderwerp is te lang.",
+    "bodyRequired": "Vul een bericht in.",
+    "bodyTooLong": "Bericht is te lang.",
+    "genericError": "Kon deze e-mail niet versturen. Probeer het opnieuw.",
+    "resultSent": "{count} verzonden",
+    "resultSkipped": "{count} overgeslagen — geen e-mailadres bekend",
+    "resultFailed": "{count} niet verzonden"
   }
 }

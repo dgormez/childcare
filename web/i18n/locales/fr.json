@@ -42,7 +42,8 @@
     "vaccineTypes": "Catalogue des vaccins",
     "invoices": "Factures",
     "fiscalAttestations": "Attestations fiscales",
-    "organisationSettings": "Organisation"
+    "organisationSettings": "Organisation",
+    "communications": "E-mail"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -1082,5 +1083,31 @@
     "retry": "Réessayer",
     "genericError": "Impossible d'enregistrer cette entrée. Veuillez réessayer.",
     "reorderBoundaryError": "Cette entrée est déjà en bordure de sa catégorie."
+  },
+  "communications": {
+    "title": "Communications par e-mail",
+    "compose": "Nouvel e-mail",
+    "locationLabel": "Site",
+    "groupLabel": "Groupe (facultatif)",
+    "groupAllOption": "Tout le site",
+    "subjectLabel": "Sujet",
+    "bodyLabel": "Message",
+    "attachmentLabel": "Pièce jointe (facultatif)",
+    "attachmentUpload": "Ajouter une pièce jointe",
+    "attachmentUploading": "Téléversement…",
+    "attachmentRemove": "Supprimer",
+    "attachmentTooLarge": "Ce fichier dépasse 10 Mo. Choisissez un fichier plus petit.",
+    "invalidContentType": "Seuls les fichiers PDF, JPEG ou PNG sont pris en charge.",
+    "recipientCount": "{count, plural, =0 {Aucune famille dans ce périmètre} one {# famille recevra cet e-mail} other {# familles recevront cet e-mail}}",
+    "send": "Envoyer l'e-mail",
+    "sending": "Envoi…",
+    "subjectRequired": "Saisissez un sujet.",
+    "subjectTooLong": "Le sujet est trop long.",
+    "bodyRequired": "Saisissez un message.",
+    "bodyTooLong": "Le message est trop long.",
+    "genericError": "Impossible d'envoyer cet e-mail. Veuillez réessayer.",
+    "resultSent": "{count} envoyé(s)",
+    "resultSkipped": "{count} ignoré(s) — pas d'adresse e-mail",
+    "resultFailed": "{count} échec(s) d'envoi"
   }
 }

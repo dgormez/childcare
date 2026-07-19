@@ -1,0 +1,2 @@
+<h2 style="margin:0 0 16px;font-size:20px;color:#1F2937">{{ subject_html }}</h2>
+<div style="font-size:15px;line-height:1.6;color:#1F2937">{{ body_html }}</div>

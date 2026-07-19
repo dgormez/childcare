@@ -23,4 +23,9 @@ public class Contact
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Feature 020: null = subscribed (default). Set = unsubscribed from the automatic daily
+    // digest, timestamped for audit. Never affects bulk/announcement/closure emails or an
+    // on-demand resend — those channels always deliver regardless of this flag (spec.md FR-008).
+    public DateTime? DigestUnsubscribedAt { get; set; }
 }

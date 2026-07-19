@@ -49,6 +49,8 @@ public interface ITenantDbContext
     DbSet<Message> Messages { get; }
     DbSet<Announcement> Announcements { get; }
     DbSet<AnnouncementRecipient> AnnouncementRecipients { get; }
+    DbSet<BulkEmailSend> BulkEmailSends { get; }
+    DbSet<BulkEmailRecipient> BulkEmailRecipients { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<GroupActivity> GroupActivities { get; }
     DbSet<GroupActivityPhoto> GroupActivityPhotos { get; }

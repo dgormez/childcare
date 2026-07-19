@@ -15,10 +15,10 @@ testing.
 
 **Purpose**: New dependency, response contracts, and i18n scaffolding shared across every story.
 
-- [ ] T001 Add the Scriban NuGet package to `backend/ChildCare.Infrastructure/ChildCare.Infrastructure.csproj` (research.md R1)
-- [ ] T002 [P] Add response DTOs per contracts/email-communications-api.md (`BulkEmailUploadUrlResponse`, `BulkEmailSendResultResponse`, `BulkEmailRecipientCountResponse`, `DailyReportResendResultResponse`, `UnsubscribeResultResponse`) in `backend/ChildCare.Contracts/Responses/EmailResponses.cs`
-- [ ] T003 [P] Add director-web `communications.*` i18n keys (location/group selector, subject/body fields, attachment upload progress/error, send button, delivery-outcome summary, zero-recipient empty state) to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
-- [ ] T004 [P] Add `errors.email.*` i18n keys (subject_required, subject_too_long, body_required, body_too_long, invalid_content_type, attachment_too_large) to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
+- [X] T001 Add the Scriban NuGet package to `backend/ChildCare.Infrastructure/ChildCare.Infrastructure.csproj` (research.md R1)
+- [X] T002 [P] Add response DTOs per contracts/email-communications-api.md (`BulkEmailUploadUrlResponse`, `BulkEmailSendResultResponse`, `BulkEmailRecipientCountResponse`, `DailyReportResendResultResponse`, `UnsubscribeResultResponse`) in `backend/ChildCare.Contracts/Responses/EmailResponses.cs`
+- [X] T003 [P] Add director-web `communications.*` i18n keys (location/group selector, subject/body fields, attachment upload progress/error, send button, delivery-outcome summary, zero-recipient empty state) to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
+- [X] T004 [P] Add `errors.email.*` i18n keys (subject_required, subject_too_long, body_required, body_too_long, invalid_content_type, attachment_too_large) to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`, `web/i18n/locales/nl.json`
 
 ---
 
@@ -29,27 +29,27 @@ token mechanism every user story depends on.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 [P] Add `DigestUnsubscribedAt` (`DateTime?`) to `Contact` in `backend/ChildCare.Domain/Entities/Contact.cs` per data-model.md
-- [ ] T006 [P] Add `BulkEmailDeliveryStatus` enum (`Sent`, `SkippedNoEmail`, `ProviderFailure`) in `backend/ChildCare.Domain/Enums/BulkEmailDeliveryStatus.cs` per data-model.md
-- [ ] T007 [P] Add `BulkEmailSend` entity in `backend/ChildCare.Domain/Entities/BulkEmailSend.cs` per data-model.md
-- [ ] T008 [P] Add `BulkEmailRecipient` entity in `backend/ChildCare.Domain/Entities/BulkEmailRecipient.cs` per data-model.md (depends on T006, T007)
-- [ ] T009 Map `Contact.DigestUnsubscribedAt`, `BulkEmailSend`, `BulkEmailRecipient` (with an index on `BulkEmailRecipient.BulkEmailSendId`) in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` (depends on T005, T007, T008)
-- [ ] T010 Add `ITenantDbContext` members (`Contacts` already exists; add `BulkEmailSends`, `BulkEmailRecipients`) in `backend/ChildCare.Application/Common/ITenantDbContext.cs` (depends on T009)
-- [ ] T011 Add tenant migration `AddEmailCommunications` (Contact column + two new tables + index) in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T009, T010)
-- [ ] T012 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new column/tables (the recurring pattern every migration-adding feature since 003 has needed) in `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs` (depends on T011)
-- [ ] T013 [P] Add `IEmailTemplateRenderer` port (locale + template-name + model → rendered HTML string) in `backend/ChildCare.Application/Common/IEmailTemplateRenderer.cs` per research.md R1
-- [ ] T014 [P] Add shared HTML email layout partial (`_layout.scriban` — inline-CSS header/footer, matches design-system.md's warmth/calm tone within email-client constraints) in `backend/ChildCare.Infrastructure/Email/Templates/_layout.scriban`
-- [ ] T015 `ScribanEmailTemplateRenderer` implementing `IEmailTemplateRenderer` (loads embedded `.scriban` resources, renders with the shared layout) in `backend/ChildCare.Infrastructure/Email/ScribanEmailTemplateRenderer.cs` (depends on T013, T014)
-- [ ] T016 [P] Extend `IEmailSender` with new templated send methods (`SendBulkEmailAsync`, `SendDailyReportAsync`, `SendClosureNotificationEmailAsync`, `SendAnnouncementEmailAsync`) accepting a locale + template model, replacing the raw-string-literal signatures for these kinds only (existing auth-email methods — verify/reset/invitation — are unchanged, out of this feature's scope) in `backend/ChildCare.Application/Common/IEmailSender.cs`
-- [ ] T017 Implement the new `IEmailSender` methods in `EmailService` using `IEmailTemplateRenderer`, including per-email-kind MIME attachment support (bulk email only) in `backend/ChildCare.Api/Services/EmailService.cs` (depends on T015, T016)
-- [ ] T018 Correct the stale "feature 019 owns the templating/i18n rework" doc comments to reference this feature (020) in `backend/ChildCare.Application/Common/IEmailSender.cs` (spec.md Assumptions)
-- [ ] T019 [P] Add `IBulkEmailAttachmentStorage` port in `backend/ChildCare.Application/Common/IBulkEmailAttachmentStorage.cs` per research.md R3 (mirrors `IHealthAttachmentStorage`'s shape)
-- [ ] T020 `GcsBulkEmailAttachmentStorage` implementing `IBulkEmailAttachmentStorage` (signed upload/download URLs, `bulk-email-attachments/{bulkEmailSendId}/attachment.{ext}` object path, 15-minute TTL) in `backend/ChildCare.Infrastructure/Storage/GcsBulkEmailAttachmentStorage.cs` (depends on T019)
-- [ ] T021 [P] Add `IUnsubscribeTokenService` port (issue/verify a `Contact.Id` + purpose-scoped token via `IDataProtector` — the token itself carries no tenant info; schema resolution is a separate step via the link's `org` slug, per research.md R5) in `backend/ChildCare.Application/Common/IUnsubscribeTokenService.cs` per research.md R5
-- [ ] T022 Implement `DataProtectionUnsubscribeTokenService` in `backend/ChildCare.Infrastructure/Email/DataProtectionUnsubscribeTokenService.cs` (depends on T021)
-- [ ] T023 Register `IDataProtection`, `IEmailTemplateRenderer`, `IBulkEmailAttachmentStorage`, `IUnsubscribeTokenService`, and the new `IEmailSender` implementation in DI in `backend/ChildCare.Api/Program.cs` (depends on T015, T017, T020, T022)
-- [ ] T024 [P] Add `EmailEndpoints.cs` skeleton (route group, no handlers yet) in `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs`
-- [ ] T025 Register `app.MapEmailEndpoints()` in `backend/ChildCare.Api/Program.cs` (depends on T024)
+- [X] T005 [P] Add `DigestUnsubscribedAt` (`DateTime?`) to `Contact` in `backend/ChildCare.Domain/Entities/Contact.cs` per data-model.md
+- [X] T006 [P] Add `BulkEmailDeliveryStatus` enum (`Sent`, `SkippedNoEmail`, `ProviderFailure`) in `backend/ChildCare.Domain/Enums/BulkEmailDeliveryStatus.cs` per data-model.md
+- [X] T007 [P] Add `BulkEmailSend` entity in `backend/ChildCare.Domain/Entities/BulkEmailSend.cs` per data-model.md
+- [X] T008 [P] Add `BulkEmailRecipient` entity in `backend/ChildCare.Domain/Entities/BulkEmailRecipient.cs` per data-model.md (depends on T006, T007)
+- [X] T009 Map `Contact.DigestUnsubscribedAt`, `BulkEmailSend`, `BulkEmailRecipient` (with an index on `BulkEmailRecipient.BulkEmailSendId`) in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` (depends on T005, T007, T008)
+- [X] T010 Add `ITenantDbContext` members (`Contacts` already exists; add `BulkEmailSends`, `BulkEmailRecipients`) in `backend/ChildCare.Application/Common/ITenantDbContext.cs` (depends on T009)
+- [X] T011 Add tenant migration `AddEmailCommunications` (Contact column + two new tables + index) in `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T009, T010)
+- [X] T012 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new column/tables (the recurring pattern every migration-adding feature since 003 has needed) in `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs` (depends on T011)
+- [X] T013 [P] Add `IEmailTemplateRenderer` port (locale + template-name + model → rendered HTML string) in `backend/ChildCare.Application/Common/IEmailTemplateRenderer.cs` per research.md R1
+- [X] T014 [P] Add shared HTML email layout partial (`_layout.scriban` — inline-CSS header/footer, matches design-system.md's warmth/calm tone within email-client constraints) in `backend/ChildCare.Infrastructure/Email/Templates/_layout.scriban`
+- [X] T015 `ScribanEmailTemplateRenderer` implementing `IEmailTemplateRenderer` (loads embedded `.scriban` resources, renders with the shared layout) in `backend/ChildCare.Infrastructure/Email/ScribanEmailTemplateRenderer.cs` (depends on T013, T014)
+- [X] T016 [P] Extend `IEmailSender` with new templated send methods (`SendBulkEmailAsync`, `SendDailyReportAsync`, `SendClosureNotificationEmailAsync`, `SendAnnouncementEmailAsync`) accepting a locale + template model, replacing the raw-string-literal signatures for these kinds only (existing auth-email methods — verify/reset/invitation — are unchanged, out of this feature's scope) in `backend/ChildCare.Application/Common/IEmailSender.cs`
+- [X] T017 Implement the new `IEmailSender` methods in `EmailService` using `IEmailTemplateRenderer`, including per-email-kind MIME attachment support (bulk email only) in `backend/ChildCare.Api/Services/EmailService.cs` (depends on T015, T016)
+- [X] T018 Correct the stale "feature 019 owns the templating/i18n rework" doc comments to reference this feature (020) in `backend/ChildCare.Application/Common/IEmailSender.cs` (spec.md Assumptions)
+- [X] T019 [P] Add `IBulkEmailAttachmentStorage` port in `backend/ChildCare.Application/Common/IBulkEmailAttachmentStorage.cs` per research.md R3 (mirrors `IHealthAttachmentStorage`'s shape)
+- [X] T020 `GcsBulkEmailAttachmentStorage` implementing `IBulkEmailAttachmentStorage` (signed upload/download URLs, `bulk-email-attachments/{bulkEmailSendId}/attachment.{ext}` object path, 15-minute TTL) in `backend/ChildCare.Infrastructure/Storage/GcsBulkEmailAttachmentStorage.cs` (depends on T019)
+- [X] T021 [P] Add `IUnsubscribeTokenService` port (issue/verify a `Contact.Id` + purpose-scoped token via `IDataProtector` — the token itself carries no tenant info; schema resolution is a separate step via the link's `org` slug, per research.md R5) in `backend/ChildCare.Application/Common/IUnsubscribeTokenService.cs` per research.md R5
+- [X] T022 Implement `DataProtectionUnsubscribeTokenService` in `backend/ChildCare.Infrastructure/Email/DataProtectionUnsubscribeTokenService.cs` (depends on T021)
+- [X] T023 Register `IDataProtection`, `IEmailTemplateRenderer`, `IBulkEmailAttachmentStorage`, `IUnsubscribeTokenService`, and the new `IEmailSender` implementation in DI in `backend/ChildCare.Api/Program.cs` (depends on T015, T017, T020, T022)
+- [X] T024 [P] Add `EmailEndpoints.cs` skeleton (route group, no handlers yet) in `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs`
+- [X] T025 Register `app.MapEmailEndpoints()` in `backend/ChildCare.Api/Program.cs` (depends on T024)
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -68,38 +68,38 @@ other contact receives the attachment intact.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T026 [P] [US1] Integration test: `POST /api/email/bulk-send` sends exactly one email per
+- [X] T026 [P] [US1] Integration test: `POST /api/email/bulk-send` sends exactly one email per
   household, not per child, for a contact linked to two children in scope (FR-002) in
   `backend/ChildCare.Api.Tests/Email/BulkEmailEndpointsTests.cs`
-- [ ] T027 [P] [US1] Integration test: a contact with no email on file is skipped, logged, and
+- [X] T027 [P] [US1] Integration test: a contact with no email on file is skipped, logged, and
   does not block the rest of the batch (FR-012) in
   `backend/ChildCare.Api.Tests/Email/BulkEmailEndpointsTests.cs`
-- [ ] T028 [P] [US1] Integration test: `GET /api/email/bulk-send/recipient-count` and
+- [X] T028 [P] [US1] Integration test: `GET /api/email/bulk-send/recipient-count` and
   `POST /api/email/bulk-send` both return zero for a location/group with no currently enrolled
   children, with no error (FR-016) in `backend/ChildCare.Api.Tests/Email/BulkEmailEndpointsTests.cs`
-- [ ] T029 [P] [US1] Integration test: `groupId` narrows recipients to only that group's
+- [X] T029 [P] [US1] Integration test: `groupId` narrows recipients to only that group's
   currently-assigned children's contacts (FR-001) in
   `backend/ChildCare.Api.Tests/Email/BulkEmailEndpointsTests.cs`
-- [ ] T030 [P] [US1] Integration test: `POST /api/email/attachments/upload-url` rejects a
+- [X] T030 [P] [US1] Integration test: `POST /api/email/attachments/upload-url` rejects a
   disallowed content type (422 `errors.email.invalid_content_type`) and an uploaded object over
   10MB is rejected at send time (`errors.email.attachment_too_large`, FR-017) in
   `backend/ChildCare.Api.Tests/Email/BulkEmailAttachmentTests.cs`
-- [ ] T031 [P] [US1] Integration test: a director from tenant A cannot resolve or send to tenant
+- [X] T031 [P] [US1] Integration test: a director from tenant A cannot resolve or send to tenant
   B's contacts via any of this story's endpoints (FR-013) in
   `backend/ChildCare.Api.Tests/Email/BulkEmailEndpointsTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T032 [P] [US1] `bulk-email-*.scriban` content template (director subject/body rendered
+- [X] T032 [P] [US1] `bulk-email-*.scriban` content template (director subject/body rendered
   into the shared layout, plain-text director copy escaped, not raw HTML — research.md R1 model
   note) in `backend/ChildCare.Infrastructure/Email/Templates/bulk-email.scriban`
-- [ ] T033 [US1] `GetBulkEmailRecipientCountQuery`/Handler (location/group scope → distinct
+- [X] T033 [US1] `GetBulkEmailRecipientCountQuery`/Handler (location/group scope → distinct
   household count, no `TenantUserId` gate per research.md R4) in
   `backend/ChildCare.Application/Email/GetBulkEmailRecipientCountQuery.cs`
-- [ ] T034 [US1] `CreateBulkEmailAttachmentUploadUrlCommand`/Handler (content-type validation,
+- [X] T034 [US1] `CreateBulkEmailAttachmentUploadUrlCommand`/Handler (content-type validation,
   issues signed upload URL via `IBulkEmailAttachmentStorage`) in
   `backend/ChildCare.Application/Email/CreateBulkEmailAttachmentUploadUrlCommand.cs` (depends on T020)
-- [ ] T035 [US1] `SendBulkEmailCommand`/Validator/Handler — creates `BulkEmailSend`, resolves
+- [X] T035 [US1] `SendBulkEmailCommand`/Validator/Handler — creates `BulkEmailSend`, resolves
   recipients (mirrors `SendAnnouncementCommandHandler`'s location/group child resolution, but
   filtered on `Contact.Email != null` with no `TenantUserId` gate per R4), verifies attachment
   size via the storage port, sends via `IEmailSender.SendBulkEmailAsync` per contact/locale,

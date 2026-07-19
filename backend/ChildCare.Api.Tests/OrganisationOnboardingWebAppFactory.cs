@@ -124,10 +124,18 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             {
                 var innerEmailService = new ChildCare.Api.Services.EmailService(
                     sp.GetRequiredService<IConfiguration>(),
-                    sp.GetRequiredService<ILogger<ChildCare.Api.Services.EmailService>>());
+                    sp.GetRequiredService<ILogger<ChildCare.Api.Services.EmailService>>(),
+                    sp.GetRequiredService<IEmailTemplateRenderer>());
                 return new FakeEmailSender(innerEmailService);
             });
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
+
+            // Feature 020 — ScribanEmailTemplateRenderer has no external dependency (embedded
+            // resources only), so the real implementation is used as-is, not faked.
+            services.AddSingleton<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
+
+            services.AddSingleton<FakeBulkEmailAttachmentStorage>();
+            services.AddSingleton<IBulkEmailAttachmentStorage>(sp => sp.GetRequiredService<FakeBulkEmailAttachmentStorage>());
 
             // Feature 009 — never call the real Expo push service in tests.
             services.AddSingleton<FakeExpoPushSender>();

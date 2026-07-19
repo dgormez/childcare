@@ -42,7 +42,8 @@
     "vaccineTypes": "Vaccine Catalog",
     "invoices": "Invoices",
     "fiscalAttestations": "Fiscal Attestations",
-    "organisationSettings": "Organisation"
+    "organisationSettings": "Organisation",
+    "communications": "Email"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -1082,5 +1083,31 @@
     "retry": "Retry",
     "genericError": "Couldn't save this entry. Please try again.",
     "reorderBoundaryError": "This entry is already at the edge of its category."
+  },
+  "communications": {
+    "title": "Email Communications",
+    "compose": "New email",
+    "locationLabel": "Location",
+    "groupLabel": "Group (optional)",
+    "groupAllOption": "Whole location",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Message",
+    "attachmentLabel": "Attachment (optional)",
+    "attachmentUpload": "Add attachment",
+    "attachmentUploading": "Uploading…",
+    "attachmentRemove": "Remove",
+    "attachmentTooLarge": "This file is larger than 10MB. Choose a smaller file.",
+    "invalidContentType": "Only PDF, JPEG, or PNG files are supported.",
+    "recipientCount": "{count, plural, =0 {No families in this scope} one {# family will receive this email} other {# families will receive this email}}",
+    "send": "Send email",
+    "sending": "Sending…",
+    "subjectRequired": "Enter a subject.",
+    "subjectTooLong": "Subject is too long.",
+    "bodyRequired": "Enter a message.",
+    "bodyTooLong": "Message is too long.",
+    "genericError": "Couldn't send this email. Please try again.",
+    "resultSent": "{count} sent",
+    "resultSkipped": "{count} skipped — no email on file",
+    "resultFailed": "{count} failed to send"
   }
 }

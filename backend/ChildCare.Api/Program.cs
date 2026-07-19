@@ -272,6 +272,13 @@ builder.Services.AddScoped<IMilestonePortfolioPdfGenerator, QuestPdfMilestonePor
 builder.Services.AddScoped<IAttendanceSummaryCsvWriter, ChildCare.Infrastructure.Reporting.CsvAttendanceSummaryWriter>();
 builder.Services.AddScoped<IAttendanceSummaryPdfGenerator, QuestPdfAttendanceSummaryGenerator>();
 
+// ── Email Communications (feature 020) ───────────────────────────────────────
+// AddDataProtection() already called above (feature 014a) — IUnsubscribeTokenService reuses
+// that same registration (research.md R5), not a second one.
+builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
+builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
+builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -753,6 +760,7 @@ app.MapPaymentEndpoints();
 app.MapFiscalAttestationEndpoints();
 app.MapDevelopmentalMilestoneEndpoints();
 app.MapReportingEndpoints();
+app.MapEmailEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.
