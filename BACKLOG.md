@@ -80,7 +80,7 @@
 | 039 | `039-tenant-onboarding-migration` | Productised KDV onboarding & supplier-switch migration: guided setup wizard, bulk import of children/parents/contracts/staff from CSV/Excel (as exported by D-Care/Bitcare/spreadsheets), dry-run validation + preview, shadow-run mode, and a full tenant data export (data portability / no lock-in) | 001, 006, 007 | 🔲 Not started |
 | 040 | `040-occupancy-placement-planning` | Forward occupancy & placement planning: available places per day/week/month/year per group, BKR-aware "can this child be placed on these days?" simulation for enquiries, and doorstroom (age-based group-transition) planning to avoid occupancy gaps | 007, 010, 012a | 🔲 Not started |
 | 041 | `041-bkr-2027-ruleset` | Date-versioned BKR rulesets: the lower Flemish kindratio becomes mandatory 1 Jan 2027 (transition period until 31 Dec 2026, early adoption allowed per location); includes new countable staffing profiles (AKT trainees, logistieke medewerkers under conditions) and an average-over-staffing-hours ratio report at location level (how Opgroeien assesses the linked subsidy) | 010, 012 | 🔲 Not started |
-| 017 | `017-memoq` | MeMoQ pedagogical quality self-evaluation (6 dimensions) — **blocked: no official Opgroeien MeMoQ instrument document (dimension/item/scale content) exists anywhere in this repo; a 2026-07-17 scheduled run correctly refused to fabricate a government self-evaluation instrument and paused rather than guess.** Moved to the end of the queue on 2026-07-18 pending either the source document or an explicit decision to scope this down to infrastructure-only (evaluation lifecycle, versioned instrument table) with real content deferred as a follow-up feature, mirroring how 013g/013h split the vaccine catalog. | 004, 005 | 🔲 Not started |
+| 017 | `017-memoq` | MeMoQ self-evaluation companion — **unblocked 2026-07-19**: the official instrument documents (handleiding + six groepsopvang dimension forms + Zorginspectie monitoring note + pedagogisch raamwerk) are now committed under `docs/memoq/`, and the prompt block below was fully rewritten from them with product-owner decisions (structured-but-all-optional cycles, web full-cycle + tablet observation capture, participant-private-until-shared ratings, child rows detached from child records, versioned seed content). One open question remains in the block (content-licensing permission from Opgroeien) with a defined fallback, so it does not re-block the feature. | 004, 005, 008 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -2078,66 +2078,129 @@ Out of scope:
 ### 017 — MeMoQ
 
 ```
-Build the MeMoQ pedagogical quality self-evaluation instrument —
-the mandatory Flemish quality framework for all licensed KDVs.
+Build a digital companion for the MeMoQ zelfevaluatie-instrument — the
+official Flemish pedagogical-quality self-evaluation for childcare.
 
-Background:
-MeMoQ (Meten + Monitoren + Kwaliteit) is the official Flemish
-self-evaluation tool developed by UGent, KU Leuven, and Opgroeien.
-Zorginspectie (the care inspectorate) uses it during inspection visits.
-Every KDV with an erkenning (operating licence) must complete it,
-including private (vrije prijs) KDVs. It is NOT IKT-specific.
+REWRITTEN 2026-07-19 against the official instrument documents (handleiding
+2016 + the six per-dimension invulbare forms, 2025 layout refresh, © Kind en
+Gezin/Opgroeien – UGent – KU Leuven; source markdown conversions in
+docs/memoq/). The earlier draft of this block guessed the dimension names
+and assumed a director-completed annual form — both wrong. Do not reuse it.
+
+What MeMoQ actually is (verified):
+- Six dimensions: 1 Welbevinden, 2 Betrokkenheid, 3 Emotionele
+  ondersteuning, 4 Educatieve ondersteuning, 5 Omgeving, 6 Gezinnen en
+  diversiteit. Two variants exist (groepsopvang / gezinsopvang) — build
+  the GROEPSOPVANG variant only (our segment); the data model must not
+  preclude adding the gezinsopvang variant later.
+- Per dimension, a quality circle of 3 steps:
+    Step 1 "Verken": dimensions 1–2 use per-child OBSERVATION ROUNDS
+      (metadata: filled-by + function, date, leefgroep, #children,
+      #caregivers, binnen/buiten, time from–to, activity type
+      [eetmoment/geleide activiteit/vrij spel/anders]; up to 10 child
+      rows, each with free-text notes + a welbevinden and/or
+      betrokkenheid score on the official 5-level signal scale).
+      Dimensions 3–6 use STATEMENT sets self-rated 1–4 ("doe ik momenteel
+      niet" → "echte kwaliteit van mij"), grouped in named themes (e.g.
+      dim 3: "positieve relaties", "sensitief-responsieve begeleiding").
+      All dimensions also have open reflection questions (free text).
+    Step 2 "Stel vast": one overall dimension score 1–10 + a written
+      "waarom", plus structured sterktes / aandachtspunten lists, plus an
+      external-factors note.
+    Step 3 "Onderneem actie": repeatable action blocks — goal ("We willen
+      ervoor zorgen dat…"), steps, evaluation date, achieved /
+      not-achieved (+ follow-up action if not).
+- Philosophy (the instrument's own words): FLEXIBLE. Any dimension first,
+  any subset of statements/questions, own pace (~3 months/dimension is
+  their rough guide), individual or team, multi-year planning recommended.
+  It is a SELF-evaluation: nothing is submitted to Opgroeien. It is
+  explicitly NOT a functioneringsgesprek. Zorginspectie uses a separate,
+  simpler monitoring instrument (5 dimensions, 1–4, unannounced ≥2h
+  visit) — out of scope for software, but self-evaluation prepares for it
+  and inspection findings are a valid trigger to start a cycle.
+
+Product decisions (confirmed with product owner 2026-07-19):
+- Depth: STRUCTURED BUT ALL OPTIONAL. Digital forms mirror the 3-step
+  cycle, but no enforced sequence, no required completeness, any
+  dimension in any order, everything skippable, free text everywhere.
+  Do not turn this into a compliance wizard.
+- Surfaces: director web hosts the full cycle (create cycle, statements,
+  reflections, findings, action plans, multi-year planning overview);
+  the caregiver TABLET gets one lightweight capture screen for
+  observation rounds (dims 1–2) since those happen in the room.
+- Privacy: statement ratings and personal reflections are PRIVATE TO THE
+  PARTICIPANT until they explicitly share them into the team cycle.
+  Directors see shared content and cycle-level aggregates only. This
+  mirrors the manual's safe-atmosphere principle.
+- Child rows in observation rounds are DETACHED from child records:
+  label "Kind 1..10" + optional free-text label, NO FK to children.
+  Observation scores must never appear on a child profile, in the parent
+  app, or in any per-child export.
 
 What to build:
-- The MeMoQ instrument has 6 fixed dimensions:
-    1. Child development and wellbeing
-    2. Caregiver-child interactions
-    3. Family involvement
-    4. Diversity and inclusion
-    5. Team quality
-    6. Organisational policy
-  Each dimension has dozens of items with a scored scale (e.g. 1–4 or
-  yes/partially/no). The exact items and scale must match the official
-  Opgroeien instrument — do not invent them.
-
-- memoq_evaluations table:
-    id, location_id, evaluator_id (director), tax_year INT,
-    status TEXT ('draft'|'completed'), completed_at,
-    created_at, updated_at
-
-- memoq_responses table:
-    id, evaluation_id, dimension_code TEXT, item_code TEXT,
-    score INT (or TEXT for qualitative scales), notes TEXT,
-    created_at
-
-- Digital self-evaluation form in web admin: director completes the
-  instrument dimension by dimension.
-- Completed evaluations are stored per year and retrievable before an
-  inspection visit.
-- Progress tracking: which dimensions have been completed vs. pending.
+- memoq_cycles: per location (and optionally per leefgroep), dimension,
+  variant ('groepsopvang'), status (open/closed — closing is optional
+  bookkeeping, not a lock), started/closed dates, freeform title/notes.
+  Multiple cycles per dimension over the years = the multi-year planning
+  view (a simple timeline of past and planned cycles per dimension; a
+  planned cycle is just a cycle with a future start and nothing in it).
+- Observation rounds (dims 1–2): the round form + detached child rows as
+  described above; capture on tablet or web; rounds attach to a cycle.
+- Statement responses (dims 3–6): per participant, per statement, 1–4 +
+  optional note; participant-private until shared (share = snapshot into
+  the cycle, further edits stay private again until re-shared).
+- Reflection answers: free text per official question, same privacy model.
+- Findings (step 2): per cycle: 1–10 score, waarom, sterktes[],
+  aandachtspunten[], external factors — team-level, entered by anyone in
+  the cycle, visible to the cycle.
+- Action plans (step 3): repeatable blocks with goal/steps/evaluation
+  date/outcome; surfaced in a simple "open MeMoQ actions" list for the
+  location so they don't die in a closed cycle.
+- Instrument content as SEED DATA, versioned: dimensions, themes,
+  statements, reflection questions, observation-scale descriptions are
+  reference data (public schema, like the vaccine catalog 013g), keyed by
+  instrument version ("2016/2025-layout"). Cycles reference the version
+  they were run against; an instrument update creates a new version and
+  never rewrites historical cycles.
+- Print/export: a cycle (with its shared content only) exports to a clean
+  PDF (QuestPDF) — the thing a director hands to a pedagogisch
+  ondersteuner or shows when Zorginspectie asks how quality work is done.
 
 Key constraints:
-- The item structure (dimension codes, item codes, scale values) must match
-  the official Opgroeien MeMoQ instrument exactly. This is a regulatory
-  document — do not approximate.
-- Evaluations are per location per year (a multi-location organisation
-  completes one evaluation per location).
-- All user-facing strings use i18n keys (NL/FR/EN).
-- A completed evaluation cannot be edited — start a new one for the next year.
+- Statement/question texts must match the official instrument exactly
+  (source: docs/memoq/ conversions; verify against the PDFs) — in NL.
+  FR/EN: UI chrome is translated per i18n rules, but the official
+  instrument content itself exists only in Dutch — display NL content
+  with a note, do not machine-translate the official texts (they are the
+  calibrated instrument). This is a deliberate, documented exception to
+  the "all user-facing text via i18n keys" rule, scoped to instrument
+  content only.
+- Tablet observation capture must work offline (rounds happen on the
+  floor) — reuse the existing offline-queue infrastructure (008).
+- Personal (unshared) responses are excluded from director exports and
+  from 038's team-visible surfaces; deleting a participant's unshared
+  drafts on their departure is fine (they were never team data).
+- No submission to any government system — nothing in 033/019/034 touches
+  this feature.
 
-Edge cases:
-- A director starts an evaluation, saves progress, and returns to complete
-  it later. Draft state must persist.
-- Opgroeien updates the MeMoQ instrument (new items, changed scale).
-  The data model must support versioning of the instrument without
-  invalidating historical responses.
-- An inspection visit is announced. The director needs to quickly find
-  last year's completed evaluation to print or share.
+Open questions (do NOT invent — resolve before /speckit-plan):
+- Content licensing: embedding the full statement sets verbatim goes
+  beyond "citeren mits bronvermelding" — ask Opgroeien
+  (klantenbeheerder or software-ontwikkeling@) for permission to
+  reproduce the instrument content in-app, with attribution. If refused:
+  fall back to cycle/step scaffolding + user-entered content with links
+  to the official PDFs (the feature still works — the structure is the
+  value; decide the fallback UX at plan time, not now).
+- Whether the "waarmee begin ik het best?" quick-start test (handleiding
+  p.15–16) is worth digitising in v1 or linked as PDF. Default: link.
 
 Out of scope:
-- The scientific measurement instrument used by researchers (different tool).
-- The monitoring instrument used by Zorginspectie themselves (they use their
-  own system — we only support the KDV's self-evaluation side).
+- The gezinsopvang variant (data model ready, content not seeded).
+- The scientific measurement instrument and Zorginspectie's monitoring
+  instrument (theirs, not ours).
+- Machine translation of official instrument content.
+- Any per-child longitudinal analysis of observation scores (deliberate:
+  rows are detached; see product decisions).
 ```
 
 ---

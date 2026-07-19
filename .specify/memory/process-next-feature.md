@@ -639,3 +639,18 @@ use the static code review instead.
   just "test suite") and step 12 to require `gh pr checks --watch` as a blocking foreground call,
   rather than patching this one spot narrowly again.
 - 2026-07-17: cron interval changed from 3h to 4h at the user's request.
+- 2026-07-19: feature 017 (MeMoQ) UNBLOCKED — the 2026-07-17 run's pause (no official
+  instrument content in the repo, correctly refused to fabricate) is resolved. The product owner
+  supplied the full official document set; the instrument sources now live in `docs/memoq/`
+  (handleiding, six groepsopvang dimension forms, Zorginspectie monitoring note, pedagogisch
+  raamwerk — markdown conversions; original PDFs remain with the product owner). BACKLOG's 017
+  prompt block was fully rewritten from the verified instrument (the old block's dimension names
+  and director-annual-form model were wrong — do not resurrect them from git history) and four
+  product decisions were confirmed via AskUserQuestion: structured-but-all-optional (no
+  compliance wizard), director-web full cycle + caregiver-tablet observation capture,
+  participant-private-until-shared statement ratings, observation child-rows detached from child
+  records. ONE open question remains in the block — content-licensing permission from Opgroeien
+  to embed the statement sets verbatim — with a defined fallback (scaffolding + user-entered
+  content) so it is a clarify-phase item, not a blocker; per the standing rule it goes to the
+  product owner/Opgroeien, not guessed. Note for the run that picks 017 up: read `docs/memoq/`
+  before /speckit-specify, same pattern as docs/integrations/opgroeien/ for 033–041.

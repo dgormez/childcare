@@ -17,5 +17,21 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: childcare-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # web UI + JSON API
+      - "1025:1025" # SMTP
+    volumes:
+      - ./docker/mailpit:/certs:ro
+    environment:
+      # Cert enables STARTTLS (docker/mailpit/generate-cert.sh) — EmailService.cs always
+      # requests StartTls for any port other than 465, and Mailpit only advertises STARTTLS
+      # capability when it has a cert configured.
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+
 volumes:
   childcare-pgdata:

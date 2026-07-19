@@ -9,7 +9,7 @@ namespace ChildCare.Api.Services;
 
 /// <summary>Implements IEmailSender directly (research.md R6) — no adapter needed, its two
 /// public methods already match the port's shape.</summary>
-public class EmailService(IConfiguration config, ILogger<EmailService> logger, IEmailTemplateRenderer templateRenderer) : IEmailSender
+public class EmailService(IConfiguration config, ILogger<EmailService> logger, IEmailTemplateRenderer templateRenderer, IHostEnvironment environment) : IEmailSender
 {
     public async Task SendEmailVerificationAsync(string toEmail, string verifyLink)
     {
@@ -304,6 +304,12 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
     private async Task SendAsync(MimeMessage message)
     {
         using var smtp = new SmtpClient();
+
+        // Dev-only: a local Mailpit container's cert is self-signed (docker/mailpit/generate-cert.sh),
+        // so the default chain-of-trust validation would otherwise reject it. Never applies outside
+        // Development — a real deployment always validates against a trusted CA.
+        if (environment.IsDevelopment())
+            smtp.ServerCertificateValidationCallback = (_, _, _, _) => true;
 
         var host         = config["Email:SmtpHost"]!;
         var port         = int.Parse(config["Email:SmtpPort"] ?? "587");

@@ -38,4 +38,9 @@ backend/**/*.sql
 infra/**/.terraform/
 infra/**/*.tfstate
 infra/**/*.tfstate.backup
+
 infra/**/terraform.tfvars
+
+# Mailpit — generated throwaway dev TLS cert (docker/mailpit/generate-cert.sh)
+docker/mailpit/cert.pem
+docker/mailpit/key.pem

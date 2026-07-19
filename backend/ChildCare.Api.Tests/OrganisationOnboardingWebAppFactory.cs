@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -125,7 +126,8 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
                 var innerEmailService = new ChildCare.Api.Services.EmailService(
                     sp.GetRequiredService<IConfiguration>(),
                     sp.GetRequiredService<ILogger<ChildCare.Api.Services.EmailService>>(),
-                    sp.GetRequiredService<IEmailTemplateRenderer>());
+                    sp.GetRequiredService<IEmailTemplateRenderer>(),
+                    sp.GetRequiredService<IHostEnvironment>());
                 return new FakeEmailSender(innerEmailService);
             });
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
