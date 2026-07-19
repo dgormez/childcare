@@ -105,26 +105,22 @@ raw error (FR-018).
 
 ## `POST /api/email/unsubscribe`
 
-**Auth**: none (public). Body: `{ "token": "...", "org": "..." }`.
+**Auth**: none (public). Body: `application/x-www-form-urlencoded` — `token`, `org` (a plain
+HTML `<form>` POST from the GET page above, not a JSON API — there is no other consumer of this
+action besides a parent's browser, and a form-POST-redirect-GET round trip is the correct shape
+for a no-JS-required confirm action per spec.md's UX Requirements).
 
 Resolves the tenant schema from `org`, then toggles `Contact.DigestUnsubscribedAt` (sets it if
 currently subscribed) for the token's contact within that schema. Idempotent (FR-020) —
-re-posting an already-applied token succeeds silently, no error.
-
-```json
-{ "unsubscribed": true }
-```
+re-posting an already-applied token succeeds silently, no error. Redirects (302) back to
+`GET /api/email/unsubscribe?token=...&org=...`, which then renders the updated state.
 
 ## `POST /api/email/resubscribe`
 
-**Auth**: none (public). Body: `{ "token": "...", "org": "..." }`. Same
-token+org shape/verification as unsubscribe (R5 — the token is purpose-scoped to
-"digest-unsubscribe" toggling generally, not single-direction). Clears
-`Contact.DigestUnsubscribedAt`. Idempotent.
-
-```json
-{ "unsubscribed": false }
-```
+**Auth**: none (public). Same `application/x-www-form-urlencoded` `token`/`org` shape as
+unsubscribe (R5 — the token is purpose-scoped to "digest-unsubscribe" toggling generally, not
+single-direction). Clears `Contact.DigestUnsubscribedAt`. Idempotent. Same 302-redirect-back
+shape as unsubscribe.
 
 ## Internal (no HTTP surface): `send-daily-reports` CLI subcommand
 

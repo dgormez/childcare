@@ -105,7 +105,7 @@ other contact receives the attachment intact.
   size via the storage port, sends via `IEmailSender.SendBulkEmailAsync` per contact/locale,
   writes one `BulkEmailRecipient` per outcome, tolerates partial failure (FR-012) in
   `backend/ChildCare.Application/Email/SendBulkEmailCommand.cs` (depends on T032, T033, T034)
-- [ ] T036 [US1] Implement `POST /api/email/attachments/upload-url`,
+- [X] T036 [US1] Implement `POST /api/email/attachments/upload-url`,
   `POST /api/email/bulk-send`, `GET /api/email/bulk-send/recipient-count` (`DirectorOnly`) in
   `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs` (depends on T033, T034, T035)
 - [X] T037 [US1] Add `web/app/(app)/communications/page.tsx` — location/group selector, subject/
@@ -163,15 +163,15 @@ guardian and every other household still receive theirs.
 
 ### Implementation for User Story 2
 
-- [ ] T046 [P] [US2] `daily-report.scriban` content template (naps/bottles/diaper/mood/
+- [X] T046 [P] [US2] `daily-report.scriban` content template (naps/bottles/diaper/mood/
   activities from `DailySummaryResponse`, "no updates logged today" branch, unsubscribe link
   footer built with `org` slug + token per T046a) in
   `backend/ChildCare.Infrastructure/Email/Templates/daily-report.scriban`
-- [ ] T046a [US2] Add `BuildUnsubscribeUrl`/`BuildResubscribeUrl` to `AuthLinkBuilder`-style link
+- [X] T046a [US2] Add `BuildUnsubscribeUrl`/`BuildResubscribeUrl` to `AuthLinkBuilder`-style link
   builder (reuses the exact `?token=...&org={organisationSlug}` query-string shape
   `AuthLinkBuilder.BuildResetUrl` already uses, per research.md R5 — found and corrected during
   `/speckit-analyze`) in `backend/ChildCare.Application/Email/EmailLinkBuilder.cs` (depends on T021)
-- [ ] T047 [US2] `UnsubscribeDigestCommand`/`ResubscribeDigestCommand`/Handlers — each takes
+- [X] T047 [US2] `UnsubscribeDigestCommand`/`ResubscribeDigestCommand`/Handlers — each takes
   `(OrganisationSlug, Token)`, resolves the tenant schema via `OrganisationSlugResolver` →
   `ITenantDbContextResolver.ForSchema` **first** (mirrors `ResetPasswordCommandHandler`'s exact
   shape — this is not a same-request `ITenantDbContext` injection, since these are public routes
@@ -179,7 +179,7 @@ guardian and every other household still receive theirs.
   `IUnsubscribeTokenService` and toggles `Contact.DigestUnsubscribedAt` within that schema,
   idempotently, in `backend/ChildCare.Application/Email/UnsubscribeDigestCommand.cs` and
   `backend/ChildCare.Application/Email/ResubscribeDigestCommand.cs` (depends on T022, T046a)
-- [ ] T048 [US2] Implement `GET /api/email/unsubscribe` (server-rendered minimal HTML page, no
+- [X] T048 [US2] Implement `GET /api/email/unsubscribe` (server-rendered minimal HTML page, no
   auth, dispatches a query built the same way as T047's commands to read current subscription
   state before rendering), `POST /api/email/unsubscribe`, `POST /api/email/resubscribe` — every
   handler goes through MediatR per constitution Principle III (thin endpoints; schema resolution
@@ -262,10 +262,10 @@ every contact with an address on file.
 
 ### Implementation for User Story 4
 
-- [ ] T060 [P] [US4] `closure-notification.scriban` content template (published/cancelled
+- [X] T060 [P] [US4] `closure-notification.scriban` content template (published/cancelled
   variants, reusing `ClosureNotificationService.Labels`' existing NL/FR/EN copy as the template
   model) in `backend/ChildCare.Infrastructure/Email/Templates/closure-notification.scriban`
-- [ ] T061 [P] [US4] `announcement.scriban` content template (reusing
+- [X] T061 [P] [US4] `announcement.scriban` content template (reusing
   `SendAnnouncementCommandHandler`'s subject/body verbatim) in
   `backend/ChildCare.Infrastructure/Email/Templates/announcement.scriban`
 - [ ] T062 [US4] Extend `ClosureNotificationService.NotifyAsync` to additionally call

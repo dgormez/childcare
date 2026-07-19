@@ -187,6 +187,7 @@ builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>
 // ── Group activities (feature 009b) ─────────────────────────────────────────
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
+builder.Services.AddScoped<ChildCare.Application.ChildEvents.DailySummaryCalculator>();
 
 // ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
 // Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a
@@ -278,6 +279,7 @@ builder.Services.AddScoped<IAttendanceSummaryPdfGenerator, QuestPdfAttendanceSum
 builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
 builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
 builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
+builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkResolver>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");

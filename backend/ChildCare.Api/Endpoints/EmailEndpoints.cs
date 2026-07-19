@@ -1,4 +1,6 @@
+using System.Net;
 using System.Security.Claims;
+using ChildCare.Api.Services;
 using ChildCare.Application.Email;
 using ChildCare.Contracts.Requests;
 using MediatR;
@@ -52,6 +54,69 @@ public static class EmailEndpoints
                 })
                 : MapSendFailure(result.Failure!.Value);
         });
+
+        var publicGroup = app.MapGroup("/api/email")
+            .WithTags("Email")
+            .AllowAnonymous();
+
+        publicGroup.MapGet("/unsubscribe", async (string token, string org, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetDigestSubscriptionStateQuery(org, token));
+            return Results.Content(RenderUnsubscribePage(result, token, org), "text/html");
+        });
+
+        publicGroup.MapPost("/unsubscribe", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            var token = form["token"].ToString();
+            var org = form["org"].ToString();
+            await mediator.Send(new UnsubscribeDigestCommand(org, token));
+            return Results.Redirect($"/api/email/unsubscribe?token={Uri.EscapeDataString(token)}&org={Uri.EscapeDataString(org)}");
+        });
+
+        publicGroup.MapPost("/resubscribe", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            var token = form["token"].ToString();
+            var org = form["org"].ToString();
+            await mediator.Send(new ResubscribeDigestCommand(org, token));
+            return Results.Redirect($"/api/email/unsubscribe?token={Uri.EscapeDataString(token)}&org={Uri.EscapeDataString(org)}");
+        });
+    }
+
+    private static string RenderUnsubscribePage(DigestSubscriptionResult result, string token, string organisationSlug)
+    {
+        var encodedToken = WebUtility.HtmlEncode(token);
+        var encodedOrg = WebUtility.HtmlEncode(organisationSlug);
+
+        if (!result.Valid)
+        {
+            var invalidLabels = UnsubscribePageLabelsProvider.For("nl");
+            return $"""
+                <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+                <body style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:0 16px;color:#1F2937">
+                <p>{WebUtility.HtmlEncode(invalidLabels.InvalidLinkText)}</p>
+                </body></html>
+                """;
+        }
+
+        var labels = UnsubscribePageLabelsProvider.For(result.Locale);
+        var (statusText, action, buttonText) = result.Unsubscribed
+            ? (labels.UnsubscribedText, "resubscribe", labels.ResubscribeButton)
+            : (labels.SubscribedText, "unsubscribe", labels.UnsubscribeButton);
+
+        return $"""
+            <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+            <body style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:0 16px;color:#1F2937">
+            <h1 style="font-size:18px">{WebUtility.HtmlEncode(labels.Title)}</h1>
+            <p>{WebUtility.HtmlEncode(statusText)}</p>
+            <form method="post" action="/api/email/{action}">
+              <input type="hidden" name="token" value="{encodedToken}" />
+              <input type="hidden" name="org" value="{encodedOrg}" />
+              <button type="submit" style="background:#4F7CAC;color:#fff;padding:10px 20px;border:none;border-radius:8px;font-size:15px;cursor:pointer">{WebUtility.HtmlEncode(buttonText)}</button>
+            </form>
+            </body></html>
+            """;
     }
 
     private static Guid TenantUserIdOf(HttpContext ctx) => Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
