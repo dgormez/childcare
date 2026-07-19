@@ -108,11 +108,11 @@ other contact receives the attachment intact.
 - [ ] T036 [US1] Implement `POST /api/email/attachments/upload-url`,
   `POST /api/email/bulk-send`, `GET /api/email/bulk-send/recipient-count` (`DirectorOnly`) in
   `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs` (depends on T033, T034, T035)
-- [ ] T037 [US1] Add `web/app/(app)/communications/page.tsx` — location/group selector, subject/
+- [X] T037 [US1] Add `web/app/(app)/communications/page.tsx` — location/group selector, subject/
   body fields, attachment upload with progress, zero-recipient empty state (queries
   recipient-count before enabling send), delivery-outcome summary after send; every control
   keyboard-reachable with a visible focus ring per platform-rules.md (FR-019, FR-016)
-- [ ] T038 [P] [US1] Add `web/app/(app)/communications/` API client bindings (generated via
+- [X] T038 [P] [US1] Add `web/app/(app)/communications/` API client bindings (generated via
   `openapi-typescript`/`openapi-fetch` per constitution Technology Stack Constraints) — regenerate
   the OpenAPI client after T036 ships
 
