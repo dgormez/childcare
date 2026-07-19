@@ -101,6 +101,31 @@ public class DailyReportResendEndpointTests(OrganisationOnboardingWebAppFactory 
         return match.Groups[1].Value;
     }
 
+    // ── FR-012: a bad/bounced address doesn't block the rest of this child's contacts ──
+
+    [Fact]
+    public async Task Resend_OneContactProviderFailure_OthersStillSent()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"ResendFail Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var okContact = await CreateContactWithEmailAsync(client, org.AccessToken, firstName: "Ok");
+        await LinkContactAsync(client, org.AccessToken, child.Id, okContact.Id, relationship: "Mother");
+        var failContact = await CreateContactWithEmailAsync(client, org.AccessToken, firstName: "Fail");
+        await LinkContactAsync(client, org.AccessToken, child.Id, failContact.Id, relationship: "Father");
+
+        var fakeEmail = factory.Services.GetRequiredService<FakeEmailSender>();
+        fakeEmail.ThrowOnDailyReportTo.Add(failContact.Email!);
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/email/daily-report/{child.Id}/resend", org.AccessToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode); // the failure doesn't fail the whole request
+        var result = (await response.Content.ReadFromJsonAsync<JsonResendResult>())!;
+        Assert.Equal(1, result.SentCount);
+        Assert.Contains(fakeEmail.DailyReportCalls, c => c.ToEmail == okContact.Email);
+        Assert.Contains(fakeEmail.DailyReportCalls, c => c.ToEmail == failContact.Email); // attempted...
+    }
+
     [Fact]
     public async Task Resend_ChildIdOutsideCallerTenant_Returns404()
     {

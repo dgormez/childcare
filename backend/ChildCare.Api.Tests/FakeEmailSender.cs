@@ -72,6 +72,11 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
         return inner.SendBulkEmailAsync(toEmail, locale, subject, body, attachment, cancellationToken);
     }
 
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (DailyReportDigestService's/ResendDailyReportEmailCommandHandler's partial-failure
+    /// handling, FR-012).</summary>
+    public HashSet<string> ThrowOnDailyReportTo { get; } = [];
+
     public List<(string ToEmail, string Locale, string ChildName, DailySummaryResponse Summary, string? UnsubscribeUrl)> DailyReportCalls { get; } = [];
 
     public Task SendDailyReportAsync(
@@ -79,6 +84,9 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
         CancellationToken cancellationToken = default)
     {
         DailyReportCalls.Add((toEmail, locale, childName, summary, unsubscribeUrl));
+        if (ThrowOnDailyReportTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
         return inner.SendDailyReportAsync(toEmail, locale, childName, summary, unsubscribeUrl, cancellationToken);
     }
 

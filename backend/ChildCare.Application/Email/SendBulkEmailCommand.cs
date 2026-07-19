@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
 using ChildCare.Domain.Enums;
@@ -114,28 +115,50 @@ public class SendBulkEmailCommandHandler(
         var skippedCount = 0;
         var failedCount = 0;
 
+        var toSend = new List<Contact>();
         foreach (var contact in contacts)
         {
-            if (contact.Email is null)
+            if (contact.Email is not null)
             {
-                db.BulkEmailRecipients.Add(new BulkEmailRecipient { BulkEmailSendId = bulkEmailSend.Id, ContactId = contact.Id, Status = BulkEmailDeliveryStatus.SkippedNoEmail });
-                skippedCount++;
-                logger.LogInformation("Bulk email {BulkEmailSendId}: contact {ContactId} has no email on file, skipped.", bulkEmailSend.Id, contact.Id);
+                toSend.Add(contact);
                 continue;
             }
 
+            db.BulkEmailRecipients.Add(new BulkEmailRecipient { BulkEmailSendId = bulkEmailSend.Id, ContactId = contact.Id, Status = BulkEmailDeliveryStatus.SkippedNoEmail });
+            skippedCount++;
+            logger.LogInformation("Bulk email {BulkEmailSendId}: contact {ContactId} has no email on file, skipped.", bulkEmailSend.Id, contact.Id);
+        }
+
+        // FR-015: bounded-parallel dispatch rather than one SMTP round-trip at a time, so a
+        // 100+-recipient scope doesn't block this request for the full serial send duration
+        // (research.md — no new job-queue dependency for this). DbContext itself isn't
+        // thread-safe, so outcomes are collected here and written to it afterward, single-
+        // threaded, not from inside the parallel closure.
+        var outcomes = new ConcurrentBag<(Contact Contact, bool Success, string? ErrorType)>();
+        await BoundedConcurrency.ForEachAsync(toSend, async contact =>
+        {
             try
             {
-                await emailSender.SendBulkEmailAsync(contact.Email, contact.Locale, request.Subject, request.Body, attachment, cancellationToken);
-                db.BulkEmailRecipients.Add(new BulkEmailRecipient { BulkEmailSendId = bulkEmailSend.Id, ContactId = contact.Id, Status = BulkEmailDeliveryStatus.Sent });
-                sentCount++;
+                await emailSender.SendBulkEmailAsync(contact.Email!, contact.Locale, request.Subject, request.Body, attachment, cancellationToken);
+                outcomes.Add((contact, true, null));
             }
             catch (Exception ex)
             {
-                db.BulkEmailRecipients.Add(new BulkEmailRecipient { BulkEmailSendId = bulkEmailSend.Id, ContactId = contact.Id, Status = BulkEmailDeliveryStatus.ProviderFailure, Error = ex.GetType().Name });
-                failedCount++;
+                outcomes.Add((contact, false, ex.GetType().Name));
                 logger.LogWarning(ex, "Bulk email {BulkEmailSendId}: dispatch failed for contact {ContactId}.", bulkEmailSend.Id, contact.Id);
             }
+        }, cancellationToken: cancellationToken);
+
+        foreach (var (contact, success, errorType) in outcomes)
+        {
+            db.BulkEmailRecipients.Add(new BulkEmailRecipient
+            {
+                BulkEmailSendId = bulkEmailSend.Id,
+                ContactId = contact.Id,
+                Status = success ? BulkEmailDeliveryStatus.Sent : BulkEmailDeliveryStatus.ProviderFailure,
+                Error = errorType,
+            });
+            if (success) sentCount++; else failedCount++;
         }
 
         await db.SaveChangesAsync(cancellationToken);

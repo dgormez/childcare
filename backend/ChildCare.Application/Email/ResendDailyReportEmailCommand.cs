@@ -2,6 +2,7 @@ using ChildCare.Application.ChildEvents;
 using ChildCare.Application.Common;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ChildCare.Application.Email;
 
@@ -32,7 +33,8 @@ public class ResendDailyReportEmailCommandHandler(
     IEmailSender emailSender,
     IUnsubscribeTokenService tokenService,
     ICurrentTenantService currentTenant,
-    Microsoft.Extensions.Configuration.IConfiguration config)
+    Microsoft.Extensions.Configuration.IConfiguration config,
+    ILogger<ResendDailyReportEmailCommandHandler> logger)
     : IRequestHandler<ResendDailyReportEmailCommand, ResendDailyReportEmailResult>
 {
     public async Task<ResendDailyReportEmailResult> Handle(ResendDailyReportEmailCommand request, CancellationToken cancellationToken)
@@ -58,8 +60,17 @@ public class ResendDailyReportEmailCommandHandler(
             var token = tokenService.CreateToken(contact.Id);
             var unsubscribeUrl = EmailLinkBuilder.BuildUnsubscribeUrl(config, token, currentTenant.TenantSlug);
 
-            await emailSender.SendDailyReportAsync(contact.Email, contact.Locale, child.FirstName, summary, unsubscribeUrl, cancellationToken);
-            sentCount++;
+            // FR-012: a bad/bounced address doesn't block the rest of this child's contacts —
+            // matches every other send path in this feature (bulk/digest/closure/announcement).
+            try
+            {
+                await emailSender.SendDailyReportAsync(contact.Email, contact.Locale, child.FirstName, summary, unsubscribeUrl, cancellationToken);
+                sentCount++;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Daily report resend dispatch failed for child {ChildId}, contact {ContactId}.", request.ChildId, contact.Id);
+            }
         }
 
         return ResendDailyReportEmailResult.Ok(sentCount);

@@ -119,6 +119,36 @@ public class SendDailyReportsCommandTests(OrganisationOnboardingWebAppFactory fa
         Assert.DoesNotContain(fakeEmail.DailyReportCalls, c => c.ToEmail == unsubscribedContact.Email);
     }
 
+    // ── FR-012/FR-015: bounded-parallel dispatch still tolerates a per-recipient failure ────
+
+    [Fact]
+    public async Task SendDailyReports_OneRecipientProviderFailure_OthersStillSent()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"DigestFail Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+
+        var childOk = await CreateChildAsync(client, org.AccessToken, "OkChild");
+        await AssignChildToGroupAsync(client, org.AccessToken, childOk.Id, group.Id, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-60)));
+        var okContact = await CreateContactWithEmailAsync(client, org.AccessToken, firstName: "Ok");
+        await LinkContactAsync(client, org.AccessToken, childOk.Id, okContact.Id);
+
+        var childFail = await CreateChildAsync(client, org.AccessToken, "FailChild");
+        await AssignChildToGroupAsync(client, org.AccessToken, childFail.Id, group.Id, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-60)));
+        var failContact = await CreateContactWithEmailAsync(client, org.AccessToken, firstName: "Fail");
+        await LinkContactAsync(client, org.AccessToken, childFail.Id, failContact.Id);
+
+        var fakeEmail = factory.Services.GetRequiredService<FakeEmailSender>();
+        fakeEmail.ThrowOnDailyReportTo.Add(failContact.Email!);
+
+        var exitCode = await ChildCare.Api.Cli.SendDailyReportsCommand.RunAsync(factory.Services);
+
+        Assert.Equal(0, exitCode); // one recipient's failure doesn't fail the tenant/job run
+        Assert.Contains(fakeEmail.DailyReportCalls, c => c.ToEmail == okContact.Email);
+        Assert.Contains(fakeEmail.DailyReportCalls, c => c.ToEmail == failContact.Email); // attempted...
+    }
+
     // ── Per-tenant failure isolation (matches SendPaymentRemindersCommand's existing test) ──
 
     [Fact]
