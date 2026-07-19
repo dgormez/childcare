@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -149,7 +150,10 @@ export function LinkContactDialog({ childId, open, onOpenChange, onLinked }: Lin
 
               {matchedContact && (
                 <div className="rounded-lg bg-warning px-4 py-3 text-sm text-warning-fg dark:bg-warning-dark">
-                  <p>{t("matchFound")} {matchedContact.firstName} {matchedContact.lastName}</p>
+                  <p className="flex items-center gap-2">
+                    <Info className="h-4 w-4 shrink-0" strokeWidth={2} />
+                    {t("matchFound")} {matchedContact.firstName} {matchedContact.lastName}
+                  </p>
                   <Button variant="secondary" size="sm" className="mt-2" onClick={() => setUseExisting(true)}>
                     {t("linkExisting")}
                   </Button>

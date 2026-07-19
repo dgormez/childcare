@@ -51,7 +51,7 @@ public class ParentPreviousChildrenTests(OrganisationOnboardingWebAppFactory fac
         var entry = Assert.Single(previousChildren);
         Assert.Equal(child.Id, entry.Id);
         Assert.Equal(new DateOnly(2026, 1, 1), entry.EnrollmentStart);
-        Assert.NotNull(entry.EnrollmentEnd);
+        Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), entry.EnrollmentEnd); // deactivated just now
     }
 
     [Fact]
