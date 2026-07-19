@@ -167,6 +167,19 @@ export interface DayReservationResponse {
   updatedAt:         string | null;
 }
 
+// Feature 030 US1 — contracts/family-siblings-api.md.
+export interface BulkDayReservationResultItem {
+  childId:      string;
+  childName:    string;
+  succeeded:    boolean;
+  reservation:  DayReservationResponse | null;
+  errorKey:     string | null;
+}
+
+export interface BulkDayReservationResponse {
+  results: BulkDayReservationResultItem[];
+}
+
 // ── Reservation settings (feature 013f) ──────────────────────────────────────────
 export type ReservationRequestMode = "disabled" | "informational" | "approval";
 

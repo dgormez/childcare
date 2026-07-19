@@ -4806,6 +4806,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/day-reservations/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["BulkDayReservationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/day-reservations/{id}/approve": {
         parameters: {
             query?: never;
@@ -7648,6 +7685,15 @@ export interface components {
             childId: string;
             /** Format: date */
             date: string;
+        };
+        BulkDayReservationRequest: {
+            childIds: string[];
+            type: string;
+            /** Format: date */
+            requestedDate: string;
+            /** Format: date */
+            exchangeForDate: null | string;
+            reason: null | string;
         };
         BulkEmailAttachmentUploadUrlRequest: {
             contentType: string;

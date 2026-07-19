@@ -105,12 +105,12 @@ settings.
 - [X] T021 [US1] Add `POST /api/parent/day-reservations/bulk` route per
   contracts/family-siblings-api.md in
   `backend/ChildCare.Api/Endpoints/DayReservationEndpoints.cs` (depends on T019)
-- [ ] T022 [P] [US1] Add "apply to all my children" toggle to
+- [X] T022 [P] [US1] Add "apply to all my children" toggle to
   `parent-mobile/components/DayReservationForm.tsx` — shown only when 2+ active children are
   linked, switches submission to the new bulk endpoint, and renders per-child partial-failure
   results (T005/T006 i18n keys)
-- [ ] T023 [P] [US1] Add `submitBulkDayReservation` to `parent-mobile/services/dayReservations.ts`
-- [ ] T024 [P] [US1] Component test: form shows the bulk toggle only for 2+ children, and renders
+- [X] T023 [P] [US1] Add `submitBulkDayReservation` to `parent-mobile/services/dayReservations.ts`
+- [X] T024 [P] [US1] Component test: form shows the bulk toggle only for 2+ children, and renders
   a partial-failure result correctly, in `parent-mobile/__tests__/dayReservations.test.tsx`
 
 **Checkpoint**: Bulk day-reservation submission works end to end — User Story 1 independently
