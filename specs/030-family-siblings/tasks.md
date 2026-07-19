@@ -319,17 +319,17 @@ via quickstart.md's five scenarios.
 **Purpose**: Cross-story validation and the explicit no-regression guarantee for 006/013/013a/
 014/014a/018.
 
-- [ ] T062 [P] Accessibility pass: bulk-reservation toggle, sibling-billing settings fields,
+- [X] T062 [P] Accessibility pass: bulk-reservation toggle, sibling-billing settings fields,
   Contacts tab actions, and the previous-children list meet this codebase's existing
   accessibility baseline (48pt touch targets on parent-mobile, focus rings on web —
   design-system.md/platform-rules.md)
-- [ ] T063 Run quickstart.md's five scenarios manually/via integration tests and confirm each
+- [X] T063 Run quickstart.md's five scenarios manually/via integration tests and confirm each
   passes
-- [ ] T064 Confirm SC-005 explicitly: run 014/014a's own existing test suites unmodified and
+- [X] T064 Confirm SC-005 explicitly: run 014/014a's own existing test suites unmodified and
   confirm they still pass in full — a location that never configures sibling
   discount/bundling must see zero behavior change to invoice generation, sending, or manual
   mark-paid
-- [ ] T065 Confirm 018's management-reporting queries (which key off `Invoice`/`ChildId`)
+- [X] T065 Confirm 018's management-reporting queries (which key off `Invoice`/`ChildId`)
   produce identical output whether or not `FamilyGroupId` is set — no report regression from the
   new column
 
