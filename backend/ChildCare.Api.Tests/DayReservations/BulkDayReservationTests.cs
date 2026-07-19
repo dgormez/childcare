@@ -52,7 +52,9 @@ public class BulkDayReservationTests(OrganisationOnboardingWebAppFactory factory
         Assert.Equal(2, result.Results.Count);
         Assert.All(result.Results, r => Assert.True(r.Succeeded));
         Assert.All(result.Results, r => Assert.Equal("pending", r.Reservation!.Status));
-        Assert.Equal([child1.Id, child2.Id], result.Results.Select(r => r.ChildId).OrderBy(id => id).ToList().OrderBy(id => id));
+        Assert.Equal(
+            new[] { child1.Id, child2.Id }.OrderBy(id => id),
+            result.Results.Select(r => r.ChildId).OrderBy(id => id));
     }
 
     [Fact]

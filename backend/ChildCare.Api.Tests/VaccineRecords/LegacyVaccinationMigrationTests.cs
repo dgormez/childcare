@@ -122,7 +122,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// never dropped in this test (only referenced), so its new nullable DigestUnsubscribedAt
     /// column needs its own explicit DROP COLUMN, same reason as Capacity above (found by this
     /// test actually failing after that migration shipped, same as every migration-adding
-    /// feature's note above predicted).
+    /// feature's note above predicted). Feature 030's "AddSiblingBillingSettingsAndFamilyGroupId"
+    /// is the next one — its two new locations columns (SiblingDiscountPct,
+    /// FamilyInvoiceBundlingEnabled) need their own explicit DROP COLUMNs, same reason as
+    /// DigestUnsubscribedAt above; its new invoices column (FamilyGroupId) needs no separate
+    /// step since invoices is already dropped wholesale above.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -171,8 +175,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "Capacity";
             ALTER TABLE "{schemaName}"."contacts"
                 DROP COLUMN "DigestUnsubscribedAt";
+            ALTER TABLE "{schemaName}"."locations"
+                DROP COLUMN "SiblingDiscountPct",
+                DROP COLUMN "FamilyInvoiceBundlingEnabled";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId';
             """);
     }
 
