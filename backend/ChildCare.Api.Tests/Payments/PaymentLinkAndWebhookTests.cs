@@ -61,6 +61,13 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = (await response.Content.ReadFromJsonAsync<CheckoutUrlResponse>())!;
         Assert.Contains("fake-mollie.test/checkout", body.CheckoutUrl);
+
+        // Feature 030 Convergence (T071) — an unbundled invoice (FamilyGroupId null) must still
+        // charge only its own TotalCents, unchanged from 014a's original behavior.
+        using var scope = factory.Services.CreateScope();
+        var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+        var payment = publicDb.Payments.Single(p => p.InvoiceId == invoice.Id);
+        Assert.Equal(invoice.TotalCents, payment.AmountCents);
     }
 
     [Fact]
@@ -270,6 +277,77 @@ public class PaymentLinkAndWebhookTests(OrganisationOnboardingWebAppFactory fact
         var invoiceResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice.Id}", org.AccessToken));
         var invoiceAfter = (await invoiceResponse.Content.ReadFromJsonAsync<InvoiceResponse>())!;
         Assert.Equal("paid", invoiceAfter.Status);
+    }
+
+    // Feature 030 Convergence (T066/T067/T071/T072) — spec.md FR-009a/Clarifications: "one
+    // payment action covers the whole bundled group" must also hold for the online PSP path, not
+    // just MarkInvoicePaidCommand's manual path (InvoiceLifecycleTests already covers that one).
+    [Fact]
+    public async Task Webhook_ConfirmsPaid_OnBundledInvoice_ChargesCombinedTotalAndCascadesToSibling()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Bundled Webhook Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        await ConnectMollieAsync(client, org.AccessToken);
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{location.Id}/sibling-billing-settings", org.AccessToken,
+            new UpdateLocationSiblingBillingSettingsRequest(0, true)));
+
+        var (child1, contact, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var child2 = await CreateChildAsync(client, org.AccessToken, "Lucas");
+        await LinkContactAsync(client, org.AccessToken, child2.Id, contact.Id);
+
+        var contractRequest1 = new CreateContractRequest(
+            location.Id, new DateOnly(2027, 9, 1), null,
+            [new ContractedDayRequest(DayOfWeek.Monday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var contract1 = (await (await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child1.Id}/contracts", org.AccessToken, contractRequest1))).Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract1.Id}/activate", org.AccessToken));
+
+        var contractRequest2 = new CreateContractRequest(
+            location.Id, new DateOnly(2027, 9, 8), null,
+            [new ContractedDayRequest(DayOfWeek.Tuesday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var contract2 = (await (await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child2.Id}/contracts", org.AccessToken, contractRequest2))).Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract2.Id}/activate", org.AccessToken));
+
+        var generateResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/locations/{location.Id}/invoices/generate", org.AccessToken, new GenerateInvoicesRequest(2027, 9)));
+        var invoices = (await generateResponse.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!;
+        Assert.All(invoices, i => Assert.NotNull(i.FamilyGroupId));
+        var combinedTotalCents = invoices.Sum(i => i.TotalCents);
+
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/invoices/send", org.AccessToken, new SendInvoicesRequest(invoices.Select(i => i.Id).ToList())));
+
+        var invoice1 = invoices.Single(i => i.ChildId == child1.Id);
+        var invoice2 = invoices.Single(i => i.ChildId == child2.Id);
+
+        var linkResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/parent/invoices/{invoice1.Id}/payment-link", parentToken));
+        Assert.Equal(HttpStatusCode.OK, linkResponse.StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
+            var payment = publicDb.Payments.Single(p => p.InvoiceId == invoice1.Id);
+            // The one payment action must charge the whole bundle's total, not just invoice1's
+            // own share — otherwise the cascade below would mark invoice2 Paid for free.
+            Assert.Equal(combinedTotalCents, payment.AmountCents);
+        }
+
+        // Looked up by InvoiceId, not Assert.Single — FakePaymentProvider.Payments is a
+        // Singleton shared across every test in this class (IClassFixture), so other tests'
+        // payments accumulate in it too (see GetPaymentForInvoiceAsync's own comment below).
+        var (providerPaymentId, paymentReference) = await GetPaymentForInvoiceAsync(invoice1.Id);
+        var fakeProvider = factory.Services.GetRequiredService<FakePaymentProvider>();
+        fakeProvider.Payments[providerPaymentId].Status = "paid";
+
+        var webhookResponse = await client.PostAsync($"/api/webhooks/mollie/{paymentReference}", null);
+        Assert.Equal(HttpStatusCode.OK, webhookResponse.StatusCode);
+
+        var invoice1After = (await (await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice1.Id}", org.AccessToken))).Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        var invoice2After = (await (await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice2.Id}", org.AccessToken))).Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        Assert.Equal("paid", invoice1After.Status);
+        Assert.Equal("paid", invoice2After.Status);
+        Assert.NotNull(invoice2After.PaidAt);
     }
 
     private async Task<Guid> GetPaymentReferenceAsync(string providerPaymentId)

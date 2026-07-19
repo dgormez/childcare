@@ -282,6 +282,7 @@ export interface ParentInvoiceEntry {
 // collapse into one of these entries in the parent invoice list instead of one ParentInvoiceEntry
 // each; an ungrouped invoice stays a normal ParentInvoiceEntry (familyGroupId absent there).
 export interface FamilyInvoiceChildLine {
+  invoiceId:     string;
   childId:       string;
   childName:     string;
   subtotalCents: number;

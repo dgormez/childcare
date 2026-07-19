@@ -36,7 +36,10 @@ public record InvoiceExtraChargeResponse(string Label, int AmountCents);
 // Feature 030 — contracts/family-siblings-api.md. Presentation shape for a group of invoices
 // sharing a FamilyGroupId; the underlying per-child Invoice rows are unchanged (spec.md
 // Clarifications).
-public record FamilyInvoiceChildLineResponse(Guid ChildId, string ChildName, int SubtotalCents);
+// InvoiceId lets a client target one of the group's underlying per-child invoices (e.g. to pay
+// the whole bundle online — CreatePaymentLinkCommand resolves the full FamilyGroupId total from
+// any one of them) without a separate "family invoice" identifier existing anywhere.
+public record FamilyInvoiceChildLineResponse(Guid InvoiceId, Guid ChildId, string ChildName, int SubtotalCents);
 
 public record FamilyInvoiceResponse(
     Guid FamilyGroupId,

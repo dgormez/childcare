@@ -75,7 +75,7 @@ public class GetParentInvoicesQueryHandler(ITenantDbContext db, ICurrentParentCo
             responses.Add((
                 new FamilyInvoiceResponse(
                     group.Key,
-                    groupInvoices.Select(i => new FamilyInvoiceChildLineResponse(i.ChildId, $"{children[i.ChildId].FirstName} {children[i.ChildId].LastName}", i.SubtotalCents)).ToList(),
+                    groupInvoices.Select(i => new FamilyInvoiceChildLineResponse(i.Id, i.ChildId, $"{children[i.ChildId].FirstName} {children[i.ChildId].LastName}", i.SubtotalCents)).ToList(),
                     groupInvoices.Sum(i => i.TotalCents),
                     groupInvoices[0].Status.ToString().ToLowerInvariant(),
                     isOverdue,

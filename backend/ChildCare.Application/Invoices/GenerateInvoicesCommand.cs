@@ -150,10 +150,13 @@ public class GenerateInvoicesCommandHandler(ITenantDbContext db, BillableDayCalc
             .Where(cc => cc.IsPrimary && childIds.Contains(cc.ChildId))
             .ToDictionaryAsync(cc => cc.ChildId, cc => cc.ContactId, cancellationToken);
 
-        var earliestStartByChildId = contracts
+        // Feature 030 (spec.md Assumptions) — tie-broken by the earliest-*created* contract
+        // record when two siblings' contracts share the exact same start date (e.g. twins
+        // signed on one contract date), so the "full price" pick stays fully deterministic.
+        var earliestContractByChildId = contracts
             .Where(c => childIds.Contains(c.ChildId))
             .GroupBy(c => c.ChildId)
-            .ToDictionary(g => g.Key, g => g.Min(c => c.StartDate));
+            .ToDictionary(g => g.Key, g => g.OrderBy(c => c.StartDate).ThenBy(c => c.CreatedAt).First());
 
         var groups = invoiceEntries
             .Where(e => primaryContactByChildId.ContainsKey(e.Invoice.ChildId))
@@ -167,7 +170,8 @@ public class GenerateInvoicesCommandHandler(ITenantDbContext db, BillableDayCalc
             // research.md R3: the earliest-enrolled sibling (by contract start date) at this
             // location is full price; every other sibling in the group is discounted.
             var fullPriceChildId = group.Select(e => e.Invoice.ChildId).Distinct()
-                .OrderBy(childId => earliestStartByChildId[childId])
+                .OrderBy(childId => earliestContractByChildId[childId].StartDate)
+                .ThenBy(childId => earliestContractByChildId[childId].CreatedAt)
                 .First();
 
             if (location.SiblingDiscountPct > 0)

@@ -188,6 +188,34 @@ public class SiblingDiscountAndBundlingTests(OrganisationOnboardingWebAppFactory
         Assert.NotNull(SiblingDiscountLine(invoices.Single(i => i.ChildId == child3.Id)));
     }
 
+    // Feature 030 Convergence (T068/T069) — spec.md Assumptions: when two siblings' contracts
+    // share the exact same start date (e.g. twins), the earlier-*created* contract record is the
+    // deterministic secondary tie-breaker for which child is full price.
+    [Fact]
+    public async Task Generate_TwoSiblingsSameContractStartDate_TieBreaksByEarlierCreatedContract()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Sibling Discount Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await SetSiblingBillingAsync(client, org.AccessToken, location.Id, 10, false);
+
+        var contact = await CreateContactWithEmailAsync(client, org.AccessToken);
+        var earlierCreatedChild = await CreateChildAsync(client, org.AccessToken, "Emma");
+        var laterCreatedChild = await CreateChildAsync(client, org.AccessToken, "Lucas");
+        await LinkContactAsync(client, org.AccessToken, earlierCreatedChild.Id, contact.Id);
+        await LinkContactAsync(client, org.AccessToken, laterCreatedChild.Id, contact.Id);
+
+        // Same StartDate for both — only creation order can break the tie.
+        var sameStartDate = new DateOnly(2027, 8, 1);
+        await CreateContractAsync(client, org.AccessToken, earlierCreatedChild.Id, location.Id, sameStartDate, DayOfWeek.Monday);
+        await CreateContractAsync(client, org.AccessToken, laterCreatedChild.Id, location.Id, sameStartDate, DayOfWeek.Tuesday);
+
+        var invoices = await GenerateAsync(client, org.AccessToken, location.Id, 2027, 8);
+
+        Assert.Null(SiblingDiscountLine(invoices.Single(i => i.ChildId == earlierCreatedChild.Id)));
+        Assert.NotNull(SiblingDiscountLine(invoices.Single(i => i.ChildId == laterCreatedChild.Id)));
+    }
+
     [Fact]
     public async Task Generate_SiblingsWithDifferentPrimaryContacts_NeverGroupedEvenWithSharedSecondaryContact()
     {

@@ -136,6 +136,14 @@ public class GetParentInvoicesTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(2, familyEntry.GetProperty("children").GetArrayLength());
         Assert.Equal(invoice1.SubtotalCents + invoice2.SubtotalCents, familyEntry.GetProperty("totalCents").GetInt32());
         Assert.Equal(ungroupedChild.Id.ToString(), normalEntry.GetProperty("childId").GetString());
+
+        // Feature 030 Convergence (T070) — each child line must expose its own underlying
+        // InvoiceId so the client can target the online payment-link endpoint for the bundle.
+        var childLineInvoiceIds = familyEntry.GetProperty("children").EnumerateArray()
+            .Select(c => c.GetProperty("invoiceId").GetString())
+            .ToList();
+        Assert.Contains(invoice1.Id.ToString(), childLineInvoiceIds);
+        Assert.Contains(invoice2.Id.ToString(), childLineInvoiceIds);
     }
 
     // Feature 030 (US5, research.md R8) — a deactivated child's invoices must remain reachable

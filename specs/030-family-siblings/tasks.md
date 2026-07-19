@@ -406,3 +406,42 @@ via quickstart.md's five scenarios.
   generation path 014/014a/018 all depend on) — only running the *existing* suites unmodified,
   plus an explicit reporting-output check, actually proves it held.
 - Commit after each task or logical group, per this repo's standing convention.
+
+## Phase 9: Convergence
+
+- [X] T066 Cascade the FamilyGroupId paid-status transition in `ProcessPaymentWebhookCommand`'s
+  Paid branch (`backend/ChildCare.Application/Payments/ProcessPaymentWebhookCommand.cs`), mirroring
+  `MarkInvoicePaidCommand`'s existing sibling cascade, so a bundled family invoice paid via a 014a
+  PSP payment link marks every grouped child invoice Paid together, per FR-009a (missing)
+- [X] T067 Add a regression test proving `ProcessPaymentWebhookCommand` cascades Paid status to
+  every sibling invoice sharing a `FamilyGroupId`, mirroring
+  `MarkPaid_OnInvoiceWithFamilyGroupId_CascadesToSiblingInvoices` per FR-009a (missing)
+- [X] T068 Add a deterministic secondary tie-breaker (`Contract.CreatedAt`, earliest wins) to
+  `GenerateInvoicesCommand`'s full-price sibling selection
+  (`backend/ChildCare.Application/Invoices/GenerateInvoicesCommand.cs`) for siblings whose
+  contracts share the exact same start date, per spec.md's Assumptions section (partial)
+- [X] T069 Add a regression test for two siblings' contracts sharing the same start date,
+  confirming the earlier-created contract's child is selected full-price per T068 (partial)
+- [X] T070 Discovered while implementing T066: the parent-mobile app has no way to reach the
+  online-PSP payment path for a bundled family invoice at all — `FamilyInvoiceChildLineResponse`
+  carried no `InvoiceId`, and `invoices/index.tsx`'s own comment records this as a deliberate
+  choice ("never linked to from this per-invoice detail screen"), directly contradicting FR-009a/
+  Clarifications ("including via a 014a PSP payment link"). Added `InvoiceId` to
+  `FamilyInvoiceChildLineResponse` (`backend/ChildCare.Contracts/Responses/InvoiceResponse.cs`)
+  and populated it in `GetParentInvoicesQuery` (missing)
+- [X] T071 Fix `CreatePaymentLinkCommand`
+  (`backend/ChildCare.Application/Payments/CreatePaymentLinkCommand.cs`) to charge the combined
+  `FamilyGroupId` total (sum of every Sent sibling's `TotalCents`) rather than just the one
+  invoice's own share, when the targeted invoice is part of a bundle — otherwise T066's cascade
+  would mark every sibling Paid after collecting only one child's amount, per FR-009a (missing)
+- [X] T072 Add backend regression tests for T070/T071: `CreatePaymentLinkCommand` charges the
+  combined bundle total for a bundled invoice and the unchanged per-invoice amount for an
+  unbundled one; `GetParentInvoicesQuery` exposes each child line's `InvoiceId` (missing)
+- [X] T073 Add a "Pay" action to the family invoice tile in parent-mobile's
+  `app/(app)/invoices/index.tsx`, reusing `services/payments.ts`'s `createPaymentLink`/
+  `getPaymentStatus` against the group's first child's `InvoiceId` (any grouped invoice resolves
+  the combined total per T071 and cascades Paid to every sibling per T066), mirroring
+  `invoices/[id].tsx`'s existing `handlePayNow` poll-and-confirm flow (missing)
+- [X] T074 Add a parent-mobile component test covering T073's new family-tile Pay action:
+  tapping Pay creates a payment link, opens the browser, polls status, and reloads the list
+  showing the whole group Paid once confirmed (missing)
