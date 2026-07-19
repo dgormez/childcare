@@ -214,21 +214,21 @@ that contact's child, and confirm delivery despite the unsubscribe flag.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T052 [P] [US3] Integration test: `POST /api/email/daily-report/{childId}/resend` delivers
+- [X] T052 [P] [US3] Integration test: `POST /api/email/daily-report/{childId}/resend` delivers
   to every contact with an email on file, including a digest-unsubscribed contact (FR-009,
   Scenario 2) in `backend/ChildCare.Api.Tests/Email/DailyReportResendEndpointTests.cs`
-- [ ] T053 [P] [US3] Integration test: resend is available to both `DirectorOnly` and
+- [X] T053 [P] [US3] Integration test: resend is available to both `DirectorOnly` and
   `StaffOrDirector` (caregiver) callers, and 404s for a `childId` outside the caller's tenant in
   `backend/ChildCare.Api.Tests/Email/DailyReportResendEndpointTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T054 [US3] `ResendDailyReportEmailCommand`/Handler (reuses `GetDailySummaryQuery` +
+- [X] T054 [US3] `ResendDailyReportEmailCommand`/Handler (reuses `GetDailySummaryQuery` +
   `IEmailSender.SendDailyReportAsync`, no unsubscribe check) in
   `backend/ChildCare.Application/Email/ResendDailyReportEmailCommand.cs`
-- [ ] T055 [US3] Implement `POST /api/email/daily-report/{childId}/resend`
+- [X] T055 [US3] Implement `POST /api/email/daily-report/{childId}/resend`
   (`StaffOrDirector`) in `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs` (depends on T054)
-- [ ] T056 [US3] Add a "Resend daily report by email" action (sent/failed confirmation) to the
+- [X] T056 [US3] Add a "Resend daily report by email" action (sent/failed confirmation) to the
   existing per-child screen in `mobile/app/(app)/child/[id].tsx`, calling T055's endpoint via
   `mobile/services/childEvents.ts`
 

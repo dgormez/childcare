@@ -10,11 +10,11 @@ namespace ChildCare.Api.Endpoints;
 
 /// <summary>
 /// Feature 020. Director routes (bulk send, attachment upload, recipient-count preview) are
-/// DirectorOnly. The daily-report resend is reachable by both director-web and the caregiver
-/// tablet (DeviceOrStaffOrDirector, mirrors ChildrenEndpoints/GroupsEndpoints' existing
-/// caregiver-plus-director routes). The unsubscribe/resubscribe routes are deliberately
-/// unauthenticated (spec.md Security Considerations) — see research.md R5 for why they resolve
-/// the tenant schema from a separate `org` query/body parameter rather than a JWT claim.
+/// DirectorOnly. The daily-report resend (User Story 3) is StaffOrDirector — reachable by both
+/// director-web and a caregiver's own mobile-app session (tasks.md T055), not the kiosk tablet's
+/// device token. The unsubscribe/resubscribe routes are deliberately unauthenticated (spec.md
+/// Security Considerations) — see research.md R5 for why they resolve the tenant schema from a
+/// separate `org` query/body parameter rather than a JWT claim.
 /// </summary>
 public static class EmailEndpoints
 {
@@ -54,6 +54,18 @@ public static class EmailEndpoints
                     providerFailureCount = result.ProviderFailureCount,
                 })
                 : MapSendFailure(result.Failure!.Value);
+        });
+
+        var staffOrDirectorGroup = app.MapGroup("/api/email")
+            .WithTags("Email")
+            .RequireAuthorization("StaffOrDirector");
+
+        staffOrDirectorGroup.MapPost("/daily-report/{childId:guid}/resend", async (Guid childId, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ResendDailyReportEmailCommand(childId));
+            return result.Succeeded
+                ? Results.Ok(new { sentCount = result.SentCount })
+                : MapResendFailure(result.Failure!.Value);
         });
 
         var publicGroup = app.MapGroup("/api/email")
@@ -141,5 +153,12 @@ public static class EmailEndpoints
             statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(SendBulkEmailFailure)}: {failure}"),
+    };
+
+    private static IResult MapResendFailure(ResendDailyReportEmailFailure failure) => failure switch
+    {
+        ResendDailyReportEmailFailure.ChildNotFound => Results.NotFound(),
+
+        _ => throw new InvalidOperationException($"Unhandled {nameof(ResendDailyReportEmailFailure)}: {failure}"),
     };
 }

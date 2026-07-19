@@ -49,6 +49,9 @@
       "invalid_status": "Die status is niet geldig.",
       "milestone_not_found": "Deze mijlpaal kon niet gevonden worden.",
       "forbidden": "Je hebt geen toegang tot de mijlpalen van dit kind."
+    },
+    "email": {
+      "resend_failed": "Het dagverslag kon niet per e-mail worden verstuurd. Probeer het opnieuw."
     }
   },
   "session": {
@@ -96,6 +99,15 @@
       "unavailable": "Kan gezondheidsinformatie niet laden — controleer je verbinding.",
       "overdue": "Verlopen sinds {{date}}",
       "dueSoon": "Volgende dosis verwacht op {{date}}"
+    },
+    "dailyReportResend": {
+      "action": "Dagverslag opnieuw per e-mail versturen",
+      "sentTitle": "Verzonden",
+      "sentMessageOne": "Het dagverslag is per e-mail verstuurd naar 1 contactpersoon.",
+      "sentMessageMany": "Het dagverslag is per e-mail verstuurd naar {{count}} contactpersonen.",
+      "sentMessageZero": "Er is geen e-mailadres bekend voor dit kind.",
+      "failedTitle": "Versturen mislukt",
+      "failedMessage": "Het dagverslag kon niet per e-mail worden verstuurd. Probeer het opnieuw."
     }
   },
   "roomSetup": {

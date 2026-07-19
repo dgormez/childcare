@@ -49,6 +49,9 @@
       "invalid_status": "That status isn't valid.",
       "milestone_not_found": "This milestone could not be found.",
       "forbidden": "You don't have access to this child's milestones."
+    },
+    "email": {
+      "resend_failed": "The daily report couldn't be emailed. Please try again."
     }
   },
   "session": {
@@ -96,6 +99,15 @@
       "unavailable": "Can't load health information — check your connection.",
       "overdue": "Overdue since {{date}}",
       "dueSoon": "Next dose due on {{date}}"
+    },
+    "dailyReportResend": {
+      "action": "Resend daily report by email",
+      "sentTitle": "Sent",
+      "sentMessageOne": "The daily report was emailed to 1 contact.",
+      "sentMessageMany": "The daily report was emailed to {{count}} contacts.",
+      "sentMessageZero": "No contact has an email address on file for this child.",
+      "failedTitle": "Couldn't send",
+      "failedMessage": "The daily report couldn't be emailed. Please try again."
     }
   },
   "roomSetup": {

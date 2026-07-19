@@ -49,6 +49,9 @@
       "invalid_status": "Ce statut n'est pas valide.",
       "milestone_not_found": "Cette étape de développement est introuvable.",
       "forbidden": "Vous n'avez pas accès aux étapes de développement de cet enfant."
+    },
+    "email": {
+      "resend_failed": "Le rapport quotidien n'a pas pu être envoyé par e-mail. Veuillez réessayer."
     }
   },
   "session": {
@@ -96,6 +99,15 @@
       "unavailable": "Impossible de charger les informations de santé — vérifiez votre connexion.",
       "overdue": "En retard depuis le {{date}}",
       "dueSoon": "Prochaine dose prévue le {{date}}"
+    },
+    "dailyReportResend": {
+      "action": "Renvoyer le rapport quotidien par e-mail",
+      "sentTitle": "Envoyé",
+      "sentMessageOne": "Le rapport quotidien a été envoyé par e-mail à 1 contact.",
+      "sentMessageMany": "Le rapport quotidien a été envoyé par e-mail à {{count}} contacts.",
+      "sentMessageZero": "Aucune adresse e-mail n'est enregistrée pour cet enfant.",
+      "failedTitle": "Échec de l'envoi",
+      "failedMessage": "Le rapport quotidien n'a pas pu être envoyé par e-mail. Veuillez réessayer."
     }
   },
   "roomSetup": {

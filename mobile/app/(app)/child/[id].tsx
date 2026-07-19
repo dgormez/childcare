@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Plus, AlertTriangle, Syringe, HeartPulse, Clock, Sparkles } from "lucide-react-native";
+import { Plus, AlertTriangle, Syringe, HeartPulse, Clock, Sparkles, Mail } from "lucide-react-native";
 import { getCached } from "../../../services/readCache";
 import { getPending } from "../../../services/offlineQueue";
-import { listChildEvents, deleteChildEvent, updateChildEvent } from "../../../services/childEvents";
+import { listChildEvents, deleteChildEvent, updateChildEvent, resendDailyReportEmail } from "../../../services/childEvents";
 import { getChildHealthSummary, type HealthSummaryLoadResult } from "../../../services/healthSummary";
 import { fetchMilestonePortfolio } from "../../../services/milestones";
 import { useColors } from "../../../hooks/useColors";
@@ -66,6 +66,8 @@ export default function ChildDetailScreen() {
 
   const [milestoneEntries, setMilestoneEntries] = useState<MilestoneTimelineEntry[]>([]);
   const [milestoneSheetVisible, setMilestoneSheetVisible] = useState(false);
+
+  const [resendingDailyReport, setResendingDailyReport] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -174,6 +176,26 @@ export default function ChildDetailScreen() {
   const handleDelete = async (event: ChildEventResponse) => {
     await deleteChildEvent(event.id, isConnected);
     load();
+  };
+
+  // User Story 3 (spec.md): unaffected by digest-unsubscribe state, online-first (T056).
+  const handleResendDailyReport = async () => {
+    if (!child || resendingDailyReport) return;
+    setResendingDailyReport(true);
+    try {
+      const sentCount = await resendDailyReportEmail(child.id);
+      const sentMessageKey =
+        sentCount === 0
+          ? "child.dailyReportResend.sentMessageZero"
+          : sentCount === 1
+            ? "child.dailyReportResend.sentMessageOne"
+            : "child.dailyReportResend.sentMessageMany";
+      Alert.alert(t("child.dailyReportResend.sentTitle"), t(sentMessageKey, { count: sentCount }));
+    } catch {
+      Alert.alert(t("child.dailyReportResend.failedTitle"), t("child.dailyReportResend.failedMessage"));
+    } finally {
+      setResendingDailyReport(false);
+    }
   };
 
   const handleIncidentSaved = (report: IncidentReportResponse) => {
@@ -346,6 +368,18 @@ export default function ChildDetailScreen() {
         </TouchableOpacity>
 
         <MilestoneTimeline entries={milestoneEntries} />
+
+        <TouchableOpacity
+          onPress={handleResendDailyReport}
+          disabled={resendingDailyReport}
+          style={{ minHeight: 48 }}
+          className="flex-row items-center rounded-xl bg-surface-soft dark:bg-surface-soft-dark px-4 mt-3 active:opacity-60 disabled:opacity-50"
+        >
+          <Mail size={20} strokeWidth={2} color={colors.primaryHover} />
+          <Text className="text-text dark:text-text-dark font-semibold ml-2">
+            {t("child.dailyReportResend.action")}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <IncidentReportForm
