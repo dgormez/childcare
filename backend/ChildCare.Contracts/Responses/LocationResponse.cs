@@ -27,4 +27,6 @@ public record LocationResponse(
     int InvoiceDueDays,
     bool PaymentRemindersEnabled,
     int PaymentReminderDelayDays,
-    int PaymentReminderCadenceDays);
+    int PaymentReminderCadenceDays,
+    decimal SiblingDiscountPct,
+    bool FamilyInvoiceBundlingEnabled);

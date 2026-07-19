@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using Xunit;
@@ -96,6 +97,76 @@ public class GetParentInvoicesTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(2, invoices.Count);
         Assert.Contains(invoices, i => i.LocationId == firstLocation.Id && i.LocationName == "First");
         Assert.Contains(invoices, i => i.LocationId == secondLocation.Id && i.LocationName == "Second");
+    }
+
+    // Feature 030 (US3) — invoices sharing a FamilyGroupId collapse into one combined entry
+    // (contracts/family-siblings-api.md); a non-grouped invoice keeps its normal single shape.
+    [Fact]
+    public async Task GetInvoices_FamilyGroup_CollapsesIntoOneCombinedEntry_UngroupedInvoiceStaysNormal()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Parent Invoices Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{location.Id}/sibling-billing-settings", org.AccessToken,
+            new UpdateLocationSiblingBillingSettingsRequest(0, true)));
+
+        var (child1, contact, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var child2 = await CreateChildAsync(client, org.AccessToken, "Lucas");
+        await LinkContactAsync(client, org.AccessToken, child2.Id, contact.Id);
+        var ungroupedChild = await CreateChildAsync(client, org.AccessToken, "Nora");
+        await LinkContactAsync(client, org.AccessToken, ungroupedChild.Id, contact.Id, relationship: "Father");
+        // A third linked child at a location with bundling disabled never joins the group.
+        var otherLocation = await CreateLocationAsync(client, org.AccessToken, "Other");
+
+        var invoice1 = await CreateDraftInvoiceAsync(client, org.AccessToken, location.Id, child1.Id, 2027, 10, DayOfWeek.Monday);
+        var invoice2 = await CreateDraftInvoiceAsync(client, org.AccessToken, location.Id, child2.Id, 2027, 10, DayOfWeek.Tuesday);
+        var ungroupedInvoice = await CreateDraftInvoiceAsync(client, org.AccessToken, otherLocation.Id, ungroupedChild.Id, 2027, 10, DayOfWeek.Wednesday);
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/invoices/send", org.AccessToken,
+            new SendInvoicesRequest([invoice1.Id, invoice2.Id, ungroupedInvoice.Id])));
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/parent/invoices", parentToken));
+        var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+
+        Assert.Equal(2, json.GetArrayLength());
+        var familyEntry = json.EnumerateArray().Single(e => e.TryGetProperty("children", out _));
+        var normalEntry = json.EnumerateArray().Single(e => !e.TryGetProperty("children", out _));
+
+        Assert.Equal(2, familyEntry.GetProperty("children").GetArrayLength());
+        Assert.Equal(invoice1.SubtotalCents + invoice2.SubtotalCents, familyEntry.GetProperty("totalCents").GetInt32());
+        Assert.Equal(ungroupedChild.Id.ToString(), normalEntry.GetProperty("childId").GetString());
+
+        // Feature 030 Convergence (T070) — each child line must expose its own underlying
+        // InvoiceId so the client can target the online payment-link endpoint for the bundle.
+        var childLineInvoiceIds = familyEntry.GetProperty("children").EnumerateArray()
+            .Select(c => c.GetProperty("invoiceId").GetString())
+            .ToList();
+        Assert.Contains(invoice1.Id.ToString(), childLineInvoiceIds);
+        Assert.Contains(invoice2.Id.ToString(), childLineInvoiceIds);
+    }
+
+    // Feature 030 (US5, research.md R8) — a deactivated child's invoices must remain reachable
+    // read-only for the parent (no new authorization gap introduced by 030).
+    [Fact]
+    public async Task GetInvoices_DeactivatedChild_StillSucceeds()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Parent Invoices Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var invoice = await CreateDraftInvoiceAsync(client, org.AccessToken, location.Id, child.Id, 2027, 9);
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/invoices/send", org.AccessToken, new SendInvoicesRequest([invoice.Id])));
+        // A child can't be deactivated while an active contract exists (ContractChildDeactivationGuard) — terminate it first.
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{invoice.ContractId}/terminate", org.AccessToken, new TerminateContractRequest(new DateOnly(2027, 9, 30))));
+        var deactivateResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/deactivate", org.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, deactivateResponse.StatusCode);
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/parent/invoices", parentToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var invoices = (await response.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!;
+        Assert.Contains(invoices, i => i.ChildId == child.Id);
     }
 
     [Fact]

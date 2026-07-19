@@ -70,6 +70,9 @@ export interface LocationResponse {
   paymentRemindersEnabled: boolean;
   paymentReminderDelayDays: number;
   paymentReminderCadenceDays: number;
+  // Feature 030 — contracts/family-siblings-api.md.
+  siblingDiscountPct: number;
+  familyInvoiceBundlingEnabled: boolean;
 }
 
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
@@ -335,6 +338,21 @@ export interface ContactResponse {
   phone: string;
   email: string | null;
   locale: string;
+}
+
+// Feature 030 (US4) — contracts/family-siblings-api.md.
+export type ContactRelationship = "Mother" | "Father" | "Guardian" | "EmergencyContact" | "AuthorisedPickup" | "FosterParent" | "Other";
+
+export interface ChildContactResponse {
+  contactId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  locale: string;
+  relationship: ContactRelationship;
+  canPickup: boolean;
+  isPrimary: boolean;
 }
 
 export interface MessageResponse {

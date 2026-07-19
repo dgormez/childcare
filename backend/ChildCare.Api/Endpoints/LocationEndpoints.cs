@@ -83,6 +83,14 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 030 — contracts/family-siblings-api.md.
+        group.MapPut("/{id:guid}/sibling-billing-settings", async (Guid id, UpdateLocationSiblingBillingSettingsRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new UpdateLocationSiblingBillingSettingsCommand(
+                id, req.SiblingDiscountPct, req.FamilyInvoiceBundlingEnabled));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateLocationCommand(id));

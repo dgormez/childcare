@@ -45,3 +45,8 @@ public record UpdateLocationPaymentReminderSettingsRequest(
     bool Enabled,
     int DelayDays,
     int CadenceDays);
+
+// Feature 030 — contracts/family-siblings-api.md.
+public record UpdateLocationSiblingBillingSettingsRequest(
+    decimal SiblingDiscountPct,
+    bool FamilyInvoiceBundlingEnabled);

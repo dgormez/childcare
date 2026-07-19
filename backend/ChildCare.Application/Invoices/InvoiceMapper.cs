@@ -38,6 +38,7 @@ internal static class InvoiceMapper
             invoice.SentAt,
             invoice.PaidAt,
             invoice.CreatedAt,
-            invoice.UpdatedAt);
+            invoice.UpdatedAt,
+            invoice.FamilyGroupId);
     }
 }

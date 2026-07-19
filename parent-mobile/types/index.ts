@@ -34,6 +34,17 @@ export interface ParentChildResponse {
   dateOfBirth:      string;
 }
 
+// Feature 030 (US5) — contracts/family-siblings-api.md.
+export interface ParentPreviousChildResponse {
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  photoDownloadUrl: string | null;
+  dateOfBirth:      string;
+  enrollmentStart:  string | null;
+  enrollmentEnd:    string;
+}
+
 // ── Group activities (feature 009b) ──────────────────────────────────────────────
 export type GroupActivityType = "outdoor" | "creative" | "music" | "story" | "celebration" | "other";
 
@@ -167,6 +178,19 @@ export interface DayReservationResponse {
   updatedAt:         string | null;
 }
 
+// Feature 030 US1 — contracts/family-siblings-api.md.
+export interface BulkDayReservationResultItem {
+  childId:      string;
+  childName:    string;
+  succeeded:    boolean;
+  reservation:  DayReservationResponse | null;
+  errorKey:     string | null;
+}
+
+export interface BulkDayReservationResponse {
+  results: BulkDayReservationResultItem[];
+}
+
 // ── Reservation settings (feature 013f) ──────────────────────────────────────────
 export type ReservationRequestMode = "disabled" | "informational" | "approval";
 
@@ -252,6 +276,32 @@ export interface ParentInvoiceEntry {
   paidAt:        string | null;
   createdAt:     string;
   updatedAt:     string;
+}
+
+// Feature 030 (US3) — contracts/family-siblings-api.md. Siblings sharing a FamilyGroupId
+// collapse into one of these entries in the parent invoice list instead of one ParentInvoiceEntry
+// each; an ungrouped invoice stays a normal ParentInvoiceEntry (familyGroupId absent there).
+export interface FamilyInvoiceChildLine {
+  invoiceId:     string;
+  childId:       string;
+  childName:     string;
+  subtotalCents: number;
+}
+
+export interface ParentFamilyInvoiceEntry {
+  familyGroupId: string;
+  children:      FamilyInvoiceChildLine[];
+  totalCents:    number;
+  status:        InvoiceStatus;
+  isOverdue:     boolean;
+  dueDate:       string | null;
+  createdAt:     string;
+}
+
+export type ParentInvoiceListEntry = ParentInvoiceEntry | ParentFamilyInvoiceEntry;
+
+export function isFamilyInvoiceEntry(entry: ParentInvoiceListEntry): entry is ParentFamilyInvoiceEntry {
+  return "children" in entry;
 }
 
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.

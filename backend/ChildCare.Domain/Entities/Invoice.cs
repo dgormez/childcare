@@ -47,6 +47,12 @@ public class Invoice
     public int ReminderCount { get; set; }
     public DateTime? LastReminderSentAt { get; set; }
 
+    // Feature 030 — null unless generated while the location's FamilyInvoiceBundlingEnabled was
+    // true and the child had 2+ siblings sharing the same primary contact (research.md R4). Wraps
+    // existing per-child rows for combined PDF/parent-app/payment purposes only — never changes
+    // ChildId/ContractId/reporting semantics (spec.md Clarifications).
+    public Guid? FamilyGroupId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

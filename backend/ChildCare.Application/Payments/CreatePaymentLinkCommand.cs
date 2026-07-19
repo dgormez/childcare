@@ -67,6 +67,16 @@ public class CreatePaymentLinkCommandHandler(
         if (connection is null)
             return CreatePaymentLinkResult.Fail(CreatePaymentLinkFailure.ProviderNotConnected);
 
+        // Feature 030 (US3, spec.md FR-009a/Clarifications) — "one payment action covers the
+        // whole bundled group": paying any one sibling invoice online must charge the group's
+        // combined total, matching what the parent app already displays as the family's
+        // combinedTotal, and matching MarkInvoicePaidCommand's manual-path cascade amount.
+        var amountCents = invoice.FamilyGroupId is null
+            ? invoice.TotalCents
+            : await db.Invoices
+                .Where(i => i.FamilyGroupId == invoice.FamilyGroupId && i.Status == InvoiceStatus.Sent)
+                .SumAsync(i => i.TotalCents, cancellationToken);
+
         // research.md R6 — reuse an existing active attempt rather than creating a second one.
         var existing = await publicDb.Payments
             .Where(p => p.TenantId == currentTenant.TenantId && p.InvoiceId == request.InvoiceId && p.Status == PaymentStatus.Open)
@@ -96,7 +106,7 @@ public class CreatePaymentLinkCommandHandler(
             {
                 TenantId = currentTenant.TenantId,
                 InvoiceId = invoice.Id,
-                AmountCents = invoice.TotalCents,
+                AmountCents = amountCents,
                 Status = PaymentStatus.Open,
             };
             publicDb.Payments.Add(payment);

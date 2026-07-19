@@ -55,7 +55,8 @@
       "myRequests": "My requests",
       "viewInvoices": "My invoices",
       "viewFiscalAttestations": "Fiscal attestations",
-      "viewMilestones": "Development"
+      "viewMilestones": "Development",
+      "viewPreviousChildren": "Previous children"
     }
   },
   "messages": {
@@ -232,7 +233,11 @@
     "payNotAvailable": "Online payment isn't set up yet — pay by bank transfer using the reference above.",
     "payLinkFailed": "Couldn't start the payment. Please try again.",
     "viewReceipt": "View receipt",
-    "receiptDownloadFailed": "Could not download the receipt. Please try again."
+    "receiptDownloadFailed": "Could not download the receipt. Please try again.",
+    "familyGroup": {
+      "combinedTotal": "Combined total",
+      "perChildLine": "{{childName}}: {{amount}}"
+    }
   },
   "fiscalAttestations": {
     "title": "Fiscal Attestations",
@@ -305,7 +310,9 @@
       "exchange": "Day exchange"
     },
     "notAvailableForChild": "This request type isn't available for {childName} right now.",
-    "loadAvailabilityFailed": "Couldn't check request availability. Please try again."
+    "loadAvailabilityFailed": "Couldn't check request availability. Please try again.",
+    "applyToAllChildren": "Apply to all my children",
+    "bulkPartialResult": "{{succeededCount}} of {{totalCount}} requests submitted successfully."
   },
   "milestones": {
     "title": "Development",
@@ -320,5 +327,12 @@
       "emerging": "Emerging",
       "not_yet": "Not yet"
     }
+  },
+  "previousChildren": {
+    "title": "Previous children",
+    "loadFailed": "Could not load previous children.",
+    "emptyState": "No previous children to show.",
+    "enrollmentPeriod": "Enrolled {{start}} – {{end}}",
+    "readOnlyBanner": "This child is no longer active — this information is read-only."
   }
 }

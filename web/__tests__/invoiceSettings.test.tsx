@@ -36,6 +36,8 @@ const location: LocationResponse = {
   paymentRemindersEnabled: false,
   paymentReminderDelayDays: 3,
   paymentReminderCadenceDays: 7,
+  siblingDiscountPct: 0,
+  familyInvoiceBundlingEnabled: false,
   deactivatedAt: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
@@ -143,5 +145,45 @@ describe("InvoiceSettingsForm — payment reminder settings", () => {
 
     expect(await screen.findByText("Couldn't save changes. Please try again.")).toBeInTheDocument();
     expect(screen.getByLabelText("Send automatic payment reminders")).not.toBeChecked();
+  });
+});
+
+describe("InvoiceSettingsForm — sibling billing settings", () => {
+  it("loads the current discount percent and bundling toggle (defaults: 0%, disabled)", () => {
+    renderForm();
+    expect(screen.getByLabelText("Sibling discount (%)")).toHaveValue(0);
+    expect(screen.getByLabelText("Combine sibling invoices into one")).not.toBeChecked();
+  });
+
+  it("saves sibling billing settings independently of the other fields", async () => {
+    const updated = { ...location, siblingDiscountPct: 10, familyInvoiceBundlingEnabled: true };
+    vi.mocked(apiClient.PUT).mockResolvedValue(okResponse(updated) as never);
+    const onSaved = renderForm();
+
+    await userEvent.clear(screen.getByLabelText("Sibling discount (%)"));
+    await userEvent.type(screen.getByLabelText("Sibling discount (%)"), "10");
+    await userEvent.click(screen.getByLabelText("Combine sibling invoices into one"));
+    await userEvent.click(screen.getByRole("button", { name: "Save sibling billing settings" }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));
+    expect(apiClient.PUT).toHaveBeenCalledWith(
+      "/api/locations/{id}/sibling-billing-settings",
+      expect.objectContaining({
+        params: { path: { id: "loc-1" } },
+        body: { siblingDiscountPct: 10, familyInvoiceBundlingEnabled: true },
+      }),
+    );
+    expect(screen.getByText("Sibling billing settings saved.")).toBeInTheDocument();
+  });
+
+  it("shows an error notice and reverts the toggle on a failed sibling-billing save", async () => {
+    vi.mocked(apiClient.PUT).mockResolvedValue(errorResponse(404) as never);
+    renderForm();
+
+    await userEvent.click(screen.getByLabelText("Combine sibling invoices into one"));
+    await userEvent.click(screen.getByRole("button", { name: "Save sibling billing settings" }));
+
+    expect(await screen.findByText("Couldn't save changes. Please try again.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Combine sibling invoices into one")).not.toBeChecked();
   });
 });

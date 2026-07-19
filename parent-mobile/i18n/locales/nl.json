@@ -55,7 +55,8 @@
       "myRequests": "Mijn aanvragen",
       "viewInvoices": "Mijn facturen",
       "viewFiscalAttestations": "Fiscale attesten",
-      "viewMilestones": "Ontwikkeling"
+      "viewMilestones": "Ontwikkeling",
+      "viewPreviousChildren": "Vorige kinderen"
     }
   },
   "messages": {
@@ -232,7 +233,11 @@
     "payNotAvailable": "Online betalen is nog niet ingesteld — betaal via overschrijving met de referentie hierboven.",
     "payLinkFailed": "Kon de betaling niet starten. Probeer het opnieuw.",
     "viewReceipt": "Betalingsbewijs bekijken",
-    "receiptDownloadFailed": "Kon het betalingsbewijs niet downloaden. Probeer het opnieuw."
+    "receiptDownloadFailed": "Kon het betalingsbewijs niet downloaden. Probeer het opnieuw.",
+    "familyGroup": {
+      "combinedTotal": "Gecombineerd totaal",
+      "perChildLine": "{{childName}}: {{amount}}"
+    }
   },
   "fiscalAttestations": {
     "title": "Fiscale attesten",
@@ -305,7 +310,9 @@
       "exchange": "Dagwissel"
     },
     "notAvailableForChild": "Dit type verzoek is momenteel niet beschikbaar voor {childName}.",
-    "loadAvailabilityFailed": "Kan de beschikbaarheid niet controleren. Probeer het opnieuw."
+    "loadAvailabilityFailed": "Kan de beschikbaarheid niet controleren. Probeer het opnieuw.",
+    "applyToAllChildren": "Toepassen op al mijn kinderen",
+    "bulkPartialResult": "{{succeededCount}} van {{totalCount}} aanvragen succesvol verstuurd."
   },
   "milestones": {
     "title": "Ontwikkeling",
@@ -320,5 +327,12 @@
       "emerging": "In opkomst",
       "not_yet": "Nog niet"
     }
+  },
+  "previousChildren": {
+    "title": "Vorige kinderen",
+    "loadFailed": "Kon vorige kinderen niet laden.",
+    "emptyState": "Geen vorige kinderen om te tonen.",
+    "enrollmentPeriod": "Ingeschreven {{start}} – {{end}}",
+    "readOnlyBanner": "Dit kind is niet meer actief — deze informatie is alleen-lezen."
   }
 }

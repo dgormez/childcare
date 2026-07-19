@@ -40,12 +40,34 @@ public class MarkInvoicePaidCommandHandler(ITenantDbContext db, PaymentReceiptNo
         if (invoice.Status != InvoiceStatus.Sent)
             return MarkInvoicePaidResult.Fail(MarkInvoicePaidFailure.NotSent);
 
+        var paidAt = request.PaidAt.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         invoice.Status = InvoiceStatus.Paid;
-        invoice.PaidAt = request.PaidAt.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        invoice.PaidAt = paidAt;
         invoice.UpdatedAt = DateTime.UtcNow;
+
+        // Feature 030 (US3, spec.md FR-009a/research.md R5) — "one payment action covers the
+        // whole bundle": every sibling invoice sharing this FamilyGroupId transitions Sent→Paid
+        // together in the same transaction. Only Sent siblings are touched — one already Paid
+        // (shouldn't happen by construction, since they'd have transitioned together) is left
+        // alone rather than erroring the whole request.
+        var siblingInvoices = invoice.FamilyGroupId is null
+            ? []
+            : await db.Invoices
+                .Where(i => i.FamilyGroupId == invoice.FamilyGroupId && i.Id != invoice.Id && i.Status == InvoiceStatus.Sent)
+                .ToListAsync(cancellationToken);
+
+        foreach (var sibling in siblingInvoices)
+        {
+            sibling.Status = InvoiceStatus.Paid;
+            sibling.PaidAt = paidAt;
+            sibling.UpdatedAt = DateTime.UtcNow;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         await receiptNotificationService.NotifyAsync(db, invoice, cancellationToken);
+        foreach (var sibling in siblingInvoices)
+            await receiptNotificationService.NotifyAsync(db, sibling, cancellationToken);
 
         var child = await db.Children.FirstAsync(c => c.Id == invoice.ChildId, cancellationToken);
         var location = await db.Locations.FirstAsync(l => l.Id == invoice.LocationId, cancellationToken);

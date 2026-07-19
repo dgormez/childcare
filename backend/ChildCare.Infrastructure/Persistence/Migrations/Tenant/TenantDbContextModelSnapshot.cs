@@ -19,7 +19,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("tenant_template")
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1064,6 +1064,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateOnly?>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<Guid?>("FamilyGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("LastReminderSentAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1116,6 +1119,8 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.HasIndex("ContractId");
+
+                    b.HasIndex("FamilyGroupId");
 
                     b.HasIndex("OgmReference")
                         .IsUnique();
@@ -1253,6 +1258,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<bool>("FamilyInvoiceBundlingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("FlexPermission")
                         .HasColumnType("boolean");
 
@@ -1327,6 +1337,12 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("disabled");
+
+                    b.Property<decimal>("SiblingDiscountPct")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

@@ -1,17 +1,32 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
 import InvoicesScreen from "../app/(app)/invoices/index";
-import type { ParentInvoiceEntry } from "../types";
+import type { ParentFamilyInvoiceEntry, ParentInvoiceEntry } from "../types";
 
 jest.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string, opts?: Record<string, unknown>) => (opts ? `${key} ${JSON.stringify(opts)}` : key) }),
 }));
 
 jest.mock("../services/invoices", () => ({
   getInvoices: jest.fn(),
+  downloadFamilyInvoicePdf: jest.fn(),
+}));
+
+jest.mock("../services/payments", () => ({
+  createPaymentLink: jest.fn(),
+  getPaymentStatus: jest.fn(),
+}));
+
+jest.mock("expo-web-browser", () => ({
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: "dismiss" }),
 }));
 
 const { getInvoices } = jest.requireMock("../services/invoices") as { getInvoices: jest.Mock };
+const { createPaymentLink, getPaymentStatus } = jest.requireMock("../services/payments") as {
+  createPaymentLink: jest.Mock;
+  getPaymentStatus: jest.Mock;
+};
+const WebBrowser = jest.requireMock("expo-web-browser") as { openBrowserAsync: jest.Mock };
 
 function makeInvoice(overrides: Partial<ParentInvoiceEntry> = {}): ParentInvoiceEntry {
   return {
@@ -88,4 +103,78 @@ it("shows an unavailable message when the service can't load invoices", async ()
 
   const { findByText } = await render(<InvoicesScreen />);
   expect(await findByText("invoices.loadFailed")).toBeTruthy();
+});
+
+function makeFamilyEntry(overrides: Partial<ParentFamilyInvoiceEntry> = {}): ParentFamilyInvoiceEntry {
+  return {
+    familyGroupId: "family-1",
+    children: [
+      { invoiceId: "inv-1", childId: "child-1", childName: "Emma Peeters", subtotalCents: 45000 },
+      { invoiceId: "inv-2", childId: "child-2", childName: "Liam Peeters", subtotalCents: 40500 },
+    ],
+    totalCents: 85500,
+    status: "sent",
+    isOverdue: false,
+    dueDate: "2026-07-29",
+    createdAt: "2026-07-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+// Feature 030 (US3) — a FamilyGroupId entry renders distinctly from a normal single-invoice entry.
+it("renders a grouped family invoice entry distinctly from a normal single-invoice entry", async () => {
+  const familyEntry = makeFamilyEntry();
+  const normalInvoice = makeInvoice({ id: "inv-3", childId: "child-3", childName: "Nora Peeters" });
+  getInvoices.mockResolvedValue({ status: "loaded", invoices: [familyEntry, normalInvoice] });
+
+  const { findByText } = await render(<InvoicesScreen />);
+
+  expect(await findByText("Nora Peeters")).toBeTruthy();
+  expect(await screen.findAllByText(/invoices\.familyGroup\.perChildLine/)).toHaveLength(2);
+  expect(await findByText("invoices.familyGroup.combinedTotal")).toBeTruthy();
+});
+
+// Feature 030 Convergence (T073/T074) — spec.md FR-009a/Clarifications: paying any one invoice
+// in the bundle via the family tile's Pay action must be reachable from this list screen (no
+// per-invoice detail navigation exists for a grouped entry) and reflect the whole group Paid.
+describe("online payment for a bundled family invoice (feature 030 convergence)", () => {
+  it("shows a Pay action on a Sent family entry", async () => {
+    getInvoices.mockResolvedValue({ status: "loaded", invoices: [makeFamilyEntry()] });
+
+    const { findByLabelText } = await render(<InvoicesScreen />);
+    expect(await findByLabelText("invoices.payNow")).toBeTruthy();
+  });
+
+  it("does not show a Pay action on a Paid family entry", async () => {
+    getInvoices.mockResolvedValue({ status: "loaded", invoices: [makeFamilyEntry({ status: "paid" })] });
+
+    const { queryByLabelText } = await render(<InvoicesScreen />);
+    expect(queryByLabelText("invoices.payNow")).toBeNull();
+  });
+
+  it("tapping Pay uses the first grouped child's invoiceId, opens checkout, and reloads the list once confirmed", async () => {
+    getInvoices.mockResolvedValueOnce({ status: "loaded", invoices: [makeFamilyEntry()] });
+    createPaymentLink.mockResolvedValue({ status: "created", checkoutUrl: "https://fake-mollie.test/checkout/abc" });
+    getPaymentStatus.mockResolvedValue({ invoiceStatus: "paid", paymentStatus: "paid" });
+    getInvoices.mockResolvedValueOnce({ status: "loaded", invoices: [makeFamilyEntry({ status: "paid" })] });
+
+    const { findByLabelText, findAllByText } = await render(<InvoicesScreen />);
+    await fireEvent.press(await findByLabelText("invoices.payNow"));
+
+    await waitFor(() => expect(createPaymentLink).toHaveBeenCalledWith("inv-1"));
+    await waitFor(() => expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith("https://fake-mollie.test/checkout/abc"));
+    await waitFor(() => expect(getPaymentStatus).toHaveBeenCalledWith("inv-1"), { timeout: 5000 });
+    await waitFor(() => expect(getInvoices).toHaveBeenCalledTimes(2), { timeout: 5000 });
+    expect(await findAllByText("invoices.statusPaid")).toHaveLength(1);
+  }, 10000);
+
+  it("shows a not-connected message when the organisation has no Mollie connection", async () => {
+    getInvoices.mockResolvedValue({ status: "loaded", invoices: [makeFamilyEntry()] });
+    createPaymentLink.mockResolvedValue({ status: "not_connected" });
+
+    const { findByLabelText, findByText } = await render(<InvoicesScreen />);
+    await fireEvent.press(await findByLabelText("invoices.payNow"));
+
+    expect(await findByText("invoices.payNotAvailable")).toBeTruthy();
+  });
 });

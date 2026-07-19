@@ -69,7 +69,9 @@ export default function InvoiceDetailScreen() {
         setLoading(false);
         return;
       }
-      const found = result.invoices.find((i) => i.id === id) ?? null;
+      // A grouped family entry has no single `id` — it's never linked to from this per-invoice
+      // detail screen (the list renders it as its own non-navigable tile, T053).
+      const found = result.invoices.find((i): i is ParentInvoiceEntry => "id" in i && i.id === id) ?? null;
       if (!found) setError(t("invoices.loadFailed"));
       setInvoice(found);
       setLoading(false);

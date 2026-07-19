@@ -19,7 +19,8 @@ public record InvoiceResponse(
     DateTime? SentAt,
     DateTime? PaidAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    Guid? FamilyGroupId);
 
 public record InvoiceLineItemsResponse(
     int PresentDays,
@@ -31,3 +32,20 @@ public record InvoiceLineItemsResponse(
     IReadOnlyList<InvoiceExtraChargeResponse> ExtraCharges);
 
 public record InvoiceExtraChargeResponse(string Label, int AmountCents);
+
+// Feature 030 — contracts/family-siblings-api.md. Presentation shape for a group of invoices
+// sharing a FamilyGroupId; the underlying per-child Invoice rows are unchanged (spec.md
+// Clarifications).
+// InvoiceId lets a client target one of the group's underlying per-child invoices (e.g. to pay
+// the whole bundle online — CreatePaymentLinkCommand resolves the full FamilyGroupId total from
+// any one of them) without a separate "family invoice" identifier existing anywhere.
+public record FamilyInvoiceChildLineResponse(Guid InvoiceId, Guid ChildId, string ChildName, int SubtotalCents);
+
+public record FamilyInvoiceResponse(
+    Guid FamilyGroupId,
+    IReadOnlyList<FamilyInvoiceChildLineResponse> Children,
+    int TotalCents,
+    string Status,
+    bool IsOverdue,
+    DateOnly? DueDate,
+    DateTime CreatedAt);

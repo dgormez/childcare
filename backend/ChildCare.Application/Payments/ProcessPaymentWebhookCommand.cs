@@ -60,12 +60,33 @@ public class ProcessPaymentWebhookCommandHandler(
             // manual mark-paid may have already won the race (spec.md Edge Cases).
             if (invoice is not null && invoice.Status == InvoiceStatus.Sent)
             {
+                var paidAt = DateTime.UtcNow;
                 invoice.Status = InvoiceStatus.Paid;
-                invoice.PaidAt = DateTime.UtcNow;
-                invoice.UpdatedAt = DateTime.UtcNow;
+                invoice.PaidAt = paidAt;
+                invoice.UpdatedAt = paidAt;
+
+                // Feature 030 (US3, spec.md FR-009a/Clarifications) — "one payment action covers
+                // the whole bundle" applies to the PSP payment-link path too, mirroring
+                // MarkInvoicePaidCommand's cascade: every sibling invoice sharing this
+                // FamilyGroupId transitions Sent→Paid together.
+                var siblingInvoices = invoice.FamilyGroupId is null
+                    ? []
+                    : await tenantDb.Invoices
+                        .Where(i => i.FamilyGroupId == invoice.FamilyGroupId && i.Id != invoice.Id && i.Status == InvoiceStatus.Sent)
+                        .ToListAsync(cancellationToken);
+
+                foreach (var sibling in siblingInvoices)
+                {
+                    sibling.Status = InvoiceStatus.Paid;
+                    sibling.PaidAt = paidAt;
+                    sibling.UpdatedAt = paidAt;
+                }
+
                 await tenantDb.SaveChangesAsync(cancellationToken);
 
                 await receiptNotificationService.NotifyAsync(tenantDb, invoice, cancellationToken);
+                foreach (var sibling in siblingInvoices)
+                    await receiptNotificationService.NotifyAsync(tenantDb, sibling, cancellationToken);
             }
         }
 

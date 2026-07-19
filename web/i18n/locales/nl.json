@@ -514,6 +514,15 @@
       "saveSuccess": "Facturatie-instellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
     },
+    "siblingBilling": {
+      "discountLabel": "Broer/zus-korting (%)",
+      "discountHint": "Wordt automatisch toegepast op elk kind behalve het langst ingeschreven kind dat dezelfde hoofdcontactpersoon deelt op deze locatie.",
+      "bundlingLabel": "Facturen van broers/zussen samenvoegen tot één",
+      "bundlingHint": "Groepeert facturen van hetzelfde gezin tot één PDF, één item in de ouder-app en één betaalactie.",
+      "saveButton": "Broer/zus-facturatie-instellingen opslaan",
+      "saveSuccess": "Instellingen voor broer/zus-facturatie opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
     "paymentReminderSettings": {
       "title": "Betalingsherinneringen",
       "description": "Herinner ouders automatisch aan openstaande facturen.",
@@ -697,6 +706,7 @@
     "newChild": "Nieuw kind",
     "tabProfile": "Profiel",
     "tabHealth": "Gezondheid",
+    "tabContacts": "Contacten",
     "profile": {
       "editButton": "Bewerken",
       "notSet": "Niet ingevuld",
@@ -849,6 +859,48 @@
         "achieved": "Bereikt",
         "emerging": "In opkomst",
         "not_yet": "Nog niet"
+      }
+    },
+    "contacts": {
+      "emptyState": "Nog geen contacten gekoppeld.",
+      "loadError": "Kon contacten niet laden. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen",
+      "primaryBadge": "Hoofdcontact",
+      "addContact": "Contact toevoegen",
+      "removeContact": "Contact verwijderen",
+      "removeConfirmTitle": "Dit contact verwijderen?",
+      "removeConfirmBody": "Dit contact wordt niet meer aan dit kind gekoppeld.",
+      "removeConfirm": "Verwijderen",
+      "removeCancel": "Annuleren",
+      "removeError": "Kon dit contact niet verwijderen. Probeer het opnieuw.",
+      "setPrimary": "Instellen als hoofdcontact",
+      "setPrimaryError": "Kon het hoofdcontact niet bijwerken. Probeer het opnieuw.",
+      "relationshipLabel": "Relatie",
+      "canPickupLabel": "Mag ophalen",
+      "relationships": {
+        "mother": "Moeder",
+        "father": "Vader",
+        "guardian": "Voogd",
+        "emergencyContact": "Noodcontact",
+        "authorisedPickup": "Gemachtigd om op te halen",
+        "fosterParent": "Pleegouder",
+        "other": "Andere"
+      },
+      "dialog": {
+        "title": "Contact toevoegen",
+        "searchLabel": "Zoeken op naam, e-mail of telefoon",
+        "searchPlaceholder": "Begin te typen om bestaande contacten te zoeken…",
+        "matchFound": "Dit lijkt op een bestaand contact:",
+        "linkExisting": "Bestaand contact koppelen in plaats daarvan",
+        "createNew": "Nieuw contact aanmaken",
+        "firstNameLabel": "Voornaam",
+        "lastNameLabel": "Achternaam",
+        "phoneLabel": "Telefoon",
+        "emailLabel": "E-mail",
+        "localeLabel": "Voorkeurstaal",
+        "save": "Contact toevoegen",
+        "saveError": "Kon dit contact niet toevoegen. Probeer het opnieuw.",
+        "cancel": "Annuleren"
       }
     }
   },

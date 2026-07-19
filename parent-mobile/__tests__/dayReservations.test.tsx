@@ -31,6 +31,7 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01" };
+const child2: ParentChildResponse = { id: "c2", firstName: "Lucas", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2023-01-01" };
 
 function makeReservation(overrides: Partial<DayReservationResponse> = {}): DayReservationResponse {
   return {
@@ -96,6 +97,47 @@ describe("AbsenceRequestScreen", () => {
     await fireEvent.press(await findByText("dayReservations.submit"));
 
     expect(await findByText("errors.validation")).toBeTruthy();
+  });
+});
+
+describe("AbsenceRequestScreen bulk toggle (feature 030 US1)", () => {
+  it("hides the bulk toggle with one linked child, shows it with two", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/parent/children") return Promise.resolve(jsonResponse(200, [child1]));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+
+    const { findByText, queryByText } = await render(<AbsenceRequestScreen />);
+    await findByText("Timmy Tester");
+    expect(queryByText("dayReservations.applyToAllChildren")).toBeNull();
+  });
+
+  it("shows the bulk toggle and renders a partial-failure result", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/parent/children") return Promise.resolve(jsonResponse(200, [child1, child2]));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+    postMock.mockResolvedValue(jsonResponse(200, {
+      results: [
+        { childId: "c1", childName: "Timmy Tester", succeeded: true, reservation: makeReservation(), errorKey: null },
+        { childId: "c2", childName: "Lucas Tester", succeeded: false, reservation: null, errorKey: "errors.day_reservations.request_type_disabled" },
+      ],
+    }));
+
+    const { findByText, getByPlaceholderText } = await render(<AbsenceRequestScreen />);
+    await findByText("Timmy Tester");
+    await findByText("Lucas Tester");
+
+    await fireEvent.press(await findByText("dayReservations.applyToAllChildren"));
+    await fireEvent.changeText(getByPlaceholderText("dayReservations.chooseDate"), "2026-07-13");
+    await fireEvent.press(await findByText("dayReservations.submit"));
+
+    await waitFor(() => expect(postMock).toHaveBeenCalledWith(
+      "/api/parent/day-reservations/bulk",
+      expect.objectContaining({ body: { childIds: ["c1", "c2"], type: "absence", requestedDate: "2026-07-13", exchangeForDate: null, reason: null } }),
+    ));
+    expect(await findByText("dayReservations.bulkPartialResult")).toBeTruthy();
+    expect(await findByText("errors.day_reservations.request_type_disabled")).toBeTruthy();
   });
 });
 

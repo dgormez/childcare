@@ -10,19 +10,19 @@
 import { Directory, File, Paths } from "expo-file-system";
 import { apiClient, getApiBaseUrl } from "./apiClient";
 import { useStore } from "../store/useStore";
-import type { ParentInvoiceEntry } from "../types";
+import type { ParentInvoiceListEntry } from "../types";
 
 export type InvoicesLoadResult =
-  | { status: "loaded"; invoices: ParentInvoiceEntry[] }
+  | { status: "loaded"; invoices: ParentInvoiceListEntry[] }
   | { status: "unavailable" };
 
-let cache: ParentInvoiceEntry[] | null = null;
+let cache: ParentInvoiceListEntry[] | null = null;
 
 export async function getInvoices(): Promise<InvoicesLoadResult> {
   try {
     const result = await apiClient.GET("/api/parent/invoices");
     if (!result.response.ok) throw new Error("invoices_load_failed");
-    const invoices = result.data as unknown as ParentInvoiceEntry[];
+    const invoices = result.data as unknown as ParentInvoiceListEntry[];
     cache = invoices;
     return { status: "loaded", invoices };
   } catch {
@@ -40,6 +40,19 @@ export async function downloadInvoicePdf(invoiceId: string) {
   destination.create({ intermediates: true, idempotent: true });
   const url = `${getApiBaseUrl()}/api/parent/invoices/${invoiceId}/pdf`;
   return File.downloadFileAsync(url, new File(destination, `${invoiceId}.pdf`), {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    idempotent: true,
+  });
+}
+
+// Feature 030 (US3) — combined family invoice PDF (one document covering every sibling in the
+// group), mirrors downloadInvoicePdf's download-then-share shape exactly.
+export async function downloadFamilyInvoicePdf(familyGroupId: string) {
+  const token = useStore.getState().auth?.accessToken;
+  const destination = new Directory(Paths.cache, "invoices");
+  destination.create({ intermediates: true, idempotent: true });
+  const url = `${getApiBaseUrl()}/api/parent/invoices/family/${familyGroupId}/pdf`;
+  return File.downloadFileAsync(url, new File(destination, `family-${familyGroupId}.pdf`), {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     idempotent: true,
   });

@@ -5,7 +5,7 @@
  * logging (spec.md Assumptions).
  */
 import { apiClient } from "./apiClient";
-import type { DayReservationResponse, DayReservationType } from "../types";
+import type { BulkDayReservationResponse, DayReservationResponse, DayReservationType } from "../types";
 
 function errorKeyFrom(result: { error?: unknown }): string {
   return (result.error as { errorKey?: string } | undefined)?.errorKey ?? "errors.validation";
@@ -23,6 +23,22 @@ export async function submitDayReservation(
   });
   if (!result.response.ok) throw new Error(errorKeyFrom(result));
   return result.data as unknown as DayReservationResponse;
+}
+
+// Feature 030 US1 — fans out to one DayReservation per childId server-side (research.md R1).
+// Always 200 with a per-child result unless the caller isn't authorized at all (see contracts).
+export async function submitBulkDayReservation(
+  childIds: string[],
+  type: DayReservationType,
+  requestedDate: string,
+  exchangeForDate: string | null,
+  reason: string | null,
+): Promise<BulkDayReservationResponse> {
+  const result = await apiClient.POST("/api/parent/day-reservations/bulk", {
+    body: { childIds, type, requestedDate, exchangeForDate, reason },
+  });
+  if (!result.response.ok) throw new Error(errorKeyFrom(result));
+  return result.data as unknown as BulkDayReservationResponse;
 }
 
 export async function cancelDayReservation(id: string): Promise<DayReservationResponse> {
