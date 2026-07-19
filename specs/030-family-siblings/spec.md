@@ -36,6 +36,73 @@
   with a sibling. Reuses the single already-authoritative "who gets billed" field instead of
   inventing new family-resolution logic.
 
+## Product Context
+
+### Feature Type
+
+Mixed — data-model change (Location/Invoice extensions, ContactRelationship enum), API-backend
+capability (bulk day reservations, sibling billing), and user-facing UI across parent mobile and
+director web.
+
+### Primary Consumer
+
+Parent (child switcher already existed pre-feature; this adds bulk day-reservations, combined
+family invoice, previous-children view) and Director (sibling-billing settings, the first web UI
+for managing a child's linked family contacts).
+
+### Workflow Boundary
+
+Primarily **Billing & Payments** (`Workflows/billing.md` — sibling discount, family invoice
+bundling) and **Child Lifecycle** (parent/family relationship visibility, previous-children
+view). Also extends **Parent Communication**'s existing day-reservation flow (013a) to a
+multi-child bulk action. No new workflow — this is a cross-cutting extension of three existing,
+already-documented workflows, not a new business capability. Actors: Parent (multi-child),
+Director (per-location billing settings, contact management), System (primary-contact-based
+grouping resolution). Cross-platform impact: parent-mobile (bulk day reservations, combined
+invoice view, previous-children view), director web (sibling-billing settings, new Contacts
+tab), backend (all of the above). No caregiver-tablet surface.
+
+### User Impact
+
+This enables parents with multiple enrolled children to report absences for all of them in one
+action and receive one combined invoice per family, and enables directors to configure sibling
+discounts and manage a child's family contacts from the web for the first time, resulting in
+less repetitive parent effort and billing that reflects real household structure.
+
+### UX Requirements
+
+**Parent persona** (parent-mobile, phone/portrait, per platform-rules.md): job is "act on all my
+children in one place without repeating myself." Success criteria: the "all children" option on
+the day-reservation form appears only when it would actually save a step (2+ active children);
+a combined family invoice reads as one clear document, not a confusing merge. Main flow: existing
+single-child screens are unchanged; the bulk option and previous-children view are additive entry
+points, not a new navigation model (design-decisions.md's "parent app uses timeline as primary
+home screen" decision is unaffected). Loading/empty/error states: bulk submission shows per-child
+partial results, never a single opaque success/failure; previous-children entry point has no
+empty-state affordance since it's hidden entirely when not applicable (FR-017). Accessibility: 48pt
+touch targets on the new bulk-selection toggle and previous-children list cards, per
+platform-rules.md. Offline: bulk day-reservation submission reuses the existing single-submission
+offline-queue behavior (008) per child.
+
+**Director persona** (director web, desktop-first, per platform-rules.md): job is "configure
+per-location billing policy and manage family records without leaving the child profile or
+location settings screens I already use." Success criteria: sibling-billing settings live on the
+existing Invoicing tab (no new settings surface); the new Contacts tab follows the same tab
+pattern 006a/013c already established on the child-detail screen. Loading/empty/error states: an
+empty Contacts section prompts adding the first contact; duplicate-detection surfaces inline
+during contact creation, not as a separate blocking step. Accessibility: standard director-web
+focus-ring/keyboard-navigation requirements (platform-rules.md) — no touch-target floor.
+
+### Technical Requirements
+
+API impact, data-model impact, security, and testing requirements are detailed in
+research.md/data-model.md/contracts/ (produced by `/speckit-plan`) — summarized: no new tables
+(additive `Location`/`Invoice` columns, `ContactRelationship` enum extension only); new/extended
+endpoints listed in contracts/family-siblings-api.md; authorization reuses the existing
+`ICurrentParentContactResolver` link-check and `DirectorOnly` policies throughout (no new
+authorization model); testing per Constitution V (real-PostgreSQL integration tests for the
+money-correctness logic — sibling-discount tie-breaking, bundling group assignment, paid-cascade).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Report all children absent in one action (Priority: P1)
