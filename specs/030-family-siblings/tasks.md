@@ -261,9 +261,9 @@ marking it paid marks both underlying invoices paid.
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T048)
 - [X] T052 [P] [US3] Add family invoice bundling toggle to
   `web/components/InvoiceSettingsForm.tsx` alongside the T033 discount field
-- [ ] T053 [P] [US3] Render grouped family invoice entries (combined total, per-child lines,
+- [X] T053 [P] [US3] Render grouped family invoice entries (combined total, per-child lines,
   single download action) in `parent-mobile/app/(app)/invoices/index.tsx` (depends on T006)
-- [ ] T054 [P] [US3] Component test: invoice list renders a `FamilyInvoiceResponse` entry
+- [X] T054 [P] [US3] Component test: invoice list renders a `FamilyInvoiceResponse` entry
   distinctly from a normal single-invoice entry, in
   `parent-mobile/__tests__/invoices.test.tsx` (create if it doesn't already exist, mirroring
   existing parent-mobile test conventions)

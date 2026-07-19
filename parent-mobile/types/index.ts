@@ -267,6 +267,31 @@ export interface ParentInvoiceEntry {
   updatedAt:     string;
 }
 
+// Feature 030 (US3) — contracts/family-siblings-api.md. Siblings sharing a FamilyGroupId
+// collapse into one of these entries in the parent invoice list instead of one ParentInvoiceEntry
+// each; an ungrouped invoice stays a normal ParentInvoiceEntry (familyGroupId absent there).
+export interface FamilyInvoiceChildLine {
+  childId:       string;
+  childName:     string;
+  subtotalCents: number;
+}
+
+export interface ParentFamilyInvoiceEntry {
+  familyGroupId: string;
+  children:      FamilyInvoiceChildLine[];
+  totalCents:    number;
+  status:        InvoiceStatus;
+  isOverdue:     boolean;
+  dueDate:       string | null;
+  createdAt:     string;
+}
+
+export type ParentInvoiceListEntry = ParentInvoiceEntry | ParentFamilyInvoiceEntry;
+
+export function isFamilyInvoiceEntry(entry: ParentInvoiceListEntry): entry is ParentFamilyInvoiceEntry {
+  return "children" in entry;
+}
+
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
 export interface PaymentLinkResponse {
   checkoutUrl: string;

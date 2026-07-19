@@ -1,14 +1,15 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, screen } from "@testing-library/react-native";
 import InvoicesScreen from "../app/(app)/invoices/index";
-import type { ParentInvoiceEntry } from "../types";
+import type { ParentFamilyInvoiceEntry, ParentInvoiceEntry } from "../types";
 
 jest.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string, opts?: Record<string, unknown>) => (opts ? `${key} ${JSON.stringify(opts)}` : key) }),
 }));
 
 jest.mock("../services/invoices", () => ({
   getInvoices: jest.fn(),
+  downloadFamilyInvoicePdf: jest.fn(),
 }));
 
 const { getInvoices } = jest.requireMock("../services/invoices") as { getInvoices: jest.Mock };
@@ -88,4 +89,28 @@ it("shows an unavailable message when the service can't load invoices", async ()
 
   const { findByText } = await render(<InvoicesScreen />);
   expect(await findByText("invoices.loadFailed")).toBeTruthy();
+});
+
+// Feature 030 (US3) — a FamilyGroupId entry renders distinctly from a normal single-invoice entry.
+it("renders a grouped family invoice entry distinctly from a normal single-invoice entry", async () => {
+  const familyEntry: ParentFamilyInvoiceEntry = {
+    familyGroupId: "family-1",
+    children: [
+      { childId: "child-1", childName: "Emma Peeters", subtotalCents: 45000 },
+      { childId: "child-2", childName: "Liam Peeters", subtotalCents: 40500 },
+    ],
+    totalCents: 85500,
+    status: "sent",
+    isOverdue: false,
+    dueDate: "2026-07-29",
+    createdAt: "2026-07-01T00:00:00Z",
+  };
+  const normalInvoice = makeInvoice({ id: "inv-3", childId: "child-3", childName: "Nora Peeters" });
+  getInvoices.mockResolvedValue({ status: "loaded", invoices: [familyEntry, normalInvoice] });
+
+  const { findByText } = await render(<InvoicesScreen />);
+
+  expect(await findByText("Nora Peeters")).toBeTruthy();
+  expect(await screen.findAllByText(/invoices\.familyGroup\.perChildLine/)).toHaveLength(2);
+  expect(await findByText("invoices.familyGroup.combinedTotal")).toBeTruthy();
 });
