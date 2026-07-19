@@ -15,11 +15,20 @@ interface InvoiceSettingsFormProps {
 export function InvoiceSettingsForm({ location, onSaved }: InvoiceSettingsFormProps) {
   const t = useTranslations("locations.invoiceSettings");
   const tr = useTranslations("locations.paymentReminderSettings");
+  const ts = useTranslations("locations.siblingBilling");
   const [erkenningsnummer, setErkenningsnummer] = useState(location.erkenningsnummer ?? "");
   const [bankAccountNumber, setBankAccountNumber] = useState(location.bankAccountNumber ?? "");
   const [invoiceDueDays, setInvoiceDueDays] = useState(String(location.invoiceDueDays));
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+
+  // Feature 030 — separate save action from the fields above, since it's a distinct backend
+  // command/endpoint (UpdateLocationSiblingBillingSettingsCommand), mirroring the payment-
+  // reminders section's own PUT call below.
+  const [siblingDiscountPct, setSiblingDiscountPct] = useState(String(location.siblingDiscountPct));
+  const [bundlingEnabled, setBundlingEnabled] = useState(location.familyInvoiceBundlingEnabled);
+  const [savingSiblingBilling, setSavingSiblingBilling] = useState(false);
+  const [siblingBillingNotice, setSiblingBillingNotice] = useState("");
 
   // Feature 014a — separate save action from the fields above, since it's a distinct backend
   // command/endpoint (UpdateLocationPaymentReminderSettingsCommand), mirroring how this same
@@ -69,6 +78,26 @@ export function InvoiceSettingsForm({ location, onSaved }: InvoiceSettingsFormPr
       return;
     }
     setReminderNotice(tr("saveSuccess"));
+    onSaved(result.data as unknown as LocationResponse);
+  }
+
+  async function saveSiblingBilling() {
+    setSavingSiblingBilling(true);
+    setSiblingBillingNotice("");
+    const result = await apiClient.PUT("/api/locations/{id}/sibling-billing-settings", {
+      params: { path: { id: location.id } },
+      body: {
+        siblingDiscountPct: Number(siblingDiscountPct) || 0,
+        familyInvoiceBundlingEnabled: bundlingEnabled,
+      },
+    });
+    setSavingSiblingBilling(false);
+    if (!result.response.ok) {
+      setBundlingEnabled(location.familyInvoiceBundlingEnabled);
+      setSiblingBillingNotice(ts("saveError"));
+      return;
+    }
+    setSiblingBillingNotice(ts("saveSuccess"));
     onSaved(result.data as unknown as LocationResponse);
   }
 
@@ -155,6 +184,43 @@ export function InvoiceSettingsForm({ location, onSaved }: InvoiceSettingsFormPr
         {reminderNotice && <p className="text-sm text-text-soft dark:text-text-soft-dark">{reminderNotice}</p>}
         <Button onClick={saveReminders} disabled={savingReminders}>
           {tr("saveButton")}
+        </Button>
+      </div>
+
+      <div className="space-y-4 border-t border-border pt-8 dark:border-border-dark">
+        <div className="space-y-2">
+          <label htmlFor="siblingDiscountPct" className="text-sm font-medium text-text dark:text-text-dark">
+            {ts("discountLabel")}
+          </label>
+          <Input
+            id="siblingDiscountPct"
+            type="number"
+            min={0}
+            max={100}
+            step="0.01"
+            value={siblingDiscountPct}
+            onChange={(e) => setSiblingDiscountPct(e.target.value)}
+            className="max-w-[8rem] tabular-nums"
+          />
+          <p className="text-xs text-text-soft dark:text-text-soft-dark">{ts("discountHint")}</p>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm font-medium text-text dark:text-text-dark">
+          <input
+            type="checkbox"
+            checked={bundlingEnabled}
+            onChange={(e) => setBundlingEnabled(e.target.checked)}
+            className="h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary dark:border-border-dark"
+          />
+          {ts("bundlingLabel")}
+        </label>
+        <p className="text-xs text-text-soft dark:text-text-soft-dark">{ts("bundlingHint")}</p>
+
+        {siblingBillingNotice && (
+          <p className="text-sm text-text-soft dark:text-text-soft-dark">{siblingBillingNotice}</p>
+        )}
+        <Button onClick={saveSiblingBilling} disabled={savingSiblingBilling}>
+          {ts("saveButton")}
         </Button>
       </div>
     </div>

@@ -156,9 +156,9 @@ other doesn't.
   (depends on T002, T009)
 - [X] T032 [US2] Add `PUT /api/locations/{locationId}/sibling-billing-settings` route in
   `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` (depends on T031)
-- [ ] T033 [P] [US2] Add sibling-discount percent field to
+- [X] T033 [P] [US2] Add sibling-discount percent field to
   `web/components/InvoiceSettingsForm.tsx` (extends the existing Invoicing tab per plan.md)
-- [ ] T034 [P] [US2] Component test: saving the discount field calls the new settings endpoint,
+- [X] T034 [P] [US2] Component test: saving the discount field calls the new settings endpoint,
   in `web/__tests__/InvoiceSettingsForm.test.tsx` (or existing equivalent test file for that
   component)
 
@@ -259,7 +259,7 @@ marking it paid marks both underlying invoices paid.
 - [X] T051 [US3] Add `GET /api/parent/invoices/family/{familyGroupId}/pdf` route (same
   indistinguishable-not-found authorization pattern as the existing per-invoice PDF route) in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T048)
-- [ ] T052 [P] [US3] Add family invoice bundling toggle to
+- [X] T052 [P] [US3] Add family invoice bundling toggle to
   `web/components/InvoiceSettingsForm.tsx` alongside the T033 discount field
 - [ ] T053 [P] [US3] Render grouped family invoice entries (combined total, per-child lines,
   single download action) in `parent-mobile/app/(app)/invoices/index.tsx` (depends on T006)

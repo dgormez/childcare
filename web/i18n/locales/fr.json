@@ -519,7 +519,7 @@
       "discountHint": "Appliquée automatiquement à chaque enfant sauf celui inscrit depuis le plus longtemps partageant le même contact principal dans cet établissement.",
       "bundlingLabel": "Regrouper les factures de la fratrie en une seule",
       "bundlingHint": "Regroupe les factures d'une même famille en un seul PDF, une seule entrée dans l'application parent et une seule action de paiement.",
-      "saveButton": "Enregistrer les modifications",
+      "saveButton": "Enregistrer les paramètres de facturation fratrie",
       "saveSuccess": "Paramètres de facturation fratrie enregistrés.",
       "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
     },

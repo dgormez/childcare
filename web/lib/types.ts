@@ -70,6 +70,9 @@ export interface LocationResponse {
   paymentRemindersEnabled: boolean;
   paymentReminderDelayDays: number;
   paymentReminderCadenceDays: number;
+  // Feature 030 — contracts/family-siblings-api.md.
+  siblingDiscountPct: number;
+  familyInvoiceBundlingEnabled: boolean;
 }
 
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.

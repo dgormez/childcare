@@ -519,7 +519,7 @@
       "discountHint": "Wordt automatisch toegepast op elk kind behalve het langst ingeschreven kind dat dezelfde hoofdcontactpersoon deelt op deze locatie.",
       "bundlingLabel": "Facturen van broers/zussen samenvoegen tot één",
       "bundlingHint": "Groepeert facturen van hetzelfde gezin tot één PDF, één item in de ouder-app en één betaalactie.",
-      "saveButton": "Wijzigingen opslaan",
+      "saveButton": "Broer/zus-facturatie-instellingen opslaan",
       "saveSuccess": "Instellingen voor broer/zus-facturatie opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
     },

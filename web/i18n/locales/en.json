@@ -519,7 +519,7 @@
       "discountHint": "Applied automatically to every child but the earliest-enrolled sibling sharing the same primary contact at this location.",
       "bundlingLabel": "Combine sibling invoices into one",
       "bundlingHint": "Groups same-family invoices into one PDF, one parent-app entry, and one payment action.",
-      "saveButton": "Save changes",
+      "saveButton": "Save sibling billing settings",
       "saveSuccess": "Sibling billing settings saved.",
       "saveError": "Couldn't save changes. Please try again."
     },
