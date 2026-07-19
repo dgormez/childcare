@@ -253,4 +253,42 @@ public class ChildContactTests(OrganisationOnboardingWebAppFactory factory)
         var getResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{child.Id}", org.AccessToken));
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
     }
+
+    // Feature 030 (US4) — the web Contacts tab's first read: list a child's linked contacts,
+    // primary first.
+    [Fact]
+    public async Task ListChildContacts_ReturnsLinkedContacts_PrimaryFirst()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"List Contacts Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var secondary = await CreateContactAsync(client, org.AccessToken, "Tom");
+        var primary = await CreateContactAsync(client, org.AccessToken, "Anna");
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/contacts", org.AccessToken,
+            new LinkContactToChildRequest(secondary.Id, "Father", true, false)));
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/contacts", org.AccessToken,
+            new LinkContactToChildRequest(primary.Id, "Mother", true, true)));
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{child.Id}/contacts", org.AccessToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contacts = (await response.Content.ReadFromJsonAsync<List<ChildContactResponse>>())!;
+        Assert.Equal(2, contacts.Count);
+        Assert.True(contacts[0].IsPrimary);
+        Assert.Equal(primary.Id, contacts[0].ContactId);
+    }
+
+    [Fact]
+    public async Task ListChildContacts_NoContactsLinked_ReturnsEmptyList()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"List Contacts Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken);
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{child.Id}/contacts", org.AccessToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contacts = (await response.Content.ReadFromJsonAsync<List<ChildContactResponse>>())!;
+        Assert.Empty(contacts);
+    }
 }

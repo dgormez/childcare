@@ -37,6 +37,13 @@ public static class ContactsEndpoints
             .WithTags("Contacts")
             .RequireAuthorization("DirectorOnly");
 
+        // Feature 030 (US4) — new; see ListChildContactsQuery's doc comment.
+        childContacts.MapGet("/", async (Guid childId, IMediator mediator) =>
+        {
+            var list = await mediator.Send(new ListChildContactsQuery(childId));
+            return Results.Ok(list);
+        });
+
         childContacts.MapPost("/", async (Guid childId, LinkContactToChildRequest req, IMediator mediator) =>
         {
             var relationship = Enum.Parse<ContactRelationship>(req.Relationship, ignoreCase: true);
