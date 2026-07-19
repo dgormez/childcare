@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Claims;
+using ChildCare.Api.Middleware;
 using ChildCare.Api.Services;
 using ChildCare.Application.Email;
 using ChildCare.Contracts.Requests;
@@ -63,7 +64,8 @@ public static class EmailEndpoints
         {
             var result = await mediator.Send(new GetDigestSubscriptionStateQuery(org, token));
             return Results.Content(RenderUnsubscribePage(result, token, org), "text/html");
-        });
+        })
+        .RequireTenantExempt();
 
         publicGroup.MapPost("/unsubscribe", async (HttpContext ctx, IMediator mediator) =>
         {
@@ -72,7 +74,8 @@ public static class EmailEndpoints
             var org = form["org"].ToString();
             await mediator.Send(new UnsubscribeDigestCommand(org, token));
             return Results.Redirect($"/api/email/unsubscribe?token={Uri.EscapeDataString(token)}&org={Uri.EscapeDataString(org)}");
-        });
+        })
+        .RequireTenantExempt();
 
         publicGroup.MapPost("/resubscribe", async (HttpContext ctx, IMediator mediator) =>
         {
@@ -81,7 +84,8 @@ public static class EmailEndpoints
             var org = form["org"].ToString();
             await mediator.Send(new ResubscribeDigestCommand(org, token));
             return Results.Redirect($"/api/email/unsubscribe?token={Uri.EscapeDataString(token)}&org={Uri.EscapeDataString(org)}");
-        });
+        })
+        .RequireTenantExempt();
     }
 
     private static string RenderUnsubscribePage(DigestSubscriptionResult result, string token, string organisationSlug)

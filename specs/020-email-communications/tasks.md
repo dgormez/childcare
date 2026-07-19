@@ -133,30 +133,30 @@ guardian and every other household still receive theirs.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T039 [P] [US2] Integration test: `send-daily-reports` sends one independent email per
+- [X] T039 [P] [US2] Integration test: `send-daily-reports` sends one independent email per
   guardian contact of a child, in each contact's own locale (User Story 2 Scenario 1) in
   `backend/ChildCare.Api.Tests/Cli/SendDailyReportsCommandTests.cs`
-- [ ] T040 [P] [US2] Integration test: a child with zero events that day still receives an email
+- [X] T040 [P] [US2] Integration test: a child with zero events that day still receives an email
   whose body clearly reads "no updates logged today" (Scenario 2) in
   `backend/ChildCare.Api.Tests/Cli/SendDailyReportsCommandTests.cs`
-- [ ] T041 [P] [US2] Integration test: a digest-unsubscribed contact is skipped by
+- [X] T041 [P] [US2] Integration test: a digest-unsubscribed contact is skipped by
   `send-daily-reports`, while every other contact (including another guardian of the same child)
   still receives theirs (Scenario 3/6) in
   `backend/ChildCare.Api.Tests/Cli/SendDailyReportsCommandTests.cs`
-- [ ] T042 [P] [US2] Integration test: `POST /api/email/unsubscribe` sets
+- [X] T042 [P] [US2] Integration test: `POST /api/email/unsubscribe` sets
   `Contact.DigestUnsubscribedAt`, is idempotent on a repeated call with the same token (FR-020),
   and `POST /api/email/resubscribe` clears it, resuming future digests in
   `backend/ChildCare.Api.Tests/Email/UnsubscribeEndpointsTests.cs`
-- [ ] T043 [P] [US2] Integration test: an invalid/unresolvable `org` slug, and separately an
+- [X] T043 [P] [US2] Integration test: an invalid/unresolvable `org` slug, and separately an
   invalid/tampered `token` against a valid `org`, both return a calm "not valid" result, never a
   raw error (FR-018); a `token` valid for tenant A's contact posted with tenant B's `org` also
   fails closed rather than resolving to tenant B's data (constitution Principle I) in
   `backend/ChildCare.Api.Tests/Email/UnsubscribeEndpointsTests.cs`
-- [ ] T044 [P] [US2] Integration test: `send-daily-reports` isolates a single tenant's failure —
+- [X] T044 [P] [US2] Integration test: `send-daily-reports` isolates a single tenant's failure —
   one organisation's exception does not block the rest (matches
   `SendPaymentRemindersCommand`'s existing per-tenant isolation) in
   `backend/ChildCare.Api.Tests/Cli/SendDailyReportsCommandTests.cs`
-- [ ] T045 [P] [US2] Integration test: a child's daily-report email respects that child's own
+- [X] T045 [P] [US2] Integration test: a child's daily-report email respects that child's own
   `Contract.Consent.PhotosInternal` flag independently, even when one contact has children with
   differing consent states (Edge Cases) in
   `backend/ChildCare.Api.Tests/Cli/SendDailyReportsCommandTests.cs`

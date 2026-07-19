@@ -315,6 +315,11 @@ builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Emai
 builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
 builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
 builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkResolver>();
+// Registered on the main host too (not just the send-daily-reports CLI builder in Program.cs's
+// early-exit block above) so integration tests can call SendDailyReportsCommand.RunAsync against
+// the ordinary WebApplicationFactory-built ServiceProvider, matching every other CLI command's
+// existing test pattern (e.g. PaymentReminderTests calling SendPaymentRemindersCommand directly).
+builder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
