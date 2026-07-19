@@ -654,3 +654,31 @@ use the static code review instead.
   content) so it is a clarify-phase item, not a blocker; per the standing rule it goes to the
   product owner/Opgroeien, not guessed. Note for the run that picks 017 up: read `docs/memoq/`
   before /speckit-specify, same pattern as docs/integrations/opgroeien/ for 033–041.
+- 030 (`030-family-siblings`): ✅ Done, merged 2026-07-19 (PR #39, squash-merged after green CI —
+  871/871 backend + 105/105 parent-mobile + 213/213 web tests). This run resumed mid-flight: a
+  prior session had already fully implemented all five user stories (all 65 tasks checked off,
+  no open PR) — this invocation found the in-progress branch per step 0 and ran `/speckit-converge`
+  before proceeding, since no converge pass had been recorded. It found two real gaps, both fixed
+  rather than deferred: (1) the full-price sibling tie-break (`GenerateInvoicesCommand`) had no
+  deterministic secondary sort for two contracts sharing the exact same start date, despite
+  spec.md's own Assumptions section requiring one (`Contract.CreatedAt`, earliest wins); (2) a
+  much bigger one — FR-009a/Clarifications promise "one payment action covers the whole bundled
+  group... including via a 014a PSP payment link," but the shipped code made that path
+  categorically unreachable (`FamilyInvoiceChildLineResponse` carried no `InvoiceId`, and
+  `invoices/index.tsx`'s own comment recorded the missing navigation as a deliberate choice) and,
+  independently, `ProcessPaymentWebhookCommand` never cascaded Paid status to sibling invoices the
+  way `MarkInvoicePaidCommand` already did — worth remembering generally: fixing a webhook/manual
+  path parity gap like that without also checking the *amount* charged would have been worse than
+  not fixing it at all, since `CreatePaymentLinkCommand` was charging only the one targeted
+  invoice's share, not the bundle's combined total, so the cascade alone would have marked a whole
+  family's invoices Paid for less money than they owed. Fixed all three (InvoiceId exposure,
+  correct combined-amount charging, webhook cascade) plus added a Pay action to parent-mobile's
+  family invoice tile, with backend and mobile regression tests for each. Also worth logging: this
+  run hit a self-inflicted git accident mid-session (a stray `git checkout master -- .` while
+  investigating an unrelated file, followed by a conflicted `git stash pop`) that briefly
+  overwrote working-tree files with master's content — recovered cleanly since the stash is kept
+  on a failed pop and nothing was committed yet; `git reset --hard HEAD` followed by a clean
+  `git stash apply` restored exactly the intended session diff, verified via `git diff --stat`
+  before re-committing. No damage occurred, but worth remembering: never run `git checkout
+  <other-branch> -- .` on a feature branch to inspect something — use `git show
+  <branch>:<path>` (read-only) instead.
