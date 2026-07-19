@@ -1,11 +1,16 @@
 using ChildCare.Application.Common;
 using ChildCare.Domain.Entities;
 using ChildCare.Domain.Enums;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Infrastructure.Persistence;
 
-public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbContext(options), IPublicDbContext
+// IDataProtectionKeyContext (feature 020, research.md R5): shares one persisted key ring between
+// the API host and the send-daily-reports CLI job — see ChildCare.Infrastructure.csproj's
+// package-reference comment for why this is required, not optional, for that feature's
+// unsubscribe tokens to verify across processes.
+public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbContext(options), IPublicDbContext, IDataProtectionKeyContext
 {
     public DbSet<Tenant>     Tenants     => Set<Tenant>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
@@ -14,6 +19,7 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<DevelopmentalDomain> DevelopmentalDomains => Set<DevelopmentalDomain>();
     public DbSet<DevelopmentalMilestone> DevelopmentalMilestones => Set<DevelopmentalMilestone>();
+    public DbSet<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey> DataProtectionKeys => Set<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey>();
 
     public void Detach(object entity) => Entry(entity).State = EntityState.Detached;
 

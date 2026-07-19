@@ -228,6 +228,14 @@ export async function getDailySummary(childId: string, date: string): Promise<Da
   return result.data as unknown as DailySummaryResponse;
 }
 
+/** Feature 020, User Story 3 — on-demand "resend by email" from the per-child screen (StaffOrDirector).
+ * Online-first, unlike this file's offline-queued child_event calls (spec.md Offline behavior). */
+export async function resendDailyReportEmail(childId: string): Promise<number> {
+  const result = await apiClient.POST("/api/email/daily-report/{childId}/resend", { params: { path: { childId } } });
+  if (!result.response.ok) throw new Error("errors.email.resend_failed");
+  return (result.data as unknown as { sentCount: number }).sentCount;
+}
+
 // research.md R10: a 422 (genuine validation rejection) is a permanent failure, not a transient
 // one — syncEngine.ts marks it distinctly (FR-014a) rather than retrying forever. No conflict is
 // actually expected in practice (child events are append-only, spec.md: "ALL WRITES PRESERVED"),

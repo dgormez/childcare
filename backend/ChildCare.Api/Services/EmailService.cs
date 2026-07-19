@@ -1,4 +1,6 @@
+using System.Net;
 using ChildCare.Application.Common;
+using ChildCare.Contracts.Responses;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -7,7 +9,7 @@ namespace ChildCare.Api.Services;
 
 /// <summary>Implements IEmailSender directly (research.md R6) — no adapter needed, its two
 /// public methods already match the port's shape.</summary>
-public class EmailService(IConfiguration config, ILogger<EmailService> logger) : IEmailSender
+public class EmailService(IConfiguration config, ILogger<EmailService> logger, IEmailTemplateRenderer templateRenderer) : IEmailSender
 {
     public async Task SendEmailVerificationAsync(string toEmail, string verifyLink)
     {
@@ -164,6 +166,120 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger) :
         };
 
         await SendAsync(message);
+    }
+
+    // ── Feature 020: templated sends ─────────────────────────────────────────
+
+    public async Task SendBulkEmailAsync(
+        string toEmail, string locale, string subject, string body,
+        (byte[] Bytes, string FileName, string ContentType)? attachment,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryBuildMessage(toEmail, subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Bulk email for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("bulk-email", locale, new
+        {
+            SubjectHtml = WebUtility.HtmlEncode(subject),
+            BodyHtml = ToHtmlParagraphs(body),
+        }, cancellationToken);
+
+        var builder = new BodyBuilder { HtmlBody = html };
+        if (attachment is { } file)
+            builder.Attachments.Add(file.FileName, file.Bytes, MimeKit.ContentType.Parse(file.ContentType));
+
+        message!.Body = builder.ToMessageBody();
+        await SendAsync(message);
+    }
+
+    public async Task SendDailyReportAsync(
+        string toEmail, string locale, string childName, DailySummaryResponse summary, string? unsubscribeUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var labels = DailyReportEmailLabels.For(locale);
+        var subject = string.Format(labels.Subject, childName);
+
+        if (!TryBuildMessage(toEmail, subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Daily report for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var hasEvents = summary.NapsCount > 0 || summary.BottlesCount > 0 || summary.DiaperChangesCount > 0
+            || summary.LatestMood is not null || summary.LatestTemperatureCelsius is not null
+            || summary.MedicationAdministered || summary.Activities.Count > 0 || summary.GroupActivities.Count > 0;
+
+        var html = await templateRenderer.RenderAsync("daily-report", locale, new
+        {
+            Title = string.Format(labels.TitleFormat, WebUtility.HtmlEncode(childName)),
+            HasEvents = hasEvents,
+            NoUpdatesText = labels.NoUpdatesText,
+            NapsLabel = labels.NapsLabel,
+            NapsCount = summary.NapsCount,
+            BottlesLabel = labels.BottlesLabel,
+            BottlesCount = summary.BottlesCount,
+            DiapersLabel = labels.DiapersLabel,
+            DiapersCount = summary.DiaperChangesCount,
+            MoodLabel = labels.MoodLabel,
+            MoodText = summary.LatestMood is null ? null : WebUtility.HtmlEncode(summary.LatestMood),
+            TemperatureLabel = labels.TemperatureLabel,
+            TemperatureText = summary.LatestTemperatureCelsius is null ? null : $"{summary.LatestTemperatureCelsius:0.0}°C",
+            MedicationText = summary.MedicationAdministered ? labels.MedicationAdministeredText : null,
+            ActivitiesLabel = labels.ActivitiesLabel,
+            Activities = summary.Activities.Select(WebUtility.HtmlEncode).ToArray(),
+            GroupActivitiesLabel = labels.GroupActivitiesLabel,
+            GroupActivities = summary.GroupActivities
+                .Select(a => new { Title = WebUtility.HtmlEncode(a.Title), Description = a.Description is null ? null : WebUtility.HtmlEncode(a.Description) })
+                .ToArray(),
+            UnsubscribeText = unsubscribeUrl is null ? null : labels.UnsubscribeText,
+            UnsubscribeUrl = unsubscribeUrl,
+        }, cancellationToken);
+
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
+    public async Task SendClosureNotificationEmailAsync(string toEmail, string locale, string title, string body, CancellationToken cancellationToken = default)
+    {
+        if (!TryBuildMessage(toEmail, title, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Closure notification for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("closure-notification", locale, new { Title = WebUtility.HtmlEncode(title), Body = WebUtility.HtmlEncode(body) }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
+    public async Task SendAnnouncementEmailAsync(string toEmail, string locale, string subject, string body, CancellationToken cancellationToken = default)
+    {
+        if (!TryBuildMessage(toEmail, subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Announcement email for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("announcement", locale, new
+        {
+            SubjectHtml = WebUtility.HtmlEncode(subject),
+            BodyHtml = ToHtmlParagraphs(body),
+        }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
+    /// <summary>HTML-encodes free text, then converts newlines to paragraph breaks — the one
+    /// piece of "formatting" a director's plain-text compose box gets (research.md R1: no raw
+    /// HTML from the director, to avoid template-injection risk).</summary>
+    private static string ToHtmlParagraphs(string plainText)
+    {
+        var encoded = WebUtility.HtmlEncode(plainText);
+        var paragraphs = encoded.Replace("\r\n", "\n").Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        return string.Join("", paragraphs.Select(p => $"<p style=\"margin:0 0 12px\">{p}</p>"));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

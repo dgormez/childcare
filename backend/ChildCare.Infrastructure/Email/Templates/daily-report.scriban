@@ -1,0 +1,30 @@
+<h2 style="margin:0 0 16px;font-size:20px;color:#1F2937">{{ title }}</h2>
+{{ if has_events }}
+<table style="width:100%;font-size:15px;line-height:1.8;color:#1F2937;border-collapse:collapse">
+  <tr><td style="color:#6B7280">{{ naps_label }}</td><td>{{ naps_count }}</td></tr>
+  <tr><td style="color:#6B7280">{{ bottles_label }}</td><td>{{ bottles_count }}</td></tr>
+  <tr><td style="color:#6B7280">{{ diapers_label }}</td><td>{{ diapers_count }}</td></tr>
+  {{ if mood_text }}<tr><td style="color:#6B7280">{{ mood_label }}</td><td>{{ mood_text }}</td></tr>{{ end }}
+  {{ if temperature_text }}<tr><td style="color:#6B7280">{{ temperature_label }}</td><td>{{ temperature_text }}</td></tr>{{ end }}
+</table>
+{{ if medication_text }}
+<p style="font-size:15px;color:#1F2937;margin:16px 0 0">{{ medication_text }}</p>
+{{ end }}
+{{ if activities && activities.size > 0 }}
+<h3 style="margin:24px 0 8px;font-size:16px;color:#1F2937">{{ activities_label }}</h3>
+<ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.6;color:#1F2937">
+  {{ for activity in activities }}<li>{{ activity }}</li>{{ end }}
+</ul>
+{{ end }}
+{{ if group_activities && group_activities.size > 0 }}
+<h3 style="margin:24px 0 8px;font-size:16px;color:#1F2937">{{ group_activities_label }}</h3>
+<ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.6;color:#1F2937">
+  {{ for item in group_activities }}<li><strong>{{ item.title }}</strong>{{ if item.description }} — {{ item.description }}{{ end }}</li>{{ end }}
+</ul>
+{{ end }}
+{{ else }}
+<p style="font-size:15px;line-height:1.6;color:#1F2937">{{ no_updates_text }}</p>
+{{ end }}
+{{ if unsubscribe_text }}
+<p style="margin-top:24px;font-size:13px;color:#6B7280"><a href="{{ unsubscribe_url }}" style="color:#3D638A">{{ unsubscribe_text }}</a></p>
+{{ end }}

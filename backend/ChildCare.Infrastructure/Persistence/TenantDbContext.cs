@@ -85,6 +85,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<AnnouncementRecipient> AnnouncementRecipients => Set<AnnouncementRecipient>();
 
+    public DbSet<BulkEmailSend> BulkEmailSends => Set<BulkEmailSend>();
+
+    public DbSet<BulkEmailRecipient> BulkEmailRecipients => Set<BulkEmailRecipient>();
+
     public DbSet<Notification> Notifications => Set<Notification>();
 
     public DbSet<GroupActivity> GroupActivities => Set<GroupActivity>();
@@ -803,6 +807,28 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // A contact appears at most once per announcement; also the parent-facing
             // "am I a recipient of this announcement" authorization lookup.
             ar.HasIndex(x => new { x.AnnouncementId, x.ContactId }).IsUnique();
+        });
+
+        modelBuilder.Entity<BulkEmailSend>(bes =>
+        {
+            bes.ToTable("bulk_email_sends");
+            bes.HasKey(x => x.Id);
+            bes.Property(x => x.Subject).IsRequired().HasMaxLength(200);
+            bes.Property(x => x.Body).IsRequired().HasMaxLength(5000);
+            bes.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            bes.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            bes.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.SentByTenantUserId);
+            bes.HasIndex(x => x.SentAt);
+        });
+
+        modelBuilder.Entity<BulkEmailRecipient>(ber =>
+        {
+            ber.ToTable("bulk_email_recipients");
+            ber.HasKey(x => x.Id);
+            ber.HasOne<BulkEmailSend>().WithMany().HasForeignKey(x => x.BulkEmailSendId);
+            ber.HasOne<Contact>().WithMany().HasForeignKey(x => x.ContactId);
+            // Backs the post-send delivery-outcome summary aggregation (data-model.md).
+            ber.HasIndex(x => x.BulkEmailSendId);
         });
 
         modelBuilder.Entity<Notification>(n =>

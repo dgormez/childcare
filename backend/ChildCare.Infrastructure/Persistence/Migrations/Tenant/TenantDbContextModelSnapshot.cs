@@ -156,6 +156,86 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("attendance_records", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.BulkEmailRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BulkEmailSendId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BulkEmailSendId");
+
+                    b.HasIndex("ContactId");
+
+                    b.ToTable("bulk_email_recipients", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.BulkEmailSend", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AttachmentContentType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AttachmentFileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AttachmentObjectPath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SentByTenantUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("SentAt");
+
+                    b.HasIndex("SentByTenantUserId");
+
+                    b.ToTable("bulk_email_sends", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.Child", b =>
                 {
                     b.Property<Guid>("Id")
@@ -462,6 +542,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DigestUnsubscribedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
@@ -2160,6 +2243,40 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.Location", null)
                         .WithMany()
                         .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.BulkEmailRecipient", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.BulkEmailSend", null)
+                        .WithMany()
+                        .HasForeignKey("BulkEmailSendId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.BulkEmailSend", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId");
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("SentByTenantUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

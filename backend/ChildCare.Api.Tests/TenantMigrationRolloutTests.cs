@@ -164,7 +164,12 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// nullable column to the already-dropped groups table, no new table, so it only needs its
     /// own history-removal entry (same as 014a's reminder-tracking columns above); its
     /// "AddReportingIndexes" migration only adds/replaces indexes on already-dropped tables, no
-    /// column or table of its own, so it likewise only needs a history-removal entry.
+    /// column or table of its own, so it likewise only needs a history-removal entry. Feature
+    /// 020's "AddEmailCommunications" migration adds one nullable column to the already-dropped
+    /// contacts table (DigestUnsubscribedAt, no separate DROP COLUMN step needed for the same
+    /// reason as 018's Group.Capacity above) plus two new tables (bulk_email_recipients has FKs
+    /// to bulk_email_sends and contacts, so it must drop before both; bulk_email_sends has FKs to
+    /// groups/locations/users, so it must drop before groups/locations) — same recurring pattern.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -198,6 +203,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."message_threads";
             DROP TABLE "{schemaName}"."announcement_recipients";
             DROP TABLE "{schemaName}"."announcements";
+            DROP TABLE "{schemaName}"."bulk_email_recipients";
+            DROP TABLE "{schemaName}"."bulk_email_sends";
             DROP TABLE "{schemaName}"."notifications";
             DROP TABLE "{schemaName}"."parent_invitations";
             DROP TABLE "{schemaName}"."incident_reports";
@@ -224,7 +231,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications';
             """);
     }
 
@@ -248,6 +255,9 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             _ = await db.FiscalAttestations.CountAsync();
             _ = await db.ChildMilestoneObservations.CountAsync();
             _ = await db.Groups.Select(g => g.Capacity).FirstOrDefaultAsync();
+            _ = await db.Contacts.Select(c => c.DigestUnsubscribedAt).FirstOrDefaultAsync();
+            _ = await db.BulkEmailSends.CountAsync();
+            _ = await db.BulkEmailRecipients.CountAsync();
             return true;
         }
         catch

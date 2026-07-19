@@ -12,6 +12,7 @@ public record ClosureNotificationSummary(int Recipients, int PushSent, int PushF
 public class ClosureNotificationService(
     ITenantDbContext db,
     IExpoPushSender pushSender,
+    IEmailSender emailSender,
     ClosureParentRecipientResolver recipients,
     ILogger<ClosureNotificationService> logger)
 {
@@ -36,6 +37,12 @@ public class ClosureNotificationService(
         var alreadyDelivered = existingContactIds.ToHashSet();
         var messagesCreated = 0;
         var deliveriesToSend = new List<(ClosureParentRecipient Recipient, ClosureNotificationDelivery Delivery)>();
+        // FR-010: emails every resolved contact with an address on file, independent of
+        // TenantUserId/push-token state — reaches a contact with no parent-app account at all,
+        // which the push-only fan-out above can never reach (research.md R4, no TenantUserId
+        // gate). Gated by the same alreadyDelivered idempotency check as push, so a retried
+        // NotifyAsync call doesn't re-email a contact already notified for this closure+kind.
+        var emailRecipients = new List<ClosureParentRecipient>();
 
         foreach (var recipient in targetRecipients)
         {
@@ -79,6 +86,8 @@ public class ClosureNotificationService(
             db.ClosureNotificationDeliveries.Add(delivery);
             if (!string.IsNullOrWhiteSpace(recipient.PushToken))
                 deliveriesToSend.Add((recipient, delivery));
+            if (!string.IsNullOrWhiteSpace(recipient.Email))
+                emailRecipients.Add(recipient);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -110,6 +119,25 @@ public class ClosureNotificationService(
         if (deliveriesToSend.Count > 0)
             await db.SaveChangesAsync(cancellationToken);
 
+        foreach (var recipient in emailRecipients)
+        {
+            var labels = Labels.TryGetValue(recipient.Locale, out var localized) ? localized : Labels["nl"];
+            var title = kind == ClosureNotificationKind.Published ? labels.PublishedTitle : labels.CancelledTitle;
+            var body = kind == ClosureNotificationKind.Published
+                ? string.Format(labels.PublishedBody, location.Name, closure.Date, closure.Label)
+                : string.Format(labels.CancelledBody, location.Name, closure.Date);
+            try
+            {
+                await emailSender.SendClosureNotificationEmailAsync(recipient.Email!, recipient.Locale, title, body, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // FR-012: a bad/bounced address doesn't block the rest of the batch — logged
+                // server-side only, matching CLAUDE.md's error-handling rule.
+                logger.LogWarning(ex, "Closure notification email dispatch failed for closure {ClosureDayId}.", closure.Id);
+            }
+        }
+
         return new ClosureNotificationSummary(targetRecipients.Count, pushSent, pushFailed, messagesCreated);
     }
 
@@ -127,7 +155,7 @@ public class ClosureNotificationService(
                 db.Contacts,
                 d => d.ContactId,
                 c => c.Id,
-                (d, c) => new ClosureParentRecipient(c.Id, c.Locale, c.PushToken ?? d.PushToken))
+                (d, c) => new ClosureParentRecipient(c.Id, c.Locale, c.PushToken ?? d.PushToken, c.Email))
             .ToListAsync(cancellationToken);
 
         return publishedContacts

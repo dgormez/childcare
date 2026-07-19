@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Contracts.Responses;
 
 namespace ChildCare.Api.Tests;
 
@@ -49,5 +50,73 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
             throw new InvalidOperationException("Simulated SMTP failure (test).");
 
         return inner.SendParentInvitationAsync(toEmail, inviteLink);
+    }
+
+    // ── Feature 020 ──────────────────────────────────────────────────────────
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (SendBulkEmailCommandHandler's partial-failure handling, FR-012).</summary>
+    public HashSet<string> ThrowOnBulkEmailTo { get; } = [];
+
+    public List<(string ToEmail, string Locale, string Subject, string Body, bool HasAttachment)> BulkEmailCalls { get; } = [];
+
+    public Task SendBulkEmailAsync(
+        string toEmail, string locale, string subject, string body,
+        (byte[] Bytes, string FileName, string ContentType)? attachment,
+        CancellationToken cancellationToken = default)
+    {
+        BulkEmailCalls.Add((toEmail, locale, subject, body, attachment is not null));
+        if (ThrowOnBulkEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendBulkEmailAsync(toEmail, locale, subject, body, attachment, cancellationToken);
+    }
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (DailyReportDigestService's/ResendDailyReportEmailCommandHandler's partial-failure
+    /// handling, FR-012).</summary>
+    public HashSet<string> ThrowOnDailyReportTo { get; } = [];
+
+    public List<(string ToEmail, string Locale, string ChildName, DailySummaryResponse Summary, string? UnsubscribeUrl)> DailyReportCalls { get; } = [];
+
+    public Task SendDailyReportAsync(
+        string toEmail, string locale, string childName, DailySummaryResponse summary, string? unsubscribeUrl,
+        CancellationToken cancellationToken = default)
+    {
+        DailyReportCalls.Add((toEmail, locale, childName, summary, unsubscribeUrl));
+        if (ThrowOnDailyReportTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendDailyReportAsync(toEmail, locale, childName, summary, unsubscribeUrl, cancellationToken);
+    }
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (ClosureNotificationService's partial-failure handling, FR-012).</summary>
+    public HashSet<string> ThrowOnClosureNotificationEmailTo { get; } = [];
+
+    public List<(string ToEmail, string Locale, string Title, string Body)> ClosureNotificationEmailCalls { get; } = [];
+
+    public Task SendClosureNotificationEmailAsync(string toEmail, string locale, string title, string body, CancellationToken cancellationToken = default)
+    {
+        ClosureNotificationEmailCalls.Add((toEmail, locale, title, body));
+        if (ThrowOnClosureNotificationEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendClosureNotificationEmailAsync(toEmail, locale, title, body, cancellationToken);
+    }
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (SendAnnouncementCommandHandler's partial-failure handling, FR-012).</summary>
+    public HashSet<string> ThrowOnAnnouncementEmailTo { get; } = [];
+
+    public List<(string ToEmail, string Locale, string Subject, string Body)> AnnouncementEmailCalls { get; } = [];
+
+    public Task SendAnnouncementEmailAsync(string toEmail, string locale, string subject, string body, CancellationToken cancellationToken = default)
+    {
+        AnnouncementEmailCalls.Add((toEmail, locale, subject, body));
+        if (ThrowOnAnnouncementEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendAnnouncementEmailAsync(toEmail, locale, subject, body, cancellationToken);
     }
 }

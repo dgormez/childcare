@@ -9,6 +9,13 @@
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
+    <!-- Feature 020, research.md R5 — the unsubscribe token is created by the send-daily-reports
+         CLI job (one process) and verified later by the long-running API host (a different
+         process, and on Cloud Run potentially a different instance). The default ephemeral key
+         ring is per-process, so without a shared persisted key store every token would fail to
+         verify as soon as the CLI job exited. Persisted via PublicDbContext (already shared
+         across both hosts) rather than a new GCS dependency. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -17,6 +24,9 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="QuestPDF" Version="2026.7.0" />
+    <!-- Email templating (feature 020, research.md R1) — sandboxed, no ASP.NET MVC/Razor
+         dependency, fits a Minimal API monolith with no Controllers (constitution Principle VII). -->
+    <PackageReference Include="Scriban" Version="7.2.5" />
     <!-- Pinned to 3.1.x (Six Labors Split License, free under the revenue threshold this
          project currently qualifies for) — 4.0.0 requires a paid license key even to build,
          a harder blocker than research.md R2's licensing note anticipated; revisit together
@@ -27,6 +37,12 @@
   <ItemGroup>
     <ProjectReference Include="..\ChildCare.Domain\ChildCare.Domain.csproj" />
     <ProjectReference Include="..\ChildCare.Application\ChildCare.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Feature 020, research.md R1 — Scriban templates, embedded so publish/Cloud Run deploy
+         never depends on a loose file existing alongside the assembly. -->
+    <EmbeddedResource Include="Email\Templates\*.scriban" />
   </ItemGroup>
 
 </Project>

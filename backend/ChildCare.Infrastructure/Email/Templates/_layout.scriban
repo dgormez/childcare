@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#FAF9F6;font-family:'Public Sans',sans-serif;color:#1F2937">
+  <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:12px;padding:24px">
+    {{ content }}
+  </div>
+  {{ if footer_text }}
+  <p style="max-width:480px;margin:16px auto 0;color:#6B7280;font-size:12px;text-align:center">{{ footer_text }}</p>
+  {{ end }}
+</body>
+</html>

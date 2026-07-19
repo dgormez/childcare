@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -107,6 +109,34 @@ if (args.Length > 0 && args[0] == "send-payment-reminders")
     Environment.Exit(exitCode);
 }
 
+// send-daily-reports CLI subcommand (feature 020, User Story 2) — same early-exit shape as
+// send-payment-reminders above. Triggered daily at 19:00 Europe/Brussels by a Cloud Scheduler +
+// Cloud Run Job execution of this container (infra/gcp/main.tf).
+if (args.Length > 0 && args[0] == "send-daily-reports")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+    cliBuilder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+    // Keys must be the same persisted ring the API host uses (research.md R5) — a token this
+    // job creates is verified later by that separate, long-running process.
+    cliBuilder.Services.AddDataProtection()
+        .PersistKeysToDbContext<PublicDbContext>()
+        .SetApplicationName("ChildCare");
+    cliBuilder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
+    cliBuilder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
+    cliBuilder.Services.AddScoped<DailySummaryCalculator>();
+    cliBuilder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
+    cliBuilder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
+    cliBuilder.Services.AddScoped<IEmailSender, EmailService>();
+    cliBuilder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>();
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await ChildCare.Api.Cli.SendDailyReportsCommand.RunAsync(cliScope.ServiceProvider);
+    Environment.Exit(exitCode);
+}
+
 // Raises the ThreadPool's minimum worker threads above the .NET default (= ProcessorCount)
 // so a sudden burst of concurrent requests doesn't stall on the pool's slow "hill-climbing"
 // thread-injection rate. Auth endpoints in particular call BCrypt.Verify/HashPassword
@@ -187,6 +217,7 @@ builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>
 // ── Group activities (feature 009b) ─────────────────────────────────────────
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
+builder.Services.AddScoped<ChildCare.Application.ChildEvents.DailySummaryCalculator>();
 
 // ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
 // Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a
@@ -250,8 +281,13 @@ builder.Services.AddScoped<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
 
 // ── Invoice Payments Plus (feature 014a) ─────────────────────────────────────
 // IDataProtector-backed OAuth-token encryption (research.md R3) — the first per-tenant
-// third-party credential this codebase stores.
-builder.Services.AddDataProtection();
+// third-party credential this codebase stores. Keys persist to PublicDbContext (feature 020,
+// research.md R5) rather than the per-process default: a Cloud Run API instance and the
+// send-daily-reports CLI job are separate processes and must decrypt/verify each other's
+// output — an ephemeral key ring would silently break both this and the unsubscribe token.
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<PublicDbContext>()
+    .SetApplicationName("ChildCare");
 builder.Services.AddScoped<IPaymentTokenProtector, PaymentTokenProtector>();
 builder.Services.AddScoped<IPaymentProvider, MolliePaymentProvider>();
 builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotificationService>();
@@ -271,6 +307,19 @@ builder.Services.AddScoped<IMilestonePortfolioPdfGenerator, QuestPdfMilestonePor
 // ── Management Reporting (feature 018) ───────────────────────────────────────
 builder.Services.AddScoped<IAttendanceSummaryCsvWriter, ChildCare.Infrastructure.Reporting.CsvAttendanceSummaryWriter>();
 builder.Services.AddScoped<IAttendanceSummaryPdfGenerator, QuestPdfAttendanceSummaryGenerator>();
+
+// ── Email Communications (feature 020) ───────────────────────────────────────
+// AddDataProtection() already called above (feature 014a) — IUnsubscribeTokenService reuses
+// that same registration (research.md R5), not a second one.
+builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
+builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
+builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
+builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkResolver>();
+// Registered on the main host too (not just the send-daily-reports CLI builder in Program.cs's
+// early-exit block above) so integration tests can call SendDailyReportsCommand.RunAsync against
+// the ordinary WebApplicationFactory-built ServiceProvider, matching every other CLI command's
+// existing test pattern (e.g. PaymentReminderTests calling SendPaymentRemindersCommand directly).
+builder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>();
 
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
@@ -753,6 +802,7 @@ app.MapPaymentEndpoints();
 app.MapFiscalAttestationEndpoints();
 app.MapDevelopmentalMilestoneEndpoints();
 app.MapReportingEndpoints();
+app.MapEmailEndpoints();
 
 // Test-only role-policy endpoints (feature 003, research.md R5) — never mapped outside the
 // integration test host.
