@@ -46,7 +46,7 @@ US3/US4 = P2.
 
 ## Phase 3: User Story 1 - Director purges a departed child's photos (Priority: P1) 🎯 MVP
 
-**Goal**: A director can permanently delete a deactivated child's profile photo, health/vaccine attachments, and any group-activity photo where they're the sole depicted child, in one action, without touching photos still depicting other children.
+**Goal**: A director or staff member can permanently delete a deactivated child's profile photo, health/vaccine attachments, and any group-activity photo where they're the sole depicted child, in one action, without touching photos still depicting other children.
 
 **Independent Test**: Deactivate a child with a profile photo, a solely-depicted group photo, a shared group photo, and a health attachment; purge; verify exactly the solely-owned objects are gone and the shared photo survives untouched.
 
@@ -59,32 +59,32 @@ US3/US4 = P2.
 ### Implementation for User Story 1
 
 - [ ] T014 [US1] Create `PurgeChildPhotosCommand` + `PurgePhotosResult`/`PurgePhotosFailure` in `backend/ChildCare.Application/Children/PurgeChildPhotosCommand.cs` per data-model.md's shape (depends on T002, T003, T008).
-- [ ] T015 [US1] Implement the handler: reject if `Child.DeactivatedAt is null`; else delete profile photo, every health/vaccine attachment, and every group-activity photo where `GetDepictedChildIdsAsync` resolves to exactly `[ChildId]`; aggregate deleted/failed paths; count preserved shared photos.
+- [ ] T015 [US1] Implement the handler: reject if `Child.DeactivatedAt is null`; else delete profile photo, every health/vaccine attachment, and every group-activity photo where `GetDepictedChildIdsAsync` resolves to exactly `[ChildId]`; aggregate deleted/failed paths; count preserved shared photos. Purging must be idempotent/retry-safe: an object that no longer exists (already deleted by a prior attempt) is treated as already-satisfied, not a failure.
 - [ ] T016 [US1] Add the structured audit log entry (`ILogger.LogInformation`/`LogWarning`) to the handler per research.md R4 — `{TenantId}`, `{ActorUserId}`, `{ActorRole}`, `{ChildId}`, `{DeletedObjectCount}`, `{FailedObjectCount}`.
-- [ ] T017 [US1] Add `POST /api/children/{childId}/purge-photos` route (`DirectorOnly`) to `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs` per contracts/photo-lifecycle-api.md (400 `errors.children.still_active`, 404 `errors.children.not_found`, 200 with `deletedObjectPaths`/`failedObjectPaths`/`preservedGroupPhotoCount`).
-- [ ] T018 [P] [US1] Add `children.purgePhotos.{action,confirmTitle,confirmBody,success,partialFailure,blockedActiveChild}` i18n keys to `web/i18n/locales/{en,fr,nl}.json`.
-- [ ] T019 [US1] Add the "Purge photos" destructive text-style action (design-system.md's Destructive button pattern — never filled) to the deactivated-child state of `web/app/(app)/children/[id]/page.tsx`, gated on `children.statusDeactivated` (existing key/state), with a confirmation dialog naming exactly what will be deleted vs. preserved, and a loading/success/partial-failure result state (depends on T017, T018).
+- [ ] T017 [US1] Add `POST /api/children/{childId}/purge-photos` route (`StaffOrDirector` — per FR-008/UX Requirements) as a standalone route outside the file's `DirectorOnly` group in `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs` (mirroring `StaffEndpoints.cs`'s existing pattern for its one `StaffOrDirector` exception), per contracts/photo-lifecycle-api.md (400 `errors.children.still_active`, 404 `errors.children.not_found`, 200 with `deletedObjectPaths`/`failedObjectPaths`/`preservedGroupPhotoCount`).
+- [ ] T018 [P] [US1] Add `children.purgePhotos.{action,confirmTitle,confirmBody,success,partialFailure,blockedActiveChild}` i18n keys to `web/i18n/locales/{en,fr,nl}.json`, written in the same clear/professional register as the rest of the director-web copy (distinct from parent-mobile's warmer tone — this dialog's audience is staff/director, not a parent).
+- [ ] T019 [US1] Add the "Purge photos" destructive text-style action (design-system.md's Destructive button pattern — never filled) to the deactivated-child state of `web/app/(app)/children/[id]/page.tsx`, visible to both staff and director accounts, gated on `children.statusDeactivated` (existing key/state), with a confirmation dialog (its confirm/cancel controls meeting the same 48pt touch-target floor as the entry action) naming exactly what will be deleted vs. preserved, and a loading/success/partial-failure result state (depends on T017, T018).
 
-**Checkpoint**: A director can purge a departed child's photos end-to-end; group photos with other depicted children are provably safe.
+**Checkpoint**: A director or staff member can purge a departed child's photos end-to-end; group photos with other depicted children are provably safe.
 
 ---
 
 ## Phase 4: User Story 2 - Parent downloads an original-resolution photo (Priority: P1)
 
-**Goal**: A parent can download the full-resolution original of any photo their child appears in, including group photos, as a file (not inline view).
+**Goal**: A parent can download the full-resolution original of any photo their child appears in, including group photos, as a file (not inline view), byte-identical to the stored original with no cropping/redaction of other children.
 
 **Independent Test**: A parent opens a group-activity photo their child is derived as depicted in and downloads it; verify the file is full-resolution with an attachment content-disposition, and that a parent with no relation to the child is denied.
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] Integration test: parent can download original for their own child's profile photo and a group photo they're derived as depicted in; response has attachment content-disposition and points at the full-resolution object, in `backend/ChildCare.Api.Tests/ParentPhotoDownloadTests.cs`.
+- [ ] T020 [P] [US2] Integration test: parent can download original for their own child's profile photo and a group photo they're derived as depicted in; response has attachment content-disposition, points at the full-resolution object (not the thumbnail), and its byte content is identical to the stored object (no cropping/redaction of other depicted children, FR-014) — in `backend/ChildCare.Api.Tests/ParentPhotoDownloadTests.cs`.
 - [ ] T021 [P] [US2] Test: parent is denied (403) downloading a photo of a child that is not theirs, and denied a group photo their child has no consent/membership basis to see, same test file.
 
 ### Implementation for User Story 2
 
 - [ ] T022 [US2] Add `GET /api/parent/photos/{photoType}/{objectRef}/download` route (`ParentOnly`) — new file or extension of the existing parent-facing photo endpoints — reusing the same ownership/consent gate `GetParentGroupActivityGalleryQuery` already applies, calling the new `CreateAttachmentDownloadUrlAsync` (T004/T005/T006) per `photoType` (depends on T004, T005, T006).
 - [ ] T023 [P] [US2] Add `gallery.downloadOriginal` / `gallery.downloadFailed` i18n keys to `parent-mobile/i18n/locales/{en,nl,fr}.json`, matching the existing `gallery.*` namespace convention.
-- [ ] T024 [US2] Add a "Download original" action (48pt touch target, per platform-rules.md) to `parent-mobile/app/(app)/gallery.tsx`, wired through `parent-mobile/services/groupActivityGallery.ts` (or a new sibling service function) to call T022's endpoint, with a loading spinner on tap and a toast on failure (no internal error detail) — hidden entirely when offline (depends on T022, T023).
+- [ ] T024 [US2] Add a "Download original" action (48pt touch target, per platform-rules.md) to `parent-mobile/app/(app)/gallery.tsx`, wired through `parent-mobile/services/groupActivityGallery.ts` (or a new sibling service function) to call T022's endpoint — measured from this already-open photo view, satisfying SC-003's "two taps or fewer" (tap to open detail, if not already open; tap to download) — with a loading spinner on tap and a toast on failure (no internal error detail) — hidden entirely when offline (depends on T022, T023).
 
 **Checkpoint**: A parent can download an original photo end-to-end from the existing gallery screen.
 
@@ -92,7 +92,7 @@ US3/US4 = P2.
 
 ## Phase 5: User Story 3 - Archive-on-departure and general cost tiering (Priority: P2)
 
-**Goal**: A deactivated child's photos automatically move to Coldline 30 days after deactivation (once every derived child on a group photo is inactive); all photo types get a general 90-day-no-activity → Nearline tier; none of this is visible to any user.
+**Goal**: A deactivated child's photos automatically move to Coldline 30 days after deactivation (once every derived child on a group photo is inactive, with the eligibility clock keyed to each child's *current* `DeactivatedAt`, not a stale prior deactivation); all photo types get a general 90-day-no-activity → Nearline tier (approximated by object creation age, not literal access tracking — see research.md R2); none of this is visible to any user, at any storage class.
 
 **Independent Test**: Deactivate a child, back-date `DeactivatedAt` 31 days, run the job, confirm the storage class transitions and the object remains resolvable; confirm a group photo with one remaining active derived child stays on Standard.
 
@@ -101,48 +101,51 @@ US3/US4 = P2.
 - [ ] T025 [P] [US3] Unit test: archival eligibility computation — all-derived-children-inactive vs. mixed-active case — for the job's eligibility-selection logic, in `backend/ChildCare.Api.Tests/Cli/EvaluatePhotoArchivalCommandTests.cs` (or an extracted eligibility-service test file if the logic is factored out for testability).
 - [ ] T026 [P] [US3] TestContainers integration test: a child deactivated >30 days ago has profile photo + health/vaccine attachments transitioned to Coldline; a group photo with one still-active derived child is not transitioned; re-running the job after that child also becomes inactive (>30d) does transition it.
 - [ ] T027 [P] [US3] Test: reactivating an archived child requires no explicit un-archive step — the object remains resolvable via the existing signed-URL flow (storage class alone does not block `CreateDownloadUrlAsync`).
+- [ ] T028 [P] [US3] Regression test (FR-001): calling `DeactivateChildCommand` alone (no archival job run) leaves every one of the child's GCS objects on their current storage class and fully present — deactivation itself never deletes or transitions anything.
+- [ ] T029 [P] [US3] Test (FR-006/SC-005, general-tiering case): a group-activity full-resolution photo transitioned to Nearline by the 90-day no-activity rule (still belonging to an active child, not archived) remains resolvable via the existing signed-URL mechanism with no functional difference from a Standard-tier object.
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Create `EvaluatePhotoArchivalCommand` in `backend/ChildCare.Api/Cli/EvaluatePhotoArchivalCommand.cs`, mirroring `SendPaymentRemindersCommand.cs`'s shape exactly (tenant loop via `ITenantDbContextResolver`, per-tenant try/catch, exit code) (depends on T007, T008).
-- [ ] T029 [US3] Implement per-tenant logic: find children with `DeactivatedAt <= UtcNow.AddDays(-30)`; transition their profile photo and health/vaccine attachments to Coldline (skip if already there) via T007's `SetStorageClassAsync`.
-- [ ] T030 [US3] Implement group-activity photo archival: for photos where every `GetDepictedChildIdsAsync` result has been inactive ≥30 days, transition the full-resolution object only (never `-thumb.jpg`) to Coldline.
-- [ ] T031 [US3] Implement the general 90-day-no-activity → Nearline tiering for `group-activities/` full-resolution objects only (research.md R5's exception — the other four prefixes are covered by the native Terraform rule in T033), based on object creation time, skipping any object already on Coldline (never downgrade Coldline → Nearline).
-- [ ] T032 [US3] Wire `args[0] == "evaluate-photo-archival"` dispatch in `backend/ChildCare.Api/Program.cs`, mirroring the `send-payment-reminders`/`send-daily-reports` branches (depends on T028).
-- [ ] T033 [US3] Add the Terraform `lifecycle_rule` to `google_storage_bucket.staff_profile_photos` in `infra/gcp/main.tf` per research.md R5 (`age = 90`, `matches_storage_class = ["STANDARD"]`, `matches_prefix = ["staff/", "children/", "health-records/", "vaccine-records/"]`, `SetStorageClass → NEARLINE`).
-- [ ] T034 [US3] Add `google_cloud_run_v2_job` + `google_cloud_scheduler_job` for `evaluate-photo-archival` to `infra/gcp/main.tf`, mirroring the `send-payment-reminders` pair (`max_retries = 0`, daily cron, `Europe/Brussels`).
+- [ ] T030 [US3] Create `EvaluatePhotoArchivalCommand` in `backend/ChildCare.Api/Cli/EvaluatePhotoArchivalCommand.cs`, mirroring `SendPaymentRemindersCommand.cs`'s shape exactly (tenant loop via `ITenantDbContextResolver`, per-tenant try/catch, exit code) (depends on T007, T008).
+- [ ] T031 [US3] Implement per-tenant logic: find children with `DeactivatedAt <= UtcNow.AddDays(-30)`; transition their profile photo and health/vaccine attachments to Coldline (skip if already there) via T007's `SetStorageClassAsync`.
+- [ ] T032 [US3] Implement group-activity photo archival: for photos where every `GetDepictedChildIdsAsync` result has been inactive ≥30 days, transition the full-resolution object only (never `-thumb.jpg`) to Coldline.
+- [ ] T033 [US3] Implement the general 90-day-no-activity → Nearline tiering for `group-activities/` full-resolution objects only (research.md R5's exception — the other four prefixes are covered by the native Terraform rule in T035), based on object creation time, skipping any object already on Coldline (never downgrade Coldline → Nearline).
+- [ ] T034 [US3] Wire `args[0] == "evaluate-photo-archival"` dispatch in `backend/ChildCare.Api/Program.cs`, mirroring the `send-payment-reminders`/`send-daily-reports` branches (depends on T030).
+- [ ] T035 [US3] Add the Terraform `lifecycle_rule` to `google_storage_bucket.staff_profile_photos` in `infra/gcp/main.tf` per research.md R5 (`age = 90`, `matches_storage_class = ["STANDARD"]`, `matches_prefix = ["staff/", "children/", "health-records/", "vaccine-records/"]`, `SetStorageClass → NEARLINE`).
+- [ ] T036 [US3] Add `google_cloud_run_v2_job` + `google_cloud_scheduler_job` for `evaluate-photo-archival` to `infra/gcp/main.tf`, mirroring the `send-payment-reminders` pair (`max_retries = 0`, daily cron, `Europe/Brussels`).
 
-**Checkpoint**: Storage-class transitions run correctly and invisibly; `terraform plan` shows the new lifecycle rule and job wiring.
+**Checkpoint**: Storage-class transitions run correctly and invisibly at both the archive (Coldline) and general (Nearline) tiers; `terraform plan` shows the new lifecycle rule and job wiring.
 
 ---
 
 ## Phase 6: User Story 4 - Staff and Director have consistent photo permissions (Priority: P2)
 
-**Goal**: Staff (not just directors) can delete group-activity photos, health records, and vaccine records within their assigned location — closing the gap where upload was already staff-accessible but delete was director-only.
+**Goal**: Staff (not just directors) can create/edit/delete health records and vaccine records, and delete group-activity photos, within their assigned location(s) — the same location-assignment check already used elsewhere in the app, no new semantics. Health/vaccine records were verified to be entirely `DirectorOnly` today (staff had zero access of any kind, not a delete-lags-upload asymmetry); group-activity photos already have a staff-accessible *create* path via the caregiver-tablet's `DeviceAuthenticated` device-token channel (008a, unchanged by this story) but no staff-JWT path to delete one.
 
-**Independent Test**: Authenticate as staff, delete a group-activity photo / health record / vaccine record at an assigned location — succeeds; a parent attempting any upload/edit/delete on any of the three photo types is still denied.
+**Independent Test**: Authenticate as staff, create/edit/delete a health record and a vaccine record, and delete a group-activity photo, at an assigned location — succeeds; a parent attempting any upload/edit/delete on any of the three photo types is still denied.
 
 ### Tests for User Story 4
 
-- [ ] T035 [P] [US4] Integration test: staff account successfully deletes a group-activity photo (activity), a health record, and a vaccine record at their assigned location, in `backend/ChildCare.Api.Tests/PhotoRbacParityTests.cs`.
-- [ ] T036 [P] [US4] Test: parent account is denied upload/edit/delete on all three photo types (regression — must remain true after the widening), same test file.
-- [ ] T037 [P] [US4] Test: staff/director account is denied all three actions for a location they are not assigned to (regression on existing location-scoping).
+- [ ] T037 [P] [US4] Integration test: staff account successfully creates, edits, and deletes a health record and a vaccine record (including their attachment-upload-url routes), and deletes a group-activity photo (activity), all at their assigned location, in `backend/ChildCare.Api.Tests/PhotoRbacParityTests.cs`.
+- [ ] T038 [P] [US4] Test: parent account is denied upload/edit/delete on all three photo types (regression — must remain true after the widening), same test file.
+- [ ] T039 [P] [US4] Test: staff/director account is denied all these actions for a location they are not assigned to (regression on existing location-scoping), and — for a staff account assigned to multiple locations — is allowed the action at every one of their assigned locations, not just a primary one.
+- [ ] T040 [P] [US4] Test: authorization for a delete action is evaluated against the actor's *current* location assignment at the time of the delete, not their assignment at the photo's original upload time (Edge Cases).
 
 ### Implementation for User Story 4
 
-- [ ] T038 [P] [US4] Widen `DELETE /api/group-activities/{id}` from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/GroupActivityEndpoints.cs`.
-- [ ] T039 [P] [US4] Widen `DELETE /api/children/{childId}/health-records/{id}` from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/HealthRecordEndpoints.cs`.
-- [ ] T040 [P] [US4] Widen `DELETE /api/children/{childId}/vaccine-records/{id}` and its sibling `DirectorOnly` route from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/VaccineRecordEndpoints.cs` (both occurrences).
+- [ ] T041 [P] [US4] Widen `DELETE /api/group-activities/{id}` from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/GroupActivityEndpoints.cs`. `POST /api/group-activities/{id}/photos` (create/upload) stays `DeviceAuthenticated` — unchanged.
+- [ ] T042 [P] [US4] Widen all four health-record routes (`POST`, `PUT`, `POST .../attachment-upload-url`, `DELETE`) from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/HealthRecordEndpoints.cs` — staff had zero access to any of these before.
+- [ ] T043 [P] [US4] Widen all four vaccine-record routes (`POST`, `PUT`, `POST .../attachment-upload-url`, `DELETE`) from `DirectorOnly` to `StaffOrDirector` in `backend/ChildCare.Api/Endpoints/VaccineRecordEndpoints.cs` — staff had zero access to any of these before.
 
-**Checkpoint**: All three photo ports enforce identical Staff/Director authorization for upload, delete, and download.
+**Checkpoint**: Health/vaccine records and group-activity-photo deletion enforce identical Staff/Director authorization; group-activity photo creation remains on its existing device-token channel.
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T041 Run quickstart.md's six scenarios end-to-end against a dev environment with a real GCS bucket (storage-class assertions cannot run against the fake-gcs-server emulator).
-- [ ] T042 [P] Confirm every new i18n key (web `children.purgePhotos.*`, parent-mobile `gallery.downloadOriginal`/`downloadFailed`) has non-empty NL/FR/EN values — no placeholder/English-only entries.
-- [ ] T043 `terraform plan` against `infra/gcp/main.tf` — confirm only the expected lifecycle-rule and job/scheduler diffs appear, no unrelated drift.
+- [ ] T044 Run quickstart.md's six scenarios end-to-end against a dev environment with a real GCS bucket (storage-class assertions cannot run against the fake-gcs-server emulator).
+- [ ] T045 [P] Confirm every new i18n key (web `children.purgePhotos.*`, parent-mobile `gallery.downloadOriginal`/`downloadFailed`) has non-empty NL/FR/EN values — no placeholder/English-only entries.
+- [ ] T046 `terraform plan` against `infra/gcp/main.tf` — confirm only the expected lifecycle-rule and job/scheduler diffs appear, no unrelated drift.
 
 ---
 
@@ -162,7 +165,7 @@ US3/US4 = P2.
 
 - T002–T007 (storage-port interface additions) are all `[P]` — different files, no shared dependencies.
 - Once Foundational completes, US1, US2, and US3 can proceed in parallel (different files); US4 can run in parallel with all of them from the start.
-- Within US4, T038/T039/T040 touch three different endpoint files — fully parallel.
+- Within US4, T041/T042/T043 touch three different endpoint files — fully parallel.
 
 ---
 

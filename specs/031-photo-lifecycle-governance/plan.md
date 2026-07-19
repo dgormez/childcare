@@ -8,23 +8,28 @@
 
 Close three governance gaps left open by the existing photo storage ports (005/006 profile
 photos, 009b group-activity photos, 013b/013c health/vaccine attachments): (1) inconsistent
-staff/director authorization (delete was `DirectorOnly` on group-activity/health-record/
-vaccine-record while upload was already staff-accessible via the kiosk device channel), (2) no
+staff/director authorization — verified against the actual endpoint code (spec.md's
+Clarifications), health/vaccine record create/edit/attachment-upload/delete are ALL
+`DirectorOnly` today (staff has zero access, not a delete-lags-upload asymmetry), while
+group-activity photos create via the caregiver-tablet's `DeviceAuthenticated` device-token
+channel (unchanged, not a gap) but delete is `DirectorOnly` (no staff-JWT path at all) — (2) no
 storage-class cost tiering at all, and (3) no way to delete a profile photo or health/vaccine
 attachment (only group-activity photos have a `DeleteAsync` today). Technical approach: widen
-three endpoint authorization policies from `DirectorOnly` to `StaffOrDirector`; add
-`DeleteAsync` to `IProfilePhotoStorage`/`IHealthAttachmentStorage`; add an attachment-disposition
-download-URL method to all three storage ports for the parent-facing download action; add a new
+health/vaccine record create/edit/attachment-upload/delete endpoints, and the group-activity
+delete endpoint, from `DirectorOnly` to `StaffOrDirector`; add `DeleteAsync` to
+`IProfilePhotoStorage`/`IHealthAttachmentStorage`; add an attachment-disposition download-URL
+method to all three storage ports for the parent-facing download action; add a new
 tenant-looping CLI job (`evaluate-photo-archival`, following the `send-payment-reminders`
 pattern) that transitions a deactivated child's objects to Coldline after a 30-day grace period,
 using the same group-membership derivation `GetParentGroupActivityGalleryQuery` already uses
 (extracted into a shared service so both consumers stay consistent); add a Terraform bucket
 `lifecycle_rule`, prefix-scoped to full-resolution originals, moving any object to Nearline after
 90 days of `age` (a proxy for access-recency — GCS has no native "days since last read"
-condition); add a new `PurgeChildPhotosCommand` (director/staff) that permanently deletes a
-deactivated child's profile photo and health/vaccine attachments plus any group-activity photo
-where they are the sole derived child, guarded against active children, logging a structured
-audit entry per the codebase's existing `ILogger`-based precedent (no new `AuditLog` table).
+condition); add a new `PurgeChildPhotosCommand` (`StaffOrDirector`, per FR-008) that permanently
+deletes a deactivated child's profile photo and health/vaccine attachments plus any
+group-activity photo where they are the sole derived child, guarded against active children,
+logging a structured audit entry per the codebase's existing `ILogger`-based precedent (no new
+`AuditLog` table).
 
 ## Technical Context
 
@@ -117,10 +122,10 @@ backend/
 │       └── GroupActivityChildDerivationService.cs     # new implementation
 ├── ChildCare.Api/
 │   ├── Endpoints/
-│   │   ├── HealthRecordEndpoints.cs           # DirectorOnly → StaffOrDirector (delete)
-│   │   ├── VaccineRecordEndpoints.cs          # DirectorOnly → StaffOrDirector (delete x2)
-│   │   ├── GroupActivityEndpoints.cs          # DirectorOnly → StaffOrDirector (delete)
-│   │   ├── ChildrenEndpoints.cs               # + purge route (DirectorOnly, matches existing write-route policy on this file)
+│   │   ├── HealthRecordEndpoints.cs           # DirectorOnly → StaffOrDirector (create/edit/attachment-upload/delete — staff had zero access before)
+│   │   ├── VaccineRecordEndpoints.cs          # DirectorOnly → StaffOrDirector (create/edit/attachment-upload/delete x2 — staff had zero access before)
+│   │   ├── GroupActivityEndpoints.cs          # DirectorOnly → StaffOrDirector (delete only — create/upload stays DeviceAuthenticated, unchanged)
+│   │   ├── ChildrenEndpoints.cs               # + purge route (StaffOrDirector per FR-008, standalone route outside this file's DirectorOnly group)
 │   │   └── ParentEndpoints.cs (or equivalent)  # + download-original routes
 │   ├── Cli/
 │   │   └── EvaluatePhotoArchivalCommand.cs    # new — mirrors SendPaymentRemindersCommand

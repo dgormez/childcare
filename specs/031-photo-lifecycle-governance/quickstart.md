@@ -14,12 +14,16 @@ Validation scenarios proving this feature works end-to-end. Run against local de
 
 ## Scenario 1 — Staff/director RBAC parity
 
-1. As a staff account, `POST /api/group-activities/{id}/photos` (upload) — succeeds (unchanged).
-2. As the same staff account, `DELETE /api/group-activities/{id}` — expect `204` (previously
-   would have been `403 DirectorOnly`).
-3. As the same staff account, `DELETE /api/children/{childId}/health-records/{id}` and
-   `DELETE /api/children/{childId}/vaccine-records/{id}` — expect `204` for each.
-4. As a parent account, attempt any of the above three deletes — expect `403` for all.
+1. Using a paired kiosk device token (not a staff JWT), `POST /api/group-activities/{id}/photos`
+   (upload) — succeeds, unchanged by this feature.
+2. As a staff JWT account, `DELETE /api/group-activities/{id}` for that activity — expect `204`
+   (previously would have been `403 DirectorOnly`).
+3. As the same staff account, `POST`, `PUT`, `POST .../attachment-upload-url`, and `DELETE` on
+   `/api/children/{childId}/health-records/{id}` and the equivalent
+   `/api/children/{childId}/vaccine-records/{id}` routes — expect success on all eight calls
+   (previously all eight would have been `403 DirectorOnly` — staff had zero access to either
+   record type before this feature).
+4. As a parent account, attempt any of the delete/create/edit calls above — expect `403` for all.
 
 ## Scenario 2 — Parent downloads an original photo
 

@@ -7,19 +7,24 @@ policy is introduced (spec.md Assumptions).
 
 Was `DirectorOnly`, now `StaffOrDirector`. Request/response shape unchanged — deletes the
 activity and cascades to its photos via the existing `IGroupActivityPhotoStorage.DeleteAsync`.
+`POST /api/group-activities/{id}/photos` (create/upload) is **unchanged** — it already runs on
+the caregiver-tablet's `DeviceAuthenticated` device-token channel (008a), which has no staff-JWT
+role claim at all and is not part of this RBAC gap; only the delete path (a director/staff-web
+JWT action) gets widened.
 
-## `DELETE /api/children/{childId}/health-records/{id}` (policy change only)
+## Health-record and vaccine-record endpoints (policy change — all four routes per port)
 
-Was `DirectorOnly`, now `StaffOrDirector`. Request/response shape unchanged.
+Per spec.md's Clarifications, health/vaccine records were verified to be **entirely**
+`DirectorOnly` today — create, edit, attachment-upload-url, and delete alike — meaning staff had
+*zero* access to either record type, not a delete-lags-upload asymmetry. This feature widens all
+four routes on each port from `DirectorOnly` to `StaffOrDirector`:
 
-## `DELETE /api/children/{childId}/vaccine-records/{id}` (policy change only)
+- `POST /api/children/{childId}/health-records`, `PUT .../health-records/{id}`,
+  `POST .../health-records/{id}/attachment-upload-url`, `DELETE .../health-records/{id}`.
+- `POST /api/children/{childId}/vaccine-records`, `PUT .../vaccine-records/{id}`,
+  `POST .../vaccine-records/{id}/attachment-upload-url`, `DELETE .../vaccine-records/{id}`.
 
-Was `DirectorOnly`, now `StaffOrDirector`. Request/response shape unchanged.
-
-Upload routes (`POST .../photos`, `POST .../attachment-upload-url`) are unchanged — kiosk
-`DeviceAuthenticated` upload for group-activity photos and `DirectorOnly`-issued upload URLs for
-health/vaccine attachments were already staff-accessible per spec.md's Clarifications; this
-feature widens *delete* to match, it does not change who can upload.
+Request/response shapes are unchanged for all eight routes — this is a policy-only change.
 
 ## `GET /api/parent/photos/{photoType}/{objectRef}/download` (new)
 
@@ -38,13 +43,15 @@ additionally require the existing `Contract.Consent.PhotosInternal` gate) before
 
 ## `POST /api/children/{childId}/purge-photos` (new)
 
-`DirectorOnly` — matches `ChildrenEndpoints.cs`'s existing convention that all *write* routes on
-this file are `DirectorOnly` (per its own file-level comment); this is a deliberate,
-compliance-sensitive irreversible action, kept at the narrower existing tier rather than widened
-to `StaffOrDirector` alongside the delete-endpoint changes above, since spec.md's Clarifications
-only extend the *record-level delete* audit gap to `StaffOrDirector` — GDPR erasure was never
-part of that inconsistency (it's new capability, not an existing gap) and stays director-level by
-default, matching this file's established pattern.
+`StaffOrDirector` — per FR-008 and the UX Requirements' persona line, both spec.md's own text,
+which explicitly extend purge to "director or staff member" / "Director/Staff," not director
+alone. (An earlier draft of this contract restricted this route to `DirectorOnly`, reasoning it
+as a narrower compliance action outside the FR-011 RBAC-parity gap; that reasoning directly
+contradicted the spec's own FR-008 and was corrected during `/speckit-analyze`.) This does mean
+`ChildrenEndpoints.cs` gains its first non-`DirectorOnly` write route alongside the file's
+existing `DirectorOnly` group — map it the same way `StaffEndpoints.cs` already handles its one
+`StaffOrDirector` exception (a standalone route outside the `DirectorOnly` group, per that file's
+own comment on why route-group composition requires this).
 
 Rejects (`400 errors.children.still_active`) if the child's `DeactivatedAt` is null — nothing is
 deleted.

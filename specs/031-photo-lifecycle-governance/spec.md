@@ -60,11 +60,11 @@ This enables a director or staff member to permanently and correctly remove a de
 
 **Loading/empty/error states**: parent download shows a loading spinner on tap and a toast on signed-URL failure (generic, no internal/GCS error detail, per this codebase's error-handling convention); purge confirmation shows a loading state while the cascade runs and a clear success/failure result — a partial failure (e.g. one GCS delete call fails) must not silently report success.
 
-**Accessibility**: 48pt minimum touch target on both actions (parent-mobile platform floor, `platform-rules.md`); purge is a destructive text-style action per `design-system.md`'s Destructive button pattern, never a filled button, so it doesn't compete with the profile screen's primary actions.
+**Accessibility**: 48pt minimum touch target on both entry actions and on the purge confirmation dialog's own confirm/cancel controls (parent-mobile/director-web platform floors, `platform-rules.md`); purge is a destructive text-style action per `design-system.md`'s Destructive button pattern, never a filled button, so it doesn't compete with the profile screen's primary actions.
 
 **Offline behavior**: parent download action is hidden when offline (a live signed URL is required; no offline-queue applicability, unlike 008a's check-in queue — this is a pure read/download action with no state to reconcile later).
 
-**i18n**: parent-mobile keys follow the existing `gallery`/`invoices`/`fiscalAttestations` convention (`downloadOriginal`, `downloadFailed`) in `parent-mobile/i18n/locales/{en,nl,fr}.json`; director-web purge dialog strings follow web's existing i18n convention, all three locales.
+**i18n**: parent-mobile keys follow the existing `gallery`/`invoices`/`fiscalAttestations` convention (`downloadOriginal`, `downloadFailed`) in `parent-mobile/i18n/locales/{en,nl,fr}.json`, in this surface's warm/human tone; director-web purge dialog strings follow web's existing i18n convention, all three locales, in a clear/professional register matching the rest of director-web's staff/director-facing copy (not the parent-mobile warmth — this dialog's audience is staff and directors, not parents).
 
 ### Technical Requirements
 
@@ -156,6 +156,9 @@ A staff member (not just a director) can create/edit, delete, and download healt
 - Purging one child's photos must never affect another child's still-active or not-yet-purged photos, even within the same group-activity photo, per US1/AC2.
 - A child is deactivated and reactivated multiple times before any archiving grace period elapses: the eligibility evaluation always reflects current `DeactivatedAt` state, never a stale prior deactivation.
 - The scheduled evaluation runs while a purge is concurrently in progress for the same child: the purge (explicit, user-initiated deletion) and the archiving evaluation (automatic, storage-class-only, never deletes) operate on disjoint outcomes — a deleted object is simply no longer present for the evaluation to consider, no conflict.
+- A staff or director account's location assignment changes between an object's upload and a later action (delete, download, purge) on it: authorization is evaluated against the account's *current* location assignment at the time of the action, never a snapshot taken at upload time.
+- Once a photo/attachment object has been transitioned to the archive tier (FR-002/FR-003), a later general no-recent-activity evaluation (FR-005) MUST NOT move it back to a warmer tier — the archive tier is a one-way floor for that object; only reactivation-driven access, not the tiering jobs themselves, ever benefits from (never requires) a faster tier.
+- A purge action is retried after a prior partial failure (FR-016): an object already deleted by the earlier attempt is treated as already-satisfied, not re-reported as a new failure — retrying a purge is always safe.
 
 ## Requirements *(mandatory)*
 
@@ -176,7 +179,7 @@ A staff member (not just a director) can create/edit, delete, and download healt
 - **FR-013**: The parent-facing "download original" action MUST return the full-resolution object (never the thumbnail) via a signed URL with an attachment (not inline) content-disposition.
 - **FR-014**: Group-photo downloads MUST NOT crop, blur, or otherwise redact any child other than the requesting parent's own child (explicitly out of scope for this feature).
 - **FR-015**: All new user-facing strings (download action, purge action and its confirmation dialog, any retention-related setting) MUST use i18n keys across NL/FR/EN, following each platform's existing key-naming convention.
-- **FR-016**: A partial failure during a purge cascade (e.g. one object's GCS deletion call fails) MUST be surfaced as a failure, not reported as success, and MUST NOT silently leave the child's record in an inconsistent "some objects deleted" state without indicating this to the director/staff user.
+- **FR-016**: A partial failure during a purge cascade (e.g. one object's GCS deletion call fails) MUST be surfaced as a failure, not reported as success, and MUST NOT silently leave the child's record in an inconsistent "some objects deleted" state without indicating this to the director/staff user. Retrying a purge after a partial failure MUST be safe — an object already deleted by a prior attempt is treated as satisfied, not re-reported as a failure.
 - **FR-017**: Every purge action MUST be recorded in an audit log (who performed it, when, for which child) — an irreversible GDPR-erasure action is never silent.
 
 ### Key Entities
@@ -191,7 +194,7 @@ A staff member (not just a director) can create/edit, delete, and download healt
 
 - **SC-001**: 100% of group-activity photos depicting at least one currently-active child remain on the standard storage class — verified by a regression test, not just manual review, since silently mis-tiering an actively-viewed photo would degrade a caregiver/parent-facing experience.
 - **SC-002**: A GDPR purge action never deletes a photo that still depicts another active or not-targeted child — verified by a regression test asserting zero cross-child data loss across repeated purge scenarios.
-- **SC-003**: A parent can download a full-resolution original photo in two taps or fewer from the gallery/timeline view where they already view it.
+- **SC-003**: A parent can download a full-resolution original photo in two taps or fewer, measured from the photo already open in its detail/full-screen view (not from the gallery list or app launch).
 - **SC-004**: Staff members can perform the same upload/edit/delete/download actions directors could already perform, across all three photo types, with zero remaining director-only gaps in the audited paths.
 - **SC-005**: Storage-class transitions produce no reported functional regression (broken image, failed load) for any deactivated-then-reactivated child's photos.
 
@@ -203,3 +206,6 @@ A staff member (not just a director) can create/edit, delete, and download healt
 - No new authorization policy is introduced — `StaffOrDirector` and `ParentOnly` (both already defined in `backend/ChildCare.Api/Program.cs`) are sufficient for every access rule in this feature.
 - The single shared GCS bucket (`{project}-staff-profile-photos`) is not split into multiple buckets by this feature — lifecycle rules are scoped by object-path prefix within the one bucket, consistent with how every existing storage port already shares it.
 - Content-licensing / photo-consent flags (`Contract.Consent.PhotosInternal` etc., feature 007) are unchanged by this feature — a parent's download eligibility for a group photo already depends on the same consent gate `GetParentGroupActivityGalleryQuery` enforces today; this feature does not alter consent semantics, only adds a download variant of an already-consent-gated view.
+- "Their location(s)" (FR-001/FR-011's location-scoping) reuses whatever multi-location assignment check already gates other staff/director actions elsewhere in the app — a staff account assigned to more than one location gets identical photo-action access at every location they're assigned to, not only a primary one; this feature does not introduce new location-assignment semantics.
+- FR-005's "no-recent-activity" is approximated by object creation age (time since upload), not literal last-read tracking — GCS's native lifecycle rules have no "days since last accessed" condition, and instrumenting true access tracking (e.g. updating a timestamp on every signed-URL issuance) is judged not worth the added complexity given most photo views already happen shortly after upload, which is the rationale the 90-day default itself is based on.
+- The scheduled evaluation job (FR-002/FR-003/FR-005) runs on a daily cadence, consistent with this codebase's existing scheduled-job pattern (`send-payment-reminders`, `send-daily-reports`) — the spec does not require sub-day transition latency, since both P2 stories this job serves are explicitly background/invisible with no user-facing timing expectation.
