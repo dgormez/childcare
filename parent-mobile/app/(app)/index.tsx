@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks, Receipt, FileCheck2, Sprout } from "lucide-react-native";
+import { CalendarOff, CalendarPlus, ArrowLeftRight, ListChecks, Receipt, FileCheck2, Sprout, Users } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getReservationAvailability } from "../../services/locations";
 import { useColors } from "../../hooks/useColors";
@@ -24,6 +24,9 @@ export default function HomeScreen() {
   // nothing to do there is genuinely nothing. Defaults to visible while availability loads, so
   // a slow/failed availability fetch never hides a quick action that might actually work.
   const [anyChildAllows, setAnyChildAllows] = useState({ absence: true, extra: true, exchange: true });
+  // Feature 030 (US5, FR-017) — hidden entirely for a parent with zero deactivated linked
+  // children, not just an empty-state placeholder.
+  const [hasPreviousChildren, setHasPreviousChildren] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -51,6 +54,11 @@ export default function HomeScreen() {
           extra: availabilities.some((a) => a.extra !== "disabled"),
           exchange: availabilities.some((a) => a.exchange !== "disabled"),
         });
+      }
+
+      const previousResult = await apiClient.GET("/api/parent/children/previous");
+      if (previousResult.response.ok) {
+        setHasPreviousChildren((previousResult.data as unknown as unknown[]).length > 0);
       }
     } catch {
       setError(t("home.loadFailed"));
@@ -161,6 +169,16 @@ export default function HomeScreen() {
             <Sprout color={colors.text} size={20} strokeWidth={2} />
             <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.viewMilestones")}</Text>
           </TouchableOpacity>
+          {hasPreviousChildren && (
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/children/previous")}
+              className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4"
+              style={{ minHeight: 48 }}
+            >
+              <Users color={colors.text} size={20} strokeWidth={2} />
+              <Text className="text-text dark:text-text-dark ml-2 font-medium">{t("home.quickActions.viewPreviousChildren")}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </ScreenContainer>

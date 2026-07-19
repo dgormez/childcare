@@ -84,6 +84,12 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="children"
+        options={{
+          href: null, // reached only via Home's "previous children" entry point (feature 030 US5)
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: t("settings.title"),

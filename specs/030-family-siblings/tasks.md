@@ -299,14 +299,14 @@ historical access.
   `backend/ChildCare.Application/Parent/GetParentPreviousChildrenQuery.cs` (depends on T004)
 - [X] T058 [US5] Add `GET /api/parent/children/previous` route in
   `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs` (depends on T057)
-- [ ] T059 [US5] Create `parent-mobile/app/(app)/children/previous.tsx` — lists deactivated
+- [X] T059 [US5] Create `parent-mobile/app/(app)/children/previous.tsx` — lists deactivated
   children (name, photo, enrollment period), links into the existing per-child daily-
   summary/invoices/milestones screens read-only (hides action buttons per FR-016) (depends on
   T006)
-- [ ] T060 [US5] Add a "previous children" entry point to `parent-mobile/app/(app)/index.tsx`,
+- [X] T060 [US5] Add a "previous children" entry point to `parent-mobile/app/(app)/index.tsx`,
   shown only when `GET /api/parent/children/previous` returns a non-empty list (FR-017) (depends
   on T059)
-- [ ] T061 [P] [US5] Component test: entry point hidden with zero deactivated children, shown and
+- [X] T061 [P] [US5] Component test: entry point hidden with zero deactivated children, shown and
   navigable with one, in `parent-mobile/__tests__/home.test.tsx`
 
 **Checkpoint**: All five user stories complete — the full 030 scope is independently verifiable

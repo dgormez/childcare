@@ -1,7 +1,8 @@
 import React from "react";
-import { render, act } from "@testing-library/react-native";
+import { render, act, fireEvent } from "@testing-library/react-native";
+import { useRouter } from "expo-router";
 import HomeScreen from "../app/(app)/index";
-import type { DailySummaryResponse, ParentChildResponse } from "../types";
+import type { DailySummaryResponse, ParentChildResponse, ParentPreviousChildResponse } from "../types";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -117,5 +118,45 @@ describe("group activities section (feature 009b)", () => {
 
     expect(await findByText("Verhaaltje")).toBeTruthy();
     expect(queryAllByLabelText("Verhaaltje")).toHaveLength(0);
+  });
+});
+
+// Feature 030 (US5, FR-017) — the entry point is hidden entirely for a parent with zero
+// deactivated linked children, and shown/navigable with one.
+describe("previous children entry point (feature 030 US5)", () => {
+  const previousChild: ParentPreviousChildResponse = {
+    id: "c3", firstName: "Nora", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2020-01-01",
+    enrollmentStart: "2023-01-01", enrollmentEnd: "2026-06-30",
+  };
+
+  it("is hidden when the parent has zero deactivated linked children", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/parent/children") return Promise.resolve(jsonResponse(200, [child1]));
+      if (path === "/api/parent/children/{childId}/daily-summary") return Promise.resolve(jsonResponse(200, emptySummary));
+      if (path === "/api/parent/children/previous") return Promise.resolve(jsonResponse(200, []));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+
+    const { findByText, queryByText } = await render(<HomeScreen />);
+
+    await findByText("home.quickActions.title");
+    expect(queryByText("home.quickActions.viewPreviousChildren")).toBeNull();
+  });
+
+  it("is shown and navigates to the previous-children screen when one exists", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/parent/children") return Promise.resolve(jsonResponse(200, [child1]));
+      if (path === "/api/parent/children/{childId}/daily-summary") return Promise.resolve(jsonResponse(200, emptySummary));
+      if (path === "/api/parent/children/previous") return Promise.resolve(jsonResponse(200, [previousChild]));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+    const push = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
+
+    const { findByText } = await render(<HomeScreen />);
+
+    await fireEvent.press(await findByText("home.quickActions.viewPreviousChildren"));
+
+    expect(push).toHaveBeenCalledWith("/(app)/children/previous");
   });
 });

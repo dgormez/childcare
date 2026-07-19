@@ -34,6 +34,17 @@ export interface ParentChildResponse {
   dateOfBirth:      string;
 }
 
+// Feature 030 (US5) — contracts/family-siblings-api.md.
+export interface ParentPreviousChildResponse {
+  id:               string;
+  firstName:        string;
+  lastName:         string;
+  photoDownloadUrl: string | null;
+  dateOfBirth:      string;
+  enrollmentStart:  string | null;
+  enrollmentEnd:    string;
+}
+
 // ── Group activities (feature 009b) ──────────────────────────────────────────────
 export type GroupActivityType = "outdoor" | "creative" | "music" | "story" | "celebration" | "other";
 
