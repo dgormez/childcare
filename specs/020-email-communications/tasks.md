@@ -185,16 +185,16 @@ guardian and every other household still receive theirs.
   handler goes through MediatR per constitution Principle III (thin endpoints; schema resolution
   plus token verification is multi-step business logic, not a "simple single-entity lookup"
   carve-out) in `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs` (depends on T047)
-- [ ] T049 [US2] `SendDailyReportsCommand.RunAsync` — mirrors `SendPaymentRemindersCommand`'s
+- [X] T049 [US2] `SendDailyReportsCommand.RunAsync` — mirrors `SendPaymentRemindersCommand`'s
   tenant-loop structure exactly (iterate `Tenant` rows with `ProvisioningStatus.Ready` via
   `ITenantDbContextResolver.ForSchema`, isolate per-tenant failures, per-tenant
   `Console.WriteLine` summary, non-zero exit on any failure); per tenant, per enrolled child, per
   contact with `Email != null` and `DigestUnsubscribedAt == null`, renders via
   `GetDailySummaryQuery` and sends via `IEmailSender.SendDailyReportAsync` in
   `backend/ChildCare.Api/Cli/SendDailyReportsCommand.cs` (depends on T046, T017)
-- [ ] T050 Add `send-daily-reports` CLI subcommand branch (same early-exit shape as
+- [X] T050 Add `send-daily-reports` CLI subcommand branch (same early-exit shape as
   `send-payment-reminders`) in `backend/ChildCare.Api/Program.cs` (depends on T049)
-- [ ] T051 [US2] Add `google_cloud_run_v2_job.send_daily_reports` and
+- [X] T051 [US2] Add `google_cloud_run_v2_job.send_daily_reports` and
   `google_cloud_scheduler_job.send_daily_reports_daily` (`schedule = "0 19 * * *"`,
   `time_zone = "Europe/Brussels"`, `max_retries = 0`), mirroring
   `send_payment_reminders`/`send_payment_reminders_daily` exactly, in `infra/gcp/main.tf`

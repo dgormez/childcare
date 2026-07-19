@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -104,6 +106,34 @@ if (args.Length > 0 && args[0] == "send-payment-reminders")
     using var cliHost = cliBuilder.Build();
     using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
     var exitCode = await ChildCare.Api.Cli.SendPaymentRemindersCommand.RunAsync(cliScope.ServiceProvider);
+    Environment.Exit(exitCode);
+}
+
+// send-daily-reports CLI subcommand (feature 020, User Story 2) — same early-exit shape as
+// send-payment-reminders above. Triggered daily at 19:00 Europe/Brussels by a Cloud Scheduler +
+// Cloud Run Job execution of this container (infra/gcp/main.tf).
+if (args.Length > 0 && args[0] == "send-daily-reports")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+    cliBuilder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+    // Keys must be the same persisted ring the API host uses (research.md R5) — a token this
+    // job creates is verified later by that separate, long-running process.
+    cliBuilder.Services.AddDataProtection()
+        .PersistKeysToDbContext<PublicDbContext>()
+        .SetApplicationName("ChildCare");
+    cliBuilder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
+    cliBuilder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
+    cliBuilder.Services.AddScoped<DailySummaryCalculator>();
+    cliBuilder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Email.ScribanEmailTemplateRenderer>();
+    cliBuilder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
+    cliBuilder.Services.AddScoped<IEmailSender, EmailService>();
+    cliBuilder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>();
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await ChildCare.Api.Cli.SendDailyReportsCommand.RunAsync(cliScope.ServiceProvider);
     Environment.Exit(exitCode);
 }
 
@@ -251,8 +281,13 @@ builder.Services.AddScoped<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
 
 // ── Invoice Payments Plus (feature 014a) ─────────────────────────────────────
 // IDataProtector-backed OAuth-token encryption (research.md R3) — the first per-tenant
-// third-party credential this codebase stores.
-builder.Services.AddDataProtection();
+// third-party credential this codebase stores. Keys persist to PublicDbContext (feature 020,
+// research.md R5) rather than the per-process default: a Cloud Run API instance and the
+// send-daily-reports CLI job are separate processes and must decrypt/verify each other's
+// output — an ephemeral key ring would silently break both this and the unsubscribe token.
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<PublicDbContext>()
+    .SetApplicationName("ChildCare");
 builder.Services.AddScoped<IPaymentTokenProtector, PaymentTokenProtector>();
 builder.Services.AddScoped<IPaymentProvider, MolliePaymentProvider>();
 builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotificationService>();

@@ -9,6 +9,13 @@
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
+    <!-- Feature 020, research.md R5 — the unsubscribe token is created by the send-daily-reports
+         CLI job (one process) and verified later by the long-running API host (a different
+         process, and on Cloud Run potentially a different instance). The default ephemeral key
+         ring is per-process, so without a shared persisted key store every token would fail to
+         verify as soon as the CLI job exited. Persisted via PublicDbContext (already shared
+         across both hosts) rather than a new GCS dependency. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
