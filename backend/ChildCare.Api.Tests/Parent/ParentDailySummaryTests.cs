@@ -108,6 +108,22 @@ public class ParentDailySummaryTests(OrganisationOnboardingWebAppFactory factory
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    // Feature 030 (US5, research.md R8) — a deactivated child's daily summary must remain
+    // reachable read-only for the parent (no new authorization gap introduced by 030).
+    [Fact]
+    public async Task DailySummary_DeactivatedChild_StillSucceeds()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"ParentSummaryDeactivated Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var (child, _, parentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
+        var deactivateResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/deactivate", org.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, deactivateResponse.StatusCode);
+
+        var response = await client.SendAsync(ParentRequest(HttpMethod.Get, $"/api/parent/children/{child.Id}/daily-summary", parentToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     // ── empty summary → clean zeroed response, not an error ─────────────────────────
 
     [Fact]

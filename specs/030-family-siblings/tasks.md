@@ -129,17 +129,17 @@ other doesn't.
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] Test: 2 siblings, same primary contact, same location, 10% discount
+- [X] T025 [P] [US2] Test: 2 siblings, same primary contact, same location, 10% discount
   configured → later-contract child's invoice has a `-10%` discount line item, earlier-contract
   child's invoice has none, in
   `backend/ChildCare.Api.Tests/Invoices/SiblingDiscountAndBundlingTests.cs`
-- [ ] T026 [P] [US2] Test: discount = 0 (default) → no discount line on any invoice, in the same
+- [X] T026 [P] [US2] Test: discount = 0 (default) → no discount line on any invoice, in the same
   test file
-- [ ] T027 [P] [US2] Test: 2 children of the same parent at two different locations → no discount
+- [X] T027 [P] [US2] Test: 2 children of the same parent at two different locations → no discount
   at either (no shared-location sibling group), in the same test file
-- [ ] T028 [P] [US2] Test: 2 children with no shared primary contact (unrelated families,
+- [X] T028 [P] [US2] Test: 2 children with no shared primary contact (unrelated families,
   same location) → no discount, in the same test file
-- [ ] T029 [P] [US2] Test: 3 siblings same primary contact/location → discount applies to all but
+- [X] T029 [P] [US2] Test: 3 siblings same primary contact/location → discount applies to all but
   the earliest-contract child, in the same test file
 
 ### Implementation for User Story 2
@@ -220,21 +220,21 @@ marking it paid marks both underlying invoices paid.
 
 ### Tests for User Story 3
 
-- [ ] T042 [P] [US3] Test: bundling enabled, 2 siblings same primary contact/location → both
+- [X] T042 [P] [US3] Test: bundling enabled, 2 siblings same primary contact/location → both
   generated invoices share the same new `FamilyGroupId`; bundling disabled (default) → both
   `FamilyGroupId` remain null, in the same
   `backend/ChildCare.Api.Tests/Invoices/SiblingDiscountAndBundlingTests.cs` from Phase 4
-- [ ] T043 [P] [US3] Test: `GenerateFamilyInvoicePdfQuery` for a valid `FamilyGroupId` returns one
+- [X] T043 [P] [US3] Test: `GenerateFamilyInvoicePdfQuery` for a valid `FamilyGroupId` returns one
   PDF reflecting both children's line items and the combined total; an unrelated caller's
   `familyGroupId` guess (no linked child in the group) is indistinguishable from not-found, in
   `backend/ChildCare.Api.Tests/Invoices/FamilyInvoicePdfTests.cs`
-- [ ] T044 [P] [US3] Test: `MarkInvoicePaidCommand` on one invoice of a `FamilyGroupId` group
+- [X] T044 [P] [US3] Test: `MarkInvoicePaidCommand` on one invoice of a `FamilyGroupId` group
   transitions every invoice in the group `Sent → Paid` together, in
   `backend/ChildCare.Api.Tests/Invoices/InvoiceLifecycleTests.cs`
-- [ ] T045 [P] [US3] Test: `GetParentInvoicesQuery` collapses a family group into one
+- [X] T045 [P] [US3] Test: `GetParentInvoicesQuery` collapses a family group into one
   `FamilyInvoiceResponse`-shaped entry; a non-grouped invoice remains a normal single entry, in
   `backend/ChildCare.Api.Tests/Invoices/GetParentInvoicesTests.cs`
-- [ ] T046 [P] [US3] Test: siblings with different primary contacts (Clarifications edge case) are
+- [X] T046 [P] [US3] Test: siblings with different primary contacts (Clarifications edge case) are
   never grouped together even when a secondary contact is shared, in
   `SiblingDiscountAndBundlingTests.cs`
 
@@ -284,10 +284,10 @@ historical access.
 
 ### Tests for User Story 5
 
-- [ ] T055 [P] [US5] Test: `GetParentPreviousChildrenQuery` returns only the caller's deactivated
+- [X] T055 [P] [US5] Test: `GetParentPreviousChildrenQuery` returns only the caller's deactivated
   linked children with correct enrollment-period dates; a caller with none gets an empty list,
   in `backend/ChildCare.Api.Tests/Parent/ParentPreviousChildrenTests.cs`
-- [ ] T056 [P] [US5] Test: `GetParentDailySummaryQuery`/`GetParentInvoicesQuery` already succeed
+- [X] T056 [P] [US5] Test: `GetParentDailySummaryQuery`/`GetParentInvoicesQuery` already succeed
   for a deactivated child the caller is linked to (regression-confirming, no new authorization
   gap introduced) — extend `ParentDailySummaryTests.cs`/`GetParentInvoicesTests.cs` with a
   deactivated-child case

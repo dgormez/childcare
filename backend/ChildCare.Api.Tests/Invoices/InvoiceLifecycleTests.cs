@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Xunit;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
+using static ChildCare.Api.Tests.ParentTestSupport;
 
 namespace ChildCare.Api.Tests.Invoices;
 
@@ -147,6 +148,55 @@ public class InvoiceLifecycleTests(OrganisationOnboardingWebAppFactory factory) 
         Assert.Equal("paid", paid.Status);
         Assert.NotNull(paid.PaidAt);
         Assert.False(paid.IsOverdue);
+    }
+
+    // Feature 030 (US3, FR-009a) — marking one invoice of a bundled family group paid cascades
+    // to every sibling invoice sharing the same FamilyGroupId in the same transaction.
+    [Fact]
+    public async Task MarkPaid_OnInvoiceWithFamilyGroupId_CascadesToSiblingInvoices()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Invoice Lifecycle Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{location.Id}/sibling-billing-settings", org.AccessToken,
+            new UpdateLocationSiblingBillingSettingsRequest(0, true)));
+
+        var contact = await CreateContactWithEmailAsync(client, org.AccessToken);
+        var child1 = await CreateChildAsync(client, org.AccessToken, "Emma");
+        var child2 = await CreateChildAsync(client, org.AccessToken, "Lucas");
+        await LinkContactAsync(client, org.AccessToken, child1.Id, contact.Id);
+        await LinkContactAsync(client, org.AccessToken, child2.Id, contact.Id);
+
+        var contractRequest1 = new CreateContractRequest(
+            location.Id, new DateOnly(2027, 9, 1), null,
+            [new ContractedDayRequest(DayOfWeek.Monday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var contract1 = (await (await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child1.Id}/contracts", org.AccessToken, contractRequest1))).Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract1.Id}/activate", org.AccessToken));
+
+        var contractRequest2 = new CreateContractRequest(
+            location.Id, new DateOnly(2027, 9, 8), null,
+            [new ContractedDayRequest(DayOfWeek.Tuesday, new TimeOnly(8, 0), new TimeOnly(17, 0))], 3500, null);
+        var contract2 = (await (await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child2.Id}/contracts", org.AccessToken, contractRequest2))).Content.ReadFromJsonAsync<ContractResponse>())!;
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract2.Id}/activate", org.AccessToken));
+
+        var generateResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/locations/{location.Id}/invoices/generate", org.AccessToken, new GenerateInvoicesRequest(2027, 9)));
+        var invoices = (await generateResponse.Content.ReadFromJsonAsync<List<InvoiceResponse>>())!;
+        Assert.All(invoices, i => Assert.NotNull(i.FamilyGroupId));
+
+        await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/invoices/send", org.AccessToken, new SendInvoicesRequest(invoices.Select(i => i.Id).ToList())));
+
+        var paidAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/invoices/{invoices[0].Id}/mark-paid", org.AccessToken, new MarkInvoicePaidRequest(paidAt)));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var siblingResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoices[1].Id}", org.AccessToken));
+        var sibling = (await siblingResponse.Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        Assert.Equal("paid", sibling.Status);
+        Assert.NotNull(sibling.PaidAt);
     }
 
     [Fact]
