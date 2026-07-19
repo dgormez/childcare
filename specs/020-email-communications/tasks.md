@@ -248,15 +248,15 @@ every contact with an address on file.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T057 [P] [US4] Integration test: publishing a `KdvClosureDay` emails every resolved
+- [X] T057 [P] [US4] Integration test: publishing a `KdvClosureDay` emails every resolved
   contact with an email on file, including a contact with no parent-app account
   (`TenantUserId == null`, previously unreachable by the existing push-only fan-out) and a
   digest-unsubscribed contact (FR-010) in
   `backend/ChildCare.Api.Tests/ClosureCalendar/ClosureNotificationEmailTests.cs`
-- [ ] T058 [P] [US4] Integration test: `SendAnnouncementCommand` emails every resolved contact
+- [X] T058 [P] [US4] Integration test: `SendAnnouncementCommand` emails every resolved contact
   with an email on file under the same conditions as T057 (FR-011) in
   `backend/ChildCare.Api.Tests/Announcements/SendAnnouncementEmailTests.cs`
-- [ ] T059 [P] [US4] Integration test: a bad/bounced address in either fan-out is logged and does
+- [X] T059 [P] [US4] Integration test: a bad/bounced address in either fan-out is logged and does
   not block the rest of the batch (FR-012, matches User Story 1's partial-failure behavior) in
   `backend/ChildCare.Api.Tests/ClosureCalendar/ClosureNotificationEmailTests.cs`
 
@@ -268,12 +268,12 @@ every contact with an address on file.
 - [X] T061 [P] [US4] `announcement.scriban` content template (reusing
   `SendAnnouncementCommandHandler`'s subject/body verbatim) in
   `backend/ChildCare.Infrastructure/Email/Templates/announcement.scriban`
-- [ ] T062 [US4] Extend `ClosureNotificationService.NotifyAsync` to additionally call
+- [X] T062 [US4] Extend `ClosureNotificationService.NotifyAsync` to additionally call
   `IEmailSender.SendClosureNotificationEmailAsync` per resolved recipient with
   `Contact.Email != null` (no `TenantUserId` gate — research.md R4), logging
   `BulkEmailDeliveryStatus`-shaped outcomes without a new `BulkEmailSend` row (data-model.md) in
   `backend/ChildCare.Application/ClosureCalendar/ClosureNotificationService.cs` (depends on T060)
-- [ ] T063 [US4] Extend `SendAnnouncementCommandHandler.Handle` to additionally resolve and email
+- [X] T063 [US4] Extend `SendAnnouncementCommandHandler.Handle` to additionally resolve and email
   every contact with `Email != null` in scope (in addition to, not replacing, the existing
   `TenantUserId != null`-gated push/in-app fan-out) via
   `IEmailSender.SendAnnouncementEmailAsync` in
@@ -287,14 +287,14 @@ every contact with an address on file.
 
 **Purpose**: Consistency and hardening across every story.
 
-- [ ] T064 [P] Verify every new director-web/email string uses an i18n key with NL/FR/EN
+- [X] T064 [P] Verify every new director-web/email string uses an i18n key with NL/FR/EN
   translations, zero hardcoded/untranslated text (FR-014, SC-004) across
   `web/app/(app)/communications/`, `backend/ChildCare.Infrastructure/Email/Templates/`
-- [ ] T065 [P] Verify no raw provider/SMTP error or stack trace is ever returned in any endpoint
+- [X] T065 [P] Verify no raw provider/SMTP error or stack trace is ever returned in any endpoint
   response (FR-018, constitution Principle VI) across `backend/ChildCare.Api/Endpoints/EmailEndpoints.cs`
 - [ ] T066 Run `quickstart.md` end-to-end against a local Mailhog/Mailpit-backed dev environment
   and fix any discrepancy found
-- [ ] T067 [P] Update `Workflows/communication.md` to document the new email channel per
+- [X] T067 [P] Update `Workflows/communication.md` to document the new email channel per
   spec.md's Workflow Boundary (governance rule in `workflows.md`: document what changed, why,
   which features affected)
 

@@ -116,7 +116,13 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// column needs its own explicit DROP COLUMN, same reason as MenuVariantPriorityOrder above;
     /// its "AddReportingIndexes" migration only adds/replaces indexes on invoices (already
     /// dropped wholesale above), so it needs no schema change, just its own history-removal
-    /// entry, same reasoning as everything else in this note.
+    /// entry, same reasoning as everything else in this note. Feature 020's
+    /// "AddEmailCommunications" is the next one — its two new tables (bulk_email_recipients
+    /// before bulk_email_sends, which it FKs to) get their own DROP TABLEs, and contacts is
+    /// never dropped in this test (only referenced), so its new nullable DigestUnsubscribedAt
+    /// column needs its own explicit DROP COLUMN, same reason as Capacity above (found by this
+    /// test actually failing after that migration shipped, same as every migration-adding
+    /// feature's note above predicted).
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -124,6 +130,8 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."bulk_email_recipients";
+            DROP TABLE "{schemaName}"."bulk_email_sends";
             DROP TABLE "{schemaName}"."child_milestone_observations";
             DROP TABLE "{schemaName}"."fiscal_attestations";
             DROP TABLE "{schemaName}"."invoices";
@@ -161,8 +169,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "IsPlatformAdmin";
             ALTER TABLE "{schemaName}"."groups"
                 DROP COLUMN "Capacity";
+            ALTER TABLE "{schemaName}"."contacts"
+                DROP COLUMN "DigestUnsubscribedAt";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications';
             """);
     }
 

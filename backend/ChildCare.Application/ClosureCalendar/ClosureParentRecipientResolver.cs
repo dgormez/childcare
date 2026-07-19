@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.ClosureCalendar;
 
-public record ClosureParentRecipient(Guid ContactId, string Locale, string? PushToken);
+public record ClosureParentRecipient(Guid ContactId, string Locale, string? PushToken, string? Email);
 
 public class ClosureParentRecipientResolver(ITenantDbContext db)
 {
@@ -29,7 +29,7 @@ public class ClosureParentRecipientResolver(ITenantDbContext db)
                       && (cc.Relationship == ContactRelationship.Mother
                           || cc.Relationship == ContactRelationship.Father
                           || cc.Relationship == ContactRelationship.Guardian))
-            .Join(db.Contacts, cc => cc.ContactId, c => c.Id, (cc, c) => new ClosureParentRecipient(c.Id, c.Locale, c.PushToken))
+            .Join(db.Contacts, cc => cc.ContactId, c => c.Id, (cc, c) => new ClosureParentRecipient(c.Id, c.Locale, c.PushToken, c.Email))
             .ToListAsync(cancellationToken);
 
         return rows

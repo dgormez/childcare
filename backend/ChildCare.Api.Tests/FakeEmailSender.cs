@@ -82,19 +82,33 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
         return inner.SendDailyReportAsync(toEmail, locale, childName, summary, unsubscribeUrl, cancellationToken);
     }
 
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (ClosureNotificationService's partial-failure handling, FR-012).</summary>
+    public HashSet<string> ThrowOnClosureNotificationEmailTo { get; } = [];
+
     public List<(string ToEmail, string Locale, string Title, string Body)> ClosureNotificationEmailCalls { get; } = [];
 
     public Task SendClosureNotificationEmailAsync(string toEmail, string locale, string title, string body, CancellationToken cancellationToken = default)
     {
         ClosureNotificationEmailCalls.Add((toEmail, locale, title, body));
+        if (ThrowOnClosureNotificationEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
         return inner.SendClosureNotificationEmailAsync(toEmail, locale, title, body, cancellationToken);
     }
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (SendAnnouncementCommandHandler's partial-failure handling, FR-012).</summary>
+    public HashSet<string> ThrowOnAnnouncementEmailTo { get; } = [];
 
     public List<(string ToEmail, string Locale, string Subject, string Body)> AnnouncementEmailCalls { get; } = [];
 
     public Task SendAnnouncementEmailAsync(string toEmail, string locale, string subject, string body, CancellationToken cancellationToken = default)
     {
         AnnouncementEmailCalls.Add((toEmail, locale, subject, body));
+        if (ThrowOnAnnouncementEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
         return inner.SendAnnouncementEmailAsync(toEmail, locale, subject, body, cancellationToken);
     }
 }

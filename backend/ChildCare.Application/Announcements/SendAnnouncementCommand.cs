@@ -44,6 +44,7 @@ public class SendAnnouncementCommandValidator : AbstractValidator<SendAnnounceme
 public class SendAnnouncementCommandHandler(
     ITenantDbContext db,
     IExpoPushSender pushSender,
+    IEmailSender emailSender,
     ILogger<SendAnnouncementCommandHandler> logger) : IRequestHandler<SendAnnouncementCommand, AnnouncementResult>
 {
     private static readonly Dictionary<string, (string Title, string Body)> Labels = new()
@@ -127,6 +128,32 @@ public class SendAnnouncementCommandHandler(
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Announcement push notification dispatch failed for announcement {AnnouncementId}.", announcement.Id);
+            }
+        }
+
+        // FR-011: emails every contact with an address on file in the same scope — additive to,
+        // not gated by, the TenantUserId-bounded push/in-app fan-out above (research.md R4, no
+        // TenantUserId gate — reaches a contact with no parent-app account at all).
+        var emailRecipients = childIds.Count == 0
+            ? []
+            : await db.ChildContacts
+                .Where(cc => childIds.Contains(cc.ChildId))
+                .Join(db.Contacts, cc => cc.ContactId, c => c.Id, (cc, c) => c)
+                .Where(c => c.Email != null)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+        foreach (var contact in emailRecipients)
+        {
+            try
+            {
+                await emailSender.SendAnnouncementEmailAsync(contact.Email!, contact.Locale, request.Subject, request.Body, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // FR-012: a bad/bounced address doesn't block the rest of the batch — logged
+                // server-side only, matching CLAUDE.md's error-handling rule.
+                logger.LogWarning(ex, "Announcement email dispatch failed for announcement {AnnouncementId}.", announcement.Id);
             }
         }
 
