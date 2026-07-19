@@ -340,6 +340,21 @@ export interface ContactResponse {
   locale: string;
 }
 
+// Feature 030 (US4) — contracts/family-siblings-api.md.
+export type ContactRelationship = "Mother" | "Father" | "Guardian" | "EmergencyContact" | "AuthorisedPickup" | "FosterParent" | "Other";
+
+export interface ChildContactResponse {
+  contactId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  locale: string;
+  relationship: ContactRelationship;
+  canPickup: boolean;
+  isPrimary: boolean;
+}
+
 export interface MessageResponse {
   id: string;
   threadId: string;

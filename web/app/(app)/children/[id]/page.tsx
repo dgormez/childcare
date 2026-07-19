@@ -11,6 +11,7 @@ import { ErrorState } from "../../../../components/ErrorState";
 import { ConfirmDialog } from "../../../../components/ConfirmDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../../components/ui/tabs";
 import { ChildProfileTab } from "../../../../components/children/ChildProfileTab";
+import { ChildContactsTab } from "../../../../components/children/ChildContactsTab";
 import { ChildFormDialog, type ChildFormValues } from "../../../../components/children/ChildFormDialog";
 import { ChildMealPreferenceForm } from "../../../../components/children/ChildMealPreferenceForm";
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
@@ -259,6 +260,7 @@ export default function ChildDetailPage() {
           <TabsTrigger value="profile">{tc("tabProfile")}</TabsTrigger>
           <TabsTrigger value="health">{tc("tabHealth")}</TabsTrigger>
           <TabsTrigger value="milestones">{tc("tabMilestones")}</TabsTrigger>
+          <TabsTrigger value="contacts">{tc("tabContacts")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -444,6 +446,10 @@ export default function ChildDetailPage() {
 
         <TabsContent value="milestones">
           <MilestonePortfolioView childId={child.id} />
+        </TabsContent>
+
+        <TabsContent value="contacts">
+          <ChildContactsTab childId={child.id} />
         </TabsContent>
       </Tabs>
 

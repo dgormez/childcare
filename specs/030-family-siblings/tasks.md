@@ -177,31 +177,31 @@ duplicating.
 
 ### Tests for User Story 4
 
-- [ ] T035 [P] [US4] Component test: Contacts tab renders linked contacts with relationship and
+- [X] T035 [P] [US4] Component test: Contacts tab renders linked contacts with relationship and
   primary badge, and an empty state with zero contacts, in
   `web/__tests__/children/ChildContactsTab.test.tsx`
-- [ ] T036 [P] [US4] Component test: adding a contact whose email matches an existing tenant
+- [X] T036 [P] [US4] Component test: adding a contact whose email matches an existing tenant
   contact surfaces a "link existing contact instead" suggestion; proceeding with a non-matching
   entry creates + links a new contact, in
   `web/__tests__/children/LinkContactDialog.test.tsx`
-- [ ] T037 [P] [US4] Component test: changing which contact is primary calls the existing
+- [X] T037 [P] [US4] Component test: changing which contact is primary calls the existing
   update-link endpoint and reflects the new primary in the tab, in the same test file as T035
 
 ### Implementation for User Story 4
 
-- [ ] T038 [US4] Add a "Contacts" tab to
+- [X] T038 [US4] Add a "Contacts" tab to
   `web/app/(app)/children/[id]/page.tsx` alongside the existing Profile/Health/Milestones tabs
   (plan.md)
-- [ ] T039 [US4] Implement `web/components/children/ChildContactsTab.tsx` — lists
+- [X] T039 [US4] Implement `web/components/children/ChildContactsTab.tsx` — lists
   `GET /api/children/{childId}/contacts`, relationship + primary badge, remove action
   (`DELETE .../contacts/{contactId}`), set-primary action (`PUT .../contacts/{contactId}` with
   `isPrimary: true`), including the new `fosterParent`/`other` relationship options (depends on
   T008, T011)
-- [ ] T040 [US4] Implement `web/components/children/LinkContactDialog.tsx` — fetches
+- [X] T040 [US4] Implement `web/components/children/LinkContactDialog.tsx` — fetches
   `GET /api/contacts` once, filters client-side for an email/phone match as the director types
   (research.md R7), offers "link existing" (`POST .../contacts` with the matched `contactId`) vs.
   "create new" (`POST /api/contacts` then link) (depends on T008, T039)
-- [ ] T041 [P] [US4] Wire `LinkContactDialog` as the Contacts tab's "add contact" action in
+- [X] T041 [P] [US4] Wire `LinkContactDialog` as the Contacts tab's "add contact" action in
   `ChildContactsTab.tsx` (depends on T039, T040)
 
 **Checkpoint**: Directors can fully manage a child's linked family contacts from the web —
