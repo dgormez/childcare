@@ -345,7 +345,10 @@ children" view still surfaces the deactivated child with access to their histori
 - "Earliest contract start date at that location" is the tie-breaker for which sibling is
   full-price; this is a reasonable, deterministic default absent a more specific rule from the
   business, and mirrors common real-world sibling-discount policy (the longest-enrolled child is
-  full price).
+  full price). If two siblings' contracts share the exact same start date (e.g. twins signed on
+  one contract date), the earlier-created contract record is the secondary, fully deterministic
+  tie-breaker — this only affects which of two identical-priced siblings is labeled "full price"
+  vs. "discounted," not the total amount billed to the family.
 - Custody-schedule-aware reservations/billing (which parent has the child on which day) and
   split/divided invoicing between two parents remain out of scope, per the original backlog
   entry — this feature does not change that.
