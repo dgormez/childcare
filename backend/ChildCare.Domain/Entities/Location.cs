@@ -56,6 +56,12 @@ public class Location
     public int  PaymentReminderDelayDays   { get; set; } = 3;
     public int  PaymentReminderCadenceDays { get; set; } = 7;
 
+    // Feature 030 — opt-in sibling billing (spec.md FR-004/FR-007). Both default to no-op so a
+    // location that never configures them sees zero invoice-generation behavior change
+    // (spec.md SC-005).
+    public decimal SiblingDiscountPct             { get; set; } = 0;
+    public bool    FamilyInvoiceBundlingEnabled    { get; set; } = false;
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

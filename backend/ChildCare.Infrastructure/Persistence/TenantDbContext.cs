@@ -302,6 +302,9 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             l.Property(x => x.PaymentRemindersEnabled).HasDefaultValue(false).IsRequired();
             l.Property(x => x.PaymentReminderDelayDays).HasDefaultValue(3).IsRequired();
             l.Property(x => x.PaymentReminderCadenceDays).HasDefaultValue(7).IsRequired();
+            // Feature 030 — opt-in sibling billing (spec.md FR-004/FR-007).
+            l.Property(x => x.SiblingDiscountPct).HasPrecision(5, 2).HasDefaultValue(0m).IsRequired();
+            l.Property(x => x.FamilyInvoiceBundlingEnabled).HasDefaultValue(false).IsRequired();
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -968,6 +971,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // overdue-list computation (Status == Sent && DueDate < today).
             inv.HasIndex(x => new { x.LocationId, x.PeriodMonth });
             inv.HasIndex(x => new { x.Status, x.DueDate });
+            // Feature 030 — presentation/payment grouping over existing rows (spec.md
+            // Clarifications); null for every invoice unless bundling was enabled at generation
+            // time. Non-unique — many invoices share one group.
+            inv.HasIndex(x => x.FamilyGroupId);
         });
 
         // Feature 015 — one row per (ChildId, LocationId, TaxYear); regenerating overwrites this

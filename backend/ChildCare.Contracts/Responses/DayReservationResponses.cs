@@ -26,3 +26,14 @@ public record ReservationAvailabilityResponse(
     string Extra,
     string Exchange,
     int NoticeHours);
+
+// Feature 030 — contracts/family-siblings-api.md. One entry per requested child; always 200 for
+// an authorized caller, per-child outcome carries its own success/failure (spec.md FR-003).
+public record BulkDayReservationResultItem(
+    Guid ChildId,
+    string ChildName,
+    bool Succeeded,
+    DayReservationResponse? Reservation,
+    string? ErrorKey);
+
+public record BulkDayReservationResponse(IReadOnlyList<BulkDayReservationResultItem> Results);

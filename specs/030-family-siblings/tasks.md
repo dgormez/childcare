@@ -15,20 +15,20 @@ testing.
 
 **Purpose**: Contracts DTOs and i18n scaffolding shared across stories.
 
-- [ ] T001 [P] Add `BulkDayReservationRequest` (`{ childIds, type, requestedDate,
+- [X] T001 [P] Add `BulkDayReservationRequest` (`{ childIds, type, requestedDate,
   exchangeForDate, reason }`) and `BulkDayReservationResponse` (`{ results: [{ childId,
   childName, succeeded, reservation?, errorKey? }] }`) per contracts/family-siblings-api.md in
   `backend/ChildCare.Contracts/Requests/DayReservationRequests.cs` and
   `backend/ChildCare.Contracts/Responses/DayReservationResponses.cs`
-- [ ] T002 [P] Add `UpdateLocationSiblingBillingSettingsRequest` (`{ siblingDiscountPct,
+- [X] T002 [P] Add `UpdateLocationSiblingBillingSettingsRequest` (`{ siblingDiscountPct,
   familyInvoiceBundlingEnabled }`) and extend `LocationResponse` with the same two fields in
   `backend/ChildCare.Contracts/Requests/LocationRequests.cs` and
   `backend/ChildCare.Contracts/Responses/LocationResponse.cs`
-- [ ] T003 [P] Extend `InvoiceResponse` with nullable `FamilyGroupId`; add
+- [X] T003 [P] Extend `InvoiceResponse` with nullable `FamilyGroupId`; add
   `FamilyInvoiceResponse` (`{ familyGroupId, children: [{ childId, childName, subtotalCents }],
   totalCents, status, dueDate }`) per contracts/family-siblings-api.md in
   `backend/ChildCare.Contracts/Responses/InvoiceResponse.cs`
-- [ ] T004 [P] Add `ParentPreviousChildResponse` (`ParentChildResponse` shape +
+- [X] T004 [P] Add `ParentPreviousChildResponse` (`ParentChildResponse` shape +
   `enrollmentStart`/`enrollmentEnd`) in `backend/ChildCare.Contracts/Responses/ParentResponses.cs`
 - [ ] T005 [P] Add parent-mobile `dayReservations.applyToAllChildren`,
   `dayReservations.bulkPartialResult` i18n keys to `parent-mobile/i18n/locales/en.json`,
@@ -51,18 +51,18 @@ testing.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T009 [P] Add `SiblingDiscountPct` (`decimal(5,2)`, default 0) and
+- [X] T009 [P] Add `SiblingDiscountPct` (`decimal(5,2)`, default 0) and
   `FamilyInvoiceBundlingEnabled` (`bool`, default false) to
   `backend/ChildCare.Domain/Entities/Location.cs` per data-model.md
-- [ ] T010 [P] Add nullable `FamilyGroupId` (`Guid?`) to
+- [X] T010 [P] Add nullable `FamilyGroupId` (`Guid?`) to
   `backend/ChildCare.Domain/Entities/Invoice.cs` per data-model.md
-- [ ] T011 [P] Append `FosterParent`, `Other` to
+- [X] T011 [P] Append `FosterParent`, `Other` to
   `backend/ChildCare.Domain/Enums/ContactRelationship.cs` per research.md R6
-- [ ] T012 Configure the new `Location`/`Invoice` columns in
+- [X] T012 Configure the new `Location`/`Invoice` columns in
   `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` (depends on T009, T010)
-- [ ] T013 Add tenant migration `AddSiblingBillingSettingsAndFamilyGroupId` in
+- [X] T013 Add tenant migration `AddSiblingBillingSettingsAndFamilyGroupId` in
   `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T012)
-- [ ] T014 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new `Location`/
+- [X] T014 Extend `TenantMigrationRolloutTests`' schema-revert helper for the new `Location`/
   `Invoice` columns (the recurring pattern every migration-adding feature has needed) in
   `backend/ChildCare.Api.Tests/TenantMigrationRolloutTests.cs` (depends on T013)
 
