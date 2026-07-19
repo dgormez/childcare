@@ -24,6 +24,14 @@ public static class ParentEndpoints
             return Results.Ok(children);
         });
 
+        // Feature 030 (US5) — contracts/family-siblings-api.md.
+        group.MapGet("/children/previous", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = TenantUserIdOf(ctx);
+            var children = await mediator.Send(new GetParentPreviousChildrenQuery(tenantUserId));
+            return Results.Ok(children);
+        });
+
         group.MapGet("/children/{childId:guid}/daily-summary", async (Guid childId, DateOnly? date, HttpContext ctx, IMediator mediator) =>
         {
             var tenantUserId = TenantUserIdOf(ctx);

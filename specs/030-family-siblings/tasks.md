@@ -144,17 +144,17 @@ other doesn't.
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Extend `GenerateInvoicesCommand` to group same-period contracts-being-invoiced
+- [X] T030 [US2] Extend `GenerateInvoicesCommand` to group same-period contracts-being-invoiced
   by child's primary `ChildContact.ContactId`, and for any group of 2+ at a location with
   `SiblingDiscountPct > 0`, append a discount `ExtraCharge` (negative `AmountCents`, i18n key
   `invoices.lineItems.siblingDiscount`) to every child but the earliest `Contract.StartDate`, per
   research.md R2/R3 in `backend/ChildCare.Application/Invoices/GenerateInvoicesCommand.cs`
   (depends on T009)
-- [ ] T031 [US2] Implement `UpdateLocationSiblingBillingSettingsCommand` (mirrors
+- [X] T031 [US2] Implement `UpdateLocationSiblingBillingSettingsCommand` (mirrors
   `UpdateLocationInvoiceSettingsCommand`) in
   `backend/ChildCare.Application/Locations/UpdateLocationSiblingBillingSettingsCommand.cs`
   (depends on T002, T009)
-- [ ] T032 [US2] Add `PUT /api/locations/{locationId}/sibling-billing-settings` route in
+- [X] T032 [US2] Add `PUT /api/locations/{locationId}/sibling-billing-settings` route in
   `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` (depends on T031)
 - [ ] T033 [P] [US2] Add sibling-discount percent field to
   `web/components/InvoiceSettingsForm.tsx` (extends the existing Invoicing tab per plan.md)
@@ -240,23 +240,23 @@ marking it paid marks both underlying invoices paid.
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] Extend `GenerateInvoicesCommand`'s grouping (T030) so that when
+- [X] T047 [US3] Extend `GenerateInvoicesCommand`'s grouping (T030) so that when
   `FamilyInvoiceBundlingEnabled` is true for the location, every invoice in a same-primary-
   contact group for the period receives one shared, newly generated `FamilyGroupId` (stable
   across regeneration of the same still-open group) per research.md R4 (depends on T010, T030)
-- [ ] T048 [US3] Implement `GenerateFamilyInvoicePdfQuery` + `QuestPdfFamilyInvoiceGenerator`
+- [X] T048 [US3] Implement `GenerateFamilyInvoicePdfQuery` + `QuestPdfFamilyInvoiceGenerator`
   (per-child section reusing each invoice's `InvoiceLineItems`, one combined total, mirrors
   `QuestPdfInvoiceGenerator`'s locale-label pattern) per research.md R5 in
   `backend/ChildCare.Application/Invoices/GenerateFamilyInvoicePdfQuery.cs` and
   `backend/ChildCare.Infrastructure/Pdf/QuestPdfFamilyInvoiceGenerator.cs`
-- [ ] T049 [US3] Extend `MarkInvoicePaidCommand`: when the target invoice has a `FamilyGroupId`,
+- [X] T049 [US3] Extend `MarkInvoicePaidCommand`: when the target invoice has a `FamilyGroupId`,
   load and transition every sibling invoice sharing it to `Paid` in the same transaction, per
   research.md R5 in `backend/ChildCare.Application/Invoices/MarkInvoicePaidCommand.cs` (depends
   on T047)
-- [ ] T050 [US3] Extend `GetParentInvoicesQuery`'s response mapping to collapse invoices sharing a
+- [X] T050 [US3] Extend `GetParentInvoicesQuery`'s response mapping to collapse invoices sharing a
   `FamilyGroupId` into one `FamilyInvoiceResponse` entry, per contracts/family-siblings-api.md in
   `backend/ChildCare.Application/Invoices/GetParentInvoicesQuery.cs` (depends on T003, T047)
-- [ ] T051 [US3] Add `GET /api/parent/invoices/family/{familyGroupId}/pdf` route (same
+- [X] T051 [US3] Add `GET /api/parent/invoices/family/{familyGroupId}/pdf` route (same
   indistinguishable-not-found authorization pattern as the existing per-invoice PDF route) in
   `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T048)
 - [ ] T052 [P] [US3] Add family invoice bundling toggle to
@@ -294,10 +294,10 @@ historical access.
 
 ### Implementation for User Story 5
 
-- [ ] T057 [US5] Implement `GetParentPreviousChildrenQuery` (mirrors `GetParentChildrenQuery`,
+- [X] T057 [US5] Implement `GetParentPreviousChildrenQuery` (mirrors `GetParentChildrenQuery`,
   filters `DeactivatedAt != null`, adds enrollment-period dates) per research.md R8 in
   `backend/ChildCare.Application/Parent/GetParentPreviousChildrenQuery.cs` (depends on T004)
-- [ ] T058 [US5] Add `GET /api/parent/children/previous` route in
+- [X] T058 [US5] Add `GET /api/parent/children/previous` route in
   `backend/ChildCare.Api/Endpoints/ParentEndpoints.cs` (depends on T057)
 - [ ] T059 [US5] Create `parent-mobile/app/(app)/children/previous.tsx` — lists deactivated
   children (name, photo, enrollment period), links into the existing per-child daily-

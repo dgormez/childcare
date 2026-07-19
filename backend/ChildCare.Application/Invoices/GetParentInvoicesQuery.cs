@@ -15,9 +15,13 @@ public record GetParentInvoicesQuery(Guid TenantUserId) : IRequest<GetParentInvo
 public class GetParentInvoicesResult
 {
     public bool Authorized { get; private init; }
-    public List<InvoiceResponse>? Invoices { get; private init; }
+    // Feature 030 (US3) — each entry is either an InvoiceResponse (ungrouped, FamilyGroupId
+    // null) or a FamilyInvoiceResponse (siblings sharing a FamilyGroupId collapsed into one
+    // entry, contracts/family-siblings-api.md) — no OpenAPI response schema is declared for this
+    // route (see apiClient.ts's doc comment), so the mixed shape is a frontend-only concern.
+    public List<object>? Invoices { get; private init; }
 
-    public static GetParentInvoicesResult Ok(List<InvoiceResponse> invoices) => new() { Authorized = true, Invoices = invoices };
+    public static GetParentInvoicesResult Ok(List<object> invoices) => new() { Authorized = true, Invoices = invoices };
     public static GetParentInvoicesResult Forbidden() => new() { Authorized = false };
 }
 
@@ -49,11 +53,37 @@ public class GetParentInvoicesQueryHandler(ITenantDbContext db, ICurrentParentCo
         var locationIds = invoices.Select(i => i.LocationId).Distinct().ToList();
         var locations = await db.Locations.Where(l => locationIds.Contains(l.Id)).ToDictionaryAsync(l => l.Id, cancellationToken);
 
-        var responses = invoices
-            .OrderByDescending(i => i.CreatedAt)
-            .Select(i => InvoiceMapper.ToResponse(i, $"{children[i.ChildId].FirstName} {children[i.ChildId].LastName}", locations[i.LocationId].Name))
-            .ToList();
+        // Feature 030 (US3) — invoices sharing a FamilyGroupId collapse into one
+        // FamilyInvoiceResponse entry; every other invoice stays its own InvoiceResponse entry,
+        // identical to pre-030 behavior (contracts/family-siblings-api.md).
+        var ungrouped = invoices.Where(i => i.FamilyGroupId is null);
+        var grouped = invoices.Where(i => i.FamilyGroupId is not null).GroupBy(i => i.FamilyGroupId!.Value);
 
-        return GetParentInvoicesResult.Ok(responses);
+        var responses = new List<(object Entry, DateTime SortKey)>();
+
+        foreach (var invoice in ungrouped)
+        {
+            responses.Add((
+                InvoiceMapper.ToResponse(invoice, $"{children[invoice.ChildId].FirstName} {children[invoice.ChildId].LastName}", locations[invoice.LocationId].Name),
+                invoice.CreatedAt));
+        }
+
+        foreach (var group in grouped)
+        {
+            var groupInvoices = group.ToList();
+            var isOverdue = groupInvoices.Any(i => i.Status == InvoiceStatus.Sent && i.DueDate is { } due && due < DateOnly.FromDateTime(DateTime.UtcNow));
+            responses.Add((
+                new FamilyInvoiceResponse(
+                    group.Key,
+                    groupInvoices.Select(i => new FamilyInvoiceChildLineResponse(i.ChildId, $"{children[i.ChildId].FirstName} {children[i.ChildId].LastName}", i.SubtotalCents)).ToList(),
+                    groupInvoices.Sum(i => i.TotalCents),
+                    groupInvoices[0].Status.ToString().ToLowerInvariant(),
+                    isOverdue,
+                    groupInvoices[0].DueDate,
+                    groupInvoices.Min(i => i.CreatedAt)),
+                groupInvoices.Max(i => i.CreatedAt)));
+        }
+
+        return GetParentInvoicesResult.Ok(responses.OrderByDescending(r => r.SortKey).Select(r => r.Entry).ToList());
     }
 }

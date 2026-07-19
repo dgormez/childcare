@@ -278,6 +278,7 @@ builder.Services.AddScoped<ChildCare.Application.DayReservations.ReservationPoli
 builder.Services.AddScoped<ChildCare.Application.Invoices.BillableDayCalculator>();
 builder.Services.AddScoped<ChildCare.Application.Invoices.InvoiceNotificationService>();
 builder.Services.AddScoped<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
+builder.Services.AddScoped<IFamilyInvoicePdfGenerator, QuestPdfFamilyInvoiceGenerator>();
 
 // ── Invoice Payments Plus (feature 014a) ─────────────────────────────────────
 // IDataProtector-backed OAuth-token encryption (research.md R3) — the first per-tenant

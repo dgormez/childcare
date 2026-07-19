@@ -116,5 +116,15 @@ public static class InvoiceEndpoints
                 return Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound);
             return Results.File(result.Bytes, "application/pdf", $"invoice-{id}.pdf");
         });
+
+        // Feature 030 (US3) — contracts/family-siblings-api.md.
+        parent.MapGet("/invoices/family/{familyGroupId:guid}/pdf", async (Guid familyGroupId, HttpContext ctx, IMediator mediator, string? locale) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new GenerateParentFamilyInvoicePdfQuery(tenantUserId, familyGroupId, locale));
+            if (!result.Found)
+                return Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound);
+            return Results.File(result.Bytes, "application/pdf", $"family-invoice-{familyGroupId}.pdf");
+        });
     }
 }
