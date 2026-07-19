@@ -30,16 +30,16 @@ testing.
   `backend/ChildCare.Contracts/Responses/InvoiceResponse.cs`
 - [X] T004 [P] Add `ParentPreviousChildResponse` (`ParentChildResponse` shape +
   `enrollmentStart`/`enrollmentEnd`) in `backend/ChildCare.Contracts/Responses/ParentResponses.cs`
-- [ ] T005 [P] Add parent-mobile `dayReservations.applyToAllChildren`,
+- [X] T005 [P] Add parent-mobile `dayReservations.applyToAllChildren`,
   `dayReservations.bulkPartialResult` i18n keys to `parent-mobile/i18n/locales/en.json`,
   `parent-mobile/i18n/locales/fr.json`, `parent-mobile/i18n/locales/nl.json`
-- [ ] T006 [P] Add parent-mobile `previousChildren.*` (title, empty enrollment period label,
+- [X] T006 [P] Add parent-mobile `previousChildren.*` (title, empty enrollment period label,
   read-only banner) and `invoices.familyGroup.*` (combined total label, per-child line label) i18n
   keys to the same three parent-mobile locale files
-- [ ] T007 [P] Add web `locations.siblingBilling.*` (discount percent field, bundling toggle,
+- [X] T007 [P] Add web `locations.siblingBilling.*` (discount percent field, bundling toggle,
   save) i18n keys to `web/i18n/locales/en.json`, `web/i18n/locales/fr.json`,
   `web/i18n/locales/nl.json`
-- [ ] T008 [P] Add web `children.contacts.*` (tab label, relationship options incl. foster
+- [X] T008 [P] Add web `children.contacts.*` (tab label, relationship options incl. foster
   parent/other, primary badge, add/remove/set-primary actions, duplicate-match suggestion
   copy, empty state) i18n keys to the same three web locale files
 
@@ -81,28 +81,28 @@ settings.
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Test: bulk submission with 2 active children creates one reservation per
+- [X] T015 [P] [US1] Test: bulk submission with 2 active children creates one reservation per
   child, both `Approved`/`Pending` per each location's own policy, in
   `backend/ChildCare.Api.Tests/DayReservations/BulkDayReservationTests.cs`
-- [ ] T016 [P] [US1] Test: bulk submission where one child's location has the request type
+- [X] T016 [P] [US1] Test: bulk submission where one child's location has the request type
   disabled (013f) creates a reservation for the allowed child and reports the other as skipped
   with `errors.day_reservations.request_type_disabled`, in the same test file
-- [ ] T017 [P] [US1] Test: bulk submission including a `childId` the caller isn't linked to
+- [X] T017 [P] [US1] Test: bulk submission including a `childId` the caller isn't linked to
   returns that entry as failed (`errors.day_reservations.child_not_linked`) without blocking the
   other children, in the same test file
-- [ ] T018 [P] [US1] Test: siblings at two different locations each evaluate their own location's
+- [X] T018 [P] [US1] Test: siblings at two different locations each evaluate their own location's
   notice-hours/closure-day rules independently, in the same test file
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implement `SubmitBulkDayReservationCommand` (dispatches the existing
+- [X] T019 [US1] Implement `SubmitBulkDayReservationCommand` (dispatches the existing
   `SubmitDayReservationCommand` per child via `IMediator.Send`, aggregates per-child
   success/failure) per research.md R1 in
   `backend/ChildCare.Application/DayReservations/SubmitBulkDayReservationCommand.cs` (depends on
   T001)
-- [ ] T020 [US1] Add `FluentValidation` validator (non-empty `ChildIds`, same field rules
+- [X] T020 [US1] Add `FluentValidation` validator (non-empty `ChildIds`, same field rules
   `SubmitDayReservationCommandValidator` already applies) in the same file
-- [ ] T021 [US1] Add `POST /api/parent/day-reservations/bulk` route per
+- [X] T021 [US1] Add `POST /api/parent/day-reservations/bulk` route per
   contracts/family-siblings-api.md in
   `backend/ChildCare.Api/Endpoints/DayReservationEndpoints.cs` (depends on T019)
 - [ ] T022 [P] [US1] Add "apply to all my children" toggle to

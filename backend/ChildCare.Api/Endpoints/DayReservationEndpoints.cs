@@ -35,6 +35,19 @@ public static class DayReservationEndpoints
             return Results.Ok(result.Reservations);
         });
 
+        // Feature 030 — contracts/family-siblings-api.md. Deliberately under /api/parent (not
+        // /api/day-reservations) to match the parent-only bulk contract exactly.
+        var bulkGroup = app.MapGroup("/api/parent/day-reservations")
+            .WithTags("DayReservations")
+            .RequireAuthorization("ParentOnly");
+
+        bulkGroup.MapPost("/bulk", async (BulkDayReservationRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var response = await mediator.Send(new SubmitBulkDayReservationCommand(
+                TenantUserIdOf(ctx), req.ChildIds, req.Type, req.RequestedDate, req.ExchangeForDate, req.Reason));
+            return Results.Ok(response);
+        });
+
         var directorGroup = app.MapGroup("/api/day-reservations")
             .WithTags("DayReservations")
             .RequireAuthorization("DirectorOnly");

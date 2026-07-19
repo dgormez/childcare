@@ -514,6 +514,15 @@
       "saveSuccess": "Invoicing settings saved.",
       "saveError": "Couldn't save changes. Please try again."
     },
+    "siblingBilling": {
+      "discountLabel": "Sibling discount (%)",
+      "discountHint": "Applied automatically to every child but the earliest-enrolled sibling sharing the same primary contact at this location.",
+      "bundlingLabel": "Combine sibling invoices into one",
+      "bundlingHint": "Groups same-family invoices into one PDF, one parent-app entry, and one payment action.",
+      "saveButton": "Save changes",
+      "saveSuccess": "Sibling billing settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
+    },
     "paymentReminderSettings": {
       "title": "Payment reminders",
       "description": "Automatically remind parents about overdue invoices.",
@@ -697,6 +706,7 @@
     "newChild": "New child",
     "tabProfile": "Profile",
     "tabHealth": "Health",
+    "tabContacts": "Contacts",
     "profile": {
       "editButton": "Edit",
       "notSet": "Not set",
@@ -849,6 +859,48 @@
         "achieved": "Achieved",
         "emerging": "Emerging",
         "not_yet": "Not yet"
+      }
+    },
+    "contacts": {
+      "emptyState": "No contacts linked yet.",
+      "loadError": "Couldn't load contacts. Please try again.",
+      "retry": "Retry",
+      "primaryBadge": "Primary",
+      "addContact": "Add contact",
+      "removeContact": "Remove",
+      "removeConfirmTitle": "Remove this contact?",
+      "removeConfirmBody": "This contact will no longer be linked to this child.",
+      "removeConfirm": "Remove",
+      "removeCancel": "Cancel",
+      "removeError": "Couldn't remove this contact. Please try again.",
+      "setPrimary": "Set as primary",
+      "setPrimaryError": "Couldn't update the primary contact. Please try again.",
+      "relationshipLabel": "Relationship",
+      "canPickupLabel": "Can pick up",
+      "relationships": {
+        "mother": "Mother",
+        "father": "Father",
+        "guardian": "Guardian",
+        "emergencyContact": "Emergency contact",
+        "authorisedPickup": "Authorised pickup",
+        "fosterParent": "Foster parent",
+        "other": "Other"
+      },
+      "dialog": {
+        "title": "Add contact",
+        "searchLabel": "Search by name, email or phone",
+        "searchPlaceholder": "Start typing to search existing contacts…",
+        "matchFound": "This looks like an existing contact:",
+        "linkExisting": "Link existing contact instead",
+        "createNew": "Create new contact",
+        "firstNameLabel": "First name",
+        "lastNameLabel": "Last name",
+        "phoneLabel": "Phone",
+        "emailLabel": "Email",
+        "localeLabel": "Preferred language",
+        "save": "Add contact",
+        "saveError": "Couldn't add this contact. Please try again.",
+        "cancel": "Cancel"
       }
     }
   },

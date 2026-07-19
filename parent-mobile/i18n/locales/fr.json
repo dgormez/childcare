@@ -55,7 +55,8 @@
       "myRequests": "Mes demandes",
       "viewInvoices": "Mes factures",
       "viewFiscalAttestations": "Attestations fiscales",
-      "viewMilestones": "Développement"
+      "viewMilestones": "Développement",
+      "viewPreviousChildren": "Enfants précédents"
     }
   },
   "messages": {
@@ -232,7 +233,11 @@
     "payNotAvailable": "Le paiement en ligne n'est pas encore configuré — payez par virement bancaire avec la référence ci-dessus.",
     "payLinkFailed": "Impossible de démarrer le paiement. Veuillez réessayer.",
     "viewReceipt": "Voir la preuve de paiement",
-    "receiptDownloadFailed": "Impossible de télécharger la preuve de paiement. Veuillez réessayer."
+    "receiptDownloadFailed": "Impossible de télécharger la preuve de paiement. Veuillez réessayer.",
+    "familyGroup": {
+      "combinedTotal": "Total combiné",
+      "perChildLine": "{{childName}} : {{amount}}"
+    }
   },
   "fiscalAttestations": {
     "title": "Attestations fiscales",
@@ -305,7 +310,9 @@
       "exchange": "Échange de jour"
     },
     "notAvailableForChild": "Ce type de demande n'est pas disponible pour {childName} pour le moment.",
-    "loadAvailabilityFailed": "Impossible de vérifier la disponibilité. Veuillez réessayer."
+    "loadAvailabilityFailed": "Impossible de vérifier la disponibilité. Veuillez réessayer.",
+    "applyToAllChildren": "Appliquer à tous mes enfants",
+    "bulkPartialResult": "{{succeededCount}} demande(s) envoyée(s) avec succès sur {{totalCount}}."
   },
   "milestones": {
     "title": "Développement",
@@ -320,5 +327,12 @@
       "emerging": "En émergence",
       "not_yet": "Pas encore"
     }
+  },
+  "previousChildren": {
+    "title": "Enfants précédents",
+    "loadFailed": "Impossible de charger les enfants précédents.",
+    "emptyState": "Aucun enfant précédent à afficher.",
+    "enrollmentPeriod": "Inscrit du {{start}} au {{end}}",
+    "readOnlyBanner": "Cet enfant n'est plus actif — ces informations sont en lecture seule."
   }
 }
