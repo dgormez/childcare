@@ -251,9 +251,10 @@ children" view still surfaces the deactivated child with access to their histori
   system MUST apply the discount to every such child's invoice except the one with the earliest
   contract start date at that location, as a distinct, clearly labeled line item (not a silent
   reduction of the base charge).
-- **FR-006**: Sibling-discount eligibility MUST be based on children sharing a common active
-  primary-or-non-primary parent contact at the same location — children who merely attend the
-  same location without a shared parent contact MUST NOT receive the discount.
+- **FR-006**: Sibling-discount eligibility MUST be based on children sharing the same active
+  primary parent contact at the same location (the identical rule FR-008 uses for bundling) —
+  children who merely attend the same location without a shared primary contact, or who share
+  only a non-primary contact, MUST NOT receive the discount.
 - **FR-007**: A location MUST support an optional "family invoice bundling" toggle, defaulting to
   off (one invoice per child, current behavior).
 - **FR-008**: When family invoice bundling is enabled for a location, monthly invoice generation
