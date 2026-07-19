@@ -59,7 +59,7 @@
 | 015 | `015-fiscal-attestations` | Annual tax certificates (QuestPDF) | 014 | ✅ Done |
 | 016 | `016-developmental-milestones` | Child development tracking | 006 | ✅ Done |
 | 018 | `018-management-reporting` | KPIs, occupancy, financial summaries | 010, 014 | ✅ Done |
-| 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | 🔲 Not started |
+| 020 | `020-email-communications` | Bulk parent emails by location/group (with attachment upload), auto daily-report emails with unsubscribe | 004, 006, 009, 011, 013 | ✅ Done |
 | 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | 🔲 Not started |
 | 031 | `031-photo-lifecycle-governance` | Photo retention/archiving on child departure, GCS storage-class cost tiering, explicit staff/admin/director photo-action RBAC, parent original-download support | 006, 009b, 013b | 🔲 Not started |
 | 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff tap needed at drop-off | 010 | 🔲 Not started |
@@ -2434,6 +2434,41 @@ Out of scope:
   granularity across push/in-app/email) — Phase 3. The daily-digest
   unsubscribe above is a single, narrow opt-out flag, not that broader system.
 ```
+
+**Shipped 2026-07-19** — `specs/020-email-communications/` (spec → clarify → plan → tasks →
+checklist → analyze → implement → converge, 67/68 tasks — see below, PR #38, squash-merged after
+green CI — 845/845 backend + 202/202 web + 162/162 caregiver-mobile + 96/96 parent-mobile tests
+passing). Resumed mid-flight: a prior session had already implemented all four user stories
+(Scriban NL/FR/EN templating replacing `EmailService`'s raw-string-literal English-only
+templates, director-web bulk-email compose, the daily-digest job mirroring 014a's
+`send-payment-reminders` Cloud Scheduler/Cloud Run Job shape, and the closure/announcement email
+fan-out) with 8 commits, but left an uncommitted working-tree diff mid-fix and one task (T066)
+outstanding. This session verified and committed that diff (a real converge-style fix for two
+gaps: the daily-digest resend and on-demand resend paths didn't tolerate a per-recipient SMTP
+failure the way bulk send already did, FR-012; and bulk send/the digest dispatched serially
+instead of with bounded parallelism, FR-015 — added a shared `BoundedConcurrency` semaphore
+helper, plus attachment content-type/size-cap regression tests for FR-017), then ran
+`/speckit-converge` fresh and found zero further actionable gaps — confirmed via spot-checks of
+the riskiest items rather than a shallow pass: FR-006's per-child photo-consent flag is honored
+correctly not by new code in this feature but by design (research.md R7 — the daily-report
+template renders no photos at all; consent is already gated upstream in feature 013's
+`GetDailySummaryQuery` before the response reaches this feature's rendering layer, so a second
+consent check here would only risk drifting from that one), the `infra/gcp/main.tf`
+Cloud Scheduler/Job pair for `send-daily-reports` exists and mirrors 014a's shape, and the
+compose screen's keyboard-focus/zero-recipient states (FR-016, FR-019) are implemented. T066
+("run quickstart.md end-to-end against a local Mailhog/Mailpit-backed dev environment") was left
+unchecked rather than attempted or silently skipped: `EmailService.SendAsync` — pre-existing
+infra shared by password-reset/staff-invite/every other transactional email, not owned by this
+feature — hardcodes `SecureSocketOptions.StartTls` for any SMTP port other than 465, which
+Mailhog's default listener doesn't support, so this app cannot currently point at a local Mailhog
+container without a change outside this feature's scope; no `docker-compose` Mailhog service
+exists yet either. Worth remembering generally for any future feature whose own quickstart.md
+calls for a local Mailhog/Mailpit environment: that infra doesn't exist in this repo yet and the
+existing SMTP connection logic would need a fix first (a dev-only `SecureSocketOptions.None` path,
+or a Mailhog image with a TLS cert configured) — this is a real, not hypothetical, blocker,
+confirmed by reading `EmailService.cs`'s actual `SendAsync` implementation, not assumed. Every
+behavior T066 would have exercised is otherwise covered by the extensive `FakeEmailSender`-based
+integration test suite this feature and its converge pass built.
 
 ### 012a — Waiting List
 
