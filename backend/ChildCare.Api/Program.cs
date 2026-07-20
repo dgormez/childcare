@@ -27,6 +27,7 @@ using ChildCare.Application.RoomShifts;
 using ChildCare.Infrastructure.Auth;
 using ChildCare.Infrastructure.Concurrency;
 using ChildCare.Infrastructure.Pdf;
+using ChildCare.Infrastructure.Children;
 using ChildCare.Infrastructure.Payments;
 using ChildCare.Infrastructure.Persistence;
 using ChildCare.Infrastructure.Push;
@@ -317,6 +318,11 @@ builder.Services.AddScoped<IPaymentProvider, MolliePaymentProvider>();
 builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReminderNotificationService>();
 builder.Services.AddScoped<ChildCare.Application.Payments.PaymentReceiptNotificationService>();
 builder.Services.AddScoped<IBetalingsbewijsGenerator, QuestPdfBetalingsbewijsGenerator>();
+
+// ── ID-Verified Registration (feature 022) ───────────────────────────────────
+// Reuses the AddDataProtection() registration above (research.md R3) under its own purpose
+// string — see NrnProtector.
+builder.Services.AddScoped<INrnProtector, NrnProtector>();
 
 // ── Fiscal Attestations (feature 015) ────────────────────────────────────────
 builder.Services.AddScoped<ChildCare.Application.FiscalAttestations.FiscalAttestationAggregator>();
