@@ -81,6 +81,14 @@
 | 040 | `040-occupancy-placement-planning` | Forward occupancy & placement planning: available places per day/week/month/year per group, BKR-aware "can this child be placed on these days?" simulation for enquiries, and doorstroom (age-based group-transition) planning to avoid occupancy gaps | 007, 010, 012a | 🔲 Not started |
 | 041 | `041-bkr-2027-ruleset` | Date-versioned BKR rulesets: the lower Flemish kindratio becomes mandatory 1 Jan 2027 (transition period until 31 Dec 2026, early adoption allowed per location); includes new countable staffing profiles (AKT trainees, logistieke medewerkers under conditions) and an average-over-staffing-hours ratio report at location level (how Opgroeien assesses the linked subsidy) | 010, 012 | 🔲 Not started |
 | 017 | `017-memoq` | MeMoQ self-evaluation companion — **unblocked 2026-07-19**: the official instrument documents (handleiding + six groepsopvang dimension forms + Zorginspectie monitoring note + pedagogisch raamwerk) are now committed under `docs/memoq/`, and the prompt block below was fully rewritten from them with product-owner decisions (structured-but-all-optional cycles, web full-cycle + tablet observation capture, participant-private-until-shared ratings, child rows detached from child records, versioned seed content). One open question remains in the block (content-licensing permission from Opgroeien) with a defined fallback, so it does not re-block the feature. | 004, 005, 008 | 🔲 Not started |
+| 042 | `042-settling-in-planning` | Wenperiode (settling-in) planning: schedule wenmomenten between contract signing and first real attendance day, track how each moment went, keep parents informed — Zorginspectie looks at "wennen" as part of quality/vergunning practice | 007, 013 | 🔲 Not started |
+| 043 | `043-medication-authorisations` | Medication authorisation flow: per-medication parental consent + doctor's-instruction document on the child file, checked/surfaced when a caregiver logs a `medication` event (009); expiry dates on authorisations | 006, 009 | 🔲 Not started |
+| 044 | `044-day-pickup-authorisations` | Day-specific pickup authorisations: parent flags a one-off pickup person for a given day in the parent app ("today grandma picks up"), caregiver tablet shows it prominently at pickup time; complements 006's static authorised-pickups list | 006, 013 | 🔲 Not started |
+| 045 | `045-activity-planning` | Forward activity/week planning per group: plan activities and daily routines ahead of time, optionally share the plan with parents; links to 009b's after-the-fact activity logging | 008a, 009b | 🔲 Not started |
+| 046 | `046-parent-survey` | Parent satisfaction survey (ouderbevraging): director composes/reuses a questionnaire, parents answer anonymously in the parent app, aggregated results per location — pairs with 017 (the MeMoQ project publishes an official ouderbevraging instrument, in the product owner's Memoq folder) | 013 | 🔲 Not started |
+| 047 | `047-sleep-checks` | Rustmoment sleep-check routine: configurable check interval during naps, caregiver tablet prompts + one-tap check-in per sleeping child, log of performed checks — operationalises safe-sleep supervision (complements 035's attests/risk analysis) | 009, 008a | 🔲 Not started |
+| 048 | `048-supplies-requests` | Supplies requests: caregiver flags per child what's running out (diapers, spare clothes...), parent gets a notification + checklist in the parent app; simple acknowledge/brought flow | 006, 013 | 🔲 Not started |
+| 049 | `049-message-translation` | Auto-translation of parent communications: messages/daily reports optionally machine-translated to the parent's preferred language (differentiator for non-Dutch-speaking families); official/regulatory document content stays untranslated | 013 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -1990,6 +1998,30 @@ What to build:
 - Bulk generation: director generates attestations for all children at once
   at year-end.
 - The generated PDF is stored in GCS and served via signed URL.
+- MANUAL, DIRECTOR-REVIEWED batch with per-child selection (added
+  2026-07-19): generation/filing is never fully automatic — the director
+  opens a year-end review list of all children with a computed attest,
+  DEFAULT-SELECTED, and can unselect individual children before
+  generating/filing. An unselected child's attest is simply not produced
+  in this batch (they can be generated later in a follow-up batch).
+  Purpose is legitimate operational review — hold back a child whose data
+  is incomplete, whose amount is under correction, who is in a billing
+  dispute, or who left mid-process. Requirements:
+    * every exclusion records who excluded, when, and a short reason
+      (free text or a small reason list) — this is an audit record, not a
+      gate;
+    * the list shows each child's computed amount and period(s) so the
+      director reviews real numbers before submitting;
+    * a child excluded from a batch stays flagged "attest pending" so it
+      is not silently forgotten — surfaced until produced or explicitly
+      dismissed.
+  Note (product context, not a UI warning to nag with): the 281.86
+  digital filing is a legal obligation and the attest is the parent's
+  route to their tax reduction on amounts they actually paid; excluding a
+  child who paid withholds their attest. The review step exists to submit
+  CORRECT data, not to omit real income — keep the copy neutral and the
+  audit trail complete; do not build any "suppress reporting" affordance
+  beyond this reasoned, logged per-child hold.
 
 Key constraints:
 - NRN (nationaal registernummer / SSIN) is NEVER stored in the database.
@@ -2387,6 +2419,10 @@ What to build:
            betaald_bedrag, dagtarief optional).
    SSIN (nationaal registernummer) of the parent must be collected and stored
    securely for this feature. This is new — Phase 1–2 explicitly do not store SSIN.
+   The automated submission inherits feature 015's manual director-reviewed,
+   default-all, per-child-selectable batch (with logged exclusion reasons) —
+   the electronic filing is triggered by the director from that same review
+   list, never silently in the background.
 
 Key constraints:
 - kindkorting (sibling discount) age limit rule:
@@ -4988,6 +5024,10 @@ What to build:
   locations may drop/add questions. Model checklist items with those two
   free-text answer fields and per-location customisation.
 - Director dashboard widget: open unacceptable risks, overdue reviews.
+- Evacuation-drill (brandoefening) log: record periodic evacuation
+  exercises per location (date, participants, duration, notes, points of
+  improvement feeding the risk register) — added 2026-07-19 per product
+  owner; a small register, not a separate feature.
 
 Key constraints:
 - This is a differentiator: neither D-Care nor Bitcare markets risk-analysis
@@ -5319,6 +5359,279 @@ Key constraints:
 - Historic data untouched: past attendance is evaluated against the
   ruleset in force on that date.
 - i18n keys everywhere.
+```
+
+---
+
+### 042 — Settling-In Planning (Wenperiode)
+
+```
+Build wenperiode planning: the settling-in moments between contract
+signing and a child's first real attendance day.
+
+Context: "wennen" is standard Flemish childcare practice and Zorginspectie
+looks at how a location organises it (it sits alongside the
+vergunningsvoorwaarden on familiarisation/communication with families —
+the huishoudelijk reglement model has a wenbeleid section). Neither
+D-Care nor Bitcare products this explicitly — it currently lives in
+mailboxes and paper calendars.
+
+What to build:
+- Wenmoment scheduling per starting child: director (or parent-proposed,
+  director-confirmed — decide at plan time) plans one or more short
+  visits before the contract start date; visible in parent app and on
+  the caregiver tablet's day view for the group.
+- Per-moment outcome note by the caregiver (how did it go, tips for next
+  time) — shared with the parent (tone: reassuring, not clinical).
+- Simple status on the child: not started / wenperiode running / settled.
+- Attendance interplay: wenmoment presence is NOT a contracted/billable
+  day (014 shipped its billable-day rules — do not touch them; wenmoment
+  presence must be recorded distinctly from attendance_records or
+  clearly flagged so it never enters billing or government reporting
+  (033/019 payloads) — decide the mechanism at plan time).
+- BKR interplay: children present during a wenmoment DO count for the
+  live ratio (they are physically in the room) — verify this reading at
+  spec time and encode whichever rule research confirms.
+
+Key constraints:
+- No changes to done features' models — extension points only.
+- i18n keys everywhere; parent-facing copy in warm natural language.
+
+Open question (resolve at spec time, not invented): the exact regulatory
+framing of wennen (which vergunningsvoorwaarde covers it) — check the
+huishoudelijk reglement model in docs/integrations/opgroeien/ and
+kindengezin.be guidance.
+```
+
+---
+
+### 043 — Medication Authorisations
+
+```
+Build the medication authorisation flow: consent + instructions per
+medication on the child file.
+
+Context: feature 009 logs `medication` administration events, but nothing
+models the AUTHORISATION to administer: sector practice (and the
+huishoudelijk reglement model's medication section) is that medication is
+only administered on parental request with a doctor's
+prescription/instruction — verify the exact wording from the reglement
+model + kindengezin.be at spec time; do not invent the legal basis.
+
+What to build:
+- medication_authorisations on the child file: medication name, dosage
+  and administration instructions, prescribing doctor (optional field +
+  attachment of the doctor's note), parent consent (signed upload or
+  e-sign if 024 exists), valid-from/valid-until, status.
+- Caregiver tablet: when logging a `medication` event (009), surface the
+  matching authorisation (instructions + dosage) and warn when none
+  exists or it's expired — warn, don't hard-block (emergency reality),
+  but record that the caregiver proceeded without one (director sees it).
+- Director web: list per location of active/expiring authorisations.
+- Expiry alerts to the parent (renew the doctor's note) and director.
+
+Key constraints:
+- 009's event model is done — read-side lookup + a nullable reference at
+  most; no changes to its write behaviour beyond the optional link.
+- Documents via GCS signed URLs; retention follows the child-file class
+  (038).
+- i18n keys everywhere.
+```
+
+---
+
+### 044 — Day-Specific Pickup Authorisations
+
+```
+Build one-off pickup authorisations: "today grandma picks up".
+
+Context: 006 models the static authorised-pickups list. The daily reality
+is ad-hoc: a parent runs late and sends a grandparent. Standard feature
+in parent apps (Brightwheel-class); missing here.
+
+What to build:
+- Parent app: parent submits a one-off pickup person for a specific date
+  (name, relation, optional phone/photo), from the static list or new.
+  Cut-off and cancellation rules per location (configurable, e.g. no new
+  authorisations after 16:00 — decide defaults at plan time).
+- Caregiver tablet: the day view badges children with a deviating pickup
+  today; pickup screen shows the authorised person's details prominently.
+- Director web: per-location log of one-off authorisations (audit).
+- Safety posture: the platform records authorisation, it does not verify
+  identity — the caregiver still checks; phrase UI copy accordingly. An
+  unknown person WITHOUT an authorisation remains what it is today (call
+  the parent) — see also the FAQ item on problematic pickup situations
+  (minor or intoxicated persons) in docs/integrations/opgroeien/
+  regulation/kinderopvang-faq.html for tone.
+
+Key constraints:
+- Additive to 006 (done): new table referencing child + date, no change
+  to the static list's model.
+- Notifications reuse 013's channels. i18n keys everywhere.
+```
+
+---
+
+### 045 — Activity Planning
+
+```
+Build forward activity/week planning per group.
+
+Context: 009b logs group activities AFTER the fact; the classroom-
+operations workflow lists schedule/activities/daily routines as unwritten.
+Planning ahead (and optionally showing parents "what's on this week") is
+common in reference products and repeatedly requested by the sector.
+
+What to build:
+- Week grid per group: planned activities (label, optional description,
+  time slot or day-part, optional materials note). Templates/recurring
+  routines (e.g. every Tuesday music) to avoid re-entry.
+- Caregiver tablet: today's plan on the group screen; one tap turns a
+  planned activity into a 009b activity log entry (pre-filled).
+- Parent visibility: optional per location — publish the week plan to
+  the parent app (read-only, warm presentation).
+- No approval workflow, no completeness requirements — a planning aid,
+  not a compliance object (deliberate; mirrors 017's all-optional
+  philosophy).
+
+Key constraints:
+- 009b (done) untouched; the "convert plan → log" flow only pre-fills
+  its existing creation path.
+- i18n keys everywhere.
+```
+
+---
+
+### 046 — Parent Survey (Ouderbevraging)
+
+```
+Build a lightweight parent satisfaction survey tool.
+
+Context: the MeMoQ project publishes an official ouderbevraging
+instrument (deelrapport-6 + ouderbevraging-rapport in the product owner's
+Memoq folder — NOT yet committed to the repo; fetch/commit the actual
+questionnaire before speccing if it's to be seeded). Dimension 6 of 017
+(gezinnen & diversiteit) explicitly concerns the family relationship — a
+survey is its natural evidence source. Neither competitor products this.
+
+What to build:
+- Survey composer (director web): reuse a seeded questionnaire (the
+  official ouderbevraging, licensing permitting — same check as 017's
+  content question) or compose own questions (scale 1–5 / free text).
+- Distribution: to all parent contacts of a location (or group) via the
+  parent app + 020's email when available; open/close window.
+- ANONYMOUS responses: no respondent identity stored, aggregate-only
+  results (count, average, free-text list) — small-n warning when <5
+  responses to avoid pseudo-anonymity.
+- Results view per survey + comparison with a previous run of the same
+  questionnaire; exportable PDF for team discussion / a 017 cycle.
+
+Key constraints:
+- Anonymity is structural (no user FK on responses), not cosmetic.
+- i18n: own questions are free text (director's language); seeded
+  official content follows 017's no-machine-translation rule.
+```
+
+---
+
+### 047 — Sleep Checks (Rustmoment Routine)
+
+```
+Build the operational safe-sleep check routine during naps.
+
+Context: 035 covers sleep-safety ATTESTS and risk analysis; the
+actielijst "slapen" (docs/integrations/opgroeien/compliance/actielijsten)
+asks how supervision during sleep is organised — permanent active
+supervision, extra attention for young babies. What's missing is the
+operational routine: periodic physical checks per sleeping child,
+performed and LOGGED.
+
+What to build:
+- Per-location config: check interval (e.g. every 10 min — configurable,
+  no invented default; let the location set it per its own risk
+  analysis), which age groups/rooms it applies to.
+- Caregiver tablet: when a child has an open `sleep` event (009), a
+  check timer runs; the group screen shows who is due a check; one tap
+  logs a check (timestamp + caregiver via the shift register, same
+  attribution model as 009). Overdue checks are visually loud but never
+  auto-dismissed.
+- Sleep-position flag (035's attest) shown on the sleeping-child row.
+- Director web: per-day log of checks per child (evidence for the risk
+  analysis / Zorginspectie conversation); gaps visible, not hidden.
+- Offline-first: checks must log without connectivity (008 queue).
+
+Key constraints:
+- Builds ON 009's open sleep events — no change to its event model;
+  checks are their own records referencing the sleep event.
+- This is a care aid, not a guarantee — copy must not overpromise
+  ("reminder" language, not "safety system"); document this framing in
+  the spec.
+- i18n keys everywhere.
+```
+
+---
+
+### 048 — Supplies Requests
+
+```
+Build per-child supplies requests (diapers, spare clothes, ...).
+
+Context: ubiquitous small feature in parent apps (Brightwheel-class);
+currently handled via notes/chat, easily lost.
+
+What to build:
+- Caregiver tablet: per child, one-tap flag from a per-location
+  configurable supply list (luiers, reservekledij, slaapzak, zonnecrème,
+  ...) + optional note; batched into the child's daily report (013).
+- Parent app: open requests as a visible checklist with push
+  notification; parent marks "brought", caregiver confirms receipt
+  (auto-clears the flag).
+- Director web: nothing beyond the supply-list config per location.
+
+Key constraints:
+- Reuses 013's notification/daily-report channels — no new comms
+  infrastructure.
+- Deliberately tiny: no stock counts, no inventory management.
+- i18n keys everywhere.
+```
+
+---
+
+### 049 — Message Auto-Translation
+
+```
+Build optional machine translation of parent-facing free-text content.
+
+Context: UI chrome is already NL/FR/EN (i18n non-negotiable), but
+free-text CONTENT (messages, daily-report notes, announcements) is
+written in the caregiver's language. For non-Dutch-speaking families
+this is a real accessibility gap and a differentiator (Famly-class
+products do it; neither Belgian competitor does).
+
+What to build:
+- Per parent-contact preferred content language (defaults to their app
+  locale).
+- On-demand ("translate this") and/or automatic translation of messages,
+  announcements and daily-report free text in the parent app; original
+  always one tap away; translated text clearly labeled as machine
+  translation.
+- Translation provider behind an abstraction (candidates: DeepL, Google
+  Cloud Translation, Azure — decide at plan time on cost/quality/GDPR;
+  EU data processing required; provider becomes a subprocessor → update
+  the verwerkersovereenkomst annex).
+- Caching per message+language (translate once, not per view).
+
+Key constraints:
+- NEVER translate: official/regulatory content (017's instrument texts,
+  government documents, fiscal attests), names, or anything 036-class
+  sensitive (crisis/verontrusting records are internal anyway).
+- Cost control: per-tenant monthly cap + graceful "translation
+  unavailable" fallback.
+- Privacy: message content leaves the platform to the provider — opt-in
+  per organisation (director decision), documented in the privacy
+  statement; no child medical free-text translated without the same
+  opt-in.
+- i18n keys everywhere for the chrome around it.
 ```
 
 ---

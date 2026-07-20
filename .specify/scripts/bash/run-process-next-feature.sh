@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Runs one headless, non-interactive pass of the process-next-feature pipeline.
-# Invoked by launchd every 3h (com.dgormez.childcare.process-next-feature.plist)
+# Invoked by launchd every 4h (com.dgormez.childcare.process-next-feature.plist)
 # and safe to run manually for a one-off pass outside the schedule.
 #
 # Each invocation is a brand-new `claude -p` process with no prior conversation
@@ -20,7 +20,7 @@ REPO_DIR="/Users/dgormez/Documents/Claude/Projects/ChildCare Software/ChildCare"
 PROMPT_FILE="$REPO_DIR/.specify/memory/process-next-feature.md"
 LOG_DIR="$HOME/Library/Logs/ChildCareAutomation"
 LOG_FILE="$LOG_DIR/process-next-feature.log"
-LOCK_FILE="/tmp/childcare-process-next-feature.lock"
+LOCK_DIR="/tmp/childcare-process-next-feature.lock.d"
 
 mkdir -p "$LOG_DIR"
 
@@ -36,14 +36,35 @@ echo "=================================================================="
 echo "=== Run started: $(date '+%Y-%m-%d %H:%M:%S %z')"
 echo "=================================================================="
 
-# Guard against overlapping runs if a prior pass is still in progress
-# when the next 3h trigger fires (e.g. a large feature took >3h).
-if [ -f "$LOCK_FILE" ] && kill -0 "$(cat "$LOCK_FILE" 2>/dev/null)" 2>/dev/null; then
-  echo "Previous run (PID $(cat "$LOCK_FILE")) still in progress — skipping this trigger."
-  exit 0
+# Guard against overlapping runs if a prior pass is still in progress when the
+# next 4h trigger fires (e.g. a large feature took >4h). Uses `mkdir` rather
+# than a check-then-write on a plain file: mkdir is atomic, so two invocations
+# racing at (nearly) the same instant can't both pass the check before either
+# writes — exactly what let two concurrent runs both work feature 022 on
+# 2026-07-20 (see process-next-feature.md's progress log for that incident).
+acquire_lock() {
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo $$ > "$LOCK_DIR/pid"
+    return 0
+  fi
+  return 1
+}
+
+if ! acquire_lock; then
+  existing_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || echo "")
+  if [ -n "$existing_pid" ] && kill -0 "$existing_pid" 2>/dev/null; then
+    echo "Previous run (PID $existing_pid) still in progress — skipping this trigger."
+    exit 0
+  fi
+  # Owning process is dead (or the pid file is mid-write) — reclaim once.
+  echo "Found stale lock dir (no live owning process) — reclaiming."
+  rm -rf "$LOCK_DIR"
+  if ! acquire_lock; then
+    echo "Lost the race to reclaim the lock — another run just started. Skipping."
+    exit 0
+  fi
 fi
-echo $$ > "$LOCK_FILE"
-trap 'rm -f "$LOCK_FILE"' EXIT
+trap 'rm -rf "$LOCK_DIR"' EXIT
 
 cd "$REPO_DIR"
 

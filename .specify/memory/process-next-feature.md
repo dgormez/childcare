@@ -654,6 +654,15 @@ use the static code review instead.
   content) so it is a clarify-phase item, not a blocker; per the standing rule it goes to the
   product owner/Opgroeien, not guessed. Note for the run that picks 017 up: read `docs/memoq/`
   before /speckit-specify, same pattern as docs/integrations/opgroeien/ for 033–041.
+- 2026-07-19: features 042–049 added (product-owner request after a pure-childcare gap
+  analysis): settling-in/wenperiode planning, medication authorisations, day-specific pickup
+  authorisations, activity planning, parent survey (ouderbevraging), rustmoment sleep checks,
+  supplies requests, message auto-translation. Evacuation-drill logging was folded into 035's
+  scope rather than a separate feature. Permission slips for uitstapjes were explicitly
+  REJECTED by the product owner (KDV babies don't go on outings) — don't re-propose. Several
+  blocks contain spec-time verification pointers (wennen regulatory framing, medication legal
+  basis — check the huishoudelijk reglement model) and 049 has a provider/GDPR decision — same
+  do-NOT-invent handling as the government features.
 - 030 (`030-family-siblings`): ✅ Done, merged 2026-07-19 (PR #39, squash-merged after green CI —
   871/871 backend + 105/105 parent-mobile + 213/213 web tests). This run resumed mid-flight: a
   prior session had already fully implemented all five user stories (all 65 tasks checked off,
