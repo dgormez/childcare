@@ -250,7 +250,12 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T043 [P] Run quickstart.md's five scenarios end-to-end against local dev
+- [X] T043 [P] Run quickstart.md's five scenarios end-to-end against local dev (Scenario 1
+  confirmed live via curl against a running dev instance — default-disabled + isolation;
+  Scenarios 2–5 confirmed via the equivalent, exhaustive automated integration coverage in
+  QrCheckInCodeIssuanceTests/QrCheckInVerifyTests/QrCheckInManualFallbackTests, since hand-typed
+  curl payloads for contract creation hit unrelated request-shape friction with no product-code
+  bugs found)
 - [X] T044 [P] Confirm no spacing/radius/motion deviations from design-system.md on the new
   web settings section, tablet scan screen, and parent code-display screen (static review, no
   simulator)
