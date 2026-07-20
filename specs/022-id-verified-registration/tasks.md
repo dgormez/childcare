@@ -179,25 +179,25 @@ the record shows the verified state; attempting to confirm with no document type
       for all seven verification/NRN fields when called with a Staff JWT or a device-token
       session, and return the real values when called with a Director JWT, on a verified child, in
       `backend/ChildCare.Api.Tests/VerifyChildIdentityTests.cs` (depends on T019a, T022)
-- [ ] T023 [US1] [P] Create `ChildIdentityVerificationSection.tsx` in
+- [X] T023 [US1] [P] Create `ChildIdentityVerificationSection.tsx` in
       `web/components/children/`: read-only display (document type label, note, verifying
       director email, timestamp) when `child.idVerifiedAt` is set; a document-type `<select>` +
       optional note `<Textarea>` + "Bevestigen" button when unset or when the director chooses to
       correct it; submit disabled until a document type is chosen (FR-003); calls `onVerify`
       prop, mirrors `ChildProfileTab.tsx`'s controlled-component style (no react-hook-form)
       (depends on T020)
-- [ ] T024 [US1] Wire `ChildIdentityVerificationSection` into the `profile` `TabsContent` on
+- [X] T024 [US1] Wire `ChildIdentityVerificationSection` into the `profile` `TabsContent` on
       `web/app/(app)/children/[id]/page.tsx`, below `ChildProfileTab`/`ChildMealPreferenceForm`;
       add a `verifyChildIdentity` handler calling `POST
       /api/children/{id}/identity-verification` then `load()` (mirrors `submitChildEdit`'s
       shape) (depends on T022, T023)
-- [ ] T025 [US1] [P] Add `children.identity.*` i18n keys (section title "Identiteit bevestigen",
+- [X] T025 [US1] [P] Add `children.identity.*` i18n keys (section title "Identiteit bevestigen",
       document-type option labels, note label, confirm button, validation message, "verified by
       X on Y" display strings) to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T026 [US1] [P] Web test: `ChildIdentityVerificationSection` — confirm button disabled with
+- [X] T026 [US1] [P] Web test: `ChildIdentityVerificationSection` — confirm button disabled with
       no document type selected; submits `documentType`+`note` and shows the read-only state
       after a successful save, in `web/__tests__/components/children/ChildIdentityVerificationSection.test.tsx`
-- [ ] T027 [US1] Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client`
+- [X] T027 [US1] Regenerate `web/lib/generated/api-types.ts` via `npm run generate-api-client`
       against the backend running with T010's migration applied (depends on T022)
 
 **Checkpoint**: User Story 1 is fully functional and independently testable — a director can
@@ -260,19 +260,19 @@ confirm it's already verified there too.
       pattern as T022, using `MapContactResult`/`MapContactFailure` (add an
       `errors.contact.document_type_required`/`identity_note_too_long` case) (depends on T034,
       T036, T037)
-- [ ] T039 [US2] [P] Create `ContactIdentityVerificationDialog.tsx` in
+- [X] T039 [US2] [P] Create `ContactIdentityVerificationDialog.tsx` in
       `web/components/children/`, mirroring `LinkContactDialog.tsx`'s modal structure —
       document-type select, optional note, submit calls `POST
       /api/contacts/{contactId}/identity-verification` (depends on T036)
-- [ ] T040 [US2] Add a per-row verify action (icon button, opens
+- [X] T040 [US2] Add a per-row verify action (icon button, opens
       `ContactIdentityVerificationDialog`) and a verified/unverified `Badge` to each contact row
       in `web/components/children/ChildContactsTab.tsx`, alongside the existing "set
       primary"/"remove" actions (depends on T039)
-- [ ] T041 [US2] [P] Add `children.contacts.identity.*` i18n keys (dialog title, verify action
+- [X] T041 [US2] [P] Add `children.contacts.identity.*` i18n keys (dialog title, verify action
       label, verified/unverified badge text) to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T042 [US2] [P] Web test: `ContactIdentityVerificationDialog` submits and closes on success,
+- [X] T042 [US2] [P] Web test: `ContactIdentityVerificationDialog` submits and closes on success,
       in `web/__tests__/components/children/ContactIdentityVerificationDialog.test.tsx`
-- [ ] T043 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T038)
+- [X] T043 [US2] Regenerate `web/lib/generated/api-types.ts` (depends on T038)
 
 **Checkpoint**: User Stories 1 and 2 both work independently — children and contacts can each be
 verified.
@@ -300,18 +300,18 @@ the current record shows "eID" while the original verifier/date is still visible
 
 ### Implementation for User Story 3
 
-- [ ] T046 [US3] Extend `ChildIdentityVerificationSection.tsx` to show both attribution pairs
+- [X] T046 [US3] Extend `ChildIdentityVerificationSection.tsx` to show both attribution pairs
       when `child.firstIdVerifiedAt !== child.idVerifiedAt` (e.g., "First verified by X on
       [date]" and "Most recently confirmed by Y on [date]"), and to allow re-opening the
       form from the read-only state to submit a correction (depends on T023)
-- [ ] T047 [US3] Apply the same both-attribution display to
+- [X] T047 [US3] Apply the same both-attribution display to
       `ContactIdentityVerificationDialog.tsx`/the `ChildContactsTab.tsx` row (depends on T039,
       T040)
-- [ ] T048 [US3] [P] Add the "first verified" / "most recently confirmed" i18n label keys to
+- [X] T048 [US3] [P] Add the "first verified" / "most recently confirmed" i18n label keys to
       `web/i18n/locales/{en,fr,nl}.json` (depends on T025, T041)
-- [ ] T049 [US3] [P] Web test: `ChildIdentityVerificationSection` shows both attribution lines
+- [X] T049 [US3] [P] Web test: `ChildIdentityVerificationSection` shows both attribution lines
       only when they differ, and shows just one when first == current, extending T026's test file
-- [ ] T049a [US3] [P] Web test: `ContactIdentityVerificationDialog`/`ChildContactsTab`'s row
+- [X] T049a [US3] [P] Web test: `ContactIdentityVerificationDialog`/`ChildContactsTab`'s row
       shows both attribution lines only when they differ, same behavior as T049 for the contact
       side (FR-006a), extending T042's test file
 
@@ -354,19 +354,19 @@ exactly, and that deactivating an unverified child removes it from both.
       shape — not the handler's existing attendance-linked `childIds` variable), append one
       `DataCompletenessFlagResponse("missing_identity_verification", "child", ...)` per match
       (research.md R5) (depends on T003)
-- [ ] T054 [US4] Add the `missing_identity_verification` label mapping to
+- [X] T054 [US4] Add the `missing_identity_verification` label mapping to
       `web/components/reporting/DataCompletenessSection.tsx`'s `LABEL_KEY` record (depends on
       T053)
-- [ ] T055 [US4] Add a "Niet geverifieerd" `Badge` (`variant="warning"`, clock icon per
+- [X] T055 [US4] Add a "Niet geverifieerd" `Badge` (`variant="warning"`, clock icon per
       `design-system.md`'s status-indicator pairing) to unverified rows in the children table in
       `web/app/(app)/children/page.tsx`, reading `child.idVerifiedAt` from the already-returned
       list response (depends on T020)
-- [ ] T056 [US4] [P] Add `dashboard.reporting.dataCompleteness.missingIdentityVerification` and
+- [X] T056 [US4] [P] Add `dashboard.reporting.dataCompleteness.missingIdentityVerification` and
       `children.badgeUnverified` i18n keys to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T057 [US4] [P] Web test: `/children` list renders the unverified badge only for children
+- [X] T057 [US4] [P] Web test: `/children` list renders the unverified badge only for children
       with no `idVerifiedAt`, in `web/__tests__/app/children/page.test.tsx` (or nearest existing
       convention for that screen)
-- [ ] T058 [US4] [P] Web test: `DataCompletenessSection` renders the new flag type's label
+- [X] T058 [US4] [P] Web test: `DataCompletenessSection` renders the new flag type's label
       correctly, extending its existing test file
 
 **Checkpoint**: The dashboard and list-page signals both accurately reflect verification state,
@@ -414,14 +414,14 @@ display again and no log contains the plain-text value; an invalid-format NRN is
       `backend/ChildCare.Contracts/Requests/ChildRequests.cs`
 - [X] T066 [US5] Add `PUT /api/children/{id:guid}/nrn` to the `DirectorOnly` group in
       `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs` (depends on T064, T065)
-- [ ] T067 [US5] Add an NRN entry field (masked display of `NrnLast4` when set, plain text input
+- [X] T067 [US5] Add an NRN entry field (masked display of `NrnLast4` when set, plain text input
       when unset/being changed) to `ChildIdentityVerificationSection.tsx` (depends on T023, T020)
-- [ ] T068 [US5] [P] Add `children.identity.nrn*` i18n keys (label, masked-display format,
+- [X] T068 [US5] [P] Add `children.identity.nrn*` i18n keys (label, masked-display format,
       invalid-format validation message) to `web/i18n/locales/{en,fr,nl}.json`
-- [ ] T069 [US5] [P] Web test: `ChildIdentityVerificationSection`'s NRN field shows only a masked
+- [X] T069 [US5] [P] Web test: `ChildIdentityVerificationSection`'s NRN field shows only a masked
       value after save and rejects a non-11-digit input client-side before submit, extending
       T026's test file
-- [ ] T070 [US5] Regenerate `web/lib/generated/api-types.ts` (depends on T066)
+- [X] T070 [US5] Regenerate `web/lib/generated/api-types.ts` (depends on T066)
 
 **Checkpoint**: All five user stories are independently functional. Full feature scope complete.
 
