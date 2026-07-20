@@ -53,6 +53,12 @@ export function ChildIdentityVerificationSection({ child, onVerify, onSetNrn }: 
   }
 
   async function submitNrn() {
+    // Client-side mirror of the backend's structural check (research.md R4) — catches an
+    // obviously-wrong length before a round trip, not a replacement for server validation.
+    if (!/^\d{11}$/.test(nrnInput.replace(/[.\-\s]/g, ""))) {
+      setNrnError(t("nrnInvalidFormat"));
+      return;
+    }
     setNrnSaving(true);
     setNrnError(null);
     const success = await onSetNrn(nrnInput.trim());

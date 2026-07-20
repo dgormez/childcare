@@ -228,4 +228,19 @@ describe("DashboardPage — data completeness section", () => {
     renderComponent(<DashboardPage />);
     expect(await screen.findByText("Nothing to flag.")).toBeInTheDocument();
   });
+
+  // Feature 022 FR-007
+  it("flags a child with no recorded identity verification", async () => {
+    const completeness: DataCompletenessResponse = {
+      flags: [
+        { type: "missing_identity_verification", subjectType: "child", subjectId: "c3", subjectName: "Nora Peeters", detail: null },
+      ],
+    };
+    mockAllEndpoints({ "/api/reports/data-completeness": completeness });
+
+    renderComponent(<DashboardPage />);
+
+    expect(await screen.findByText("Nora Peeters")).toBeInTheDocument();
+    expect(screen.getByText("Identity not yet verified")).toBeInTheDocument();
+  });
 });
