@@ -911,6 +911,29 @@
         "save": "Ajouter le contact",
         "saveError": "Impossible d'ajouter ce contact. Veuillez réessayer.",
         "cancel": "Annuler"
+      },
+      "identity": {
+        "dialogTitle": "Confirmer l'identité",
+        "verifyAction": "Confirmer l'identité",
+        "verifiedBadge": "Vérifié",
+        "unverifiedBadge": "Non vérifié",
+        "documentTypeLabel": "Type de document",
+        "documentTypeNone": "Non choisi",
+        "documentType": {
+          "birth_certificate": "Acte de naissance",
+          "kids_id": "Kids-ID",
+          "eid": "eID",
+          "passport": "Passeport",
+          "other": "Autre document"
+        },
+        "noteLabel": "Note",
+        "confirmButton": "Confirmer",
+        "cancelButton": "Annuler",
+        "saveError": "Impossible d'enregistrer la vérification. Veuillez réessayer.",
+        "verifiedByLabel": "Vérifié par",
+        "mostRecentlyVerifiedLabel": "Confirmé le plus récemment par",
+        "firstVerifiedLabel": "Vérifié pour la première fois par",
+        "verifiedByValue": "{email} le {date}"
       }
     },
     "purgePhotos": {
@@ -921,7 +944,39 @@
       "success": "Photos supprimées.",
       "partialFailure": "Certains fichiers n'ont pas pu être supprimés. Veuillez réessayer.",
       "blockedActiveChild": "Cet enfant doit d'abord être désactivé avant que ses photos puissent être supprimées."
-    }
+    },
+    "identity": {
+      "title": "Confirmer l'identité",
+      "verifiedBadge": "Vérifié",
+      "unverifiedBadge": "Non vérifié",
+      "documentTypeLabel": "Type de document",
+      "documentTypeNone": "Non choisi",
+      "documentType": {
+        "birth_certificate": "Acte de naissance",
+        "kids_id": "Kids-ID",
+        "eid": "eID",
+        "passport": "Passeport",
+        "other": "Autre document"
+      },
+      "noteLabel": "Note",
+      "confirmButton": "Confirmer",
+      "cancelButton": "Annuler",
+      "correctButton": "Corriger",
+      "saveError": "Impossible d'enregistrer la vérification. Veuillez réessayer.",
+      "verifiedByLabel": "Vérifié par",
+      "mostRecentlyVerifiedLabel": "Confirmé le plus récemment par",
+      "firstVerifiedLabel": "Vérifié pour la première fois par",
+      "verifiedByValue": "{email} le {date}",
+      "nrnLabel": "Numéro de registre national",
+      "notSet": "Non défini",
+      "nrnMasked": "•••••••{last4}",
+      "nrnAddButton": "Ajouter",
+      "nrnReplaceButton": "Remplacer",
+      "nrnSaveButton": "Enregistrer",
+      "nrnPlaceholder": "85.07.30-033.71",
+      "nrnInvalidFormat": "Veuillez saisir un numéro de registre national valide (11 chiffres)."
+    },
+    "badgeUnverified": "Non vérifié"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1000,7 +1055,8 @@
         "missingPickupContact": "Aucun contact autorisé pour la reprise",
         "overdueVaccine": "Vaccin en retard",
         "missingQualification": "Niveau de qualification manquant",
-        "missingPin": "Aucun code PIN configuré"
+        "missingPin": "Aucun code PIN configuré",
+        "missingIdentityVerification": "Identité pas encore vérifiée"
       }
     }
   },

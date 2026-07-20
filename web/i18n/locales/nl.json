@@ -911,6 +911,29 @@
         "save": "Contact toevoegen",
         "saveError": "Kon dit contact niet toevoegen. Probeer het opnieuw.",
         "cancel": "Annuleren"
+      },
+      "identity": {
+        "dialogTitle": "Identiteit bevestigen",
+        "verifyAction": "Identiteit bevestigen",
+        "verifiedBadge": "Geverifieerd",
+        "unverifiedBadge": "Niet geverifieerd",
+        "documentTypeLabel": "Documenttype",
+        "documentTypeNone": "Niet gekozen",
+        "documentType": {
+          "birth_certificate": "Geboorteakte",
+          "kids_id": "Kids-ID",
+          "eid": "eID",
+          "passport": "Paspoort",
+          "other": "Ander document"
+        },
+        "noteLabel": "Notitie",
+        "confirmButton": "Bevestigen",
+        "cancelButton": "Annuleren",
+        "saveError": "Kon de verificatie niet opslaan. Probeer opnieuw.",
+        "verifiedByLabel": "Geverifieerd door",
+        "mostRecentlyVerifiedLabel": "Laatst bevestigd door",
+        "firstVerifiedLabel": "Eerst geverifieerd door",
+        "verifiedByValue": "{email} op {date}"
       }
     },
     "purgePhotos": {
@@ -921,7 +944,39 @@
       "success": "Foto's gewist.",
       "partialFailure": "Sommige bestanden konden niet worden verwijderd. Probeer het opnieuw.",
       "blockedActiveChild": "Dit kind moet eerst worden gedeactiveerd voordat de foto's kunnen worden gewist."
-    }
+    },
+    "identity": {
+      "title": "Identiteit bevestigen",
+      "verifiedBadge": "Geverifieerd",
+      "unverifiedBadge": "Niet geverifieerd",
+      "documentTypeLabel": "Documenttype",
+      "documentTypeNone": "Niet gekozen",
+      "documentType": {
+        "birth_certificate": "Geboorteakte",
+        "kids_id": "Kids-ID",
+        "eid": "eID",
+        "passport": "Paspoort",
+        "other": "Ander document"
+      },
+      "noteLabel": "Notitie",
+      "confirmButton": "Bevestigen",
+      "cancelButton": "Annuleren",
+      "correctButton": "Corrigeren",
+      "saveError": "Kon de verificatie niet opslaan. Probeer opnieuw.",
+      "verifiedByLabel": "Geverifieerd door",
+      "mostRecentlyVerifiedLabel": "Laatst bevestigd door",
+      "firstVerifiedLabel": "Eerst geverifieerd door",
+      "verifiedByValue": "{email} op {date}",
+      "nrnLabel": "Rijksregisternummer",
+      "notSet": "Niet ingesteld",
+      "nrnMasked": "•••••••{last4}",
+      "nrnAddButton": "Toevoegen",
+      "nrnReplaceButton": "Vervangen",
+      "nrnSaveButton": "Opslaan",
+      "nrnPlaceholder": "85.07.30-033.71",
+      "nrnInvalidFormat": "Voer een geldig rijksregisternummer in (11 cijfers)."
+    },
+    "badgeUnverified": "Niet geverifieerd"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1000,7 +1055,8 @@
         "missingPickupContact": "Geen bevoegde ophaalcontactpersoon",
         "overdueVaccine": "Achterstallig vaccin",
         "missingQualification": "Kwalificatieniveau ontbreekt",
-        "missingPin": "Geen PIN-code ingesteld"
+        "missingPin": "Geen PIN-code ingesteld",
+        "missingIdentityVerification": "Identiteit nog niet geverifieerd"
       }
     }
   },

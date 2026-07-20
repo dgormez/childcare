@@ -329,7 +329,18 @@ export interface ChildResponse {
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Feature 022 — null for Staff/device-token callers regardless of actual verification state
+  // (FR-015; backend/ChildCare.Application/Children/ChildMapper.cs).
+  idVerifiedAt: string | null;
+  idVerifiedByEmail: string | null;
+  idDocumentType: IdDocumentType | null;
+  idDocumentNote: string | null;
+  firstIdVerifiedAt: string | null;
+  firstIdVerifiedByEmail: string | null;
+  nrnLast4: string | null;
 }
+
+export type IdDocumentType = "birth_certificate" | "kids_id" | "eid" | "passport" | "other";
 
 // 031-photo-lifecycle-governance — POST /api/children/{id}/purge-photos.
 export interface PurgePhotosResponse {
@@ -347,6 +358,14 @@ export interface ContactResponse {
   phone: string;
   email: string | null;
   locale: string;
+  // Feature 022 — every contact-reading route is DirectorOnly, so unlike ChildResponse these
+  // are never null due to caller role (only null when genuinely unverified).
+  idVerifiedAt: string | null;
+  idVerifiedByEmail: string | null;
+  idDocumentType: IdDocumentType | null;
+  idDocumentNote: string | null;
+  firstIdVerifiedAt: string | null;
+  firstIdVerifiedByEmail: string | null;
 }
 
 // Feature 030 (US4) — contracts/family-siblings-api.md.
@@ -362,6 +381,12 @@ export interface ChildContactResponse {
   relationship: ContactRelationship;
   canPickup: boolean;
   isPrimary: boolean;
+  idVerifiedAt: string | null;
+  idVerifiedByEmail: string | null;
+  idDocumentType: IdDocumentType | null;
+  idDocumentNote: string | null;
+  firstIdVerifiedAt: string | null;
+  firstIdVerifiedByEmail: string | null;
 }
 
 export interface MessageResponse {
@@ -815,7 +840,8 @@ export type DataCompletenessFlagType =
   | "missing_pickup_contact"
   | "overdue_vaccine"
   | "missing_qualification"
-  | "missing_pin";
+  | "missing_pin"
+  | "missing_identity_verification";
 
 export interface DataCompletenessFlagResponse {
   type:        DataCompletenessFlagType;

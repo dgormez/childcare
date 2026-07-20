@@ -42,6 +42,7 @@ export function DataCompletenessSection({ locationId }: { locationId: string }) 
     overdue_vaccine: "overdueVaccine",
     missing_qualification: "missingQualification",
     missing_pin: "missingPin",
+    missing_identity_verification: "missingIdentityVerification",
   };
 
   function labelFor(type: DataCompletenessFlagType): string {

@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Clock } from "lucide-react";
 import { apiClient } from "../../../lib/apiClient";
 import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
 import { ChildFormDialog, type ChildFormValues } from "../../../components/children/ChildFormDialog";
@@ -88,7 +89,17 @@ export default function ChildrenPage() {
                 onClick={() => router.push(`/children/${child.id}`)}
                 className="h-10 cursor-pointer border-b border-border last:border-0 hover:bg-surface-soft dark:border-border-dark dark:hover:bg-surface-soft-dark"
               >
-                <td className="py-2 pr-4 text-text dark:text-text-dark">{child.firstName} {child.lastName}</td>
+                <td className="py-2 pr-4 text-text dark:text-text-dark">
+                  <span className="inline-flex items-center gap-2">
+                    {child.firstName} {child.lastName}
+                    {!child.deactivatedAt && !child.idVerifiedAt && (
+                      <Badge variant="warning" className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" strokeWidth={2} />
+                        {t("badgeUnverified")}
+                      </Badge>
+                    )}
+                  </span>
+                </td>
                 <td className="py-2 pr-4 tabular-nums text-text-soft dark:text-text-soft-dark">{child.dateOfBirth}</td>
                 <td className="py-2 pr-4 text-text-soft dark:text-text-soft-dark">
                   {child.deactivatedAt ? t("statusDeactivated") : t("statusActive")}

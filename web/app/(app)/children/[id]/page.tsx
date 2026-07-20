@@ -15,11 +15,12 @@ import { ChildProfileTab } from "../../../../components/children/ChildProfileTab
 import { ChildContactsTab } from "../../../../components/children/ChildContactsTab";
 import { ChildFormDialog, type ChildFormValues } from "../../../../components/children/ChildFormDialog";
 import { ChildMealPreferenceForm } from "../../../../components/children/ChildMealPreferenceForm";
+import { ChildIdentityVerificationSection } from "../../../../components/children/ChildIdentityVerificationSection";
 import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../components/health/VaccineRecordForm";
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
 import { MilestonePortfolioView } from "../../../../components/milestones/MilestonePortfolioView";
-import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse, PurgePhotosResponse } from "../../../../lib/types";
+import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse, PurgePhotosResponse, IdDocumentType } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
 
@@ -105,6 +106,26 @@ export default function ChildDetailPage() {
     }
     setEditDialogOpen(false);
     await load();
+  }
+
+  async function verifyChildIdentity(documentType: IdDocumentType, note: string | null): Promise<boolean> {
+    const result = await apiClient.POST("/api/children/{id}/identity-verification", {
+      params: { path: { id: params.id } },
+      body: { documentType, note },
+    });
+    if (!result.response.ok) return false;
+    await load();
+    return true;
+  }
+
+  async function setChildNrn(nrn: string): Promise<boolean> {
+    const result = await apiClient.PUT("/api/children/{id}/nrn", {
+      params: { path: { id: params.id } },
+      body: { nrn },
+    });
+    if (!result.response.ok) return false;
+    await load();
+    return true;
   }
 
   async function uploadChildPhoto(file: File): Promise<boolean> {
@@ -312,6 +333,7 @@ export default function ChildDetailPage() {
             onPhotoUpload={uploadChildPhoto}
           />
           <ChildMealPreferenceForm childId={child.id} />
+          <ChildIdentityVerificationSection child={child} onVerify={verifyChildIdentity} onSetNrn={setChildNrn} />
         </TabsContent>
 
         <TabsContent value="health">

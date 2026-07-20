@@ -52,6 +52,12 @@ function makeContact(overrides: Partial<ContactResponse> = {}): ContactResponse 
     phone: "+32 9 123 45 67",
     email: "sophie@example.com",
     locale: "nl",
+    idVerifiedAt: null,
+    idVerifiedByEmail: null,
+    idDocumentType: null,
+    idDocumentNote: null,
+    firstIdVerifiedAt: null,
+    firstIdVerifiedByEmail: null,
     ...overrides,
   };
 }

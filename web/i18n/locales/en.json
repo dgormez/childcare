@@ -911,6 +911,29 @@
         "save": "Add contact",
         "saveError": "Couldn't add this contact. Please try again.",
         "cancel": "Cancel"
+      },
+      "identity": {
+        "dialogTitle": "Confirm identity",
+        "verifyAction": "Confirm identity",
+        "verifiedBadge": "Verified",
+        "unverifiedBadge": "Not verified",
+        "documentTypeLabel": "Document type",
+        "documentTypeNone": "Not selected",
+        "documentType": {
+          "birth_certificate": "Birth certificate",
+          "kids_id": "Kids-ID",
+          "eid": "eID",
+          "passport": "Passport",
+          "other": "Other document"
+        },
+        "noteLabel": "Note",
+        "confirmButton": "Confirm",
+        "cancelButton": "Cancel",
+        "saveError": "Could not save the verification. Please try again.",
+        "verifiedByLabel": "Verified by",
+        "mostRecentlyVerifiedLabel": "Most recently confirmed by",
+        "firstVerifiedLabel": "First verified by",
+        "verifiedByValue": "{email} on {date}"
       }
     },
     "purgePhotos": {
@@ -921,7 +944,39 @@
       "success": "Photos purged.",
       "partialFailure": "Some objects could not be deleted. Please try again.",
       "blockedActiveChild": "This child must be deactivated before their photos can be purged."
-    }
+    },
+    "identity": {
+      "title": "Identity verification",
+      "verifiedBadge": "Verified",
+      "unverifiedBadge": "Not verified",
+      "documentTypeLabel": "Document type",
+      "documentTypeNone": "Not selected",
+      "documentType": {
+        "birth_certificate": "Birth certificate",
+        "kids_id": "Kids-ID",
+        "eid": "eID",
+        "passport": "Passport",
+        "other": "Other document"
+      },
+      "noteLabel": "Note",
+      "confirmButton": "Confirm",
+      "cancelButton": "Cancel",
+      "correctButton": "Correct",
+      "saveError": "Could not save the verification. Please try again.",
+      "verifiedByLabel": "Verified by",
+      "mostRecentlyVerifiedLabel": "Most recently confirmed by",
+      "firstVerifiedLabel": "First verified by",
+      "verifiedByValue": "{email} on {date}",
+      "nrnLabel": "National Register Number",
+      "notSet": "Not set",
+      "nrnMasked": "•••••••{last4}",
+      "nrnAddButton": "Add",
+      "nrnReplaceButton": "Replace",
+      "nrnSaveButton": "Save",
+      "nrnPlaceholder": "85.07.30-033.71",
+      "nrnInvalidFormat": "Enter a valid National Register Number (11 digits)."
+    },
+    "badgeUnverified": "Not verified"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1000,7 +1055,8 @@
         "missingPickupContact": "No authorised pickup contact",
         "overdueVaccine": "Overdue vaccine",
         "missingQualification": "Missing qualification level",
-        "missingPin": "No check-in PIN set"
+        "missingPin": "No check-in PIN set",
+        "missingIdentityVerification": "Identity not yet verified"
       }
     }
   },

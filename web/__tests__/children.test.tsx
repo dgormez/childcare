@@ -52,6 +52,13 @@ function makeChild(overrides: Partial<ChildResponse> = {}): ChildResponse {
     deactivatedAt: null,
     createdAt: "2026-01-01T09:00:00Z",
     updatedAt: "2026-01-01T09:00:00Z",
+    idVerifiedAt: null,
+    idVerifiedByEmail: null,
+    idDocumentType: null,
+    idDocumentNote: null,
+    firstIdVerifiedAt: null,
+    firstIdVerifiedByEmail: null,
+    nrnLast4: null,
     ...overrides,
   };
 }
