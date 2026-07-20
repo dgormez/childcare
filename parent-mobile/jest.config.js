@@ -13,7 +13,7 @@ module.exports = {
       "expo|expo-router|expo-modules-core|expo-localization|" +
       "expo-notifications|expo-auth-session|expo-apple-authentication|expo-web-browser|" +
       "expo-secure-store|expo-constants|expo-linking|expo-status-bar|" +
-      "expo-file-system|expo-sharing|" +
+      "expo-file-system|expo-sharing|expo-network|" +
       "@expo|react-native|@react-native|nativewind|react-native-reanimated|" +
       "react-native-screens|react-native-safe-area-context|react-native-toast-message|" +
       "react-native-svg|lucide-react-native|" +

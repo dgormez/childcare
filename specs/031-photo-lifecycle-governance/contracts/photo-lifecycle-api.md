@@ -28,11 +28,17 @@ Request/response shapes are unchanged for all eight routes — this is a policy-
 
 ## `GET /api/parent/photos/{photoType}/{objectRef}/download` (new)
 
-`ParentOnly`. `photoType` is one of `profile | group-activity | health-attachment`; `objectRef`
-identifies the specific photo (child id for profile; photo id for group-activity; attachment id
-for health/vaccine). The handler re-validates the same ownership/consent gate
-`GetParentGroupActivityGalleryQuery` already applies (own child only; group-activity photos
-additionally require the existing `Contract.Consent.PhotosInternal` gate) before issuing the URL.
+`ParentOnly`. `photoType` is one of `profile | group-activity` — **not** `health-attachment`:
+parents have no visibility into health/vaccine records anywhere in the API today (no route on
+`ParentEndpoints.cs` exposes them), and neither spec.md's User Story 2 acceptance scenarios nor
+FR-012 mention medical documents — only "photos." Introducing new parent-facing access to
+health/vaccine attachments would be an unrequested, privacy-sensitive scope expansion; the
+`IHealthAttachmentStorage.CreateAttachmentDownloadUrlAsync` method this feature adds exists for
+a possible future need but is not wired to this endpoint. `objectRef` identifies the specific
+photo (child id for profile; photo id for group-activity). The handler re-validates the same
+ownership/consent gate `GetParentGroupActivityGalleryQuery` already applies (own child only;
+group-activity photos additionally require the existing `Contract.Consent.PhotosInternal` gate,
+via the shared `IGroupActivityChildDerivationService`) before issuing the URL.
 
 - Response `200`: `{ "downloadUrl": "https://storage.googleapis.com/...", "expiresAt": "..." }`
   — a V4 signed URL with `Content-Disposition: attachment`, 15-minute TTL (existing convention),
