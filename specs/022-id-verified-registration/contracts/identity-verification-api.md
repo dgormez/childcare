@@ -17,8 +17,12 @@ Records or corrects a child's identity verification (FR-001, FR-004, FR-005).
 `IdVerifiedByEmail` reflect the calling director and current server time; `FirstIdVerifiedAt`/
 `FirstIdVerifiedByEmail` are set only if this is the first verification, otherwise unchanged.
 
-**Errors**: `400 errors.child.document_type_required` (missing/invalid `documentType`), `400
-errors.child.identity_note_too_long`, `404 errors.child.not_found`.
+**Errors**: `422` `{ errorKey: "errors.validation", fieldErrors: { DocumentType:
+"errors.child.document_type_required" } }` (missing/invalid `documentType`) or `{ ...,
+fieldErrors: { Note: "errors.child.identity_note_too_long" } }` — this codebase's shared
+`ValidationBehavior`/global exception handler shape (Program.cs), not a per-field `400` (013h's
+shipped-note already established this correction once; carried forward here). `404
+errors.child.not_found`.
 
 **Auth**: `VerifiedByUserId`/`VerifiedByEmail` are resolved server-side from the caller's JWT
 claims (`ClaimTypes.NameIdentifier`/`ClaimTypes.Email`) — never accepted from the request body,
@@ -39,8 +43,8 @@ Sets or updates a child's National Register Number (FR-009, FR-010, FR-011).
 **Response**: `200 OK`, extended `ChildResponse` — `NrnLast4` reflects the newly saved value. The
 raw `nrn` is never echoed back.
 
-**Errors**: `400 errors.child.nrn_invalid_format` (not 11 digits after normalization), `404
-errors.child.not_found`.
+**Errors**: `422` with `fieldErrors: { Nrn: "errors.child.nrn_invalid_format" }` (not 11 digits
+after normalization), `404 errors.child.not_found`.
 
 ## `POST /api/contacts/{id}/identity-verification` (NEW — `DirectorOnly`)
 
@@ -49,8 +53,8 @@ FR-005). Same request/error shape as the child endpoint above, scoped to `Contac
 
 **Response**: `200 OK`, extended `ContactResponse`.
 
-**Errors**: `400 errors.contact.document_type_required`, `400
-errors.contact.identity_note_too_long`, `404 errors.contact.not_found`.
+**Errors**: `422` with `fieldErrors: { DocumentType: "errors.contact.document_type_required" }`
+or `{ Note: "errors.contact.identity_note_too_long" }`, `404 errors.contact.not_found`.
 
 ## `GET /api/children` / `GET /api/children/{id}` (existing — unchanged auth, extended response)
 
