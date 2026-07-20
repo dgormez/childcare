@@ -236,7 +236,10 @@ public class VerifyContactIdentityTests(OrganisationOnboardingWebAppFactory fact
 
         Assert.Equal("eid", second.IdDocumentType);
         Assert.True(second.IdVerifiedAt > first.IdVerifiedAt);
-        Assert.Equal(first.FirstIdVerifiedAt, second.FirstIdVerifiedAt);
+        // PostgreSQL timestamptz round-trip precision (a few ticks) — same class of flake
+        // IncidentReportImmutabilityTests/RegenerateInvoiceTests/GenerateFiscalAttestations
+        // CommandTests already established a millisecond-tolerant comparison for.
+        Assert.True(Math.Abs((first.FirstIdVerifiedAt!.Value - second.FirstIdVerifiedAt!.Value).TotalMilliseconds) < 1);
         Assert.Equal(first.FirstIdVerifiedByEmail, second.FirstIdVerifiedByEmail);
     }
 }
