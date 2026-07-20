@@ -17,11 +17,21 @@ public enum ParentPhotoDownloadFailure { Forbidden, NotFound }
 
 public class ParentPhotoDownloadResult
 {
+    // 15-minute TTL matches DownloadUrlDuration in the Gcs*Storage classes signing the URL.
+    private static readonly TimeSpan UrlDuration = TimeSpan.FromMinutes(15);
+
     public bool Succeeded { get; private init; }
     public string? DownloadUrl { get; private init; }
+    public DateTime? ExpiresAt { get; private init; }
     public ParentPhotoDownloadFailure? Failure { get; private init; }
 
-    public static ParentPhotoDownloadResult Ok(string downloadUrl) => new() { Succeeded = true, DownloadUrl = downloadUrl };
+    public static ParentPhotoDownloadResult Ok(string downloadUrl) => new()
+    {
+        Succeeded = true,
+        DownloadUrl = downloadUrl,
+        ExpiresAt = DateTime.UtcNow.Add(UrlDuration),
+    };
+
     public static ParentPhotoDownloadResult Fail(ParentPhotoDownloadFailure failure) => new() { Succeeded = false, Failure = failure };
 }
 

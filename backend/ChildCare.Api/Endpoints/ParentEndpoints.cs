@@ -4,6 +4,7 @@ using ChildCare.Application.DayReservations;
 using ChildCare.Application.GroupActivities;
 using ChildCare.Application.Parent;
 using ChildCare.Contracts.Requests;
+using ChildCare.Contracts.Responses;
 using MediatR;
 
 namespace ChildCare.Api.Endpoints;
@@ -72,6 +73,35 @@ public static class ParentEndpoints
             return result.Authorized
                 ? Results.Ok(result.Response)
                 : Results.Json(new { errorKey = "errors.parent.not_a_contact" }, statusCode: StatusCodes.Status403Forbidden);
+        });
+
+        // 031-photo-lifecycle-governance FR-012/FR-013 — contracts/photo-lifecycle-api.md.
+        group.MapGet("/photos/{photoType}/{objectRef:guid}/download", async (string photoType, Guid objectRef, HttpContext ctx, IMediator mediator) =>
+        {
+            var parsedType = photoType switch
+            {
+                "profile" => ParentPhotoType.Profile,
+                "group-activity" => ParentPhotoType.GroupActivity,
+                _ => (ParentPhotoType?)null,
+            };
+            if (parsedType is null)
+                return Results.Json(new { errorKey = "errors.photos.not_found" }, statusCode: StatusCodes.Status404NotFound);
+
+            var tenantUserId = TenantUserIdOf(ctx);
+            var result = await mediator.Send(new GetParentPhotoDownloadUrlQuery(tenantUserId, parsedType.Value, objectRef));
+            if (!result.Succeeded)
+            {
+                return result.Failure switch
+                {
+                    ParentPhotoDownloadFailure.Forbidden => Results.Json(
+                        new { errorKey = "errors.photos.forbidden" }, statusCode: StatusCodes.Status403Forbidden),
+                    ParentPhotoDownloadFailure.NotFound => Results.Json(
+                        new { errorKey = "errors.photos.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                    _ => throw new InvalidOperationException($"Unhandled {nameof(ParentPhotoDownloadFailure)}: {result.Failure}"),
+                };
+            }
+
+            return Results.Ok(new ParentPhotoDownloadResponse(result.DownloadUrl!, result.ExpiresAt!.Value));
         });
     }
 
