@@ -37,3 +37,8 @@
   (only Director/Staff/Parent + a cross-tenant platform-admin flag). Resolved via a traceable
   history requirement (FR-006) instead of inventing a new access-control tier, consistent with
   the backlog note's own edge case which assumes plain director access.
+- 2026-07-20 `/speckit-clarify` pass (self-answered, unattended run, no product owner present):
+  two questions resolved with the recommended/default option each — inline expandable
+  verification history (FR-006a) instead of DB-only retention, and a per-child "Niet geverifieerd"
+  list badge (FR-007a) instead of an aggregate-only count, matching `design-system.md`'s existing
+  badge pattern. All checklist items still pass after integration.

@@ -16,6 +16,23 @@ child and contact records, a director-web 'Identiteit bevestigen' section, an op
 National Register Number field on the child record, and a dashboard badge counting unverified
 dossiers."
 
+## Clarifications
+
+### Session 2026-07-20
+
+- Q: User Story 3's acceptance scenarios promise a prior verification "remains retrievable" —
+  does that require a visible history panel in the "Identiteit bevestigen" section, or is
+  database-level retention (no in-app way to view it) sufficient? → A: Show inline history in the
+  same section — current verification first, prior entries in an expandable list. A history a
+  director can't actually see doesn't serve the trust/audit purpose the feature exists for, and
+  no separate audit-log screen is needed for it.
+- Q: Should unverified status be visible per-child (e.g., a badge on the child list row in
+  director-web), or is the aggregate count on the admin home sufficient on its own? → A: Add a
+  small "Niet geverifieerd" badge on the child list row, matching the existing badge pattern
+  already established for other short per-item states (e.g., the allergy indicator on a child
+  card, `design-system.md`'s Status Indicators). A count alone tells the director work remains
+  but not which child — the badge makes it actionable without leaving the list.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Director confirms a child's identity (Priority: P1)
@@ -85,17 +102,20 @@ long-running enrolment, but only matters once User Story 1/2 already has a verif
 correct — a natural second-priority increment.
 
 **Independent Test**: Can be fully tested by updating an already-verified child's document type
-and confirming both the current record and the change history reflect the update.
+and confirming both the current record and the visible change history reflect the update.
 
 **Acceptance Scenarios**:
 
 1. **Given** a child verified with `id_document_type = birth_certificate`, **When** the director
    updates it to `eid` (e.g., the child turned 12) and confirms, **Then** the current record shows
    `eid` with a new `id_verified_at`/`id_verified_by`, and the prior verification (document type,
-   verifier, timestamp) remains retrievable in the change history.
+   verifier, timestamp) remains visible in an expandable history within the same
+   "Identiteit bevestigen" section.
 2. **Given** an already-verified child or contact record, **When** any director updates the
    verification (document type or note), **Then** the change is attributed to that director and
-   timestamped, distinct from the original verification's attribution.
+   timestamped, distinct from the original verification's attribution, and the current
+   verification (shown first) reflects the update while the prior entry moves into the history
+   list.
 
 ---
 
@@ -120,6 +140,10 @@ unverified enrolled children and confirming the badge count matches the unverifi
    views the admin home, **Then** that child no longer counts toward the badge.
 3. **Given** the director verifies the last remaining unverified child, **When** the admin home is
    next viewed, **Then** the badge no longer appears (or shows zero).
+4. **Given** a child list view in director-web, **When** a child has no recorded identity
+   verification, **Then** that child's row shows a small "Niet geverifieerd" badge, so the
+   director can identify which specific child needs action directly from the list, not only the
+   aggregate count.
 
 ---
 
@@ -199,8 +223,14 @@ the page, and confirming only the last 4 digits are ever shown again.
   change, what changed, and when — so that a correction is always traceable rather than silently
   overwriting the prior record. This satisfies the compliance need for tamper-evidence without
   introducing an access-control tier this codebase does not otherwise have (see Assumptions).
+- **FR-006a**: The verification history MUST be visible in the app, not only persisted — the
+  "Identiteit bevestigen" section MUST show the current verification first and prior entries in
+  an expandable list, so a director can actually review what changed.
 - **FR-007**: System MUST expose a count, visible from the director's admin home, of actively
   enrolled children that do not yet have an identity verification recorded.
+- **FR-007a**: System MUST show a per-child indicator (badge) in the director-web child list for
+  any actively enrolled child without a recorded identity verification, so an unverified child can
+  be identified directly from the list, not only via the aggregate count.
 - **FR-008**: The unverified-dossier count MUST exclude children whose enrolment is inactive/
   departed, and MUST update to reflect newly-completed verifications without requiring a page
   reload workaround (i.e., it reflects current state on each view).
