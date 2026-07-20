@@ -100,6 +100,33 @@ public static class ChildrenEndpoints
                 ? Results.Ok(result.Response)
                 : Results.Json(new { errorKey = "errors.child.not_found" }, statusCode: StatusCodes.Status404NotFound);
         });
+
+        // 031-photo-lifecycle-governance FR-008: StaffOrDirector, not DirectorOnly — a standalone
+        // route outside the DirectorOnly `group` above (composition is additive/AND, same reason
+        // the `reads` group above is split out), per spec.md's own "director or staff member".
+        var purgeGroup = app.MapGroup("/api/children")
+            .WithTags("Children")
+            .RequireAuthorization("StaffOrDirector");
+
+        purgeGroup.MapPost("/{id:guid}/purge-photos", async (Guid id, HttpContext ctx, IMediator mediator) =>
+        {
+            var (role, tenantUserId) = CallerIdentity(ctx);
+            var result = await mediator.Send(new PurgeChildPhotosCommand(id, tenantUserId ?? Guid.Empty, role ?? "unknown"));
+
+            if (!result.Succeeded)
+            {
+                return result.Failure switch
+                {
+                    PurgePhotosFailure.NotFound => Results.Json(
+                        new { errorKey = "errors.children.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                    PurgePhotosFailure.ChildStillActive => Results.Json(
+                        new { errorKey = "errors.children.still_active" }, statusCode: StatusCodes.Status400BadRequest),
+                    _ => throw new InvalidOperationException($"Unhandled {nameof(PurgePhotosFailure)}: {result.Failure}"),
+                };
+            }
+
+            return Results.Ok(new PurgePhotosResponse(result.DeletedObjectPaths, result.FailedObjectPaths, result.PreservedGroupPhotoCount));
+        });
     }
 
     private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct, Enum =>

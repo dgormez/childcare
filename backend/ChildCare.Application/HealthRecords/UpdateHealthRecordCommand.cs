@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.HealthRecords;
 
+// CallerRole/CallerTenantUserId (031-photo-lifecycle-governance FR-011): staff must be scoped
+// to their assigned location(s) — reusing GetChildByIdQuery's StaffLocationEligibility check.
 public record UpdateHealthRecordCommand(
     Guid ChildId,
     Guid Id,
@@ -12,7 +14,9 @@ public record UpdateHealthRecordCommand(
     string Title,
     string Description,
     DateOnly? ValidFrom,
-    DateOnly? ValidUntil) : IRequest<HealthRecordResult>;
+    DateOnly? ValidUntil,
+    string? CallerRole = null,
+    Guid? CallerTenantUserId = null) : IRequest<HealthRecordResult>;
 
 public class UpdateHealthRecordCommandValidator : AbstractValidator<UpdateHealthRecordCommand>
 {
@@ -47,6 +51,19 @@ public class UpdateHealthRecordCommandHandler(ITenantDbContext db, IHealthAttach
             .SingleOrDefaultAsync(r => r.Id == request.Id && r.ChildId == request.ChildId && r.DeletedAt == null, cancellationToken);
         if (record is null)
             return HealthRecordResult.Fail(HealthRecordFailure.NotFound);
+
+        if (string.Equals(request.CallerRole, "staff", StringComparison.OrdinalIgnoreCase) && request.CallerTenantUserId is Guid tenantUserId)
+        {
+            var eligibleLocationIds = db.StaffProfiles
+                .Where(p => p.TenantUserId == tenantUserId)
+                .Join(db.StaffLocationEligibility, p => p.Id, e => e.StaffProfileId, (p, e) => e.LocationId);
+            var isInScope = await db.ChildGroupAssignments
+                .Where(a => a.ChildId == request.ChildId && a.EndDate == null)
+                .Join(db.Groups, a => a.GroupId, g => g.Id, (a, g) => g.LocationId)
+                .AnyAsync(locationId => eligibleLocationIds.Contains(locationId), cancellationToken);
+            if (!isInScope)
+                return HealthRecordResult.Fail(HealthRecordFailure.NotFound);
+        }
 
         HealthRecordMapper.TryParseRecordType(request.RecordType, out var recordType);
 

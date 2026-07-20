@@ -22,7 +22,8 @@ public class GalleryResult
 public class GetParentGroupActivityGalleryQueryHandler(
     ITenantDbContext db,
     ICurrentParentContactResolver contactResolver,
-    GroupActivityMapper mapper) : IRequestHandler<GetParentGroupActivityGalleryQuery, GalleryResult>
+    GroupActivityMapper mapper,
+    IGroupActivityChildDerivationService derivationService) : IRequestHandler<GetParentGroupActivityGalleryQuery, GalleryResult>
 {
     public async Task<GalleryResult> Handle(GetParentGroupActivityGalleryQuery request, CancellationToken cancellationToken)
     {
@@ -89,6 +90,14 @@ public class GetParentGroupActivityGalleryQueryHandler(
             // this parent's active contracts at this activity's location with photos_internal.
             var consentedForThisActivity = activeContracts.Any(c => c.LocationId == activity.LocationId && c.Consent.PhotosInternal);
             if (!consentedForThisActivity)
+                continue;
+
+            // groupIds above is a month-level pre-filter; the derivation service is the exact,
+            // per-activity-day authority on which children it depicts (031-photo-lifecycle-
+            // governance R3) — the same gate GetParentPhotoDownloadUrlQuery applies, so a child
+            // who left the group mid-month isn't shown photos taken after they left.
+            var depictedChildIds = await derivationService.GetDepictedChildIdsAsync(activity.Id, cancellationToken);
+            if (!depictedChildIds.Any(childIds.Contains))
                 continue;
 
             foreach (var photo in photos)

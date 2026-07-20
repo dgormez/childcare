@@ -218,6 +218,10 @@ builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
 builder.Services.AddScoped<ChildCare.Application.ChildEvents.DailySummaryCalculator>();
+// 031-photo-lifecycle-governance R3 — shared by GetParentGroupActivityGalleryQuery,
+// PurgeChildPhotosCommand, and EvaluatePhotoArchivalCommand so all three apply an identical
+// "which children does this photo depict" rule.
+builder.Services.AddScoped<IGroupActivityChildDerivationService, ChildCare.Application.GroupActivities.GroupActivityChildDerivationService>();
 
 // ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
 // Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a

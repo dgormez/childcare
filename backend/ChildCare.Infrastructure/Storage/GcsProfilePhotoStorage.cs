@@ -2,6 +2,7 @@ using ChildCare.Application.Common;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ChildCare.Infrastructure.Storage;
 
@@ -20,19 +21,28 @@ public class GcsProfilePhotoStorage : IProfilePhotoStorage
 
     private readonly string _bucketName;
     private readonly Lazy<Task<UrlSigner>> _urlSigner;
+    private readonly Lazy<Task<StorageClient>> _storageClient;
+    private readonly ILogger<GcsProfilePhotoStorage> _logger;
 
-    public GcsProfilePhotoStorage(IConfiguration config)
+    public GcsProfilePhotoStorage(IConfiguration config, ILogger<GcsProfilePhotoStorage> logger)
     {
         // Renamed from Storage:StaffPhotosBucketName in feature 006-children — this single
         // bucket now serves both staff and child photos, distinguished by the category path
         // segment (research.md R1), so a staff-specific config key name would be misleading.
         _bucketName = config["Storage:ProfilePhotosBucketName"]
             ?? throw new InvalidOperationException("Storage:ProfilePhotosBucketName is not configured.");
+        _logger = logger;
 
         _urlSigner = new Lazy<Task<UrlSigner>>(async () =>
         {
             var credential = await GoogleCredential.GetApplicationDefaultAsync();
             return UrlSigner.FromCredential(credential);
+        });
+
+        _storageClient = new Lazy<Task<StorageClient>>(async () =>
+        {
+            var credential = await GoogleCredential.GetApplicationDefaultAsync();
+            return await StorageClient.CreateAsync(credential);
         });
     }
 
@@ -56,5 +66,54 @@ public class GcsProfilePhotoStorage : IProfilePhotoStorage
 
         var signer = await _urlSigner.Value;
         return await signer.SignAsync(_bucketName, objectPath, DownloadUrlDuration, cancellationToken: cancellationToken);
+    }
+
+    public async Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default)
+    {
+        // GCS honors response-content-disposition as a signed query parameter (same mechanism
+        // S3 uses) — no dedicated "options.ResponseDisposition" property exists on this SDK's
+        // UrlSigner, so it must ride along as a RequestTemplate query parameter instead.
+        var signer = await _urlSigner.Value;
+        var template = UrlSigner.RequestTemplate.FromBucket(_bucketName)
+            .WithObjectName(objectPath)
+            .WithQueryParameters(new[]
+            {
+                new KeyValuePair<string, IEnumerable<string>>(
+                    "response-content-disposition", [$"attachment; filename=\"{downloadFileName}\""]),
+            });
+        var options = UrlSigner.Options.FromDuration(DownloadUrlDuration);
+        return await signer.SignAsync(template, options, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(string objectPath, CancellationToken cancellationToken = default)
+    {
+        var client = await _storageClient.Value;
+        try
+        {
+            await client.DeleteObjectAsync(_bucketName, objectPath, cancellationToken: cancellationToken);
+            return true;
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already gone — treated as satisfied so a retried purge never reports a stale
+            // failure (031-photo-lifecycle-governance FR-016).
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete GCS object {ObjectPath}.", objectPath);
+            return false;
+        }
+    }
+
+    public async Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default)
+    {
+        var client = await _storageClient.Value;
+        var existing = await client.GetObjectAsync(_bucketName, objectPath, cancellationToken: cancellationToken);
+        if (string.Equals(existing.StorageClass, storageClass, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        existing.StorageClass = storageClass;
+        await client.UpdateObjectAsync(existing, cancellationToken: cancellationToken);
     }
 }

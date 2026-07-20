@@ -20,6 +20,26 @@ public interface IGroupActivityPhotoStorage
     /// <summary>Returns null when objectPath is null (no photo set) rather than signing a meaningless URL.</summary>
     Task<string?> CreateDownloadUrlAsync(string? objectPath, CancellationToken cancellationToken = default);
 
-    /// <summary>Deletes both the full-image and thumbnail GCS objects for one photo (best-effort — errors are logged, never thrown, since a missing object shouldn't block a DB delete).</summary>
-    Task DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Deletes both the full-image and thumbnail GCS objects for one photo. Best-effort: a
+    /// failure is logged and reported via the boolean return rather than thrown, mirroring
+    /// IProfilePhotoStorage.DeleteAsync's semantics (031-photo-lifecycle-governance FR-016) so a
+    /// purge cascade can attempt every object and aggregate failures instead of aborting on the
+    /// first error. Returns true only if both objects no longer exist afterward (including if
+    /// either never existed — idempotent, safe to retry).
+    /// </summary>
+    Task<bool> DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Signs a time-limited download URL with an attachment (not inline) content-disposition, so
+    /// the browser/app saves the file rather than rendering it (031-photo-lifecycle-governance
+    /// FR-013) — always points at the full-resolution object, never the thumbnail.
+    /// </summary>
+    Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transitions the object to <paramref name="storageClass"/> (e.g. "NEARLINE", "COLDLINE")
+    /// in place — no-op if it is already on that class (031-photo-lifecycle-governance R2/R5).
+    /// </summary>
+    Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default);
 }

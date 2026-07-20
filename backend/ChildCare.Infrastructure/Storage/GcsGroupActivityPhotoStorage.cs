@@ -87,23 +87,55 @@ public class GcsGroupActivityPhotoStorage : IGroupActivityPhotoStorage
         return await signer.SignAsync(_bucketName, objectPath, DownloadUrlDuration, cancellationToken: cancellationToken);
     }
 
-    public async Task DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default)
     {
         var client = await _storageClient.Value;
 
-        // Best-effort: a missing GCS object shouldn't block the DB delete that already
-        // guarantees the photo is gone from every parent/caregiver/director surface.
+        var allDeleted = true;
         foreach (var path in new[] { objectPath, thumbnailObjectPath })
         {
             try
             {
                 await client.DeleteObjectAsync(_bucketName, path, cancellationToken: cancellationToken);
             }
+            catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Already gone — treated as satisfied so a retried purge never reports a stale
+                // failure (031-photo-lifecycle-governance FR-016).
+            }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to delete GCS object {ObjectPath} for a deleted group activity photo.", path);
+                allDeleted = false;
             }
         }
+
+        return allDeleted;
+    }
+
+    public async Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default)
+    {
+        var signer = await _urlSigner.Value;
+        var template = UrlSigner.RequestTemplate.FromBucket(_bucketName)
+            .WithObjectName(objectPath)
+            .WithQueryParameters(new[]
+            {
+                new KeyValuePair<string, IEnumerable<string>>(
+                    "response-content-disposition", [$"attachment; filename=\"{downloadFileName}\""]),
+            });
+        var options = UrlSigner.Options.FromDuration(DownloadUrlDuration);
+        return await signer.SignAsync(template, options, cancellationToken);
+    }
+
+    public async Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default)
+    {
+        var client = await _storageClient.Value;
+        var existing = await client.GetObjectAsync(_bucketName, objectPath, cancellationToken: cancellationToken);
+        if (string.Equals(existing.StorageClass, storageClass, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        existing.StorageClass = storageClass;
+        await client.UpdateObjectAsync(existing, cancellationToken: cancellationToken);
     }
 
     private static void ResizeToLongEdge(IImageProcessingContext ctx, int maxLongEdge)

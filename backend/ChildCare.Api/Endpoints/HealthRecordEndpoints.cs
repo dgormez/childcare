@@ -13,14 +13,19 @@ public static class HealthRecordEndpoints
 
     public static void MapHealthRecordEndpoints(this WebApplication app)
     {
+        // 031-photo-lifecycle-governance FR-011: staff previously had zero access to health
+        // records of any kind (create, edit, attachment-upload, and delete were all
+        // DirectorOnly, not a delete-lags-upload asymmetry) — widened to StaffOrDirector so
+        // staff and director are treated identically here, matching group-activity photos.
         var group = app.MapGroup("/api/children/{childId:guid}/health-records")
             .WithTags("HealthRecords")
-            .RequireAuthorization("DirectorOnly");
+            .RequireAuthorization("StaffOrDirector");
 
         group.MapPost("/", async (Guid childId, CreateHealthRecordRequest req, HttpContext ctx, IMediator mediator) =>
         {
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
             var result = await mediator.Send(new CreateHealthRecordCommand(
-                childId, req.RecordType, req.Title, req.Description, req.ValidFrom, req.ValidUntil, TenantUserIdOf(ctx)));
+                childId, req.RecordType, req.Title, req.Description, req.ValidFrom, req.ValidUntil, TenantUserIdOf(ctx), role, tenantUserId));
             return MapResult(result, onSuccess: r => Results.Created($"/api/children/{childId}/health-records/{r.Id}", r));
         });
 
@@ -30,21 +35,24 @@ public static class HealthRecordEndpoints
             return Results.Ok(list);
         });
 
-        group.MapPut("/{id:guid}", async (Guid childId, Guid id, UpdateHealthRecordRequest req, IMediator mediator) =>
+        group.MapPut("/{id:guid}", async (Guid childId, Guid id, UpdateHealthRecordRequest req, HttpContext ctx, IMediator mediator) =>
         {
-            var result = await mediator.Send(new UpdateHealthRecordCommand(childId, id, req.RecordType, req.Title, req.Description, req.ValidFrom, req.ValidUntil));
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
+            var result = await mediator.Send(new UpdateHealthRecordCommand(childId, id, req.RecordType, req.Title, req.Description, req.ValidFrom, req.ValidUntil, role, tenantUserId));
             return MapResult(result, onSuccess: Results.Ok);
         });
 
-        group.MapDelete("/{id:guid}", async (Guid childId, Guid id, IMediator mediator) =>
+        group.MapDelete("/{id:guid}", async (Guid childId, Guid id, HttpContext ctx, IMediator mediator) =>
         {
-            var result = await mediator.Send(new DeleteHealthRecordCommand(childId, id));
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
+            var result = await mediator.Send(new DeleteHealthRecordCommand(childId, id, role, tenantUserId));
             return result.Succeeded ? Results.NoContent() : MapFailure(result.Failure!.Value);
         });
 
-        group.MapPost("/{id:guid}/attachment-upload-url", async (Guid childId, Guid id, CreateHealthRecordAttachmentUploadUrlRequest req, IMediator mediator) =>
+        group.MapPost("/{id:guid}/attachment-upload-url", async (Guid childId, Guid id, CreateHealthRecordAttachmentUploadUrlRequest req, HttpContext ctx, IMediator mediator) =>
         {
-            var result = await mediator.Send(new CreateHealthRecordAttachmentUploadUrlCommand(childId, id, req.ContentType));
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
+            var result = await mediator.Send(new CreateHealthRecordAttachmentUploadUrlCommand(childId, id, req.ContentType, role, tenantUserId));
             return result.Succeeded
                 ? Results.Ok(new CreateHealthRecordAttachmentUploadUrlResponse(result.UploadUrl!, UploadUrlExpiresInSeconds))
                 : MapFailure(result.Failure!.Value);

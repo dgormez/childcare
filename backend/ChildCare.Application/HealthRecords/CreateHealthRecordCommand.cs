@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ChildCare.Application.HealthRecords;
 
 // RecordedBy comes from the caller's JWT (endpoint layer resolves it) — never client-supplied.
+// CallerRole/CallerTenantUserId (031-photo-lifecycle-governance FR-011): now that staff (not
+// just directors) can create health records, staff must be scoped to their assigned
+// location(s) — reusing GetChildByIdQuery's exact StaffLocationEligibility check.
 public record CreateHealthRecordCommand(
     Guid ChildId,
     string RecordType,
@@ -14,7 +17,9 @@ public record CreateHealthRecordCommand(
     string Description,
     DateOnly? ValidFrom,
     DateOnly? ValidUntil,
-    Guid RecordedBy) : IRequest<HealthRecordResult>;
+    Guid RecordedBy,
+    string? CallerRole = null,
+    Guid? CallerTenantUserId = null) : IRequest<HealthRecordResult>;
 
 public class CreateHealthRecordCommandValidator : AbstractValidator<CreateHealthRecordCommand>
 {
@@ -51,6 +56,19 @@ public class CreateHealthRecordCommandHandler(ITenantDbContext db, IHealthAttach
         var childExists = await db.Children.AnyAsync(c => c.Id == request.ChildId, cancellationToken);
         if (!childExists)
             return HealthRecordResult.Fail(HealthRecordFailure.ChildNotFound);
+
+        if (string.Equals(request.CallerRole, "staff", StringComparison.OrdinalIgnoreCase) && request.CallerTenantUserId is Guid tenantUserId)
+        {
+            var eligibleLocationIds = db.StaffProfiles
+                .Where(p => p.TenantUserId == tenantUserId)
+                .Join(db.StaffLocationEligibility, p => p.Id, e => e.StaffProfileId, (p, e) => e.LocationId);
+            var isInScope = await db.ChildGroupAssignments
+                .Where(a => a.ChildId == request.ChildId && a.EndDate == null)
+                .Join(db.Groups, a => a.GroupId, g => g.Id, (a, g) => g.LocationId)
+                .AnyAsync(locationId => eligibleLocationIds.Contains(locationId), cancellationToken);
+            if (!isInScope)
+                return HealthRecordResult.Fail(HealthRecordFailure.ChildNotFound);
+        }
 
         HealthRecordMapper.TryParseRecordType(request.RecordType, out var recordType);
 
