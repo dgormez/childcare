@@ -126,7 +126,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// is the next one — its two new locations columns (SiblingDiscountPct,
     /// FamilyInvoiceBundlingEnabled) need their own explicit DROP COLUMNs, same reason as
     /// DigestUnsubscribedAt above; its new invoices column (FamilyGroupId) needs no separate
-    /// step since invoices is already dropped wholesale above.
+    /// step since invoices is already dropped wholesale above. Feature 021's
+    /// "AddLocationQrCheckInEnabled" is the next one — its new locations column
+    /// (QrCheckInEnabled) needs its own explicit DROP COLUMN, same reason as
+    /// FamilyInvoiceBundlingEnabled above.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -178,8 +181,10 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."locations"
                 DROP COLUMN "SiblingDiscountPct",
                 DROP COLUMN "FamilyInvoiceBundlingEnabled";
+            ALTER TABLE "{schemaName}"."locations"
+                DROP COLUMN "QrCheckInEnabled";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled';
             """);
     }
 
