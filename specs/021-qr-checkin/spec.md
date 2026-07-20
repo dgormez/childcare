@@ -63,7 +63,7 @@ This enables a caregiver at an opted-in location to check a child in or out with
 
 **Accessibility**: caregiver's "Scan" quick action and the manual-fallback entry point both meet the 48pt tablet touch-target floor (`platform-rules.md`); the scan viewfinder provides non-color confirmation (name + photo + text state, not a color flash alone) per `design-system.md`'s "never convey semantic state by color alone" rule.
 
-**Offline behavior**: caregiver tablet scan while offline queues via the existing feature 008 offline-sync mechanism exactly as a manual tap does (FR-012) — same conflict/reconciliation semantics, no new offline path invented. Parent code display requires connectivity to issue/refresh a code (a code is a live, server-issued artifact, not a static offline-generatable value, per the Assumptions' "never a static, reusable artifact" note) — the parent screen shows a clear "reconnect to show your code" state when offline, distinct from a scan rejection.
+**Offline behavior**: code verification needs a live server round-trip (FR-012) — a fully offline tablet is directed to the manual tap fallback rather than shown a scan attempt that can't succeed; a scan verified online whose resulting write is interrupted by a subsequent connectivity drop queues via the existing feature 008 offline-sync mechanism exactly as a manual tap does — same conflict/reconciliation semantics, no new offline path invented. Parent code display requires connectivity to issue/refresh a code (a code is a live, server-issued artifact, not a static offline-generatable value, per the Assumptions' "never a static, reusable artifact" note) — the parent screen shows a clear "reconnect to show your code" state when offline, distinct from a scan rejection.
 
 **i18n**: all new strings (setting label/copy, scan confirmation, three rejection messages, parent code screen copy) added to the existing NL/FR/EN locale files per platform (`mobile/i18n`, `parent-mobile/i18n`, `web` i18n convention) — no hardcoded strings, per FR-017. Caregiver/director copy stays in this codebase's operational register; parent-facing copy stays in parent-mobile's warm register (matches feature 031's precedent for register-per-surface).
 
@@ -143,10 +143,13 @@ observing the child is checked out.
 4. **Given** a parent's displayed code has expired before it is scanned, **When** the caregiver
    tablet scans it, **Then** the scan is rejected with a clear "code expired" message, and the
    parent app refreshes to a valid code the next time it is opened or brought to the foreground.
-5. **Given** the caregiver tablet has no network connectivity at the moment of a valid scan,
-   **When** the scan is processed, **Then** the resulting check-in/check-out is queued using the
-   existing offline mechanism and reconciled once connectivity returns, exactly as a manual tap
-   would be.
+5. **Given** the caregiver tablet has no network connectivity at all, **When** a caregiver tries
+   to scan, **Then** the tablet shows a clear message directing them to the manual tap fallback
+   (FR-013) rather than attempting a scan — code verification requires a live server round-trip
+   and cannot happen offline. **Given** connectivity drops between a successful online
+   verification and the resulting attendance write, **When** that write is attempted, **Then**
+   it is queued using the existing offline mechanism and reconciled once connectivity returns,
+   exactly as a manual tap would be.
 
 ---
 
@@ -232,9 +235,14 @@ location) and confirming manual tap-based check-in completes exactly as it does 
   with a clear, human-readable message, and MUST NOT create any attendance record.
 - **FR-011**: A scan of an expired code MUST be rejected with a clear, human-readable message
   distinct from the "wrong location" message in FR-010.
-- **FR-012**: If the caregiver tablet has no network connectivity when a valid code is scanned,
-  the resulting check-in/check-out MUST be queued via the existing offline mechanism (feature
-  008) and reconciled once connectivity returns, exactly as a manual tap would be.
+- **FR-012**: Code verification requires a live server round-trip (the server-side signing key
+  needed to verify tamper-evidence per FR-007 is never shipped to any client) and therefore
+  cannot happen while the tablet has no network connectivity at all — in that state the tablet
+  MUST direct the caregiver to the manual tap fallback (FR-013) rather than attempting a scan.
+  If connectivity drops after a scan has been successfully verified but before the resulting
+  check-in/check-out write completes, that write MUST be queued via the existing offline
+  mechanism (feature 008) and reconciled once connectivity returns, exactly as a manual tap
+  would be.
 - **FR-013**: If the tablet's camera or scanning capability is unavailable or fails, the caregiver
   MUST still be able to complete check-in/check-out via the existing manual tap flow — QR check-in
   MUST always be additive, never a replacement that can block attendance.
