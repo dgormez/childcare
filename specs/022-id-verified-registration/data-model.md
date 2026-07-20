@@ -99,4 +99,17 @@ aren't rendered anywhere else in this codebase's responses either).
 
 `ContactResponse` and `ChildContactResponse` both gain: `IdVerifiedAt`, `IdVerifiedByEmail`,
 `IdDocumentType`, `IdDocumentNote`, `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail` — the latter so
-`ChildContactsTab`'s existing per-row list can render the badge without a second request.
+`ChildContactsTab`'s existing per-row list can render the badge without a second request. No
+role-gating needed here (unlike `Child`, below) — every contact-reading route is already
+`DirectorOnly`.
+
+## Read-side role gating (FR-015, research.md R8)
+
+`ChildResponse`'s verification/NRN fields (`IdVerifiedAt`, `IdVerifiedByEmail`, `IdDocumentType`,
+`IdDocumentNote`, `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail`, `NrnLast4`) MUST be null when the
+response is built for a Staff or device-token caller — only a Director caller sees them.
+`ChildMapper.ToResponse` gains `bool includeIdentityVerification = true`; `GetChildByIdQuery` and
+`ListChildrenQuery` (the only two queries the `DeviceOrStaffOrDirector` reads group calls) pass
+`string.Equals(request.CallerRole, "director", StringComparison.OrdinalIgnoreCase)` explicitly.
+Every `DirectorOnly`-group call site (create/update/deactivate/reactivate) keeps the default
+`true` and needs no change.

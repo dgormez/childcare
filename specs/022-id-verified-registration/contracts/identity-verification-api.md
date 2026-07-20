@@ -52,12 +52,19 @@ FR-005). Same request/error shape as the child endpoint above, scoped to `Contac
 **Errors**: `400 errors.contact.document_type_required`, `400
 errors.contact.identity_note_too_long`, `404 errors.contact.not_found`.
 
-## `GET /api/children` / `GET /api/children/{id}` (existing — unchanged auth)
+## `GET /api/children` / `GET /api/children/{id}` (existing — unchanged auth, extended response)
 
 **Response** (`ChildResponse`, extended — see data-model.md for the full field list). Enables:
 
 - The `/children` list page badge (FR-007a) — reads `idVerifiedAt` directly, no new request.
 - The child-detail "Identiteit bevestigen" section's read-only display when already verified.
+
+**Role-gated fields (FR-015, research.md R8)**: `idVerifiedAt`, `idVerifiedByEmail`,
+`idDocumentType`, `idDocumentNote`, `firstIdVerifiedAt`, `firstIdVerifiedByEmail`, `nrnLast4` are
+present only when the caller is a Director. A Staff caller or a caregiver-tablet device-token
+caller reading these same two routes receives `null` for every one of these fields — this route's
+authorization (`DeviceOrStaffOrDirector`) is unchanged, but its response content now varies by
+caller role for this field subset specifically.
 
 ## `GET /api/children/{childId}/contacts` (existing — unchanged auth)
 

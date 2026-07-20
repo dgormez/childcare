@@ -202,6 +202,18 @@ the page, and confirming only the last 4 digits are ever shown again.
   contributes to the "unverified dossiers" count since it no longer represents outstanding work.
 - NRN entered with an invalid format (wrong length, non-numeric): rejected at save with a
   validation message; no partial/invalid value is ever persisted.
+- A director attempts to verify (or correct) a child or contact after the child's enrolment has
+  been deactivated: allowed — deactivation doesn't block this action, since closing out a
+  dossier's compliance record after departure (or fixing a record noticed only after the fact)
+  is a legitimate use, same as this codebase's other child-record edits remaining available on
+  deactivated children.
+- A contact with no linked child (not yet linked, or every link since removed) is verified:
+  allowed — verification lives on the contact record itself, independent of any link (User Story
+  2).
+- Two directors submit a correction to the same child's or contact's verification at nearly the
+  same moment: the later write wins and becomes the current verification, consistent with this
+  codebase's existing mutation model elsewhere (no field on `Child`/`Contact` has optimistic
+  concurrency control today) — the earlier write is simply superseded, not merged or rejected.
 
 ## Requirements *(mandatory)*
 
@@ -209,8 +221,8 @@ the page, and confirming only the last 4 digits are ever shown again.
 
 - **FR-001**: System MUST allow a director to record an identity verification on a child's file,
   consisting of a document type (one of: birth certificate, Belgian Kids-ID, Belgian eID,
-  passport, other), an optional free-text note, the verifying director, and the verification
-  timestamp.
+  passport, other), an optional free-text note (max 500 characters), the verifying director, and
+  the verification timestamp.
 - **FR-002**: System MUST allow a director to record the same shape of identity verification on a
   contact (parent/guardian) record, independent of which children that contact is linked to.
 - **FR-003**: System MUST require a document type to be selected before a verification can be
@@ -239,14 +251,21 @@ the page, and confirming only the last 4 digits are ever shown again.
   be identified directly from the list, not only via the aggregate count.
 - **FR-008**: The unverified-dossier count MUST exclude children whose enrolment is inactive/
   departed, and MUST update to reflect newly-completed verifications without requiring a page
-  reload workaround (i.e., it reflects current state on each view).
+  reload workaround (i.e., it reflects current state on each view). When the admin home is
+  filtered to a single location, the count MUST reflect only that location's children,
+  consistent with the same location-filtering the admin home already applies to its other
+  outstanding-work signals; the per-child list badge (FR-007a) is unaffected by any such filter
+  since the child list itself has none.
 - **FR-009**: System MUST allow a director to optionally record a child's National Register Number
   (NRN / rijksregisternummer).
-- **FR-010**: System MUST validate that an entered NRN matches the expected Belgian national
-  register number format before it can be saved; an invalid format MUST be rejected with a clear
-  validation message and MUST NOT be persisted.
+- **FR-010**: System MUST validate that an entered NRN, after stripping any dot/dash separator
+  characters, consists of exactly 11 digits before it can be saved; an invalid format (wrong
+  digit count, or any non-digit/non-separator character) MUST be rejected with a clear validation
+  message and MUST NOT be persisted. This is a structural check only — see Assumptions for what
+  it deliberately does not validate.
 - **FR-011**: System MUST encrypt the NRN at rest and MUST NOT include its plain-text value in any
-  application log at any level.
+  application log at any level — this includes structured application logs, exception/stack
+  traces, and any HTTP request/response logging middleware.
 - **FR-012**: System MUST NOT render the NRN in plain text in any UI surface once it has been
   saved; only the last 4 digits MAY be displayed, in any subsequent view of the record.
 - **FR-013**: All user-facing strings introduced by this feature (labels, validation messages, the
@@ -254,6 +273,13 @@ the page, and confirming only the last 4 digits are ever shown again.
 - **FR-014**: Recording or updating an identity verification, and recording/updating an NRN, MUST
   remain restricted to the Director role, consistent with this codebase's existing child/contact
   write-access model.
+- **FR-015**: Verification detail fields (document type, note, first/most-recent verifier and
+  timestamp) and the NRN's last-4-digit display MUST NOT be included in child/contact data
+  returned to non-Director callers — specifically caregiver-tablet device-token reads and Staff
+  reads, which read the same underlying child/contact records for operational purposes unrelated
+  to this compliance audit trail. This is a read-side restriction distinct from FR-014's write
+  restriction; the existing shared read responses those callers already use (the same ones a
+  Director reads) MUST omit or null these fields for them.
 
 ### Key Entities
 
@@ -315,11 +341,29 @@ the page, and confirming only the last 4 digits are ever shown again.
   other) with no system-enforced age restriction (e.g., not blocking `eid` for a child under 12)
   — the backlog note's "(12+ years)" annotation is informational precedent, not a validation rule,
   since a hard age gate wasn't requested and would add complexity with no stated need.
-- Belgian NRN format validation checks structural shape (11 digits in the standard
-  YY.MM.DD-XXX.CC grouping); it does not perform the full checksum/modulo-97 validity check against
-  Belgium's national register algorithm, since correctness there isn't required for this feature's
-  purpose (recording what a director was shown) and the field's actual regulatory use is deferred
-  to the Phase 3 fiscal feature (015/Belcotax 281.86) that will consume it.
+- Belgian NRN format validation checks structural shape only (11 digits after stripping
+  separators). It deliberately does not perform the full checksum/modulo-97 validity check against
+  Belgium's national register algorithm, and does not reject a structurally-valid-but-implausible
+  embedded date (e.g., a month outside 01–12, ignoring the "+40" administrative-registration
+  convention) — correctness there isn't required for this feature's purpose (recording what a
+  director was shown). The field's actual regulatory consumer isn't feature 015
+  (fiscal-attestations, already shipped as a parent-facing PDF certificate with no NRN dependency
+  in what it built) but a future Belcotax-on-web electronic filing capability — per
+  `workflows.md`'s Government Reporting workflow, that's associated with feature 019
+  (`019-ikt-compliance`, not yet started) or a later feature — which can add stricter validation
+  once it exists and its exact input contract is known.
+- The free-text verification note (FR-001/FR-002) is not treated as a second sensitive-data
+  field requiring encryption, and its content is never validated against NRN-like patterns — a
+  director who pastes an NRN into the note instead of the dedicated field bypasses FR-011's
+  protection. Mitigated only by UI copy/labeling steering the director to the correct field, not
+  by technical enforcement — pattern-matching free text for a national-ID-shaped string risks
+  both false positives (rejecting a legitimate note) and false negatives (a formatted-differently
+  NRN slipping through), disproportionate to this feature's scope.
+- Deletion/retention of verification and NRN data follows the same lifecycle as the rest of the
+  `Child`/`Contact` record — this feature introduces no special-case retention or a separate
+  purge path. A future data-retention feature (BACKLOG 038) governing the sector's broader
+  retention terms applies to these fields the same way it applies to every other field on those
+  records; this feature doesn't anticipate or special-case that work.
 - Encryption at rest for the NRN reuses this codebase's existing ASP.NET Core Data Protection
   encryption pattern (already used for third-party OAuth token storage) rather than introducing a
   new encryption mechanism.

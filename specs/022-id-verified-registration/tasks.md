@@ -141,9 +141,18 @@ the record shows the verified state; attempting to confirm with no document type
       `backend/ChildCare.Application/Children/VerifyChildIdentityCommandHandler.cs` (depends on
       T016, T017)
 - [ ] T019 [US1] Extend `ChildMapper.ToResponse` in
-      `backend/ChildCare.Application/Children/ChildMapper.cs` to project `IdVerifiedAt`,
+      `backend/ChildCare.Application/Children/ChildMapper.cs` to take a new
+      `bool includeIdentityVerification = true` parameter; project `IdVerifiedAt`,
       `IdVerifiedByEmail`, `IdDocumentType` (`.ToString()`), `IdDocumentNote`,
-      `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail`, `NrnLast4` (depends on T003)
+      `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail`, `NrnLast4` only when it's `true` — `null` for
+      all seven fields when `false` (spec.md FR-015, research.md R8) (depends on T003)
+- [ ] T019a [US1] Update `GetChildByIdQuery`'s and `ListChildrenQuery`'s handlers in
+      `backend/ChildCare.Application/Children/GetChildByIdQuery.cs`/`ListChildrenQuery.cs` to pass
+      `includeIdentityVerification: string.Equals(request.CallerRole, "director",
+      StringComparison.OrdinalIgnoreCase)` into their `ChildMapper.ToResponse` calls — every other
+      call site (`CreateChildCommandHandler`, `UpdateChildCommandHandler`,
+      `VerifyChildIdentityCommandHandler`, `SetChildNrnCommandHandler`, all `DirectorOnly`-only)
+      keeps the default `true` (depends on T019)
 - [ ] T020 [US1] Add `IdVerifiedAt` (`DateTime?`), `IdVerifiedByEmail` (`string?`),
       `IdDocumentType` (`string?`), `IdDocumentNote` (`string?`), `FirstIdVerifiedAt`
       (`DateTime?`), `FirstIdVerifiedByEmail` (`string?`), `NrnLast4` (`string?`) fields to
@@ -157,6 +166,10 @@ the record shows the verified state; attempting to confirm with no document type
       `PlatformAdminVaccineTypeEndpoints.cs`'s `ActingUserOf` helper), parse `documentType` via
       the existing `ParseEnum<IdDocumentType>` pattern, send `VerifyChildIdentityCommand`, map via
       the existing `MapResult` helper (depends on T018, T020, T021)
+- [ ] T022a [P] [US1] Backend test: `GET /api/children`/`GET /api/children/{id}` return `null`
+      for all seven verification/NRN fields when called with a Staff JWT or a device-token
+      session, and return the real values when called with a Director JWT, on a verified child, in
+      `backend/ChildCare.Api.Tests/VerifyChildIdentityTests.cs` (depends on T019a, T022)
 - [ ] T023 [US1] [P] Create `ChildIdentityVerificationSection.tsx` in
       `web/components/children/`: read-only display (document type label, note, verifying
       director email, timestamp) when `child.idVerifiedAt` is set; a document-type `<select>` +

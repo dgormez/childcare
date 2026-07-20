@@ -142,3 +142,30 @@ without a new route.
 all-nullable columns — no backfill needed since every existing row is legitimately unverified.
 Per `CLAUDE.md`/Constitution VI, the generated SQL script is reviewed and run manually against
 existing tenant schemas — not auto-applied.
+
+## R8 — Read-side role gating: only `ChildMapper`/`GetChildByIdQuery`/`ListChildrenQuery` need it
+
+**Decision**: `ChildMapper.ToResponse` gains a `bool includeIdentityVerification = true`
+parameter (defaulting true so every existing `DirectorOnly`-group call site — create, update,
+deactivate, reactivate — needs no change). `GetChildByIdQuery`/`ListChildrenQuery`, the only two
+queries reachable by the `DeviceOrStaffOrDirector` reads group, compute it explicitly:
+`string.Equals(request.CallerRole, "director", StringComparison.OrdinalIgnoreCase)` — true for a
+Director calling the shared read endpoints, false for a Staff caller or a device-token caller
+(`CallerRole` is null for a kiosk tablet, which has no role claim at all — research.md/spec.md
+prior features already established this).
+
+**Rationale (spec.md FR-015, added during `/speckit-checklist`)**: `ChildrenEndpoints.cs`'s
+`reads` group is deliberately `DeviceOrStaffOrDirector` (feature 009c) — the same
+`GET /api/children`/`GET /api/children/{id}` a Director uses are also what a caregiver tablet's
+device token and a Staff account read. Adding verification/NRN fields to the shared
+`ChildResponse` without gating them would leak this compliance-audit data (who verified, when,
+free-text note, NRN's last 4 digits) to every caregiver-tablet and staff read of a child record
+— unnecessary and disproportionate exposure for data no caregiver workflow needs. `Contact`
+needs no equivalent change: every `/api/contacts` and `/api/children/{childId}/contacts` route is
+already `DirectorOnly` (`ContactsEndpoints.cs`) — there is no non-Director read path to gate.
+
+**Alternatives considered**: a separate `ChildIdentityResponse` type on a new endpoint (mirrors
+`GetChildHealthSummaryQuery`'s pattern of a distinct, more restricted response) — rejected as
+more machinery than needed here: the health-summary case exists because *Staff legitimately
+needs a restricted view*, whereas here Staff needs no view at all, so nulling the fields on the
+existing response is simpler than adding a whole new endpoint with no real consumer.
