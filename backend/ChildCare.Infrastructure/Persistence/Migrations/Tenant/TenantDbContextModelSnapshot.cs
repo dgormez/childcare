@@ -1309,6 +1309,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<bool>("QrCheckInEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("RequiresCaregiverPin")
                         .HasColumnType("boolean");
 

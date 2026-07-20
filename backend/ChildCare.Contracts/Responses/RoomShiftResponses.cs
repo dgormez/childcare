@@ -27,9 +27,12 @@ public record RoomRosterCardResponse(
     DateTime? CheckedInAt);
 
 /// <summary>Feature 008b: wraps the roster with the location's current RequiresCaregiverPin
-/// setting, fetched alongside the existing roster call rather than a separate request.</summary>
+/// setting, fetched alongside the existing roster call rather than a separate request.
+/// Feature 021 adds QrCheckInEnabled the same way (FR-004) — the tablet's own "Scan" quick
+/// action is gated on this, mirroring RequiresCaregiverPin's precedent.</summary>
 public record RoomRosterResponse(
     bool RequiresCaregiverPin,
+    bool QrCheckInEnabled,
     IReadOnlyList<RoomRosterCardResponse> Caregivers);
 
 public record CheckInResponse(

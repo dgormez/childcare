@@ -32,6 +32,14 @@ export interface ParentChildResponse {
   lastName:         string;
   photoDownloadUrl: string | null;
   dateOfBirth:      string;
+  // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+  qrCheckInEnabled: boolean;
+}
+
+// Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+export interface IssueCheckInCodeResponse {
+  code:          string;
+  expiresAtUnix: number;
 }
 
 // Feature 030 (US5) — contracts/family-siblings-api.md.

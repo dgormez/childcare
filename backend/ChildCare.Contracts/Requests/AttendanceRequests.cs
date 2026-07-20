@@ -21,3 +21,8 @@ public record MarkAbsentRequest(
 
 public record CorrectAttendanceRequest(
     string? Status, DateTime? CheckInAt, DateTime? CheckOutAt, bool? AbsenceJustified, string? AbsenceReason);
+
+// Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+public record IssueCheckInCodeRequest(Guid ChildId);
+
+public record VerifyCheckInCodeRequest(string Code);

@@ -51,6 +51,7 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     paymentReminderCadenceDays: 7,
     siblingDiscountPct: 0,
     familyInvoiceBundlingEnabled: false,
+    qrCheckInEnabled: false,
     deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",

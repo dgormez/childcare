@@ -44,6 +44,6 @@ public class GetRoomRosterQueryHandler(ITenantDbContext db, IProfilePhotoStorage
             cards.Add(new RoomRosterCardResponse(profile.Id, profile.FirstName, photoUrl, checkedIn, checkedIn ? shift!.CheckedInAt : null));
         }
 
-        return new RoomRosterResponse(location?.RequiresCaregiverPin ?? true, cards);
+        return new RoomRosterResponse(location?.RequiresCaregiverPin ?? true, location?.QrCheckInEnabled ?? false, cards);
     }
 }

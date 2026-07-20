@@ -29,4 +29,5 @@ public record LocationResponse(
     int PaymentReminderDelayDays,
     int PaymentReminderCadenceDays,
     decimal SiblingDiscountPct,
-    bool FamilyInvoiceBundlingEnabled);
+    bool FamilyInvoiceBundlingEnabled,
+    bool QrCheckInEnabled);

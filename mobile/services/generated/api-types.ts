@@ -1250,6 +1250,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/qr-checkin-setting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationQrCheckInSettingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/menu-variant-settings": {
         parameters: {
             query?: never;
@@ -1348,6 +1387,45 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["UpdateLocationPaymentReminderSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/locations/{id}/sibling-billing-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationSiblingBillingSettingsRequest"];
                 };
             };
             responses: {
@@ -2095,6 +2173,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/children/{id}/purge-photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/contacts": {
         parameters: {
             query?: never;
@@ -2195,7 +2308,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    childId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -3153,41 +3285,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/group-activities/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/group-activities/director-timeline": {
         parameters: {
             query?: never;
@@ -3219,6 +3316,41 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group-activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3280,6 +3412,43 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["AttendanceCheckOutRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/qr-code/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VerifyCheckInCodeRequest"];
                 };
             };
             responses: {
@@ -3493,6 +3662,43 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent/attendance/qr-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["IssueCheckInCodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -4535,6 +4741,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/children/previous": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parent/children/{childId}/daily-summary": {
         parameters: {
             query?: never;
@@ -4680,6 +4919,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/photos/{photoType}/{objectRef}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    photoType: string;
+                    objectRef: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/day-reservations": {
         parameters: {
             query?: never;
@@ -4800,6 +5075,43 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent/day-reservations/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["BulkDayReservationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -6422,6 +6734,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parent/invoices/family/{familyGroupId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    locale?: string;
+                };
+                header?: never;
+                path: {
+                    familyGroupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organisations/me/payment-connection": {
         parameters: {
             query?: never;
@@ -7649,6 +7998,15 @@ export interface components {
             /** Format: date */
             date: string;
         };
+        BulkDayReservationRequest: {
+            childIds: string[];
+            type: string;
+            /** Format: date */
+            requestedDate: string;
+            /** Format: date */
+            exchangeForDate: null | string;
+            reason: null | string;
+        };
         BulkEmailAttachmentUploadUrlRequest: {
             contentType: string;
         };
@@ -7911,6 +8269,10 @@ export interface components {
             label: string;
             /** Format: int32 */
             amountCents: number | string;
+        };
+        IssueCheckInCodeRequest: {
+            /** Format: uuid */
+            childId: string;
         };
         JsonElement: unknown;
         LinkChildToWaitingListEntryRequest: {
@@ -8182,6 +8544,9 @@ export interface components {
             /** Format: int32 */
             cadenceDays: number | string;
         };
+        UpdateLocationQrCheckInSettingRequest: {
+            enabled: boolean;
+        };
         UpdateLocationRequest: {
             name: string;
             address: string;
@@ -8202,6 +8567,11 @@ export interface components {
             /** Format: int32 */
             noticeHours: number | string;
             confirmDespitePending: boolean;
+        };
+        UpdateLocationSiblingBillingSettingsRequest: {
+            /** Format: double */
+            siblingDiscountPct: number | string;
+            familyInvoiceBundlingEnabled: boolean;
         };
         UpdateOrganisationRequest: {
             kboNumber: null | string;
@@ -8269,6 +8639,9 @@ export interface components {
         };
         UpsertMonthlyMenuRequest: {
             days: components["schemas"]["UpsertMonthlyMenuDayRequest"][];
+        };
+        VerifyCheckInCodeRequest: {
+            code: string;
         };
         VerifyEmailRequest: {
             organisationSlug: string;

@@ -27,3 +27,17 @@ public record BkrRatioResponse(
     int Threshold,
     // "green" | "amber" | "red" — FR-007e's precise threshold comparison, never a UI-computed value.
     string Status);
+
+// Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+public record IssueCheckInCodeResponse(string Code, long ExpiresAtUnix);
+
+// "check-in" | "check-out" — lets the caregiver tablet pick the right confirmation copy without
+// re-deriving it from the record's own before/after state. ChildFirstName/LastName/
+// PhotoDownloadUrl let the scan confirmation show the child's name/photo (User Story 2)
+// without a second lookup from the tablet.
+public record VerifyCheckInCodeResponse(
+    AttendanceRecordResponse Attendance,
+    string Direction,
+    string ChildFirstName,
+    string ChildLastName,
+    string? ChildPhotoDownloadUrl);

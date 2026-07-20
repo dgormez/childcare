@@ -29,7 +29,7 @@ async function handleIfDeviceRejected(status: number, error: unknown): Promise<b
   return false;
 }
 
-const EMPTY_ROSTER: RoomRosterResponse = { requiresCaregiverPin: true, caregivers: [] };
+const EMPTY_ROSTER: RoomRosterResponse = { requiresCaregiverPin: true, qrCheckInEnabled: false, caregivers: [] };
 
 export async function getRoster(): Promise<RoomRosterResponse> {
   const result = await apiClient.GET("/api/room-shifts/roster");

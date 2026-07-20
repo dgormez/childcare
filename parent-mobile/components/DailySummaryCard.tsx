@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 import {
   Moon, Milk, Droplets, Smile, Thermometer, Pill, Activity as ActivityIcon,
-  Trees, Palette, Music, BookOpen, PartyPopper, Ellipsis,
+  Trees, Palette, Music, BookOpen, PartyPopper, Ellipsis, QrCode,
 } from "lucide-react-native";
 import { useColors } from "../hooks/useColors";
 import type { DailySummaryResponse, GroupActivityType, ParentChildResponse } from "../types";
@@ -39,6 +40,7 @@ function SummaryRow({ icon, label }: RowProps) {
 export function DailySummaryCard({ child, summary }: Props) {
   const { t } = useTranslation();
   const colors = useColors();
+  const router = useRouter();
 
   const hasAnyData = !!summary && (
     summary.napsCount > 0 ||
@@ -62,9 +64,20 @@ export function DailySummaryCard({ child, summary }: Props) {
             {child.firstName.charAt(0).toUpperCase()}
           </Text>
         </View>
-        <Text className="text-text dark:text-text-dark text-lg font-bold ml-3">
+        <Text className="text-text dark:text-text-dark text-lg font-bold ml-3 flex-1">
           {child.firstName} {child.lastName}
         </Text>
+        {child.qrCheckInEnabled && (
+          <TouchableOpacity
+            testID={`show-qr-code-${child.id}`}
+            accessibilityLabel={t("qrCheckIn.showCode")}
+            onPress={() => router.push({ pathname: "/(app)/qr-checkin/[childId]", params: { childId: child.id, name: child.firstName } })}
+            className="items-center justify-center"
+            style={{ width: 48, height: 48 }}
+          >
+            <QrCode color={colors.text} size={20} strokeWidth={2} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {!hasAnyData && (

@@ -16,7 +16,7 @@ module.exports = {
       "expo-file-system|expo-sharing|expo-network|" +
       "@expo|react-native|@react-native|nativewind|react-native-reanimated|" +
       "react-native-screens|react-native-safe-area-context|react-native-toast-message|" +
-      "react-native-svg|lucide-react-native|" +
+      "react-native-svg|react-native-qrcode-svg|lucide-react-native|" +
       "@react-navigation|zustand" +
     ")/)",
   ],

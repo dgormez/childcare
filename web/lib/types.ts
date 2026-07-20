@@ -73,6 +73,8 @@ export interface LocationResponse {
   // Feature 030 — contracts/family-siblings-api.md.
   siblingDiscountPct: number;
   familyInvoiceBundlingEnabled: boolean;
+  // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+  qrCheckInEnabled: boolean;
 }
 
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.

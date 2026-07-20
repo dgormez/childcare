@@ -28,5 +28,6 @@ internal static class LocationMapper
         l.PaymentReminderDelayDays,
         l.PaymentReminderCadenceDays,
         l.SiblingDiscountPct,
-        l.FamilyInvoiceBundlingEnabled);
+        l.FamilyInvoiceBundlingEnabled,
+        l.QrCheckInEnabled);
 }

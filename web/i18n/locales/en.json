@@ -445,6 +445,7 @@
     "tabGeneral": "General",
     "tabReservationSettings": "Reservation Settings",
     "tabCheckInSettings": "Check-In",
+    "tabQrCheckInSettings": "QR Check-In",
     "tabMenuVariants": "Menu Variants",
     "tabInvoiceSettings": "Invoicing",
     "general": {
@@ -486,6 +487,15 @@
       "tradeoffRisk": "Concrete risk: if a caregiver taps the wrong card by mistake, nothing catches it. The only fix is someone noticing and correcting the check-in/out afterward.",
       "saveButton": "Save changes",
       "saveSuccess": "Check-in settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
+    },
+    "qrCheckInSettings": {
+      "description": "Let parents at this location check in or out by showing a code on their phone instead of a caregiver tapping the roster.",
+      "toggleLabel": "Allow QR check-in",
+      "explanationAdds": "When enabled, parents can show a code in the parent app for a caregiver's tablet to scan, as an alternative to the manual attendance tap.",
+      "explanationUnchanged": "The caregiver still physically receives the child — the handover itself doesn't change, only how the attendance record gets created.",
+      "saveButton": "Save changes",
+      "saveSuccess": "QR check-in settings saved.",
       "saveError": "Couldn't save changes. Please try again."
     },
     "menuVariants": {

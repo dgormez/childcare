@@ -61,6 +61,14 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+        group.MapPut("/{id:guid}/qr-checkin-setting", async (Guid id, UpdateLocationQrCheckInSettingRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var directorId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new UpdateLocationQrCheckInSettingCommand(id, directorId, req.Enabled));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPut("/{id:guid}/menu-variant-settings", async (Guid id, UpdateLocationMenuVariantSettingsRequest req, IMediator mediator) =>
         {
             var result = await mediator.Send(new UpdateLocationMenuVariantSettingsCommand(

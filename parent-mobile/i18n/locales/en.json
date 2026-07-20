@@ -337,5 +337,14 @@
     "emptyState": "No previous children to show.",
     "enrollmentPeriod": "Enrolled {{start}} – {{end}}",
     "readOnlyBanner": "This child is no longer active — this information is read-only."
+  },
+  "qrCheckIn": {
+    "showCode": "Show code",
+    "title": "{{name}}'s check-in code",
+    "instructions": "Show this to your caregiver at drop-off or pickup",
+    "loading": "Getting your code ready…",
+    "issueFailed": "Couldn't get your code. Please try again.",
+    "retry": "Try again",
+    "offline": "Reconnect to show your code"
   }
 }

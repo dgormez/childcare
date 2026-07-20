@@ -337,5 +337,14 @@
     "emptyState": "Aucun enfant précédent à afficher.",
     "enrollmentPeriod": "Inscrit du {{start}} au {{end}}",
     "readOnlyBanner": "Cet enfant n'est plus actif — ces informations sont en lecture seule."
+  },
+  "qrCheckIn": {
+    "showCode": "Afficher le code",
+    "title": "Code d'enregistrement de {{name}}",
+    "instructions": "Montrez ceci à l'accueillant(e) à l'arrivée ou au départ",
+    "loading": "Préparation de votre code…",
+    "issueFailed": "Impossible d'obtenir votre code. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "offline": "Reconnectez-vous pour afficher votre code"
   }
 }

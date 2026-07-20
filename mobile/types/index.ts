@@ -138,7 +138,18 @@ export interface RoomRosterCard {
 // Feature 008b — wraps the roster with the location's current PIN-requirement setting.
 export interface RoomRosterResponse {
   requiresCaregiverPin: boolean;
+  // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+  qrCheckInEnabled:     boolean;
   caregivers:           RoomRosterCard[];
+}
+
+// Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+export interface VerifyCheckInCodeResponse {
+  attendance:            AttendanceRecordResponse;
+  direction:             "check-in" | "check-out";
+  childFirstName:        string;
+  childLastName:         string;
+  childPhotoDownloadUrl: string | null;
 }
 
 export interface PairDeviceResponse {

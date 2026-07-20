@@ -234,3 +234,38 @@ it("'Alles selecteren' selects every present child up to the 30-child cap, and f
   expect(getByText("groupView.multiSelect.logEvent")).toBeTruthy();
   expect(mockToastShow).toHaveBeenCalledWith(expect.objectContaining({ text1: "groupView.multiSelect.maxReached" }));
 });
+
+// Feature 021, FR-004 — the "Scan" quick action is reachable only when the roster reports
+// qrCheckInEnabled for this location; hidden entirely (not just disabled) otherwise.
+describe("QR check-in scan quick action (feature 021)", () => {
+  it("is hidden when the location has not enabled QR check-in", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
+      if (path === "/api/children") return Promise.resolve(jsonResponse(200, [child]));
+      if (path === "/api/room-shifts/roster") return Promise.resolve(jsonResponse(200, { requiresCaregiverPin: true, qrCheckInEnabled: false, caregivers: [] }));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+
+    const { findByText, queryByTestId } = await render(<GroupViewScreen />);
+    await findByText("Timmy Tester");
+
+    expect(queryByTestId("scan-quick-action")).toBeNull();
+  });
+
+  it("is shown and navigates to the scan screen when the location has enabled QR check-in", async () => {
+    getMock.mockImplementation((path: string) => {
+      if (path === "/api/groups") return Promise.resolve(jsonResponse(200, [group]));
+      if (path === "/api/children") return Promise.resolve(jsonResponse(200, [child]));
+      if (path === "/api/room-shifts/roster") return Promise.resolve(jsonResponse(200, { requiresCaregiverPin: true, qrCheckInEnabled: true, caregivers: [] }));
+      return Promise.resolve(jsonResponse(404, {}));
+    });
+    const push = jest.fn();
+    useRouter.mockReturnValue({ push, replace: jest.fn(), back: jest.fn() });
+
+    const { findByTestId } = await render(<GroupViewScreen />);
+    const scanButton = await findByTestId("scan-quick-action");
+
+    await act(async () => fireEvent.press(scanButton));
+    expect(push).toHaveBeenCalledWith("/(app)/scan");
+  });
+});

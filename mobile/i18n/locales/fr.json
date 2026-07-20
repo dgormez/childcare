@@ -376,5 +376,21 @@
     "empty": "Rien n'a encore été enregistré",
     "catalog_failed": "Impossible de charger les étapes de développement",
     "pendingSync": "Synchronisation en attente"
+  },
+  "qrCheckIn": {
+    "scanAction": "Scanner",
+    "scanInstructions": "Pointez la caméra vers le code du parent",
+    "checkedIn": "{{name}} est arrivé(e)",
+    "checkedOut": "{{name}} est parti(e)",
+    "errors": {
+      "wrongLocation": "Ce code ne correspond pas à un enfant de cette implantation",
+      "expired": "Ce code a expiré. Demandez au parent de l'actualiser",
+      "invalid": "Ce code n'a pas pu être vérifié",
+      "cooldown": "Déjà traité — un instant",
+      "connectionLost": "Connexion perdue pendant le scan. Vérifiez la liste avant de rescanner"
+    },
+    "cameraUnavailable": "Caméra indisponible",
+    "useManualInstead": "Utiliser l'enregistrement manuel",
+    "offlineUseManual": "Pas de connexion — le scan en a besoin. Utilisez l'enregistrement manuel"
   }
 }

@@ -23,7 +23,7 @@ const { getMonthlyMenu } = jest.requireMock("../services/menu") as { getMonthlyM
 const { getMealPreference } = jest.requireMock("../services/mealPreferenceRequests") as { getMealPreference: jest.Mock };
 const { apiClient } = jest.requireMock("../services/apiClient") as { apiClient: { GET: jest.Mock } };
 
-const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01" };
+const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01", qrCheckInEnabled: false };
 
 function todayIso(): string {
   const now = new Date();

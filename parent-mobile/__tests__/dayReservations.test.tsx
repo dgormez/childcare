@@ -30,8 +30,8 @@ function jsonResponse(status: number, body: unknown) {
   return { response: { ok, status, json: async () => body }, data: ok ? body : undefined, error: ok ? undefined : body };
 }
 
-const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01" };
-const child2: ParentChildResponse = { id: "c2", firstName: "Lucas", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2023-01-01" };
+const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01", qrCheckInEnabled: false };
+const child2: ParentChildResponse = { id: "c2", firstName: "Lucas", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2023-01-01", qrCheckInEnabled: false };
 
 function makeReservation(overrides: Partial<DayReservationResponse> = {}): DayReservationResponse {
   return {

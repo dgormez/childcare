@@ -50,3 +50,6 @@ public record UpdateLocationPaymentReminderSettingsRequest(
 public record UpdateLocationSiblingBillingSettingsRequest(
     decimal SiblingDiscountPct,
     bool FamilyInvoiceBundlingEnabled);
+
+// Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+public record UpdateLocationQrCheckInSettingRequest(bool Enabled);
