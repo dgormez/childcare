@@ -431,19 +431,19 @@ display again and no log contains the plain-text value; an invalid-format NRN is
 
 **Purpose**: Design-compliance pass, converge findings, and final validation across all stories.
 
-- [ ] T071 [P] Verify all new UI (badge, dialog, section) uses only design-system.md's spacing
+- [X] T071 [P] Verify all new UI (badge, dialog, section) uses only design-system.md's spacing
       scale (4/8/12/16/24/32), the existing `Badge` variant set (no new colors), and no nested
       cards — fix any deviation found
-- [ ] T072 [P] Verify every new user-facing string across `ChildIdentityVerificationSection`,
+- [X] T072 [P] Verify every new user-facing string across `ChildIdentityVerificationSection`,
       `ContactIdentityVerificationDialog`, `ChildContactsTab`, `DataCompletenessSection`, and the
       `/children` list page resolves through `web/i18n/locales/{en,fr,nl}.json` — no hardcoded
       strings (Constitution IV)
-- [ ] T073 Run `.specify` `speckit-converge` against this feature once T001–T070 are implemented
+- [X] T073 Run `.specify` `speckit-converge` against this feature once T001–T070 are implemented
       and fix every finding it surfaces (standing pipeline rule — no LOW-severity items left as
       debt)
-- [ ] T074 Run the full backend test suite (`dotnet test`) and the full web test suite (`npm
+- [X] T074 Run the full backend test suite (`dotnet test`) and the full web test suite (`npm
       test` in `web/`) as blocking foreground calls; fix any failure before proceeding
-- [ ] T075 Execute quickstart.md's five scenarios manually against a locally running stack and
+- [X] T075 Execute quickstart.md's five scenarios manually against a locally running stack and
       confirm each "Expect" outcome
 
 ---
