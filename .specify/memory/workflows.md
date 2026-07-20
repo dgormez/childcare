@@ -87,6 +87,11 @@ Includes:
 - Capacity tracking.
 - KDV closure days that mark enrolled children as closed for a location/date.
 
+Cross-cutting: QR-based contactless check-in/check-out is governed by feature 021 (QR Contactless
+Check-In) — an additive, per-location opt-in entry point that triggers the same check-in/check-out
+transition a manual tap does; no change to the attendance record shape, BKR calculation, or the
+caregiver's physical handover responsibility.
+
 ---
 
 ## Daily Child Care

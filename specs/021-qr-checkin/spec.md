@@ -12,6 +12,66 @@ with a scan for locations that opt in. This must be a per-location setting that 
 manages in the web admin (director) platform, and it MUST be disabled by default for every
 location until a director explicitly turns it on."
 
+## Product Context
+
+### Feature Type
+
+Mixed — a director-web settings toggle (data-model change on `Location`), a parent-mobile UI addition (live QR code display), and a caregiver-tablet UI addition (scan mode), all backed by a new backend check-in-code issuance/verification capability.
+
+### Primary Consumer
+
+Mixed — Director (enables/disables the setting), Parent (displays the code), Caregiver (scans it). System is a secondary consumer for offline-queue reconciliation (existing feature 008 mechanism, unchanged).
+
+### Workflow Boundary
+
+This is an additive entry point into the existing **Attendance & Presence** workflow (`Workflows/attendance.md`), not a new workflow — it changes *how* an `attendance_record` transition is triggered (scan vs. tap), never the record shape, the BKR ratio calculation, or the caregiver's physical handover responsibility. `Workflows/attendance.md` gets a short cross-reference note (mirroring how feature 031 cross-referenced four other workflows) rather than new top-level content.
+
+- **Actors**: Director (setting owner), Parent (code holder), Caregiver (scanner), System (offline queue reconciliation, code expiry).
+- **Actions**: director toggles per-location setting → parent app displays a short-lived per-child code → caregiver tablet scans → system resolves scan to a check-in or check-out exactly as `CheckInCommand`/attendance toggle logic does today for a manual tap.
+- **Data Flow**: `Location` gains a boolean setting (mirrors the `UpdateLocationCheckInSettingsCommand`/`RequiresCaregiverPin` pattern from feature 008b — a distinct, unrelated setting on the same entity). A new ephemeral, tamper-evident code (server-issued, short TTL) is generated on request by the parent app and verified server-side on scan; a successful verification calls the same attendance state-transition path feature 010's manual tap already uses, so `AttendanceRecord`, BKR calculation, and reporting are untouched.
+- **Outputs**: `AttendanceRecord` check-in/check-out (identical shape to a manual tap), a structured log entry on setting change (mirrors feature 008b's `ILogger` pattern — no dedicated audit-trail subsystem exists in this codebase, confirmed by grep).
+- **Cross-platform Impact**: director-web (new location-settings toggle), parent-mobile (new QR-display screen — no QR/camera library present yet in `parent-mobile/package.json`, confirmed), mobile/caregiver-tablet (new scan-mode screen — no camera/barcode library present yet in `mobile/package.json`, confirmed), backend (new code issuance/verification endpoints reusing feature 010's existing check-in/check-out logic).
+
+### User Impact
+
+This enables a caregiver at an opted-in location to check a child in or out with a single scan instead of a manual tap, and a parent to produce the code with no extra steps beyond opening the app — reducing drop-off friction during the busiest window of the day without changing the physical handover or any downstream compliance record.
+
+### UX Requirements
+
+**Persona**: Director (primary, setting); Caregiver (primary, scan flow); Parent (primary, code display).
+
+**Platform**: director-web (location settings tab), mobile/caregiver-tablet (scan mode), parent-mobile (code display screen).
+
+**User job (director)**: "I want to let this location's parents check in by phone instead of requiring a manual tap, without changing anything for locations that don't want this."
+**User job (caregiver)**: "I want to check a child in or out in one motion without touching the tablet's keyboard or hunting for the right roster row."
+**User job (parent)**: "I want to show something on my phone at drop-off instead of waiting for a staff member to tap a screen."
+
+**Success criteria**: per SC-001–SC-005 in this spec — instant toggle feedback, zero behavior change for non-opted-in locations, sub-10-second scan-to-confirmation, identical BKR/reporting output, and a working manual fallback at all times.
+
+**Main flow (director)**: location settings → "QR-inchecken toegestaan" tab → toggle + explanatory copy → save → inline confirmation, no reload.
+**Main flow (caregiver)**: tablet group view → "Scan" quick action (one tap away, per `reference-products.md`'s Brightwheel principle) → camera viewfinder → successful scan shows child name + photo + check-in/check-out confirmation → auto-returns to scan mode.
+**Main flow (parent)**: existing child/timeline screen → "Show code" action → live QR code, auto-refreshing before expiry, no manual refresh needed under normal use.
+
+**Loading/empty/error states**: caregiver scan screen shows a distinct, human-readable message for each of the three rejection cases (wrong location, expired code, tamper/invalid) per FR-010/FR-011/FR-007 — never a generic error; parent code screen shows a loading state while a code is (re)issued and a clear retry affordance if issuance fails; director toggle reverts to last-saved state on save failure (FR-018) with a human-readable error, never a silent revert.
+
+**Accessibility**: caregiver's "Scan" quick action and the manual-fallback entry point both meet the 48pt tablet touch-target floor (`platform-rules.md`); the scan viewfinder provides non-color confirmation (name + photo + text state, not a color flash alone) per `design-system.md`'s "never convey semantic state by color alone" rule.
+
+**Offline behavior**: caregiver tablet scan while offline queues via the existing feature 008 offline-sync mechanism exactly as a manual tap does (FR-012) — same conflict/reconciliation semantics, no new offline path invented. Parent code display requires connectivity to issue/refresh a code (a code is a live, server-issued artifact, not a static offline-generatable value, per the Assumptions' "never a static, reusable artifact" note) — the parent screen shows a clear "reconnect to show your code" state when offline, distinct from a scan rejection.
+
+**i18n**: all new strings (setting label/copy, scan confirmation, three rejection messages, parent code screen copy) added to the existing NL/FR/EN locale files per platform (`mobile/i18n`, `parent-mobile/i18n`, `web` i18n convention) — no hardcoded strings, per FR-017. Caregiver/director copy stays in this codebase's operational register; parent-facing copy stays in parent-mobile's warm register (matches feature 031's precedent for register-per-surface).
+
+### Technical Requirements
+
+**API impact**: new endpoints — issue a check-in code (parent-authenticated, scoped to one child), verify/consume a scanned code (caregiver-tablet-authenticated, scoped to the tablet's location). Verification reuses feature 010's existing check-in/check-out state-transition logic (`ChildCare.Application/Attendance/CheckInCommand.cs` or its sibling) rather than duplicating attendance-toggle logic — a scan is just a different trigger into the same command path. Location settings endpoints follow the existing `UpdateLocationCheckInSettingsCommand`-style pattern (a sibling command, not a rename/reuse of 008b's unrelated `RequiresCaregiverPin`).
+
+**Data-model impact**: one new boolean column on `Location` (e.g. `QrCheckInEnabled`), defaulting to `false` for all existing rows (FR-002) — an EF Core migration with a manually-run SQL script per this repo's convention (`.claude/CLAUDE.md`: "EF Core never auto-migrates in production"). The check-in code itself is ephemeral and tamper-evident (signed/HMAC'd token or short-lived server-side record with TTL — the exact mechanism is a plan.md decision per the spec's Assumptions) and is **not** a new persisted business entity; no change to `AttendanceRecord`.
+
+**Security considerations**: codes must be tamper-evident (FR-007) and short-lived (FR-006) to bound replay risk from a captured/photographed code; verification must check the scanning tablet's location against the code's issuing child's enrolled location (FR-010) before creating any attendance record; code issuance is scoped server-side to the requesting parent's own child (existing `ParentOnly` + child-ownership pattern, same as feature 031's signed-URL precedent) — a parent can never issue a code for a child they aren't linked to.
+
+**Performance considerations**: code verification sits in the caregiver's scan-to-confirmation path and must resolve well within the 10-second SC-003 budget — no heavyweight computation beyond a signature/TTL check and the existing attendance-toggle write.
+
+**Testing requirements**: setting-toggle tests (default-disabled for existing + new locations, save/revert-on-failure, structured log entry per FR-016); code lifecycle tests (issuance, expiry, tamper-rejection, wrong-location-rejection); parity tests proving a QR-originated `AttendanceRecord` is indistinguishable from a manually-tapped one for BKR/reporting purposes (FR-014, mirrors feature 031's RBAC-parity test pattern); offline-queue test reusing feature 008's existing reconciliation test harness.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Director enables QR check-in for a location (Priority: P1)
