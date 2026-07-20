@@ -902,6 +902,15 @@
         "saveError": "Kon dit contact niet toevoegen. Probeer het opnieuw.",
         "cancel": "Annuleren"
       }
+    },
+    "purgePhotos": {
+      "action": "Foto's wissen",
+      "confirmTitle": "Foto's van dit kind definitief verwijderen?",
+      "confirmBody": "Dit verwijdert de profielfoto, bijlagen bij gezondheids- en vaccinatiegegevens, en elke groepsactiviteitsfoto waarop alleen dit kind te zien is. Een groepsfoto waarop ook een ander kind te zien is, blijft ongewijzigd. Dit kan niet ongedaan worden gemaakt.",
+      "cancel": "Annuleren",
+      "success": "Foto's gewist.",
+      "partialFailure": "Sommige bestanden konden niet worden verwijderd. Probeer het opnieuw.",
+      "blockedActiveChild": "Dit kind moet eerst worden gedeactiveerd voordat de foto's kunnen worden gewist."
     }
   },
   "dashboard": {

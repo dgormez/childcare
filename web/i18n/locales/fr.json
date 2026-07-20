@@ -902,6 +902,15 @@
         "saveError": "Impossible d'ajouter ce contact. Veuillez réessayer.",
         "cancel": "Annuler"
       }
+    },
+    "purgePhotos": {
+      "action": "Supprimer les photos",
+      "confirmTitle": "Supprimer définitivement les photos de cet enfant ?",
+      "confirmBody": "Cela supprime la photo de profil, les pièces jointes des dossiers médicaux et vaccinaux, ainsi que toute photo d'activité de groupe ne montrant que cet enfant. Une photo de groupe montrant aussi un autre enfant reste inchangée. Cette action est irréversible.",
+      "cancel": "Annuler",
+      "success": "Photos supprimées.",
+      "partialFailure": "Certains fichiers n'ont pas pu être supprimés. Veuillez réessayer.",
+      "blockedActiveChild": "Cet enfant doit d'abord être désactivé avant que ses photos puissent être supprimées."
     }
   },
   "dashboard": {
