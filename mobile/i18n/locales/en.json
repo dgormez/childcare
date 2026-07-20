@@ -386,7 +386,8 @@
       "wrongLocation": "This code isn't for a child at this location",
       "expired": "This code has expired. Ask the parent to refresh it",
       "invalid": "This code couldn't be verified",
-      "cooldown": "Already processed — one moment"
+      "cooldown": "Already processed — one moment",
+      "connectionLost": "Connection lost mid-scan. Check the roster before scanning again"
     },
     "cameraUnavailable": "Camera unavailable",
     "useManualInstead": "Use manual check-in instead",

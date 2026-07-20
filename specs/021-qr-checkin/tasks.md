@@ -313,22 +313,22 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
 
 ## Phase 7: Convergence
 
-- [ ] T047 Add offline-interruption handling to `mobile/services/attendance.ts`'s
+- [X] T047 Add offline-interruption handling to `mobile/services/attendance.ts`'s
   `scanCheckInCode` — a network failure after a scan is submitted (as opposed to before, which
   the scan screen already refuses per FR-012's first clause) should be distinguishable from a
   genuine rejection (wrong-location/expired/invalid/cooldown) and surfaced accordingly, rather
   than defaulting to the same "invalid code" copy per FR-012 (missing)
-- [ ] T048 Add `web/__tests__/qrCheckInSettings.test.tsx` covering
+- [X] T048 Add `web/__tests__/qrCheckInSettings.test.tsx` covering
   `QrCheckInSettingsForm`'s save-success and revert-on-failure behavior, mirroring
   `checkInSettings.test.tsx`'s existing coverage of the sibling 008b component per Constitution
   V's testing convention (missing)
-- [ ] T049 Add a test for `parent-mobile/app/(app)/qr-checkin/[childId].tsx` covering
+- [X] T049 Add a test for `parent-mobile/app/(app)/qr-checkin/[childId].tsx` covering
   loading, success (QR code rendered), issuance-failure-with-retry, and offline states per
   spec.md's Technical Requirements/Testing section (missing)
-- [ ] T050 Add a focused unit test for `mobile/services/attendance.ts`'s `scanCheckInCode`
+- [X] T050 Add a focused unit test for `mobile/services/attendance.ts`'s `scanCheckInCode`
   (success response shape, thrown error carries the server's errorKey) rather than relying only
   on `scan.tsx`'s screen test, which mocks the whole service (missing)
-- [ ] T051 Update `specs/021-qr-checkin/contracts/qr-checkin-api.md` so its documented response
+- [X] T051 Update `specs/021-qr-checkin/contracts/qr-checkin-api.md` so its documented response
   shapes match the actual implementation: the qr-checkin-setting PUT response is the full
   `LocationResponse`, not `{locationId, qrCheckInEnabled}`; the verify endpoint's 200 response
   includes `ChildFirstName`/`ChildLastName`/`ChildPhotoDownloadUrl` (contradicts)

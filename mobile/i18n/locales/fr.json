@@ -386,7 +386,8 @@
       "wrongLocation": "Ce code ne correspond pas à un enfant de cette implantation",
       "expired": "Ce code a expiré. Demandez au parent de l'actualiser",
       "invalid": "Ce code n'a pas pu être vérifié",
-      "cooldown": "Déjà traité — un instant"
+      "cooldown": "Déjà traité — un instant",
+      "connectionLost": "Connexion perdue pendant le scan. Vérifiez la liste avant de rescanner"
     },
     "cameraUnavailable": "Caméra indisponible",
     "useManualInstead": "Utiliser l'enregistrement manuel",

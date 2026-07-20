@@ -13,7 +13,7 @@ jest.mock("../../services/offlineQueue", () => {
 jest.mock("../../services/syncEngine", () => ({ registerSyncHandler: jest.fn() }));
 
 import { apiClient } from "../../services/apiClient";
-import { checkIn, checkOut, markAbsent, getBkrRatio, todayDateString } from "../../services/attendance";
+import { checkIn, checkOut, markAbsent, getBkrRatio, todayDateString, scanCheckInCode } from "../../services/attendance";
 import { useStore } from "../../store/useStore";
 
 const offlineQueueMock = jest.requireMock("../../services/offlineQueue") as { __mockEnqueue: jest.Mock };
@@ -111,5 +111,42 @@ describe("getBkrRatio", () => {
 describe("todayDateString", () => {
   it("returns a yyyy-MM-dd formatted date", () => {
     expect(todayDateString()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+// Feature 021, T050 — a focused unit test for scanCheckInCode, distinct from scan.tsx's screen
+// test (which mocks the whole service and only exercises UI-level branching).
+describe("scanCheckInCode", () => {
+  it("posts the code and returns the server's verify response on success", async () => {
+    const response = {
+      attendance: { id: "a1", childId: "c1", status: "present" },
+      direction: "check-in",
+      childFirstName: "Timmy",
+      childLastName: "Tester",
+      childPhotoDownloadUrl: null,
+    };
+    (apiClient.POST as jest.Mock).mockResolvedValue({ response: { ok: true }, data: response });
+
+    const result = await scanCheckInCode("abc.def");
+
+    expect(apiClient.POST).toHaveBeenCalledWith("/api/attendance/qr-code/verify", { body: { code: "abc.def" } });
+    expect(result).toEqual(response);
+  });
+
+  it("throws with the server's errorKey on a rejected scan (e.g. expired code)", async () => {
+    (apiClient.POST as jest.Mock).mockResolvedValue({
+      response: { ok: false },
+      error: { errorKey: "errors.qrCheckIn.code_expired" },
+    });
+
+    await expect(scanCheckInCode("abc.def")).rejects.toThrow("errors.qrCheckIn.code_expired");
+  });
+
+  // FR-012's second clause: a request interrupted mid-flight (fetch itself throws) is distinct
+  // from a genuine server rejection — surfaced as a dedicated errorKey, not a generic failure.
+  it("throws a connection-lost errorKey when the request itself fails (network interruption)", async () => {
+    (apiClient.POST as jest.Mock).mockRejectedValue(new TypeError("Network request failed"));
+
+    await expect(scanCheckInCode("abc.def")).rejects.toThrow("errors.qrCheckIn.connection_lost");
   });
 });

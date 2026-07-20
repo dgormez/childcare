@@ -386,7 +386,8 @@
       "wrongLocation": "Deze code is niet voor een kind op deze locatie",
       "expired": "Deze code is verlopen. Vraag de ouder om te vernieuwen",
       "invalid": "Deze code kon niet worden geverifieerd",
-      "cooldown": "Al verwerkt — een moment geduld"
+      "cooldown": "Al verwerkt — een moment geduld",
+      "connectionLost": "Verbinding verloren tijdens het scannen. Controleer de lijst voordat je opnieuw scant"
     },
     "cameraUnavailable": "Camera niet beschikbaar",
     "useManualInstead": "Gebruik handmatig inchecken",

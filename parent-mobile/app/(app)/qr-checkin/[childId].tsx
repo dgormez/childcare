@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
+import * as Network from "expo-network";
 import QRCode from "react-native-qrcode-svg";
 import { WifiOff, RefreshCw } from "lucide-react-native";
 import { requestQrCode } from "../../../services/attendance";
@@ -27,6 +28,12 @@ export default function QrCheckInScreen() {
 
   const load = useCallback(async () => {
     setError(false);
+    // useIsOffline's own connectivity check resolves asynchronously (starts optimistic/online
+    // on first render), so a mount-time load() could otherwise fire one issuance request before
+    // that check catches up — re-check connectivity directly, right before calling, so a fully
+    // offline screen never attempts one (research.md R6).
+    const state = await Network.getNetworkStateAsync();
+    if (state.isConnected === false || state.isInternetReachable === false) return;
     try {
       const issued = await requestQrCode(childId);
       setCode(issued.code);

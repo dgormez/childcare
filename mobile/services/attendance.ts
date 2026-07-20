@@ -122,13 +122,26 @@ export async function getTodayAttendanceByChildId(): Promise<Record<string, Atte
  * Feature 021 — research.md R6: verification is a single online round-trip (signature check +
  * the resulting attendance write happen atomically server-side), so there is no offline branch
  * here the way checkIn/checkOut have one — the scan screen itself refuses to even attempt a
- * scan while fully offline (FR-012), directing the caregiver to manual tap instead. The thrown
- * error's message is the server's own errorKey (`errors.qrCheckIn.wrong_location`,
- * `.code_expired`, `.invalid_code`, `.already_used`), which the scan screen maps to distinct
- * copy per FR-010/FR-011/FR-007/FR-019.
+ * scan while fully offline (FR-012's first clause), directing the caregiver to manual tap
+ * instead. The thrown error's message is the server's own errorKey
+ * (`errors.qrCheckIn.wrong_location`, `.code_expired`, `.invalid_code`, `.already_used`), which
+ * the scan screen maps to distinct copy per FR-010/FR-011/FR-007/FR-019.
+ *
+ * FR-012's second clause: connectivity can still drop *during* an in-flight request (the tablet
+ * was online when the scan started) — the fetch itself throws in that case, distinct from a
+ * genuine server rejection. The server may or may not have completed the write before the
+ * connection dropped, and replaying the same code isn't safely idempotent (a already-consumed
+ * code would just fail with `already_used`), so rather than guessing, this surfaces a distinct
+ * `errors.qrCheckIn.connection_lost` the scan screen shows as "check the roster" guidance
+ * instead of implying the code itself was invalid.
  */
 export async function scanCheckInCode(code: string): Promise<VerifyCheckInCodeResponse> {
-  const result = await apiClient.POST("/api/attendance/qr-code/verify", { body: { code } });
+  let result;
+  try {
+    result = await apiClient.POST("/api/attendance/qr-code/verify", { body: { code } });
+  } catch {
+    throw new Error("errors.qrCheckIn.connection_lost");
+  }
   if (result.response.ok) return result.data as unknown as VerifyCheckInCodeResponse;
   const errorBody = result.error as ErrorBody | undefined;
   throw new Error(errorBody?.errorKey ?? "errors.network");

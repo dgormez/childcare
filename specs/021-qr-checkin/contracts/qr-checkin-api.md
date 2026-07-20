@@ -18,7 +18,9 @@ Request:
 - Updates `Location.QrCheckInEnabled` (FR-001).
 - Emits a structured log entry (director id, location id, old/new value, timestamp — FR-016),
   only when the value actually changes (mirrors 008b's handler, which logs only on change).
-- `200`: `{ "locationId": "guid", "qrCheckInEnabled": true }`.
+- `200`: the full, updated `LocationResponse` — this endpoint follows the same
+  update-and-return-the-whole-entity convention as every other `PUT /api/locations/{id}/...-
+  settings` route (`checkin-settings`, `reservation-settings`, etc.), not a bespoke narrow shape.
 - `404 errors.locations.not_found` — `locationId` doesn't resolve within this tenant.
 - `403` — caller isn't a director for this tenant (existing `DirectorOnly` policy).
 
@@ -67,9 +69,21 @@ Verification order (first failure wins):
    `CheckInCommand` (not currently present/no record) or `CheckOutCommand` (currently present) —
    research.md R5. Record the nonce in the consumed-cooldown set immediately after a successful
    dispatch (FR-019).
-- `200`: the underlying `CheckInCommand`/`CheckOutCommand` result (`AttendanceRecordResponse`,
-  identical shape to a manual tap — FR-008), plus `"direction": "check-in" | "check-out"` so the
-  tablet knows which confirmation copy/state to show.
+- `200`:
+  ```json
+  {
+    "attendance": { /* AttendanceRecordResponse — identical shape to a manual tap, FR-008 */ },
+    "direction": "check-in" | "check-out",
+    "childFirstName": "string",
+    "childLastName": "string",
+    "childPhotoDownloadUrl": "string | null"
+  }
+  ```
+  `attendance` is the underlying `CheckInCommand`/`CheckOutCommand` result, untouched.
+  `direction` lets the tablet pick the right confirmation copy without re-deriving it from the
+  record's own before/after state. `childFirstName`/`childLastName`/`childPhotoDownloadUrl` let
+  the scan confirmation show the child's name/photo (User Story 2's acceptance scenarios)
+  without the tablet needing a second lookup.
 - Any failure from the underlying `CheckInCommand`/`CheckOutCommand` (e.g. closure day) surfaces
   with that command's existing error key — no new error shape invented for cases already handled
   by feature 010.
@@ -80,8 +94,14 @@ Verification order (first failure wins):
   meaningfully pre-generated without the server's signing key). Shows a "reconnect to show your
   code" state when offline (spec.md UX Requirements).
 - **Caregiver tablet**: verification requires connectivity (research.md R6). A fully offline
-  tablet shows a message directing the caregiver to manual tap rather than attempting a scan. If
-  connectivity drops between a successful `verify` response and the resulting
-  `CheckInCommand`/`CheckOutCommand` write completing, that write queues via the existing feature
-  008 offline mechanism exactly as a manual tap's write would (FR-012) — reuses
-  `mobile/services/attendance.ts`'s existing `checkIn`/`checkOut` functions, not a new queue path.
+  tablet (checked before attempting a scan) shows a message directing the caregiver to manual
+  tap rather than attempting one (FR-012's first clause). Verification and its resulting
+  `CheckInCommand`/`CheckOutCommand` write happen atomically in one server-side request — there
+  is no separate client-visible "verified, write pending" step to queue. FR-012's second clause
+  (connectivity lost *during* an in-flight request the tablet believed was online) is instead
+  handled by distinguishing that case at the client: `mobile/services/attendance.ts`'s
+  `scanCheckInCode` catches a thrown/network-level failure separately from a genuine HTTP
+  rejection and surfaces a dedicated `errors.qrCheckIn.connection_lost`, shown as "check the
+  roster before scanning again" rather than implying the code itself was invalid — since the
+  server may or may not have completed the write, and replaying the same (now possibly
+  already-consumed) code isn't safely idempotent the way replaying a queued manual tap is.

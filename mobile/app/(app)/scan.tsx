@@ -9,13 +9,16 @@ import { useColors } from "../../hooks/useColors";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import type { VerifyCheckInCodeResponse } from "../../types";
 
-type ErrorReason = "wrongLocation" | "expired" | "invalid" | "cooldown";
+type ErrorReason = "wrongLocation" | "expired" | "invalid" | "cooldown" | "connectionLost";
 
 const ERROR_KEY_TO_REASON: Record<string, ErrorReason> = {
   "errors.qrCheckIn.wrong_location": "wrongLocation",
   "errors.qrCheckIn.code_expired": "expired",
   "errors.qrCheckIn.invalid_code": "invalid",
   "errors.qrCheckIn.already_used": "cooldown",
+  // FR-012's second clause: the request was interrupted mid-flight, not rejected by the server —
+  // distinct copy directs the caregiver to check the roster rather than implying a bad code.
+  "errors.qrCheckIn.connection_lost": "connectionLost",
 };
 
 // User Story 2: a successful scan's confirmation, then the "already processed" cooldown state,
