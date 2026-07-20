@@ -203,7 +203,10 @@
     "title": "Galerij",
     "empty": "Nog geen foto's deze maand.",
     "noConsent": "Er zijn nog geen foto's te zien. Vraag de opvang naar de toestemming voor foto's om ze hier te bekijken.",
-    "loadFailed": "Kon de galerij niet laden."
+    "loadFailed": "Kon de galerij niet laden.",
+    "downloadOriginal": "Origineel downloaden",
+    "downloadFailed": "Kon de foto niet downloaden. Probeer het opnieuw.",
+    "closeDetail": "Sluiten"
   },
   "menu": {
     "title": "Menu",

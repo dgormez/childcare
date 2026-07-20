@@ -137,6 +137,25 @@ if (args.Length > 0 && args[0] == "send-daily-reports")
     Environment.Exit(exitCode);
 }
 
+// evaluate-photo-archival CLI subcommand (031-photo-lifecycle-governance, research.md R2/R5) —
+// same early-exit shape as send-payment-reminders above. Triggered daily by a Cloud Scheduler +
+// Cloud Run Job execution of this container (infra/gcp/main.tf).
+if (args.Length > 0 && args[0] == "evaluate-photo-archival")
+{
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    cliBuilder.Services.AddDbContext<PublicDbContext>(options =>
+        options.UseNpgsql(cliBuilder.Configuration.GetConnectionString("DefaultConnection")));
+    cliBuilder.Services.AddSingleton<ITenantDbContextResolver, TenantDbContextResolver>();
+    cliBuilder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
+    cliBuilder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>();
+    cliBuilder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
+
+    using var cliHost = cliBuilder.Build();
+    using var cliScope = cliHost.Services.CreateScope(); // PublicDbContext is Scoped
+    var exitCode = await ChildCare.Api.Cli.EvaluatePhotoArchivalCommand.RunAsync(cliScope.ServiceProvider);
+    Environment.Exit(exitCode);
+}
+
 // Raises the ThreadPool's minimum worker threads above the .NET default (= ProcessorCount)
 // so a sudden burst of concurrent requests doesn't stall on the pool's slow "hill-climbing"
 // thread-injection rate. Auth endpoints in particular call BCrypt.Verify/HashPassword
@@ -218,6 +237,10 @@ builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
 builder.Services.AddScoped<ChildCare.Application.ChildEvents.DailySummaryCalculator>();
+// 031-photo-lifecycle-governance R3 — shared by GetParentGroupActivityGalleryQuery,
+// PurgeChildPhotosCommand, and EvaluatePhotoArchivalCommand so all three apply an identical
+// "which children does this photo depict" rule.
+builder.Services.AddScoped<IGroupActivityChildDerivationService, ChildCare.Application.GroupActivities.GroupActivityChildDerivationService>();
 
 // ── Caregiver kiosk mode (feature 008a) ─────────────────────────────────────
 // Device-token issuance mirrors JwtService/JwtAccessTokenIssuer's existing pattern — a

@@ -2,6 +2,7 @@ using ChildCare.Application.Common;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ChildCare.Infrastructure.Storage;
 
@@ -18,16 +19,25 @@ public class GcsHealthAttachmentStorage : IHealthAttachmentStorage
 
     private readonly string _bucketName;
     private readonly Lazy<Task<UrlSigner>> _urlSigner;
+    private readonly Lazy<Task<StorageClient>> _storageClient;
+    private readonly ILogger<GcsHealthAttachmentStorage> _logger;
 
-    public GcsHealthAttachmentStorage(IConfiguration config)
+    public GcsHealthAttachmentStorage(IConfiguration config, ILogger<GcsHealthAttachmentStorage> logger)
     {
         _bucketName = config["Storage:ProfilePhotosBucketName"]
             ?? throw new InvalidOperationException("Storage:ProfilePhotosBucketName is not configured.");
+        _logger = logger;
 
         _urlSigner = new Lazy<Task<UrlSigner>>(async () =>
         {
             var credential = await GoogleCredential.GetApplicationDefaultAsync();
             return UrlSigner.FromCredential(credential);
+        });
+
+        _storageClient = new Lazy<Task<StorageClient>>(async () =>
+        {
+            var credential = await GoogleCredential.GetApplicationDefaultAsync();
+            return await StorageClient.CreateAsync(credential);
         });
     }
 
@@ -54,6 +64,50 @@ public class GcsHealthAttachmentStorage : IHealthAttachmentStorage
 
         var signer = await _urlSigner.Value;
         return await signer.SignAsync(_bucketName, objectPath, DownloadUrlDuration, cancellationToken: cancellationToken);
+    }
+
+    public async Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default)
+    {
+        var signer = await _urlSigner.Value;
+        var template = UrlSigner.RequestTemplate.FromBucket(_bucketName)
+            .WithObjectName(objectPath)
+            .WithQueryParameters(new[]
+            {
+                new KeyValuePair<string, IEnumerable<string>>(
+                    "response-content-disposition", [$"attachment; filename=\"{downloadFileName}\""]),
+            });
+        var options = UrlSigner.Options.FromDuration(DownloadUrlDuration);
+        return await signer.SignAsync(template, options, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(string objectPath, CancellationToken cancellationToken = default)
+    {
+        var client = await _storageClient.Value;
+        try
+        {
+            await client.DeleteObjectAsync(_bucketName, objectPath, cancellationToken: cancellationToken);
+            return true;
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete GCS object {ObjectPath}.", objectPath);
+            return false;
+        }
+    }
+
+    public async Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default)
+    {
+        var client = await _storageClient.Value;
+        var existing = await client.GetObjectAsync(_bucketName, objectPath, cancellationToken: cancellationToken);
+        if (string.Equals(existing.StorageClass, storageClass, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        existing.StorageClass = storageClass;
+        await client.UpdateObjectAsync(existing, cancellationToken: cancellationToken);
     }
 
     private static string ExtensionFor(string contentType) => contentType switch

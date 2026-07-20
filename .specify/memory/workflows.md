@@ -54,6 +54,10 @@ rather than stubbing all of them out up front.
 Detail: `Workflows/child-lifecycle.md` (feature 012a — pre-enrollment waiting list; room
 assignment/transfers/departure content is still unwritten, added when a feature needs it).
 
+Cross-cutting: photo retention/cost-tiering/deletion policy on departure is governed by feature
+031 (Photo Lifecycle & Governance), layered on top of this workflow's deactivation/reactivation
+steps rather than a change to them.
+
 Manages the relationship between a child and the childcare organization.
 
 Includes:
@@ -102,6 +106,10 @@ Includes:
 - Photos.
 - Daily reports.
 
+Cross-cutting: photo storage-class tiering and RBAC parity across profile/group-activity/health
+photos is governed by feature 031 (Photo Lifecycle & Governance) — no change to how these are
+captured or displayed here.
+
 ---
 
 ## Parent Communication
@@ -120,6 +128,10 @@ Includes:
 - Notifications.
 - Parent feedback.
 
+Cross-cutting: original-resolution photo download for parents is governed by feature 031 (Photo
+Lifecycle & Governance) — an addition to how parents access photos already surfaced here, not a
+new communication channel.
+
 ---
 
 ## Health & Safety
@@ -137,6 +149,10 @@ Includes:
 - Injuries.
 - Emergency information.
 - Health alerts.
+
+Cross-cutting: GDPR deletion-cascade and storage-class tiering for health/vaccine attachments is
+governed by feature 031 (Photo Lifecycle & Governance) — no change to how attachments are
+recorded or clinically used here.
 
 ---
 

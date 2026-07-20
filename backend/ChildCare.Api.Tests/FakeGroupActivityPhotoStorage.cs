@@ -11,6 +11,12 @@ namespace ChildCare.Api.Tests;
 /// </summary>
 public class FakeGroupActivityPhotoStorage : IGroupActivityPhotoStorage
 {
+    // 031-photo-lifecycle-governance test seam — mirrors FakeExpoPushSender's ThrowOnSend
+    // pattern for simulating a partial purge failure.
+    public bool ThrowOnDelete { get; set; }
+    public HashSet<string> DeletedPaths { get; } = [];
+    public Dictionary<string, string> StorageClasses { get; } = [];
+
     public Task<(string ObjectPath, string ThumbnailObjectPath)> UploadAsync(
         Guid groupActivityId, Guid photoId, Stream imageBytes, CancellationToken cancellationToken = default)
     {
@@ -22,6 +28,21 @@ public class FakeGroupActivityPhotoStorage : IGroupActivityPhotoStorage
     public Task<string?> CreateDownloadUrlAsync(string? objectPath, CancellationToken cancellationToken = default) =>
         Task.FromResult(objectPath is null ? null : $"https://fake-gcs.test/download/{objectPath}");
 
-    public Task DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default) =>
+        Task.FromResult($"https://fake-gcs.test/download/{objectPath}?attachment={Uri.EscapeDataString(downloadFileName)}");
+
+    public Task<bool> DeleteAsync(string objectPath, string thumbnailObjectPath, CancellationToken cancellationToken = default)
+    {
+        if (ThrowOnDelete && !DeletedPaths.Contains(objectPath))
+            return Task.FromResult(false);
+        DeletedPaths.Add(objectPath);
+        DeletedPaths.Add(thumbnailObjectPath);
+        return Task.FromResult(true);
+    }
+
+    public Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default)
+    {
+        StorageClasses[objectPath] = storageClass;
+        return Task.CompletedTask;
+    }
 }

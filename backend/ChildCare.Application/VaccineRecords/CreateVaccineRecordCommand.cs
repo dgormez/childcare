@@ -20,7 +20,11 @@ public record CreateVaccineRecordCommand(
     DateOnly? NextDueDate,
     string? AdministeredBy,
     string? Notes,
-    Guid RecordedBy) : IRequest<VaccineRecordResult>;
+    Guid RecordedBy,
+    // 031-photo-lifecycle-governance FR-011: staff must be scoped to their assigned
+    // location(s) — reusing GetChildByIdQuery's StaffLocationEligibility check.
+    string? CallerRole = null,
+    Guid? CallerTenantUserId = null) : IRequest<VaccineRecordResult>;
 
 public class CreateVaccineRecordCommandValidator : AbstractValidator<CreateVaccineRecordCommand>
 {
@@ -55,6 +59,19 @@ public class CreateVaccineRecordCommandHandler(ITenantDbContext db, IPublicDbCon
         var childExists = await db.Children.AnyAsync(c => c.Id == request.ChildId, cancellationToken);
         if (!childExists)
             return VaccineRecordResult.Fail(VaccineRecordFailure.ChildNotFound);
+
+        if (string.Equals(request.CallerRole, "staff", StringComparison.OrdinalIgnoreCase) && request.CallerTenantUserId is Guid tenantUserId)
+        {
+            var eligibleLocationIds = db.StaffProfiles
+                .Where(p => p.TenantUserId == tenantUserId)
+                .Join(db.StaffLocationEligibility, p => p.Id, e => e.StaffProfileId, (p, e) => e.LocationId);
+            var isInScope = await db.ChildGroupAssignments
+                .Where(a => a.ChildId == request.ChildId && a.EndDate == null)
+                .Join(db.Groups, a => a.GroupId, g => g.Id, (a, g) => g.LocationId)
+                .AnyAsync(locationId => eligibleLocationIds.Contains(locationId), cancellationToken);
+            if (!isInScope)
+                return VaccineRecordResult.Fail(VaccineRecordFailure.ChildNotFound);
+        }
 
         if (request.VaccineTypeId.HasValue)
         {

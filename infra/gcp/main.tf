@@ -154,6 +154,25 @@ resource "google_storage_bucket" "staff_profile_photos" {
 
   public_access_prevention = "enforced"
 
+  # 031-photo-lifecycle-governance (research.md R5): general 90-day-no-activity -> Nearline
+  # tiering for the four prefixes holding exactly one object per subject (no thumbnail sibling
+  # to accidentally match). "group-activities/" is deliberately excluded here — its full-
+  # resolution photos share a prefix and ".jpg" suffix with their thumbnails, which this
+  # AND-only lifecycle condition language cannot distinguish, so that prefix's tiering is
+  # applied by the evaluate-photo-archival app job instead (below), which can address the
+  # full-resolution object directly by path.
+  lifecycle_rule {
+    condition {
+      age                   = 90
+      matches_storage_class = ["STANDARD"]
+      matches_prefix        = ["staff/", "children/", "health-records/", "vaccine-records/"]
+    }
+    action {
+      type          = "SetStorageClass"
+      storage_class = "NEARLINE"
+    }
+  }
+
   depends_on = [google_project_service.storage]
 }
 
@@ -423,6 +442,59 @@ resource "google_cloud_scheduler_job" "send_daily_reports_daily" {
   http_target {
     http_method = "POST"
     uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.send_daily_reports.name}:run"
+
+    oauth_token {
+      service_account_email = data.google_compute_default_service_account.default.email
+    }
+  }
+
+  depends_on = [google_project_service.cloudscheduler]
+}
+
+# 031-photo-lifecycle-governance — evaluate-photo-archival scheduled job (research.md R2/R5),
+# mirrors send_payment_reminders/send_daily_reports above exactly (research.md's tenant-loop
+# precedent). Only Storage__ProfilePhotosBucketName is needed beyond the DB connection string —
+# this job never sends anything, it only transitions GCS object storage class.
+resource "google_cloud_run_v2_job" "evaluate_photo_archival" {
+  name     = "${var.service_name}-evaluate-photo-archival"
+  location = var.region
+
+  template {
+    template {
+      containers {
+        image = var.image
+        args  = ["evaluate-photo-archival"]
+
+        env {
+          name  = "ConnectionStrings__DefaultConnection"
+          value = var.db_connection_string
+        }
+        env {
+          name  = "Storage__ProfilePhotosBucketName"
+          value = google_storage_bucket.staff_profile_photos.name
+        }
+      }
+
+      # A CLI subcommand run — never retry automatically. EvaluatePhotoArchivalCommand.RunAsync
+      # already isolates per-tenant failures internally, matching send_payment_reminders'
+      # rationale; storage-class transitions are also idempotent (no-op if already on the
+      # target class), so a missed tenant is simply picked up again on tomorrow's run.
+      max_retries = 0
+    }
+  }
+
+  depends_on = [google_artifact_registry_repository.api]
+}
+
+resource "google_cloud_scheduler_job" "evaluate_photo_archival_daily" {
+  name      = "${var.service_name}-evaluate-photo-archival-daily"
+  region    = var.region
+  schedule  = "0 5 * * *" # 05:00 Europe/Brussels daily — ahead of send-payment-reminders (06:00)
+  time_zone = "Europe/Brussels"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.evaluate_photo_archival.name}:run"
 
     oauth_token {
       service_account_email = data.google_compute_default_service_account.default.email

@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.VaccineRecords;
 
-public record CreateVaccineRecordAttachmentUploadUrlCommand(Guid ChildId, Guid Id, string ContentType)
+// CallerRole/CallerTenantUserId (031-photo-lifecycle-governance FR-011): staff must be scoped
+// to their assigned location(s) — reusing GetChildByIdQuery's StaffLocationEligibility check.
+public record CreateVaccineRecordAttachmentUploadUrlCommand(
+    Guid ChildId, Guid Id, string ContentType, string? CallerRole = null, Guid? CallerTenantUserId = null)
     : IRequest<VaccineRecordAttachmentUploadUrlResult>;
 
 public class VaccineRecordAttachmentUploadUrlResult
@@ -35,6 +38,19 @@ public class CreateVaccineRecordAttachmentUploadUrlCommandHandler(ITenantDbConte
             .SingleOrDefaultAsync(v => v.Id == request.Id && v.ChildId == request.ChildId && v.DeletedAt == null, cancellationToken);
         if (record is null)
             return VaccineRecordAttachmentUploadUrlResult.Fail(VaccineRecordFailure.NotFound);
+
+        if (string.Equals(request.CallerRole, "staff", StringComparison.OrdinalIgnoreCase) && request.CallerTenantUserId is Guid tenantUserId)
+        {
+            var eligibleLocationIds = db.StaffProfiles
+                .Where(p => p.TenantUserId == tenantUserId)
+                .Join(db.StaffLocationEligibility, p => p.Id, e => e.StaffProfileId, (p, e) => e.LocationId);
+            var isInScope = await db.ChildGroupAssignments
+                .Where(a => a.ChildId == request.ChildId && a.EndDate == null)
+                .Join(db.Groups, a => a.GroupId, g => g.Id, (a, g) => g.LocationId)
+                .AnyAsync(locationId => eligibleLocationIds.Contains(locationId), cancellationToken);
+            if (!isInScope)
+                return VaccineRecordAttachmentUploadUrlResult.Fail(VaccineRecordFailure.NotFound);
+        }
 
         // spec.md FR-012: the attachment location is set the moment an upload URL is issued, not
         // after upload completion — a client-side upload that never finishes just leaves the

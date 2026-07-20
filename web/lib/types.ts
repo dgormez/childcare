@@ -329,6 +329,13 @@ export interface ChildResponse {
   updatedAt: string;
 }
 
+// 031-photo-lifecycle-governance — POST /api/children/{id}/purge-photos.
+export interface PurgePhotosResponse {
+  deletedObjectPaths: string[];
+  failedObjectPaths: string[];
+  preservedGroupPhotoCount: number;
+}
+
 // Feature 013 — parent communication.
 
 export interface ContactResponse {

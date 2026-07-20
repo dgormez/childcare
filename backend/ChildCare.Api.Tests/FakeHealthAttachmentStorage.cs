@@ -10,6 +10,12 @@ namespace ChildCare.Api.Tests;
 /// </summary>
 public class FakeHealthAttachmentStorage : IHealthAttachmentStorage
 {
+    // 031-photo-lifecycle-governance test seam — mirrors FakeExpoPushSender's ThrowOnSend
+    // pattern for simulating a partial purge failure.
+    public bool ThrowOnDelete { get; set; }
+    public HashSet<string> DeletedPaths { get; } = [];
+    public Dictionary<string, string> StorageClasses { get; } = [];
+
     private static string ExtensionFor(string contentType) => contentType switch
     {
         "application/pdf" => "pdf",
@@ -26,4 +32,23 @@ public class FakeHealthAttachmentStorage : IHealthAttachmentStorage
 
     public Task<string?> CreateDownloadUrlAsync(string? objectPath, CancellationToken cancellationToken = default) =>
         Task.FromResult(objectPath is null ? null : $"https://fake-gcs.test/download/{objectPath}");
+
+    public Task<string> CreateAttachmentDownloadUrlAsync(string objectPath, string downloadFileName, CancellationToken cancellationToken = default) =>
+        Task.FromResult($"https://fake-gcs.test/download/{objectPath}?attachment={Uri.EscapeDataString(downloadFileName)}");
+
+    public Task<bool> DeleteAsync(string objectPath, CancellationToken cancellationToken = default)
+    {
+        if (DeletedPaths.Contains(objectPath))
+            return Task.FromResult(true);
+        if (ThrowOnDelete)
+            return Task.FromResult(false);
+        DeletedPaths.Add(objectPath);
+        return Task.FromResult(true);
+    }
+
+    public Task SetStorageClassAsync(string objectPath, string storageClass, CancellationToken cancellationToken = default)
+    {
+        StorageClasses[objectPath] = storageClass;
+        return Task.CompletedTask;
+    }
 }

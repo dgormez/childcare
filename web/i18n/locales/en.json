@@ -902,6 +902,15 @@
         "saveError": "Couldn't add this contact. Please try again.",
         "cancel": "Cancel"
       }
+    },
+    "purgePhotos": {
+      "action": "Purge photos",
+      "confirmTitle": "Permanently delete this child's photos?",
+      "confirmBody": "This deletes the profile photo, health and vaccine attachments, and any group-activity photo that only depicts this child. A group photo that also depicts another child is left untouched. This cannot be undone.",
+      "cancel": "Cancel",
+      "success": "Photos purged.",
+      "partialFailure": "Some objects could not be deleted. Please try again.",
+      "blockedActiveChild": "This child must be deactivated before their photos can be purged."
     }
   },
   "dashboard": {

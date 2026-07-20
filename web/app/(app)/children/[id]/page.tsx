@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import toast from "react-hot-toast";
 import { ArrowLeft, Syringe, HeartPulse, AlertTriangle, Clock, Plus } from "lucide-react";
 import { apiClient } from "../../../../lib/apiClient";
 import { Button } from "../../../../components/ui/button";
@@ -18,7 +19,7 @@ import { VaccineRecordForm, type VaccineRecordFormValues } from "../../../../com
 import { HealthRecordForm, type HealthRecordFormValues } from "../../../../components/health/HealthRecordForm";
 import { HealthRecordAttachmentControl } from "../../../../components/health/HealthRecordAttachmentControl";
 import { MilestonePortfolioView } from "../../../../components/milestones/MilestonePortfolioView";
-import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse } from "../../../../lib/types";
+import type { ChildResponse, VaccineRecordResponse, HealthRecordResponse, VaccineTypeResponse, CustomVaccineEntryResponse, PurgePhotosResponse } from "../../../../lib/types";
 
 type LoadState = "loading" | "loaded" | "error";
 
@@ -59,6 +60,10 @@ export default function ChildDetailPage() {
   const [healthDeleteTarget, setHealthDeleteTarget] = useState<HealthRecordResponse | null>(null);
   const [healthDeleting, setHealthDeleting] = useState(false);
   const [healthDeleteError, setHealthDeleteError] = useState<string | null>(null);
+
+  const [purgeConfirmOpen, setPurgeConfirmOpen] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -208,6 +213,29 @@ export default function ChildDetailPage() {
     await load();
   }
 
+  async function confirmPurgePhotos() {
+    setPurging(true);
+    setPurgeError(null);
+    const result = await apiClient.POST("/api/children/{id}/purge-photos", {
+      params: { path: { id: params.id } },
+    });
+    setPurging(false);
+    if (!result.response.ok) {
+      const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey;
+      setPurgeError(errorKey === "errors.children.still_active" ? tc("purgePhotos.blockedActiveChild") : tc("purgePhotos.partialFailure"));
+      return;
+    }
+
+    const body = result.data as unknown as PurgePhotosResponse;
+    setPurgeConfirmOpen(false);
+    if (body.failedObjectPaths.length > 0) {
+      toast.error(tc("purgePhotos.partialFailure"));
+    } else {
+      toast.success(tc("purgePhotos.success"));
+    }
+    await load();
+  }
+
   async function uploadHealthRecordAttachment(record: HealthRecordResponse, file: File): Promise<boolean> {
     const urlResult = await apiClient.POST("/api/children/{childId}/health-records/{id}/attachment-upload-url", {
       params: { path: { childId: params.id, id: record.id } },
@@ -253,7 +281,21 @@ export default function ChildDetailPage() {
         {t("backToList")}
       </button>
 
-      <h1 className="mb-6 text-2xl font-semibold text-text dark:text-text-dark">{child.firstName} {child.lastName}</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-text dark:text-text-dark">{child.firstName} {child.lastName}</h1>
+        {child.deactivatedAt && (
+          <div className="flex items-center gap-3">
+            <Badge variant="neutral">{tc("statusDeactivated")}</Badge>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => { setPurgeError(null); setPurgeConfirmOpen(true); }}
+            >
+              {tc("purgePhotos.action")}
+            </Button>
+          </div>
+        )}
+      </div>
 
       <Tabs defaultValue="profile">
         <TabsList>
@@ -505,6 +547,18 @@ export default function ChildDetailPage() {
         onConfirm={confirmDeleteHealthRecord}
         confirmDestructive
         confirming={healthDeleting}
+      />
+
+      <ConfirmDialog
+        open={purgeConfirmOpen}
+        onOpenChange={(open) => !open && setPurgeConfirmOpen(false)}
+        title={tc("purgePhotos.confirmTitle")}
+        description={purgeError ?? tc("purgePhotos.confirmBody")}
+        confirmLabel={tc("purgePhotos.action")}
+        cancelLabel={t("cancel")}
+        onConfirm={confirmPurgePhotos}
+        confirmDestructive
+        confirming={purging}
       />
     </div>
   );

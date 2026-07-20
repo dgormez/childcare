@@ -203,7 +203,10 @@
     "title": "Gallery",
     "empty": "No photos yet this month.",
     "noConsent": "No photos to show yet. Ask the childcare center about photo consent to see them here.",
-    "loadFailed": "Could not load the gallery."
+    "loadFailed": "Could not load the gallery.",
+    "downloadOriginal": "Download original",
+    "downloadFailed": "Could not download the photo. Please try again.",
+    "closeDetail": "Close"
   },
   "menu": {
     "title": "Menu",

@@ -203,7 +203,10 @@
     "title": "Galerie",
     "empty": "Aucune photo ce mois-ci.",
     "noConsent": "Aucune photo à afficher pour le moment. Demandez à la crèche le consentement photo pour les voir ici.",
-    "loadFailed": "Impossible de charger la galerie."
+    "loadFailed": "Impossible de charger la galerie.",
+    "downloadOriginal": "Télécharger l'original",
+    "downloadFailed": "Impossible de télécharger la photo. Veuillez réessayer.",
+    "closeDetail": "Fermer"
   },
   "menu": {
     "title": "Menu",

@@ -64,9 +64,20 @@ public static class GroupActivityEndpoints
             .WithTags("GroupActivities")
             .RequireAuthorization("DirectorOnly");
 
-        directorGroup.MapDelete("/{id:guid}", async (Guid id, IMediator mediator) =>
+        // 031-photo-lifecycle-governance FR-011: widened from DirectorOnly to StaffOrDirector —
+        // staff already have an established path to *create* a group-activity photo via the
+        // deviceGroup above (unchanged), but had no staff-JWT path to delete one. A standalone
+        // route rather than folding into directorGroup, since ASP.NET Core composes group +
+        // route policy as AND, not override (same reasoning ChildrenEndpoints.cs/
+        // StaffEndpoints.cs document for their own DirectorOnly/StaffOrDirector split).
+        var staffOrDirectorGroup = app.MapGroup("/api/group-activities")
+            .WithTags("GroupActivities")
+            .RequireAuthorization("StaffOrDirector");
+
+        staffOrDirectorGroup.MapDelete("/{id:guid}", async (Guid id, HttpContext ctx, IMediator mediator) =>
         {
-            var result = await mediator.Send(new DeleteGroupActivityCommand(id));
+            var (role, tenantUserId) = ChildrenEndpoints.CallerIdentity(ctx);
+            var result = await mediator.Send(new DeleteGroupActivityCommand(id, role, tenantUserId));
             return result.Succeeded
                 ? Results.NoContent()
                 : MapFailure(result.Failure!.Value);
