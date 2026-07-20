@@ -25,7 +25,13 @@ dossiers."
   database-level retention (no in-app way to view it) sufficient? → A: Show inline history in the
   same section — current verification first, prior entries in an expandable list. A history a
   director can't actually see doesn't serve the trust/audit purpose the feature exists for, and
-  no separate audit-log screen is needed for it.
+  no separate audit-log screen is needed for it. *(Superseded during `/speckit-plan` research —
+  see the Assumptions entry on verification attribution. This codebase has no precedent anywhere
+  for a per-change history table, including for other compliance-sensitive fields; the closest
+  analog, feature 013h's vaccine-catalog deactivation, uses a single attribution field pair, not
+  a log. Replaced with a first-verified/most-recently-verified attribution pair — enough to
+  detect a corrected record without introducing a new pattern this codebase doesn't otherwise
+  use.)*
 - Q: Should unverified status be visible per-child (e.g., a badge on the child list row in
   director-web), or is the aggregate count on the admin home sufficient on its own? → A: Add a
   small "Niet geverifieerd" badge on the child list row, matching the existing badge pattern
@@ -102,20 +108,19 @@ long-running enrolment, but only matters once User Story 1/2 already has a verif
 correct — a natural second-priority increment.
 
 **Independent Test**: Can be fully tested by updating an already-verified child's document type
-and confirming both the current record and the visible change history reflect the update.
+and confirming the current record reflects the update while the original verification's
+attribution (who/when first verified) remains visible and unchanged.
 
 **Acceptance Scenarios**:
 
 1. **Given** a child verified with `id_document_type = birth_certificate`, **When** the director
    updates it to `eid` (e.g., the child turned 12) and confirms, **Then** the current record shows
-   `eid` with a new `id_verified_at`/`id_verified_by`, and the prior verification (document type,
-   verifier, timestamp) remains visible in an expandable history within the same
-   "Identiteit bevestigen" section.
+   `eid` with an updated `id_verified_at`/`id_verified_by`, and the "Identiteit bevestigen" section
+   still shows who first verified this child's identity and when, unchanged by the correction.
 2. **Given** an already-verified child or contact record, **When** any director updates the
-   verification (document type or note), **Then** the change is attributed to that director and
-   timestamped, distinct from the original verification's attribution, and the current
-   verification (shown first) reflects the update while the prior entry moves into the history
-   list.
+   verification (document type or note), **Then** the update is attributed to that director and
+   timestamped as the current verification, while the original verifying director/timestamp
+   remains visible separately and is never overwritten.
 
 ---
 
@@ -218,14 +223,15 @@ the page, and confirming only the last 4 digits are ever shown again.
   document type and/or note (e.g., a child ages into eID eligibility, or an initial entry needs
   correcting). Each update MUST re-set the verifying director and timestamp to the director and
   moment performing the update.
-- **FR-006**: System MUST retain a durable, attributable history of every identity-verification
-  change (initial verification and every subsequent update) for a child or contact — who made the
-  change, what changed, and when — so that a correction is always traceable rather than silently
-  overwriting the prior record. This satisfies the compliance need for tamper-evidence without
-  introducing an access-control tier this codebase does not otherwise have (see Assumptions).
-- **FR-006a**: The verification history MUST be visible in the app, not only persisted — the
-  "Identiteit bevestigen" section MUST show the current verification first and prior entries in
-  an expandable list, so a director can actually review what changed.
+- **FR-006**: System MUST record, per child or contact, both (a) who first verified identity and
+  when — set once and never overwritten — and (b) who most recently verified/corrected it and
+  when — updated on every correction. A correction MUST NOT erase who originally performed the
+  first verification. This satisfies the compliance need for tamper-evidence without introducing
+  an access-control tier this codebase does not otherwise have, and without introducing a
+  per-change history log this codebase has no other precedent for (see Assumptions).
+- **FR-006a**: The "Identiteit bevestigen" section MUST display both attribution pairs from
+  FR-006 (first verified by/at, most recently verified by/at) whenever they differ, so a director
+  can see that a correction happened and by whom, without a separate history screen.
 - **FR-007**: System MUST expose a count, visible from the director's admin home, of actively
   enrolled children that do not yet have an identity verification recorded.
 - **FR-007a**: System MUST show a per-child indicator (badge) in the director-web child list for
@@ -251,15 +257,12 @@ the page, and confirming only the last 4 digits are ever shown again.
 
 ### Key Entities
 
-- **Child (extended)**: gains an identity-verification state (document type, note, verifying
-  director, verified-at timestamp) and an optional encrypted National Register Number.
+- **Child (extended)**: gains an identity-verification state (document type, note, current
+  verifying director, current verified-at timestamp, plus an immutable first-verified-by/
+  first-verified-at pair per FR-006) and an optional encrypted National Register Number.
 - **Contact (extended)**: gains the same identity-verification state as Child — document type,
-  note, verifying director, verified-at timestamp. Represents a parent/guardian, independent of
+  note, current and first-verification attribution. Represents a parent/guardian, independent of
   which children they're linked to.
-- **Identity Verification History Entry (new)**: one durable record per verification event (create
-  or correction) on a Child or Contact — captures who performed it, what document type/note were
-  recorded, and when. Exists to satisfy the anti-tampering/audit requirement (FR-006) without
-  restricting who may perform a correction.
 
 ## Success Criteria *(mandatory)*
 
@@ -268,8 +271,9 @@ the page, and confirming only the last 4 digits are ever shown again.
 - **SC-001**: A director can record an identity verification for a child or contact in a single
   form submission (document type selection + confirm), with no more than one optional field
   (note) in between.
-- **SC-002**: 100% of identity-verification changes — both the first verification and any later
-  correction — are attributable to a specific director and timestamp in a retrievable history.
+- **SC-002**: 100% of verified child/contact records show both who first verified identity and
+  when, and who most recently confirmed/corrected it and when — never just a single overwritten
+  value with no trace of the original verification.
 - **SC-003**: The "unverified dossiers" count shown on the admin home always matches the actual
   count of actively enrolled children without a recorded verification, with no manual refresh or
   recomputation step required by the director.
@@ -292,6 +296,18 @@ the page, and confirming only the last 4 digits are ever shown again.
   isn't possible even though editing itself isn't gated behind a role this codebase doesn't have.
   If a genuine org-owner tier is wanted later, it's a separate cross-cutting access-control
   feature, not something to invent narrowly for this one field set.
+- **No per-change history/audit-log table exists anywhere in this codebase**, including for other
+  compliance-sensitive fields — verified during `/speckit-plan` research after the spec's initial
+  Clarifications session had assumed one. The closest analog, feature 013h's vaccine-catalog
+  deactivation, records a single `DeactivatedByUserId`/`DeactivatedByEmail` attribution pair on
+  the same row, not a separate history table; feature 013b's incident reports use a hard 24-hour
+  immutability lock instead of a changelog. Building a dedicated history entity + expandable-list
+  UI for this one feature would introduce a pattern no other feature uses, for a field that's
+  corrected rarely (the only concretely anticipated case is a child aging into eID at 12).
+  Corrected to a first-verified/most-recently-verified attribution pair (FR-006/FR-006a) — two
+  extra nullable columns per entity, shaped like the `CreatedAt`/`UpdatedAt` pair already used
+  everywhere in this codebase, giving real anti-backdating signal without a new architectural
+  pattern.
 - The "unverified dossiers" dashboard badge counts children only (per the backlog description),
   not contacts — a director can identify unverified contacts by visiting each child's file, which
   already surfaces the linked contacts.

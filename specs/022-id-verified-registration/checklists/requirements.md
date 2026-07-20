@@ -42,3 +42,9 @@
   verification history (FR-006a) instead of DB-only retention, and a per-child "Niet geverifieerd"
   list badge (FR-007a) instead of an aggregate-only count, matching `design-system.md`'s existing
   badge pattern. All checklist items still pass after integration.
+- 2026-07-20 `/speckit-plan` research pass: the clarify session's "expandable history list"
+  answer was superseded before any implementation — this codebase has no precedent anywhere for a
+  per-change history table (013h's vaccine-catalog deactivation and 013b's incident-report lock
+  are the closest analogs, and neither uses one). FR-006/FR-006a rewritten to a
+  first-verified/most-recently-verified attribution pair instead. See spec.md's Clarifications
+  and Assumptions sections for the full reasoning. All checklist items still pass.
