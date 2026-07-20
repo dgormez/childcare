@@ -119,6 +119,13 @@ the record shows the verified state; attempting to confirm with no document type
       verification), in the same file
 - [ ] T015 [P] [US1] Backend test: `404 errors.child.not_found` for a non-existent child ID, in
       the same file
+- [ ] T015a [P] [US1] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
+      /api/children/{id}/identity-verification` (mirrors this codebase's standing
+      non-director-forbidden test pattern, e.g. `ChildCrudTests.cs`'s
+      `NonDirectorRoles_WriteEndpointsForbidden`), in the same file
+- [ ] T015b [P] [US1] Backend test: verifying a child whose `DeactivatedAt` is set succeeds
+      exactly like an active child (spec.md Edge Cases — verification isn't blocked by
+      deactivation), in the same file
 
 ### Implementation for User Story 1
 
@@ -217,6 +224,10 @@ confirm it's already verified there too.
       single verification call, in the same file
 - [ ] T031 [P] [US2] Backend test: `404 errors.contact.not_found` for a non-existent contact ID,
       in the same file
+- [ ] T031a [P] [US2] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
+      /api/contacts/{id}/identity-verification`, same pattern as T015a, in the same file
+- [ ] T031b [P] [US2] Backend test: verifying a contact with zero `ChildContact` links succeeds
+      (spec.md Edge Cases — verification doesn't require an existing link), in the same file
 
 ### Implementation for User Story 2
 
@@ -298,6 +309,9 @@ the current record shows "eID" while the original verifier/date is still visible
       `web/i18n/locales/{en,fr,nl}.json` (depends on T025, T041)
 - [ ] T049 [US3] [P] Web test: `ChildIdentityVerificationSection` shows both attribution lines
       only when they differ, and shows just one when first == current, extending T026's test file
+- [ ] T049a [US3] [P] Web test: `ContactIdentityVerificationDialog`/`ChildContactsTab`'s row
+      shows both attribution lines only when they differ, same behavior as T049 for the contact
+      side (FR-006a), extending T042's test file
 
 **Checkpoint**: All three identity-verification stories (US1–US3) are complete — verification,
 per-entity coverage, and correction all work end-to-end.
@@ -324,6 +338,9 @@ exactly, and that deactivating an unverified child removes it from both.
       `missing_identity_verification` flag, in the same file
 - [ ] T052 [P] [US4] Backend test: verifying a flagged child removes its flag on the next query,
       in the same file
+- [ ] T052a [P] [US4] Backend test: `GetDataCompletenessQuery` filtered to one location excludes
+      a `missing_identity_verification` flag for an unverified child at a different location
+      (spec.md FR-008 location-scoping), in the same file
 
 ### Implementation for User Story 4
 
@@ -373,6 +390,9 @@ display again and no log contains the plain-text value; an invalid-format NRN is
 - [ ] T061 [P] [US5] Backend test: the raw NRN never appears in `ChildResponse` (only
       `NrnLast4`) and never appears in the serialized request/response logged by the test's own
       HTTP capture, in the same file
+- [ ] T061a [P] [US5] Backend test: `404 errors.child.not_found` for a non-existent child ID on
+      `PUT /api/children/{id}/nrn`, matching the sibling identity-verification endpoints' T015/
+      T031 coverage, in the same file
 
 ### Implementation for User Story 5
 
