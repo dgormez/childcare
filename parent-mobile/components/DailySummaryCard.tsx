@@ -75,7 +75,7 @@ export function DailySummaryCard({ child, summary }: Props) {
             className="items-center justify-center"
             style={{ width: 48, height: 48 }}
           >
-            <QrCode color={colors.text} size={22} strokeWidth={2} />
+            <QrCode color={colors.text} size={20} strokeWidth={2} />
           </TouchableOpacity>
         )}
       </View>

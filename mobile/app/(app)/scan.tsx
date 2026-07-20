@@ -64,7 +64,7 @@ export default function ScanScreen() {
   if (!isConnected) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <WifiOff color={colors.textSoft} size={28} strokeWidth={2} />
+        <WifiOff color={colors.textSoft} size={24} strokeWidth={2} />
         <Text className="text-text-soft dark:text-text-soft-dark text-sm text-center mt-3 mb-6">
           {t("qrCheckIn.offlineUseManual")}
         </Text>
@@ -82,7 +82,7 @@ export default function ScanScreen() {
   if (!permission || !permission.granted) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <CameraOff color={colors.textSoft} size={28} strokeWidth={2} />
+        <CameraOff color={colors.textSoft} size={24} strokeWidth={2} />
         <Text className="text-text-soft dark:text-text-soft-dark text-sm text-center mt-3 mb-6">
           {t("qrCheckIn.cameraUnavailable")}
         </Text>
@@ -150,7 +150,7 @@ export default function ScanScreen() {
           ) : (
             <View style={{ width: 96, height: 96, borderRadius: 48, marginBottom: 16, backgroundColor: colors.border }} />
           )}
-          <CheckCircle2 color={colors.success} size={32} strokeWidth={2} />
+          <CheckCircle2 color={colors.success} size={24} strokeWidth={2} />
           <Text className="text-white text-lg font-bold text-center mt-4">
             {t(result.direction === "check-in" ? "qrCheckIn.checkedIn" : "qrCheckIn.checkedOut", {
               name: `${result.childFirstName} ${result.childLastName}`,

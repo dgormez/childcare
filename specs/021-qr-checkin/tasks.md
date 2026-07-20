@@ -251,10 +251,10 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [ ] T043 [P] Run quickstart.md's five scenarios end-to-end against local dev
-- [ ] T044 [P] Confirm no spacing/radius/motion deviations from design-system.md on the new
+- [X] T044 [P] Confirm no spacing/radius/motion deviations from design-system.md on the new
   web settings section, tablet scan screen, and parent code-display screen (static review, no
   simulator)
-- [ ] T045 Verify 48pt minimum touch targets on the tablet's "Scan" quick action and the
+- [X] T045 Verify 48pt minimum touch targets on the tablet's "Scan" quick action and the
   manual-fallback entry point (platform-rules.md)
 - [X] T046 [P] Integration test (SC-003): time `POST /api/attendance/qr-code/verify` end-to-end
   (issuance → verify → committed attendance write) against a TestContainers-backed instance and

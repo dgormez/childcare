@@ -58,7 +58,7 @@ export default function QrCheckInScreen() {
 
         {isOffline && (
           <View className="items-center" style={{ paddingVertical: 48 }}>
-            <WifiOff color={colors.textSoft} size={28} strokeWidth={2} />
+            <WifiOff color={colors.textSoft} size={24} strokeWidth={2} />
             <Text className="text-text-soft dark:text-text-soft-dark text-sm text-center mt-3">
               {t("qrCheckIn.offline")}
             </Text>
