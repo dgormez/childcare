@@ -33,6 +33,14 @@ public static class AttendanceEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+        deviceGroup.MapPost("/qr-code/verify", async (AttendanceContracts.VerifyCheckInCodeRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var (_, locationId, groupId) = DeviceClaimsOf(ctx);
+            var result = await mediator.Send(new VerifyCheckInCodeCommand(req.Code, locationId, groupId));
+            return MapVerifyResult(result);
+        });
+
         deviceGroup.MapGet("/bkr", async (Guid locationId, IMediator mediator) =>
         {
             var result = await mediator.Send(new GetBkrRatioQuery(locationId));
@@ -110,6 +118,52 @@ public static class AttendanceEndpoints
             var result = await mediator.Send(new ListAttendanceQuery(locationId, date, before, limit ?? 20));
             return Results.Ok(result);
         });
+
+        // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
+        var parentGroup = app.MapGroup("/api/parent/attendance")
+            .WithTags("Attendance")
+            .RequireAuthorization("ParentOnly");
+
+        parentGroup.MapPost("/qr-code", async (AttendanceContracts.IssueCheckInCodeRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new IssueCheckInCodeCommand(tenantUserId, req.ChildId));
+            if (!result.Succeeded)
+            {
+                return result.Failure switch
+                {
+                    IssueCheckInCodeFailure.ChildNotFound => Results.Json(
+                        new { errorKey = "errors.children.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                    IssueCheckInCodeFailure.NotYourChild => Results.Json(
+                        new { errorKey = "errors.qrCheckIn.not_your_child" }, statusCode: StatusCodes.Status403Forbidden),
+                    IssueCheckInCodeFailure.NotEnabled => Results.Json(
+                        new { errorKey = "errors.qrCheckIn.not_enabled" }, statusCode: StatusCodes.Status400BadRequest),
+                    _ => throw new InvalidOperationException($"Unhandled {nameof(IssueCheckInCodeFailure)}: {result.Failure}"),
+                };
+            }
+
+            return Results.Ok(new IssueCheckInCodeResponse(result.Code!.Code, result.Code.ExpiresAtUnix));
+        });
+    }
+
+    private static IResult MapVerifyResult(VerifyCheckInCodeResult result)
+    {
+        if (result.Succeeded)
+            return Results.Ok(new VerifyCheckInCodeResponse(result.Response!, result.Direction!));
+
+        return result.Failure switch
+        {
+            VerifyCheckInCodeFailure.InvalidCode => Results.Json(
+                new { errorKey = "errors.qrCheckIn.invalid_code" }, statusCode: StatusCodes.Status401Unauthorized),
+            VerifyCheckInCodeFailure.AlreadyUsed => Results.Json(
+                new { errorKey = "errors.qrCheckIn.already_used" }, statusCode: StatusCodes.Status409Conflict),
+            VerifyCheckInCodeFailure.CodeExpired => Results.Json(
+                new { errorKey = "errors.qrCheckIn.code_expired" }, statusCode: StatusCodes.Status410Gone),
+            VerifyCheckInCodeFailure.WrongLocation => Results.Json(
+                new { errorKey = "errors.qrCheckIn.wrong_location" }, statusCode: StatusCodes.Status403Forbidden),
+            VerifyCheckInCodeFailure.AttendanceCommandFailed => MapFailure(result.AttendanceFailure!.Value),
+            _ => throw new InvalidOperationException($"Unhandled {nameof(VerifyCheckInCodeFailure)}: {result.Failure}"),
+        };
     }
 
     private static (Guid DeviceId, Guid LocationId, Guid GroupId) DeviceClaimsOf(HttpContext ctx) => (

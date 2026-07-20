@@ -133,52 +133,52 @@ to scan mode; scan again — child checks out.
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] Integration test: `POST /api/parent/attendance/qr-code` issues a code only
+- [X] T020 [P] [US2] Integration test: `POST /api/parent/attendance/qr-code` issues a code only
   for a child the calling parent is linked to (research.md R3/R4), rejects with
   `errors.qrCheckIn.not_your_child` otherwise, in
   `backend/ChildCare.Api.Tests/Attendance/QrCheckInCodeIssuanceTests.cs`
-- [ ] T021 [P] [US2] Integration test: issuance is rejected `400
+- [X] T021 [P] [US2] Integration test: issuance is rejected `400
   errors.qrCheckIn.not_enabled` when the child's location has `QrCheckInEnabled = false`, in the
   same test file as T020
-- [ ] T022 [P] [US2] Integration test: `POST /api/attendance/qr-code/verify` with a valid,
+- [X] T022 [P] [US2] Integration test: `POST /api/attendance/qr-code/verify` with a valid,
   unexpired code for a not-currently-checked-in child produces a check-in identical in shape to
   `POST /api/attendance/check-in`'s response (FR-008), in
   `backend/ChildCare.Api.Tests/Attendance/QrCheckInVerifyTests.cs`
-- [ ] T023 [P] [US2] Integration test: verifying the same code a second time within the cooldown
+- [X] T023 [P] [US2] Integration test: verifying the same code a second time within the cooldown
   window returns `409 errors.qrCheckIn.already_used` rather than a check-out (FR-019), in the
   same test file as T022
-- [ ] T024 [P] [US2] Integration test: verifying a code after 31+ simulated seconds returns `410
+- [X] T024 [P] [US2] Integration test: verifying a code after 31+ simulated seconds returns `410
   errors.qrCheckIn.code_expired` (FR-011/FR-006), in the same test file as T022
-- [ ] T025 [P] [US2] Integration test: verifying a valid code for a child not enrolled at the
+- [X] T025 [P] [US2] Integration test: verifying a valid code for a child not enrolled at the
   scanning device's `LocationId` returns `403 errors.qrCheckIn.wrong_location` and creates no
   attendance record (FR-010), in the same test file as T022
-- [ ] T026 [P] [US2] Integration test: verifying a code with a tampered signature returns `401
+- [X] T026 [P] [US2] Integration test: verifying a code with a tampered signature returns `401
   errors.qrCheckIn.invalid_code` (FR-007), in the same test file as T022
-- [ ] T027 [P] [US2] Integration test (parity, FR-014/SC-004): a QR-originated check-in and a
+- [X] T027 [P] [US2] Integration test (parity, FR-014/SC-004): a QR-originated check-in and a
   manually-tapped check-in produce identical `GET /api/attendance/bkr` output for the same
   location/day, in the same test file as T022
-- [ ] T028 [P] [US2] Integration test: a second scan of a fresh code for an already-checked-in
+- [X] T028 [P] [US2] Integration test: a second scan of a fresh code for an already-checked-in
   child produces a check-out (FR-009), in the same test file as T022
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Create `IssueCheckInCodeCommand` + `IssueCheckInCodeCommandHandler`
+- [X] T029 [US2] Create `IssueCheckInCodeCommand` + `IssueCheckInCodeCommandHandler`
   (child-ownership check via `ChildContact`/`Contact.TenantUserId` per research.md R3/R4,
   location-enabled check, delegates signing to `ICheckInCodeService`) in
   `backend/ChildCare.Application/Attendance/IssueCheckInCodeCommand.cs` and
   `IssueCheckInCodeCommandHandler.cs`
-- [ ] T030 [US2] Create `VerifyCheckInCodeCommand` + `VerifyCheckInCodeCommandHandler`
+- [X] T030 [US2] Create `VerifyCheckInCodeCommand` + `VerifyCheckInCodeCommandHandler`
   (verification order per contracts/qr-checkin-api.md: signature → cooldown → expiry →
   wrong-location → dispatch to existing `CheckInCommand`/`CheckOutCommand` via `IMediator`
   based on today's attendance status, research.md R5; records the nonce in the cooldown set only
   after a successful dispatch) in
   `backend/ChildCare.Application/Attendance/VerifyCheckInCodeCommand.cs` and
   `VerifyCheckInCodeCommandHandler.cs` (depends on T029's sibling service, T015's location read)
-- [ ] T031 [P] [US2] Add `IssueCheckInCodeRequest`/`IssueCheckInCodeResponse` and
+- [X] T031 [P] [US2] Add `IssueCheckInCodeRequest`/`IssueCheckInCodeResponse` and
   `VerifyCheckInCodeRequest`/`VerifyCheckInCodeResponse` to
   `backend/ChildCare.Contracts/Requests/AttendanceRequests.cs` and
   `backend/ChildCare.Contracts/Responses/AttendanceResponses.cs` per contracts/qr-checkin-api.md
-- [ ] T032 [US2] Add `POST /api/parent/attendance/qr-code` (`ParentOnly`) and `POST
+- [X] T032 [US2] Add `POST /api/parent/attendance/qr-code` (`ParentOnly`) and `POST
   /api/attendance/qr-code/verify` (`DeviceAuthenticated`, `DeviceTokenRotationFilter`) to
   `backend/ChildCare.Api/Endpoints/AttendanceEndpoints.cs` per contracts/qr-checkin-api.md
   (depends on T029, T030, T031)
@@ -256,7 +256,7 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
   simulator)
 - [ ] T045 Verify 48pt minimum touch targets on the tablet's "Scan" quick action and the
   manual-fallback entry point (platform-rules.md)
-- [ ] T046 [P] Integration test (SC-003): time `POST /api/attendance/qr-code/verify` end-to-end
+- [X] T046 [P] Integration test (SC-003): time `POST /api/attendance/qr-code/verify` end-to-end
   (issuance → verify → committed attendance write) against a TestContainers-backed instance and
   assert it completes well within the 10-second scan-to-confirmation budget, in
   `backend/ChildCare.Api.Tests/Attendance/QrCheckInVerifyTests.cs` (server-side latency only —

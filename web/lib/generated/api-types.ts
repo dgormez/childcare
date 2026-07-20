@@ -3430,6 +3430,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/qr-code/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VerifyCheckInCodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/bkr": {
         parameters: {
             query?: never;
@@ -3625,6 +3662,43 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent/attendance/qr-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["IssueCheckInCodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -8196,6 +8270,10 @@ export interface components {
             /** Format: int32 */
             amountCents: number | string;
         };
+        IssueCheckInCodeRequest: {
+            /** Format: uuid */
+            childId: string;
+        };
         JsonElement: unknown;
         LinkChildToWaitingListEntryRequest: {
             /** Format: uuid */
@@ -8561,6 +8639,9 @@ export interface components {
         };
         UpsertMonthlyMenuRequest: {
             days: components["schemas"]["UpsertMonthlyMenuDayRequest"][];
+        };
+        VerifyCheckInCodeRequest: {
+            code: string;
         };
         VerifyEmailRequest: {
             organisationSlug: string;
