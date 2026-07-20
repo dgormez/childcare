@@ -11,9 +11,9 @@ using Xunit;
 namespace ChildCare.Api.Tests;
 
 /// <summary>
-/// Feature 022, User Stories 1/3/4/5 (child side): recording, correcting, and role-gating a
-/// child's identity verification, plus the NRN endpoint (US5). See VerifyContactIdentityTests
-/// for the contact-side equivalent.
+/// Feature 022, User Stories 1/3/4 (child side): recording, correcting, and role-gating a
+/// child's identity verification. See SetChildNrnTests for US5 (the NRN endpoint) and
+/// VerifyContactIdentityTests for the contact-side identity-verification equivalent.
 /// </summary>
 public class VerifyChildIdentityTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -273,86 +273,5 @@ public class VerifyChildIdentityTests(OrganisationOnboardingWebAppFactory factor
         Assert.Equal(first.FirstIdVerifiedAt, second.FirstIdVerifiedAt);
         Assert.Equal(first.FirstIdVerifiedByEmail, second.FirstIdVerifiedByEmail);
         Assert.Equal("birth_certificate", first.IdDocumentType); // sanity on the original snapshot
-    }
-
-    // ── T059: SetChildNrnCommand happy path (both plain and dotted/dashed input) ─
-
-    [Theory]
-    [InlineData("85073003371")]
-    [InlineData("85.07.30-033.71")]
-    public async Task SetChildNrn_ValidFormat_PersistsEncryptedAndLast4(string rawNrn)
-    {
-        var client = factory.CreateClient();
-        var org = await RegisterOrgAsync(client, $"Set Nrn Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
-        var child = await CreateChildAsync(client, org.AccessToken);
-
-        var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, $"/api/children/{child.Id}/nrn", org.AccessToken,
-            new SetChildNrnRequest(rawNrn)));
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var updated = (await response.Content.ReadFromJsonAsync<ChildResponse>())!;
-        Assert.Equal("3371", updated.NrnLast4);
-
-        var resolver = factory.Services.GetRequiredService<Application.Common.ITenantDbContextResolver>();
-        var schema = await GetSchemaNameAsync(org.Organisation.Id);
-        var db = resolver.ForSchema(schema);
-        var stored = await db.Children.SingleAsync(c => c.Id == child.Id);
-        Assert.NotNull(stored.EncryptedNrn);
-        Assert.DoesNotContain("85073003371", stored.EncryptedNrn);
-    }
-
-    // ── T060: invalid NRN format → 422, persists nothing ─────────────────────────
-
-    [Fact]
-    public async Task SetChildNrn_InvalidFormat_Returns422AndPersistsNothing()
-    {
-        var client = factory.CreateClient();
-        var org = await RegisterOrgAsync(client, $"Set Nrn Invalid Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
-        var child = await CreateChildAsync(client, org.AccessToken);
-
-        var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, $"/api/children/{child.Id}/nrn", org.AccessToken,
-            new SetChildNrnRequest("12345")));
-
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Contains("errors.child.nrn_invalid_format", await response.Content.ReadAsStringAsync());
-
-        var getResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{child.Id}", org.AccessToken));
-        var reloaded = (await getResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
-        Assert.Null(reloaded.NrnLast4);
-    }
-
-    // ── T061: raw NRN never appears in the response ──────────────────────────────
-
-    [Fact]
-    public async Task SetChildNrn_ResponseNeverContainsRawNrn()
-    {
-        var client = factory.CreateClient();
-        var org = await RegisterOrgAsync(client, $"Set Nrn NoLeak Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
-        var child = await CreateChildAsync(client, org.AccessToken);
-
-        var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, $"/api/children/{child.Id}/nrn", org.AccessToken,
-            new SetChildNrnRequest("85073003371")));
-
-        var raw = await response.Content.ReadAsStringAsync();
-        Assert.DoesNotContain("85073003371", raw);
-    }
-
-    // ── T061a: 404 for a non-existent child on the NRN endpoint ──────────────────
-
-    [Fact]
-    public async Task SetChildNrn_NonExistentChild_Returns404()
-    {
-        var client = factory.CreateClient();
-        var org = await RegisterOrgAsync(client, $"Set Nrn NotFound Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
-
-        var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, $"/api/children/{Guid.NewGuid()}/nrn", org.AccessToken,
-            new SetChildNrnRequest("85073003371")));
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Contains("errors.child.not_found", await response.Content.ReadAsStringAsync());
     }
 }
