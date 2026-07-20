@@ -34,7 +34,7 @@ or `parent-mobile/` changes — this feature is director-web only.
 `Microsoft.AspNetCore.DataProtection` package, existing `Tabs`/`Badge`/`Dialog` UI primitives).
 Nothing to initialize.
 
-- [ ] T001 Confirm `Microsoft.AspNetCore.DataProtection` is already referenced by
+- [X] T001 Confirm `Microsoft.AspNetCore.DataProtection` is already referenced by
       `backend/ChildCare.Infrastructure/ChildCare.Infrastructure.csproj` (it is, since feature
       014a) and that no new NuGet/npm package is required for this feature
 
@@ -47,29 +47,29 @@ port/adapter, and the tenant migration — every user story depends on all of th
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 [P] Create `IdDocumentType` enum (`BirthCertificate`, `KidsId`, `Eid`, `Passport`,
+- [X] T002 [P] Create `IdDocumentType` enum (`BirthCertificate`, `KidsId`, `Eid`, `Passport`,
       `Other`) in `backend/ChildCare.Domain/Enums/IdDocumentType.cs` (data-model.md)
-- [ ] T003 [P] Add `IdVerifiedAt` (`DateTime?`), `IdVerifiedByUserId` (`Guid?`),
+- [X] T003 [P] Add `IdVerifiedAt` (`DateTime?`), `IdVerifiedByUserId` (`Guid?`),
       `IdVerifiedByEmail` (`string?`), `IdDocumentType` (`IdDocumentType?`), `IdDocumentNote`
       (`string?`), `FirstIdVerifiedAt` (`DateTime?`), `FirstIdVerifiedByUserId` (`Guid?`),
       `FirstIdVerifiedByEmail` (`string?`), `EncryptedNrn` (`string?`), `NrnLast4` (`string?`)
       properties to `Child` in `backend/ChildCare.Domain/Entities/Child.cs`, positioned after
       `Kindcode` (data-model.md)
-- [ ] T004 [P] Add `IdVerifiedAt`, `IdVerifiedByUserId`, `IdVerifiedByEmail`, `IdDocumentType`,
+- [X] T004 [P] Add `IdVerifiedAt`, `IdVerifiedByUserId`, `IdVerifiedByEmail`, `IdDocumentType`,
       `IdDocumentNote`, `FirstIdVerifiedAt`, `FirstIdVerifiedByUserId`, `FirstIdVerifiedByEmail`
       properties to `Contact` in `backend/ChildCare.Domain/Entities/Contact.cs`, positioned after
       `DigestUnsubscribedAt` (data-model.md)
-- [ ] T005 [P] Add `INrnProtector` interface (`string Protect(string plaintext)`, `string
+- [X] T005 [P] Add `INrnProtector` interface (`string Protect(string plaintext)`, `string
       Unprotect(string ciphertext)`) to `backend/ChildCare.Application/Common/INrnProtector.cs`,
       mirroring `IPaymentTokenProtector.cs` exactly (research.md R3)
-- [ ] T006 Add `NrnProtector` class implementing `INrnProtector` via `IDataProtectionProvider`
+- [X] T006 Add `NrnProtector` class implementing `INrnProtector` via `IDataProtectionProvider`
       (purpose string `"Child.NationalRegisterNumber"`) in
       `backend/ChildCare.Infrastructure/Children/NrnProtector.cs`, mirroring
       `PaymentTokenProtector.cs` exactly (depends on T005)
-- [ ] T007 Register `INrnProtector` → `NrnProtector` in the DI container (same registration site
+- [X] T007 Register `INrnProtector` → `NrnProtector` in the DI container (same registration site
       as `IPaymentTokenProtector` → `PaymentTokenProtector` in
       `backend/ChildCare.Api/Program.cs`) (depends on T006)
-- [ ] T008 Add EF Core configuration for the new `Child` properties in
+- [X] T008 Add EF Core configuration for the new `Child` properties in
       `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`'s `Entity<Child>` block
       (~line 371, after `PediatricianPhone`): `IdVerifiedByEmail`/`FirstIdVerifiedByEmail`
       `HasMaxLength(254)` (mirrors `Contact.Email`), `IdDocumentNote` `HasMaxLength(500)`,
@@ -77,14 +77,14 @@ port/adapter, and the tenant migration — every user story depends on all of th
       `AllergySeverity` nullable-enum conversion at ~line 362, `NrnLast4` `HasMaxLength(4)`, no
       explicit config needed for the two `Guid?`/two `DateTime?` attribution fields or
       `EncryptedNrn` (depends on T003)
-- [ ] T009 Add the equivalent EF Core configuration for the new `Contact` properties (same field
+- [X] T009 Add the equivalent EF Core configuration for the new `Contact` properties (same field
       shapes minus NRN) to `Entity<Contact>`'s block (~line 393) in the same file (depends on
       T004)
-- [ ] T010 Generate the EF Core migration `AddIdentityVerificationAndNrn` (additive, all-nullable
+- [X] T010 Generate the EF Core migration `AddIdentityVerificationAndNrn` (additive, all-nullable
       columns on `children` and `contacts`, no backfill) and its SQL script in
       `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`, per this repo's
       manual-apply convention (CLAUDE.md, research.md R7) (depends on T008, T009)
-- [ ] T011 Add explicit `DROP COLUMN` statements for all 10 new `children` columns and all 6 new
+- [X] T011 Add explicit `DROP COLUMN` statements for all 10 new `children` columns and all 6 new
       `contacts` columns from T003/T004 to the legacy-schema revert SQL block in
       `backend/ChildCare.Api.Tests/VaccineRecords/LegacyVaccinationMigrationTests.cs` (this file
       never drops `children`/`contacts` wholesale, only ALTERs — every migration adding columns
@@ -107,38 +107,40 @@ the record shows the verified state; attempting to confirm with no document type
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Backend test: `VerifyChildIdentityCommand` happy path (document type only,
+- [X] T012 [P] [US1] Backend test: `VerifyChildIdentityCommand` happy path (document type only,
       no note) sets `IdVerifiedAt`/`IdVerifiedByUserId`/`IdVerifiedByEmail`/`IdDocumentType` and
       also sets `FirstIdVerifiedAt`/`FirstIdVerifiedByUserId`/`FirstIdVerifiedByEmail` to the same
       values on a previously-unverified child, in
       `backend/ChildCare.Api.Tests/VerifyChildIdentityTests.cs`
-- [ ] T013 [P] [US1] Backend test: missing/invalid `documentType` returns `400
-      errors.child.document_type_required` and persists nothing, in the same file
-- [ ] T014 [P] [US1] Backend test: verifying a child enrolled months ago sets `IdVerifiedAt` to
+- [X] T013 [P] [US1] Backend test: missing/invalid `documentType` returns `422` with
+      `fieldErrors.DocumentType == "errors.child.document_type_required"` (this codebase's
+      shared `ValidationBehavior` shape, not a per-field `400`) and persists nothing, in the same
+      file
+- [X] T014 [P] [US1] Backend test: verifying a child enrolled months ago sets `IdVerifiedAt` to
       the current server time, not any earlier date (spec.md Edge Cases — retroactive
       verification), in the same file
-- [ ] T015 [P] [US1] Backend test: `404 errors.child.not_found` for a non-existent child ID, in
+- [X] T015 [P] [US1] Backend test: `404 errors.child.not_found` for a non-existent child ID, in
       the same file
-- [ ] T015a [P] [US1] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
+- [X] T015a [P] [US1] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
       /api/children/{id}/identity-verification` (mirrors this codebase's standing
       non-director-forbidden test pattern, e.g. `ChildCrudTests.cs`'s
       `NonDirectorRoles_WriteEndpointsForbidden`), in the same file
-- [ ] T015b [P] [US1] Backend test: verifying a child whose `DeactivatedAt` is set succeeds
+- [X] T015b [P] [US1] Backend test: verifying a child whose `DeactivatedAt` is set succeeds
       exactly like an active child (spec.md Edge Cases — verification isn't blocked by
       deactivation), in the same file
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Create `VerifyChildIdentityCommand(Guid ChildId, IdDocumentType DocumentType,
+- [X] T016 [US1] Create `VerifyChildIdentityCommand(Guid ChildId, IdDocumentType DocumentType,
       string? Note, Guid VerifiedByUserId, string VerifiedByEmail) : IRequest<ChildResult>` in
       `backend/ChildCare.Application/Children/VerifyChildIdentityCommand.cs` (data-model.md)
       (depends on T002, T003)
-- [ ] T017 [US1] Create `VerifyChildIdentityCommandValidator` (`DocumentType` required/valid
+- [X] T017 [US1] Create `VerifyChildIdentityCommandValidator` (`DocumentType` required/valid
       enum → `errors.child.document_type_required`; `Note` `MaximumLength(500)` →
       `errors.child.identity_note_too_long`) in
       `backend/ChildCare.Application/Children/VerifyChildIdentityCommandValidator.cs` (depends on
       T016)
-- [ ] T018 [US1] Create `VerifyChildIdentityCommandHandler`: load child (404 via
+- [X] T018 [US1] Create `VerifyChildIdentityCommandHandler`: load child (404 via
       `ChildResult.Fail(ChildFailure.NotFound)` if missing, mirrors
       `UpdateChildCommandHandler.cs`), set `IdVerifiedAt = DateTime.UtcNow`,
       `IdVerifiedByUserId`/`IdVerifiedByEmail` = request values, `IdDocumentType`/`IdDocumentNote`
@@ -147,33 +149,33 @@ the record shows the verified state; attempting to confirm with no document type
       values/time — otherwise leave them untouched; save; return via `ChildMapper.ToResponse`, in
       `backend/ChildCare.Application/Children/VerifyChildIdentityCommandHandler.cs` (depends on
       T016, T017)
-- [ ] T019 [US1] Extend `ChildMapper.ToResponse` in
+- [X] T019 [US1] Extend `ChildMapper.ToResponse` in
       `backend/ChildCare.Application/Children/ChildMapper.cs` to take a new
       `bool includeIdentityVerification = true` parameter; project `IdVerifiedAt`,
       `IdVerifiedByEmail`, `IdDocumentType` (`.ToString()`), `IdDocumentNote`,
       `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail`, `NrnLast4` only when it's `true` — `null` for
       all seven fields when `false` (spec.md FR-015, research.md R8) (depends on T003)
-- [ ] T019a [US1] Update `GetChildByIdQuery`'s and `ListChildrenQuery`'s handlers in
+- [X] T019a [US1] Update `GetChildByIdQuery`'s and `ListChildrenQuery`'s handlers in
       `backend/ChildCare.Application/Children/GetChildByIdQuery.cs`/`ListChildrenQuery.cs` to pass
       `includeIdentityVerification: string.Equals(request.CallerRole, "director",
       StringComparison.OrdinalIgnoreCase)` into their `ChildMapper.ToResponse` calls — every other
       call site (`CreateChildCommandHandler`, `UpdateChildCommandHandler`,
       `VerifyChildIdentityCommandHandler`, `SetChildNrnCommandHandler`, all `DirectorOnly`-only)
       keeps the default `true` (depends on T019)
-- [ ] T020 [US1] Add `IdVerifiedAt` (`DateTime?`), `IdVerifiedByEmail` (`string?`),
+- [X] T020 [US1] Add `IdVerifiedAt` (`DateTime?`), `IdVerifiedByEmail` (`string?`),
       `IdDocumentType` (`string?`), `IdDocumentNote` (`string?`), `FirstIdVerifiedAt`
       (`DateTime?`), `FirstIdVerifiedByEmail` (`string?`), `NrnLast4` (`string?`) fields to
       `ChildResponse` in `backend/ChildCare.Contracts/Responses/ChildResponse.cs` (depends on
       T019)
-- [ ] T021 [US1] Add `VerifyChildIdentityRequest(string DocumentType, string? Note)` to
+- [X] T021 [US1] Add `VerifyChildIdentityRequest(string DocumentType, string? Note)` to
       `backend/ChildCare.Contracts/Requests/ChildRequests.cs`
-- [ ] T022 [US1] Add `POST /api/children/{id:guid}/identity-verification` to the `DirectorOnly`
+- [X] T022 [US1] Add `POST /api/children/{id:guid}/identity-verification` to the `DirectorOnly`
       group in `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs`: resolve
       `(userId, email)` from `ClaimTypes.NameIdentifier`/`ClaimTypes.Email` (mirrors
       `PlatformAdminVaccineTypeEndpoints.cs`'s `ActingUserOf` helper), parse `documentType` via
       the existing `ParseEnum<IdDocumentType>` pattern, send `VerifyChildIdentityCommand`, map via
       the existing `MapResult` helper (depends on T018, T020, T021)
-- [ ] T022a [P] [US1] Backend test: `GET /api/children`/`GET /api/children/{id}` return `null`
+- [X] T022a [P] [US1] Backend test: `GET /api/children`/`GET /api/children/{id}` return `null`
       for all seven verification/NRN fields when called with a Staff JWT or a device-token
       session, and return the real values when called with a Director JWT, on a verified child, in
       `backend/ChildCare.Api.Tests/VerifyChildIdentityTests.cs` (depends on T019a, T022)
@@ -214,46 +216,46 @@ confirm it's already verified there too.
 
 ### Tests for User Story 2
 
-- [ ] T028 [P] [US2] Backend test: `VerifyContactIdentityCommand` happy path sets current +
+- [X] T028 [P] [US2] Backend test: `VerifyContactIdentityCommand` happy path sets current +
       first-verification attribution on a previously-unverified contact, in
       `backend/ChildCare.Api.Tests/VerifyContactIdentityTests.cs`
-- [ ] T029 [P] [US2] Backend test: missing `documentType` returns `400
-      errors.contact.document_type_required`, in the same file
-- [ ] T030 [P] [US2] Backend test: a contact linked to two children (feature 030 sibling setup)
+- [X] T029 [P] [US2] Backend test: missing `documentType` returns `422` with
+      `fieldErrors.DocumentType == "errors.contact.document_type_required"`, in the same file
+- [X] T030 [P] [US2] Backend test: a contact linked to two children (feature 030 sibling setup)
       shows as verified via `GET /api/children/{childId}/contacts` for both children after a
       single verification call, in the same file
-- [ ] T031 [P] [US2] Backend test: `404 errors.contact.not_found` for a non-existent contact ID,
+- [X] T031 [P] [US2] Backend test: `404 errors.contact.not_found` for a non-existent contact ID,
       in the same file
-- [ ] T031a [P] [US2] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
+- [X] T031a [P] [US2] Backend test: a Staff-role or Parent-role JWT gets `403` on `POST
       /api/contacts/{id}/identity-verification`, same pattern as T015a, in the same file
-- [ ] T031b [P] [US2] Backend test: verifying a contact with zero `ChildContact` links succeeds
+- [X] T031b [P] [US2] Backend test: verifying a contact with zero `ChildContact` links succeeds
       (spec.md Edge Cases — verification doesn't require an existing link), in the same file
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Create `VerifyContactIdentityCommand(Guid ContactId, IdDocumentType
+- [X] T032 [US2] Create `VerifyContactIdentityCommand(Guid ContactId, IdDocumentType
       DocumentType, string? Note, Guid VerifiedByUserId, string VerifiedByEmail) :
       IRequest<ContactResult>` in
       `backend/ChildCare.Application/Contacts/VerifyContactIdentityCommand.cs` (depends on T002,
       T004)
-- [ ] T033 [US2] Create `VerifyContactIdentityCommandValidator` (same rules as
+- [X] T033 [US2] Create `VerifyContactIdentityCommandValidator` (same rules as
       `VerifyChildIdentityCommandValidator`, `errors.contact.*` keys) in
       `backend/ChildCare.Application/Contacts/VerifyContactIdentityCommandValidator.cs` (depends
       on T032)
-- [ ] T034 [US2] Create `VerifyContactIdentityCommandHandler` — same first/current attribution
+- [X] T034 [US2] Create `VerifyContactIdentityCommandHandler` — same first/current attribution
       logic as `VerifyChildIdentityCommandHandler` (T018), on `Contact`, in
       `backend/ChildCare.Application/Contacts/VerifyContactIdentityCommandHandler.cs` (depends on
       T032, T033)
-- [ ] T035 [US2] Extend `ContactMapper` in
+- [X] T035 [US2] Extend `ContactMapper` in
       `backend/ChildCare.Application/Contacts/ContactMapper.cs` to project the same six
       verification fields onto both `ContactResponse` and `ChildContactResponse` (depends on T004)
-- [ ] T036 [US2] Add `IdVerifiedAt`, `IdVerifiedByEmail`, `IdDocumentType`, `IdDocumentNote`,
+- [X] T036 [US2] Add `IdVerifiedAt`, `IdVerifiedByEmail`, `IdDocumentType`, `IdDocumentNote`,
       `FirstIdVerifiedAt`, `FirstIdVerifiedByEmail` fields to both `ContactResponse` and
       `ChildContactResponse` in `backend/ChildCare.Contracts/Responses/ContactResponse.cs`
       (depends on T035)
-- [ ] T037 [US2] Add `VerifyContactIdentityRequest(string DocumentType, string? Note)` to
+- [X] T037 [US2] Add `VerifyContactIdentityRequest(string DocumentType, string? Note)` to
       `backend/ChildCare.Contracts/Requests/ContactRequests.cs`
-- [ ] T038 [US2] Add `POST /api/contacts/{id:guid}/identity-verification` to the `DirectorOnly`
+- [X] T038 [US2] Add `POST /api/contacts/{id:guid}/identity-verification` to the `DirectorOnly`
       group in `backend/ChildCare.Api/Endpoints/ContactsEndpoints.cs`, same claim-resolution
       pattern as T022, using `MapContactResult`/`MapContactFailure` (add an
       `errors.contact.document_type_required`/`identity_note_too_long` case) (depends on T034,
@@ -287,12 +289,12 @@ the current record shows "eID" while the original verifier/date is still visible
 
 ### Tests for User Story 3
 
-- [ ] T044 [P] [US3] Backend test: calling `VerifyChildIdentityCommand` a second time with a
+- [X] T044 [P] [US3] Backend test: calling `VerifyChildIdentityCommand` a second time with a
       different `DocumentType` updates `IdVerifiedAt`/`IdVerifiedByUserId`/`IdDocumentType` but
       leaves `FirstIdVerifiedAt`/`FirstIdVerifiedByUserId`/`FirstIdVerifiedByEmail` exactly as
       they were after the first call, in `backend/ChildCare.Api.Tests/VerifyChildIdentityTests.cs`
       (extends T012's file)
-- [ ] T045 [P] [US3] Backend test: the same correction-preserves-first-attribution behavior for
+- [X] T045 [P] [US3] Backend test: the same correction-preserves-first-attribution behavior for
       `VerifyContactIdentityCommand`, in
       `backend/ChildCare.Api.Tests/VerifyContactIdentityTests.cs` (extends T028's file)
 
@@ -329,22 +331,22 @@ exactly, and that deactivating an unverified child removes it from both.
 
 ### Tests for User Story 4
 
-- [ ] T050 [P] [US4] Backend test: `GetDataCompletenessQuery` includes a
+- [X] T050 [P] [US4] Backend test: `GetDataCompletenessQuery` includes a
       `missing_identity_verification` flag for an active, never-attended child with no
       `IdVerifiedAt` (proving the new flag's scoping is independent of the query's existing
       attendance-linked child set — research.md R5), in
       `backend/ChildCare.Api.Tests/Reporting/DataCompletenessEndpointsTests.cs`
-- [ ] T051 [P] [US4] Backend test: a deactivated unverified child produces no
+- [X] T051 [P] [US4] Backend test: a deactivated unverified child produces no
       `missing_identity_verification` flag, in the same file
-- [ ] T052 [P] [US4] Backend test: verifying a flagged child removes its flag on the next query,
+- [X] T052 [P] [US4] Backend test: verifying a flagged child removes its flag on the next query,
       in the same file
-- [ ] T052a [P] [US4] Backend test: `GetDataCompletenessQuery` filtered to one location excludes
+- [X] T052a [P] [US4] Backend test: `GetDataCompletenessQuery` filtered to one location excludes
       a `missing_identity_verification` flag for an unverified child at a different location
       (spec.md FR-008 location-scoping), in the same file
 
 ### Implementation for User Story 4
 
-- [ ] T053 [US4] Add a `missing_identity_verification`-producing block to
+- [X] T053 [US4] Add a `missing_identity_verification`-producing block to
       `GetDataCompletenessQueryHandler` in
       `backend/ChildCare.Application/Reporting/GetDataCompletenessQuery.cs`: query all `Child`
       rows with `DeactivatedAt == null` and `IdVerifiedAt == null` (intersected with
@@ -381,35 +383,36 @@ display again and no log contains the plain-text value; an invalid-format NRN is
 
 ### Tests for User Story 5
 
-- [ ] T059 [P] [US5] Backend test: `SetChildNrnCommand` with a validly-formatted NRN (both plain
+- [X] T059 [P] [US5] Backend test: `SetChildNrnCommand` with a validly-formatted NRN (both plain
       11-digit and dotted/dashed input) persists `EncryptedNrn` (ciphertext, not equal to the
       input) and `NrnLast4` (last 4 digits of the normalized input), in
       `backend/ChildCare.Api.Tests/SetChildNrnTests.cs`
-- [ ] T060 [P] [US5] Backend test: an NRN that normalizes to other than 11 digits returns `400
-      errors.child.nrn_invalid_format` and persists nothing, in the same file
-- [ ] T061 [P] [US5] Backend test: the raw NRN never appears in `ChildResponse` (only
+- [X] T060 [P] [US5] Backend test: an NRN that normalizes to other than 11 digits returns `422`
+      with `fieldErrors.Nrn == "errors.child.nrn_invalid_format"` and persists nothing, in the
+      same file
+- [X] T061 [P] [US5] Backend test: the raw NRN never appears in `ChildResponse` (only
       `NrnLast4`) and never appears in the serialized request/response logged by the test's own
       HTTP capture, in the same file
-- [ ] T061a [P] [US5] Backend test: `404 errors.child.not_found` for a non-existent child ID on
+- [X] T061a [P] [US5] Backend test: `404 errors.child.not_found` for a non-existent child ID on
       `PUT /api/children/{id}/nrn`, matching the sibling identity-verification endpoints' T015/
       T031 coverage, in the same file
 
 ### Implementation for User Story 5
 
-- [ ] T062 [US5] Create `SetChildNrnCommand(Guid ChildId, string Nrn) : IRequest<ChildResult>` in
+- [X] T062 [US5] Create `SetChildNrnCommand(Guid ChildId, string Nrn) : IRequest<ChildResult>` in
       `backend/ChildCare.Application/Children/SetChildNrnCommand.cs` (depends on T003)
-- [ ] T063 [US5] Create `SetChildNrnCommandValidator`: strip non-digit characters, require
+- [X] T063 [US5] Create `SetChildNrnCommandValidator`: strip non-digit characters, require
       exactly 11 digits remain → `errors.child.nrn_invalid_format` (research.md R4), in
       `backend/ChildCare.Application/Children/SetChildNrnCommandValidator.cs` (depends on T062)
-- [ ] T064 [US5] Create `SetChildNrnCommandHandler`: load child (404 if missing), normalize the
+- [X] T064 [US5] Create `SetChildNrnCommandHandler`: load child (404 if missing), normalize the
       input (strip non-digits), compute `NrnLast4` from the normalized 11-digit string, encrypt
       the normalized string via `INrnProtector.Protect` into `EncryptedNrn`, save, return via
       `ChildMapper.ToResponse`, in
       `backend/ChildCare.Application/Children/SetChildNrnCommandHandler.cs` (depends on T005,
       T062, T063)
-- [ ] T065 [US5] Add `SetChildNrnRequest(string Nrn)` to
+- [X] T065 [US5] Add `SetChildNrnRequest(string Nrn)` to
       `backend/ChildCare.Contracts/Requests/ChildRequests.cs`
-- [ ] T066 [US5] Add `PUT /api/children/{id:guid}/nrn` to the `DirectorOnly` group in
+- [X] T066 [US5] Add `PUT /api/children/{id:guid}/nrn` to the `DirectorOnly` group in
       `backend/ChildCare.Api/Endpoints/ChildrenEndpoints.cs` (depends on T064, T065)
 - [ ] T067 [US5] Add an NRN entry field (masked display of `NrnLast4` when set, plain text input
       when unset/being changed) to `ChildIdentityVerificationSection.tsx` (depends on T023, T020)
