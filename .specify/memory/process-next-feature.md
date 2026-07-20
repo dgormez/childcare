@@ -682,3 +682,29 @@ use the static code review instead.
   before re-committing. No damage occurred, but worth remembering: never run `git checkout
   <other-branch> -- .` on a feature branch to inspect something — use `git show
   <branch>:<path>` (read-only) instead.
+- 031 (`031-photo-lifecycle-governance`): ✅ Done, merged 2026-07-20 (PR #40, squash-merged after
+  green CI — 891/891 backend + 213/213 web + 108/108 parent-mobile tests). Resumed mid-flight: a
+  prior session had already implemented and committed all of US1 (GDPR purge), US3 (archive/cost-
+  tiering job + Terraform lifecycle rule), and US4 (staff/director RBAC parity), plus US2's backend
+  route, but left tasks.md entirely unchecked and US2's parent-mobile UI (download-original action,
+  offline-aware) half-built on disk with zero test coverage and no commit. This session verified
+  every foundational/US1/US3/US4 task actually existed in code (not just trusted the commit
+  messages), finished US2's UI (gallery detail view, download+share, `useIsOffline` hook, i18n),
+  and wrote the test coverage that was missing for it (open-detail, download+share, download-
+  failure toast, offline-hides-action — none of these existed before this pass). Running the full
+  suite surfaced a real regression: `ChildHealthSummaryReadOnlyTests.Caregiver_CannotCreateVaccine
+  OrHealthRecord` asserted the exact pre-US4 policy this feature deliberately reverses (staff can
+  now create/edit/delete health/vaccine records at their assigned location) — fixed by removing the
+  obsolete assertion and its now-unused helpers, keeping the still-valid device-token restriction;
+  `PhotoRbacParityTests` (already written by the prior session) fully covers the corrected staff-
+  allowed/staff-denied-by-location behavior, so nothing was left untested. T044 (real-GCS
+  quickstart scenarios) and T046 (a real `terraform plan`) were left as explicit manual post-merge
+  follow-ups — no GCP credentials in this session, same constraint as 013h's T049 and 014a's
+  un-applied Terraform; `terraform validate` passed as the syntax-level substitute, and the
+  scenarios that don't need a real bucket (RBAC, parent download, GDPR purge) are already covered
+  by TestContainers tests. Also worth noting: this run hit the tool harness auto-backgrounding a
+  command after its 120s default timeout (both `dotnet test` and `gh pr checks --watch`) — distinct
+  from the standing rule's warned-against failure mode (deliberately passing
+  `run_in_background: true` and walking away). Here the fix was to actively watch the
+  already-backgrounded task to completion via Monitor in the same turn, rather than treat the
+  auto-backgrounding as a signal to stop waiting.
