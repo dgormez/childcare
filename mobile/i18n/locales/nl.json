@@ -376,5 +376,19 @@
     "empty": "Nog niets geregistreerd",
     "catalog_failed": "Kon mijlpalen niet laden",
     "pendingSync": "Synchronisatie in behandeling"
+  },
+  "qrCheckIn": {
+    "scanAction": "Scannen",
+    "scanInstructions": "Richt de camera op de code van de ouder",
+    "checkedIn": "{{name}} is ingecheckt",
+    "checkedOut": "{{name}} is uitgecheckt",
+    "errors": {
+      "wrongLocation": "Deze code is niet voor een kind op deze locatie",
+      "expired": "Deze code is verlopen. Vraag de ouder om te vernieuwen",
+      "invalid": "Deze code kon niet worden geverifieerd",
+      "cooldown": "Al verwerkt — een moment geduld"
+    },
+    "cameraUnavailable": "Camera niet beschikbaar",
+    "useManualInstead": "Gebruik handmatig inchecken"
   }
 }

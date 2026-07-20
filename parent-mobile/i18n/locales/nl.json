@@ -337,5 +337,14 @@
     "emptyState": "Geen vorige kinderen om te tonen.",
     "enrollmentPeriod": "Ingeschreven {{start}} – {{end}}",
     "readOnlyBanner": "Dit kind is niet meer actief — deze informatie is alleen-lezen."
+  },
+  "qrCheckIn": {
+    "showCode": "Toon code",
+    "title": "Incheckcode van {{name}}",
+    "instructions": "Toon dit aan de begeleider bij het brengen of ophalen",
+    "loading": "Je code wordt klaargemaakt…",
+    "issueFailed": "Kon je code niet ophalen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "offline": "Verbind opnieuw om je code te tonen"
   }
 }

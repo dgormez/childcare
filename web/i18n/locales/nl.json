@@ -445,6 +445,7 @@
     "tabGeneral": "Algemeen",
     "tabReservationSettings": "Reserveringsinstellingen",
     "tabCheckInSettings": "Inchecken",
+    "tabQrCheckInSettings": "QR-inchecken",
     "tabMenuVariants": "Menuvarianten",
     "tabInvoiceSettings": "Facturatie",
     "general": {
@@ -486,6 +487,15 @@
       "tradeoffRisk": "Concreet risico: als een caregiver per ongeluk het verkeerde kaartje aantikt, wordt dat door niets meer opgevangen. De enige correctie is dat iemand het zelf opmerkt en het in-/uitchecken achteraf rechtzet.",
       "saveButton": "Wijzigingen opslaan",
       "saveSuccess": "Incheckinstellingen opgeslagen.",
+      "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "qrCheckInSettings": {
+      "description": "Laat ouders op deze locatie in- of uitchecken door een code op hun telefoon te tonen, in plaats van dat een begeleider de aanwezigheidslijst aantikt.",
+      "toggleLabel": "QR-inchecken toegestaan",
+      "explanationAdds": "Wanneer ingeschakeld, kunnen ouders een code tonen in de ouder-app die een begeleider met een tablet kan scannen, als alternatief voor de manuele incheck-tik.",
+      "explanationUnchanged": "De begeleider ontvangt het kind nog steeds fysiek — de overdracht zelf verandert niet, enkel hoe het aanwezigheidsrecord wordt aangemaakt.",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "QR-incheckinstellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
     },
     "menuVariants": {

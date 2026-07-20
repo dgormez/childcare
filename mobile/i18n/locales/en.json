@@ -376,5 +376,19 @@
     "empty": "Nothing recorded yet",
     "catalog_failed": "Could not load milestones",
     "pendingSync": "Pending sync"
+  },
+  "qrCheckIn": {
+    "scanAction": "Scan",
+    "scanInstructions": "Point the camera at the parent's code",
+    "checkedIn": "{{name}} checked in",
+    "checkedOut": "{{name}} checked out",
+    "errors": {
+      "wrongLocation": "This code isn't for a child at this location",
+      "expired": "This code has expired. Ask the parent to refresh it",
+      "invalid": "This code couldn't be verified",
+      "cooldown": "Already processed — one moment"
+    },
+    "cameraUnavailable": "Camera unavailable",
+    "useManualInstead": "Use manual check-in instead"
   }
 }

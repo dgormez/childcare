@@ -1250,6 +1250,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/qr-checkin-setting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationQrCheckInSettingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/menu-variant-settings": {
         parameters: {
             query?: never;
@@ -8426,6 +8465,9 @@ export interface components {
             delayDays: number | string;
             /** Format: int32 */
             cadenceDays: number | string;
+        };
+        UpdateLocationQrCheckInSettingRequest: {
+            enabled: boolean;
         };
         UpdateLocationRequest: {
             name: string;

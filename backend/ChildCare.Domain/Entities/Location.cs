@@ -62,6 +62,11 @@ public class Location
     public decimal SiblingDiscountPct             { get; set; } = 0;
     public bool    FamilyInvoiceBundlingEnabled    { get; set; } = false;
 
+    // Feature 021 — whether QR contactless check-in is available at this location (spec.md
+    // FR-001/FR-002). Defaults to false so no location's behavior changes until a director
+    // explicitly opts in.
+    public bool QrCheckInEnabled { get; set; } = false;
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

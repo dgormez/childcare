@@ -31,16 +31,16 @@ Parent app: `parent-mobile/{services,app,i18n}/...` (existing Expo app). Web:
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Add `expo-camera` to `mobile/package.json` (caregiver-tablet scan viewfinder +
+- [X] T001 [P] Add `expo-camera` to `mobile/package.json` (caregiver-tablet scan viewfinder +
   QR decode, research.md R2)
-- [ ] T002 [P] Add `react-native-qrcode-svg` to `parent-mobile/package.json` (client-side QR
+- [X] T002 [P] Add `react-native-qrcode-svg` to `parent-mobile/package.json` (client-side QR
   rendering, research.md R3)
-- [ ] T003 [P] Add an empty `qrCheckIn` top-level key to each of `mobile/i18n/locales/nl.json`,
+- [X] T003 [P] Add an empty `qrCheckIn` top-level key to each of `mobile/i18n/locales/nl.json`,
   `mobile/i18n/locales/fr.json`, `mobile/i18n/locales/en.json`
-- [ ] T004 [P] Add an empty `qrCheckIn` top-level key to each of
+- [X] T004 [P] Add an empty `qrCheckIn` top-level key to each of
   `parent-mobile/i18n/locales/nl.json`, `parent-mobile/i18n/locales/fr.json`,
   `parent-mobile/i18n/locales/en.json`
-- [ ] T005 [P] Add an empty `qrCheckIn` top-level key to each of `web/i18n/locales/nl.json` (or
+- [X] T005 [P] Add an empty `qrCheckIn` top-level key to each of `web/i18n/locales/nl.json` (or
   `web/messages/nl.json` per feature 007a's next-intl convention), the `fr` and `en` siblings
 
 ---
@@ -51,22 +51,22 @@ Parent app: `parent-mobile/{services,app,i18n}/...` (existing Expo app). Web:
 or writes through the `Location.QrCheckInEnabled` column and/or the signed-code
 issuance/verification path.
 
-- [ ] T006 Add `QrCheckInEnabled` (`bool`, default `false`) to
+- [X] T006 Add `QrCheckInEnabled` (`bool`, default `false`) to
   `backend/ChildCare.Domain/Entities/Location.cs` per data-model.md
-- [ ] T007 Generate the EF Core tenant migration (`dotnet ef migrations add
+- [X] T007 Generate the EF Core tenant migration (`dotnet ef migrations add
   AddLocationQrCheckInEnabled --project backend/ChildCare.Infrastructure --context
   TenantDbContext --output-dir Persistence/Migrations/Tenant`), verify it applies cleanly
   against a fresh dev schema, and generate the manually-run SQL script per this repo's
   EF-Core-never-auto-migrates-in-production convention (`.claude/CLAUDE.md`)
-- [ ] T008 Add a `QrCheckInCodeSigningKey` entry to configuration (`appsettings.json` /
+- [X] T008 Add a `QrCheckInCodeSigningKey` entry to configuration (`appsettings.json` /
   environment variable / secrets manager per Constitution VI — never a literal default in
   source) read by the code service below
-- [ ] T009 Create `ICheckInCodeService` / `CheckInCodeService` (issue: build
+- [X] T009 Create `ICheckInCodeService` / `CheckInCodeService` (issue: build
   `{childId, issuedAtUnix, nonce}`, HMAC-SHA256 sign, base64url-encode per research.md R1;
   verify: decode, recompute signature, compare, check `now - issuedAtUnix <= 30`, check nonce
   not in the consumed-cooldown set) in
   `backend/ChildCare.Application/Attendance/CheckInCodeService.cs`
-- [ ] T010 Register `ICheckInCodeService` in DI (`backend/ChildCare.Api/Program.cs`)
+- [X] T010 Register `ICheckInCodeService` in DI (`backend/ChildCare.Api/Program.cs`)
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -82,39 +82,39 @@ only that location's setting changed (a second location's `GET` still shows disa
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Integration test: `PUT /api/locations/{id}/qr-checkin-setting` persists the
+- [X] T011 [P] [US1] Integration test: `PUT /api/locations/{id}/qr-checkin-setting` persists the
   new value and leaves other locations' settings untouched, in
   `backend/ChildCare.Api.Tests/Locations/LocationQrCheckInSettingTests.cs`
-- [ ] T012 [P] [US1] Integration test: toggling the setting produces a structured log entry
+- [X] T012 [P] [US1] Integration test: toggling the setting produces a structured log entry
   (director id, location id, old/new value) only when the value actually changes, in the same
   test file as T011
-- [ ] T013 [P] [US1] Integration test: a non-director caller gets `403`; an unknown `locationId`
+- [X] T013 [P] [US1] Integration test: a non-director caller gets `403`; an unknown `locationId`
   gets `404`, in the same test file as T011
-- [ ] T013a [P] [US1] Integration test (FR-015): an `AttendanceRecord` created before a
+- [X] T013a [P] [US1] Integration test (FR-015): an `AttendanceRecord` created before a
   location's QR check-in setting is toggled is byte-identical (all fields) before and after the
   toggle — enabling or disabling the setting must not touch any existing attendance data, in the
   same test file as T011
-- [ ] T014 [P] [US1] Integration test: every existing/new `Location` row defaults to
+- [X] T014 [P] [US1] Integration test: every existing/new `Location` row defaults to
   `QrCheckInEnabled = false` (SC-002), in the same test file as T011
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Create `UpdateLocationQrCheckInSettingCommand` +
+- [X] T015 [US1] Create `UpdateLocationQrCheckInSettingCommand` +
   `UpdateLocationQrCheckInSettingCommandHandler` (mirrors feature 008b's
   `UpdateLocationCheckInSettingsCommandHandler` pattern — plain `ILogger` entry on change, no
   new audit subsystem) in
   `backend/ChildCare.Application/Locations/UpdateLocationQrCheckInSettingCommand.cs` and
   `UpdateLocationQrCheckInSettingCommandHandler.cs`
-- [ ] T016 [P] [US1] Add `UpdateLocationQrCheckInSettingRequest` to
+- [X] T016 [P] [US1] Add `UpdateLocationQrCheckInSettingRequest` to
   `backend/ChildCare.Contracts/Requests/LocationRequests.cs`
-- [ ] T017 [US1] Add `PUT /api/locations/{locationId}/qr-checkin-setting`
+- [X] T017 [US1] Add `PUT /api/locations/{locationId}/qr-checkin-setting`
   (`DirectorOnly`) to `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` per
   contracts/qr-checkin-api.md
-- [ ] T018 [US1] Add the QR check-in toggle section (label + explanatory copy per FR-003,
+- [X] T018 [US1] Add the QR check-in toggle section (label + explanatory copy per FR-003,
   save/revert-on-failure per FR-018) to the location settings screen in
   `web/app/(dashboard)/locations/[id]/settings/...` (existing settings-tab pattern, e.g.
   feature 013f's reservation settings)
-- [ ] T019 [P] [US1] Populate `qrCheckIn` i18n keys (setting label, explanatory copy, save
+- [X] T019 [P] [US1] Populate `qrCheckIn` i18n keys (setting label, explanatory copy, save
   error) in `web/i18n/locales/{nl,fr,en}.json`
 
 **Checkpoint**: User Story 1 fully functional and testable independently — the setting exists,

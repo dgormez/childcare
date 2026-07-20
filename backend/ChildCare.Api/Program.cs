@@ -345,6 +345,13 @@ builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkReso
 // existing test pattern (e.g. PaymentReminderTests calling SendPaymentRemindersCommand directly).
 builder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>();
 
+// ── QR Contactless Check-In (feature 021) ────────────────────────────────────
+// Signed-token issuance/verification (research.md R1) — IMemoryCache backs the
+// consumed-nonce cooldown set (FR-019) only, not the code itself (the code is a
+// self-contained signed token, never persisted or cached server-side on issuance).
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ChildCare.Application.Attendance.ICheckInCodeService, ChildCare.Application.Attendance.CheckInCodeService>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
