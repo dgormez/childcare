@@ -389,6 +389,7 @@
       "cooldown": "Already processed — one moment"
     },
     "cameraUnavailable": "Camera unavailable",
-    "useManualInstead": "Use manual check-in instead"
+    "useManualInstead": "Use manual check-in instead",
+    "offlineUseManual": "No connection — scanning needs it. Use manual check-in instead"
   }
 }

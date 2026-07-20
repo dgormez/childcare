@@ -24,11 +24,25 @@ public class GetParentChildrenQueryHandler(
             .Where(c => c.DeactivatedAt == null)
             .ToListAsync(cancellationToken);
 
+        var childIds = children.Select(c => c.Id).ToList();
+        // Feature 021 — same "any active contract at a QR-enabled location" gate
+        // IssueCheckInCodeCommandHandler applies, computed once for every linked child rather
+        // than per-child N+1 queries.
+        var qrEnabledChildIds = (await db.Contracts
+            .Where(c => childIds.Contains(c.ChildId) && c.Status == Domain.Enums.ContractStatus.Active)
+            .Join(db.Locations, c => c.LocationId, l => l.Id, (c, l) => new { c.ChildId, l.QrCheckInEnabled })
+            .Where(x => x.QrCheckInEnabled)
+            .Select(x => x.ChildId)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+
         var results = new List<ParentChildResponse>(children.Count);
         foreach (var child in children)
         {
             var photoUrl = await photoStorage.CreateDownloadUrlAsync(child.ProfilePhotoObjectPath, cancellationToken);
-            results.Add(new ParentChildResponse(child.Id, child.FirstName, child.LastName, photoUrl, child.DateOfBirth));
+            results.Add(new ParentChildResponse(
+                child.Id, child.FirstName, child.LastName, photoUrl, child.DateOfBirth, qrEnabledChildIds.Contains(child.Id)));
         }
 
         return results;

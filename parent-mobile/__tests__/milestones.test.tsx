@@ -29,7 +29,7 @@ const { getMilestonePortfolio, downloadMilestonePortfolioPdf } = jest.requireMoc
 const Sharing = jest.requireMock("expo-sharing") as { isAvailableAsync: jest.Mock; shareAsync: jest.Mock };
 
 function makeChild(overrides: Partial<ParentChildResponse> = {}): ParentChildResponse {
-  return { id: "child-1", firstName: "Emma", lastName: "Peeters", photoDownloadUrl: null, dateOfBirth: "2023-01-01", ...overrides };
+  return { id: "child-1", firstName: "Emma", lastName: "Peeters", photoDownloadUrl: null, dateOfBirth: "2023-01-01", qrCheckInEnabled: false, ...overrides };
 }
 
 const domainWithMilestone: DevelopmentalDomainResponse = {

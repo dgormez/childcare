@@ -93,6 +93,7 @@ export default function AppLayout() {
       >
         <Stack.Screen name="index" options={{ title: t("groupView.title") }} />
         <Stack.Screen name="child/[id]" options={{ title: t("child.medicalQuickAccess") }} />
+        <Stack.Screen name="scan" options={{ headerShown: false, presentation: "fullScreenModal" }} />
       </Stack>
     </View>
   );

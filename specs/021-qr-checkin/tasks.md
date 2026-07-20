@@ -182,31 +182,31 @@ to scan mode; scan again — child checks out.
   /api/attendance/qr-code/verify` (`DeviceAuthenticated`, `DeviceTokenRotationFilter`) to
   `backend/ChildCare.Api/Endpoints/AttendanceEndpoints.cs` per contracts/qr-checkin-api.md
   (depends on T029, T030, T031)
-- [ ] T033 [US2] Create `parent-mobile/services/attendance.ts` (`requestQrCode(childId)` —
+- [X] T033 [US2] Create `parent-mobile/services/attendance.ts` (`requestQrCode(childId)` —
   issues + tracks `expiresAtUnix`, no offline path per research.md R6) mirroring
   `mobile/services/attendance.ts`'s existing API-call conventions
-- [ ] T034 [US2] Create the parent-mobile QR code-display screen (renders the issued code via
+- [X] T034 [US2] Create the parent-mobile QR code-display screen (renders the issued code via
   `react-native-qrcode-svg`, auto-refreshes at ~20s per FR-006, shows a loading state during
   (re)issuance and a "reconnect to show your code" state when offline per spec.md UX
   Requirements) in `parent-mobile/app/.../qr-checkin.tsx` (depends on T033)
-- [ ] T035 [US2] Extend `mobile/services/attendance.ts` with `scanCheckInCode(code,
+- [X] T035 [US2] Extend `mobile/services/attendance.ts` with `scanCheckInCode(code,
   isConnected)` — online: `POST /api/attendance/qr-code/verify`, surfaces the three distinct
   rejection cases (wrong-location/expired/invalid) as human-readable errors; the resulting
   attendance write reuses the existing `checkIn`/`checkOut` functions' offline-queue branch if
   connectivity drops mid-write (research.md R6) — no new offline path
-- [ ] T036 [US2] Create the caregiver-tablet scan-mode screen (`expo-camera` viewfinder, "Scan"
+- [X] T036 [US2] Create the caregiver-tablet scan-mode screen (`expo-camera` viewfinder, "Scan"
   quick action one tap from the group view per reference-products.md's Brightwheel principle,
   success confirmation shows child name + photo + check-in/check-out state text — never color
   alone — then auto-returns to scan mode; a fully-offline tablet shows the manual-fallback
   message per research.md R6 instead of opening the camera) in `mobile/app/.../scan.tsx`
   (depends on T035)
-- [ ] T037 [US2] Gate the parent-mobile "Show code" entry point and the caregiver-tablet "Scan"
+- [X] T037 [US2] Gate the parent-mobile "Show code" entry point and the caregiver-tablet "Scan"
   quick action on the location's `QrCheckInEnabled` value (fetched via each app's existing
   roster/settings mechanism, feature 008a) so neither is reachable at a disabled location
   (FR-004)
-- [ ] T038 [P] [US2] Populate `qrCheckIn` i18n keys (scan confirmation, three rejection
+- [X] T038 [P] [US2] Populate `qrCheckIn` i18n keys (scan confirmation, three rejection
   messages) in `mobile/i18n/locales/{nl,fr,en}.json`
-- [ ] T039 [P] [US2] Populate `qrCheckIn` i18n keys ("Show code" action, loading/offline states)
+- [X] T039 [P] [US2] Populate `qrCheckIn` i18n keys ("Show code" action, loading/offline states)
   in `parent-mobile/i18n/locales/{nl,fr,en}.json`, warm parent-facing register per spec.md UX
   Requirements
 
@@ -225,11 +225,11 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
 
 ### Tests for User Story 3
 
-- [ ] T040 [P] [US3] Regression test: `POST /api/attendance/check-in`/`check-out` behavior and
+- [X] T040 [P] [US3] Regression test: `POST /api/attendance/check-in`/`check-out` behavior and
   response shape are byte-identical to pre-feature behavior regardless of
   `Location.QrCheckInEnabled`'s value, in
   `backend/ChildCare.Api.Tests/Attendance/QrCheckInManualFallbackTests.cs`
-- [ ] T040a [P] [US3] Jest test: the tablet scan screen renders its camera-permission-denied/
+- [X] T040a [P] [US3] Jest test: the tablet scan screen renders its camera-permission-denied/
   camera-unavailable fallback state (with a working link back to manual tap) when
   `expo-camera`'s permission/availability check fails, in
   `mobile/__tests__/screens/scan.test.tsx` (write first, expect it to fail against T036's screen
@@ -237,10 +237,10 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Add a camera-permission-denied / camera-unavailable fallback state to the
+- [X] T041 [US3] Add a camera-permission-denied / camera-unavailable fallback state to the
   scan-mode screen (T036) that surfaces a clear path back to the existing manual tap flow
   (FR-013) rather than a dead end (satisfies T040a)
-- [ ] T042 [US3] Confirm (code review, no new endpoint) that `CheckInCommand`/`CheckOutCommand`
+- [X] T042 [US3] Confirm (code review, no new endpoint) that `CheckInCommand`/`CheckOutCommand`
   received zero modifications by Phase 4 — VerifyCheckInCodeCommandHandler only calls them via
   `IMediator.Send`, per research.md R5's parity requirement
 

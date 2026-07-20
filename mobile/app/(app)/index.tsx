@@ -3,11 +3,12 @@ import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl, Activity
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
-import { AlertTriangle, Thermometer, ChevronRight, Plus, ListChecks, X, Check } from "lucide-react-native";
+import { AlertTriangle, Thermometer, ChevronRight, Plus, ListChecks, X, Check, QrCode } from "lucide-react-native";
 import { apiClient } from "../../services/apiClient";
 import { getCached, setCached } from "../../services/readCache";
 import { syncPendingQueue } from "../../services/syncEngine";
 import { checkIn, checkOut, getBkrRatio, getTodayAttendanceByChildId, todayDateString } from "../../services/attendance";
+import { getRoster } from "../../services/roomShift";
 import { getGroupTimeline } from "../../services/groupActivities";
 import { getPendingPhotoCountForActivity } from "../../services/photoUploadQueue";
 import { useColors } from "../../hooks/useColors";
@@ -84,6 +85,9 @@ export default function GroupViewScreen() {
   const [tab, setTab] = useState<"children" | "timeline">("children");
   const [timelineEntries, setTimelineEntries] = useState<GroupTimelineEntryResponse[]>([]);
   const [addActivityVisible, setAddActivityVisible] = useState(false);
+  // Feature 021, FR-004 — mirrors requiresCaregiverPin's own roster-fetched-settings pattern
+  // (feature 008b): the "Scan" quick action is reachable only when this location has opted in.
+  const [qrCheckInEnabled, setQrCheckInEnabled] = useState(false);
 
   // Feature 009c — research.md R7: multi-select is a mode on this existing roster, not a
   // separate screen/picker.
@@ -133,6 +137,12 @@ export default function GroupViewScreen() {
     } catch {
       // Offline or request failed — the group view still renders, just without today's
       // present/absent state until the next successful load.
+    }
+    try {
+      setQrCheckInEnabled((await getRoster()).qrCheckInEnabled);
+    } catch {
+      // Offline or request failed — defaults to hidden (false) until the next successful load,
+      // never shown-but-broken.
     }
     await refreshBkr();
     await loadTimeline();
@@ -266,6 +276,17 @@ export default function GroupViewScreen() {
             </Text>
           </TouchableOpacity>
         ))}
+        {tab === "children" && !multiSelectMode && qrCheckInEnabled && (
+          <TouchableOpacity
+            testID="scan-quick-action"
+            onPress={() => router.push("/(app)/scan")}
+            accessibilityLabel={t("qrCheckIn.scanAction")}
+            style={{ minWidth: 48, minHeight: 48, alignItems: "center", justifyContent: "center" }}
+            className="rounded-lg bg-surface-soft dark:bg-surface-soft-dark"
+          >
+            <QrCode size={20} strokeWidth={2} color={colors.text} />
+          </TouchableOpacity>
+        )}
         {tab === "children" && (
           <TouchableOpacity
             onPress={multiSelectMode ? exitMultiSelect : enterMultiSelect}

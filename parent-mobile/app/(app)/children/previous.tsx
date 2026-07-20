@@ -89,7 +89,7 @@ export default function PreviousChildrenScreen() {
             <Text className="text-text-soft dark:text-text-soft-dark text-xs mb-2">
               {t("previousChildren.enrollmentPeriod", { start: child.enrollmentStart ?? "—", end: child.enrollmentEnd })}
             </Text>
-            <DailySummaryCard child={child} summary={summaries[child.id] ?? null} />
+            <DailySummaryCard child={{ ...child, qrCheckInEnabled: false }} summary={summaries[child.id] ?? null} />
             <TouchableOpacity
               onPress={() => router.push("/(app)/invoices")}
               className="flex-row items-center bg-surface-soft dark:bg-surface-soft-dark rounded-lg px-4 mt-2"

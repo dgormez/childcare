@@ -389,6 +389,7 @@
       "cooldown": "Al verwerkt — een moment geduld"
     },
     "cameraUnavailable": "Camera niet beschikbaar",
-    "useManualInstead": "Gebruik handmatig inchecken"
+    "useManualInstead": "Gebruik handmatig inchecken",
+    "offlineUseManual": "Geen verbinding — scannen vereist dit. Gebruik handmatig inchecken"
   }
 }

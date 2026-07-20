@@ -389,6 +389,7 @@
       "cooldown": "Déjà traité — un instant"
     },
     "cameraUnavailable": "Caméra indisponible",
-    "useManualInstead": "Utiliser l'enregistrement manuel"
+    "useManualInstead": "Utiliser l'enregistrement manuel",
+    "offlineUseManual": "Pas de connexion — le scan en a besoin. Utilisez l'enregistrement manuel"
   }
 }

@@ -149,7 +149,8 @@ public static class AttendanceEndpoints
     private static IResult MapVerifyResult(VerifyCheckInCodeResult result)
     {
         if (result.Succeeded)
-            return Results.Ok(new VerifyCheckInCodeResponse(result.Response!, result.Direction!));
+            return Results.Ok(new VerifyCheckInCodeResponse(
+                result.Response!, result.Direction!, result.ChildFirstName!, result.ChildLastName!, result.ChildPhotoDownloadUrl));
 
         return result.Failure switch
         {

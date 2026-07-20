@@ -38,12 +38,25 @@ public class VerifyCheckInCodeResult
 {
     public AttendanceRecordResponse? Response { get; private init; }
     public string? Direction { get; private init; }
+    // FR-008/User Story 2 — the tablet's scan confirmation shows the child's name/photo, not
+    // just an id; resolved here rather than pushing a second lookup onto the caregiver tablet.
+    public string? ChildFirstName { get; private init; }
+    public string? ChildLastName { get; private init; }
+    public string? ChildPhotoDownloadUrl { get; private init; }
     public VerifyCheckInCodeFailure? Failure { get; private init; }
     public AttendanceFailure? AttendanceFailure { get; private init; }
     public bool Succeeded => Failure is null;
 
-    public static VerifyCheckInCodeResult Success(AttendanceRecordResponse response, string direction) =>
-        new() { Response = response, Direction = direction };
+    public static VerifyCheckInCodeResult Success(
+        AttendanceRecordResponse response, string direction, string childFirstName, string childLastName, string? childPhotoDownloadUrl) =>
+        new()
+        {
+            Response = response,
+            Direction = direction,
+            ChildFirstName = childFirstName,
+            ChildLastName = childLastName,
+            ChildPhotoDownloadUrl = childPhotoDownloadUrl,
+        };
 
     public static VerifyCheckInCodeResult Fail(VerifyCheckInCodeFailure failure) => new() { Failure = failure };
 
@@ -63,7 +76,8 @@ public class VerifyCheckInCodeResult
 public class VerifyCheckInCodeCommandHandler(
     ITenantDbContext db,
     ICheckInCodeService codeService,
-    IMediator mediator) : IRequestHandler<VerifyCheckInCodeCommand, VerifyCheckInCodeResult>
+    IMediator mediator,
+    IProfilePhotoStorage photoStorage) : IRequestHandler<VerifyCheckInCodeCommand, VerifyCheckInCodeResult>
 {
     public async Task<VerifyCheckInCodeResult> Handle(VerifyCheckInCodeCommand request, CancellationToken cancellationToken)
     {
@@ -101,7 +115,8 @@ public class VerifyCheckInCodeCommandHandler(
                 return VerifyCheckInCodeResult.FailAttendance(checkOutResult.Failure!.Value);
 
             codeService.MarkConsumed(nonce);
-            return VerifyCheckInCodeResult.Success(checkOutResult.Response!, "check-out");
+            var (firstNameOut, lastNameOut, photoUrlOut) = await ResolveChildDisplayAsync(childId, cancellationToken);
+            return VerifyCheckInCodeResult.Success(checkOutResult.Response!, "check-out", firstNameOut, lastNameOut, photoUrlOut);
         }
 
         var checkInResult = await mediator.Send(new CheckInCommand(childId, request.LocationId, request.GroupId, today), cancellationToken);
@@ -109,6 +124,14 @@ public class VerifyCheckInCodeCommandHandler(
             return VerifyCheckInCodeResult.FailAttendance(checkInResult.Failure!.Value);
 
         codeService.MarkConsumed(nonce);
-        return VerifyCheckInCodeResult.Success(checkInResult.Response!, "check-in");
+        var (firstNameIn, lastNameIn, photoUrlIn) = await ResolveChildDisplayAsync(childId, cancellationToken);
+        return VerifyCheckInCodeResult.Success(checkInResult.Response!, "check-in", firstNameIn, lastNameIn, photoUrlIn);
+    }
+
+    private async Task<(string FirstName, string LastName, string? PhotoUrl)> ResolveChildDisplayAsync(Guid childId, CancellationToken cancellationToken)
+    {
+        var child = await db.Children.AsNoTracking().FirstAsync(c => c.Id == childId, cancellationToken);
+        var photoUrl = await photoStorage.CreateDownloadUrlAsync(child.ProfilePhotoObjectPath, cancellationToken);
+        return (child.FirstName, child.LastName, photoUrl);
     }
 }

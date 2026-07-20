@@ -28,7 +28,7 @@ function jsonResponse(status: number, body: unknown) {
   return { response: { ok, status, json: async () => body }, data: ok ? body : undefined, error: ok ? undefined : body };
 }
 
-const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01" };
+const child1: ParentChildResponse = { id: "c1", firstName: "Timmy", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2022-01-01", qrCheckInEnabled: false };
 
 const emptySummary: DailySummaryResponse = {
   napsCount: 0, bottlesCount: 0, diaperChangesCount: 0,
@@ -63,7 +63,7 @@ describe("HomeScreen quick actions (feature 013f, research.md R6)", () => {
   });
 
   it("still shows a quick action when at least one linked child allows it", async () => {
-    const child2: ParentChildResponse = { id: "c2", firstName: "Anna", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2023-01-01" };
+    const child2: ParentChildResponse = { id: "c2", firstName: "Anna", lastName: "Tester", photoDownloadUrl: null, dateOfBirth: "2023-01-01", qrCheckInEnabled: false };
     getMock.mockImplementation((path: string, opts?: { params?: { path?: { childId?: string } } }) => {
       if (path === "/api/parent/children") return Promise.resolve(jsonResponse(200, [child1, child2]));
       if (path === "/api/parent/children/{childId}/daily-summary") return Promise.resolve(jsonResponse(200, emptySummary));
