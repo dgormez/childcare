@@ -81,6 +81,25 @@ public static class ChildrenEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 022 FR-001/FR-005: create or correct a child's identity verification.
+        // VerifiedByUserId/VerifiedByEmail are resolved server-side from the caller's JWT claims,
+        // never from the request body — mirrors 013h's ActingUserOf pattern.
+        group.MapPost("/{id:guid}/identity-verification", async (Guid id, VerifyChildIdentityRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var (userId, email) = ActingUserOf(ctx);
+            var documentType = IdDocumentTypeExtensions.TryParseWireString(req.DocumentType, out var parsed) ? parsed : (IdDocumentType?)null;
+            var result = await mediator.Send(new VerifyChildIdentityCommand(id, documentType, req.Note, userId, email));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        // Feature 022 FR-009/FR-010/FR-011: set/update a child's encrypted National Register
+        // Number. Never echoes the raw value back — ChildResponse only ever carries NrnLast4.
+        group.MapPut("/{id:guid}/nrn", async (Guid id, SetChildNrnRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new SetChildNrnCommand(id, req.Nrn));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPost("/{id:guid}/deactivate", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new DeactivateChildCommand(id));
@@ -141,6 +160,13 @@ public static class ChildrenEndpoints
         var idClaim = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return (role, idClaim is null ? null : Guid.Parse(idClaim));
     }
+
+    // Feature 022: the identity-verifying director's id/email, resolved from the same claims
+    // JwtService already issues — mirrors PlatformAdminVaccineTypeEndpoints.cs's ActingUserOf
+    // (013h). Only called on DirectorOnly routes, so both claims are always present.
+    private static (Guid UserId, string Email) ActingUserOf(HttpContext ctx) => (
+        Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value),
+        ctx.User.FindFirst(ClaimTypes.Email)!.Value);
 
     private static IResult MapResult(ChildResult result, Func<ChildResponse, IResult> onSuccess)
     {

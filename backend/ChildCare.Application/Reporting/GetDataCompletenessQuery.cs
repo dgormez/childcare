@@ -102,6 +102,28 @@ public class GetDataCompletenessQueryHandler(ITenantDbContext db)
                 "missing_pin", "staff", entry.Staff.Id, $"{entry.Staff.FirstName} {entry.Staff.LastName}", null));
         }
 
+        // Feature 022 FR-007/FR-008 (research.md R5): deliberately its own children query, not
+        // the attendance-linked `children`/`childIds` above — a brand-new enrolment with no
+        // attendance yet is exactly the case a director needs reminding about, and reusing the
+        // attendance-scoped set would silently exclude it.
+        var unverifiedChildrenQuery = db.Children.Where(c => c.DeactivatedAt == null && c.IdVerifiedAt == null);
+        if (request.LocationId is not null)
+        {
+            var childIdsAtLocation = db.ChildGroupAssignments
+                .Where(a => a.EndDate == null)
+                .Join(db.Groups, a => a.GroupId, g => g.Id, (a, g) => new { a.ChildId, g.LocationId })
+                .Where(x => x.LocationId == request.LocationId)
+                .Select(x => x.ChildId);
+            unverifiedChildrenQuery = unverifiedChildrenQuery.Where(c => childIdsAtLocation.Contains(c.Id));
+        }
+        var unverifiedChildren = await unverifiedChildrenQuery.ToListAsync(cancellationToken);
+
+        foreach (var child in unverifiedChildren)
+        {
+            flags.Add(new DataCompletenessFlagResponse(
+                "missing_identity_verification", "child", child.Id, $"{child.FirstName} {child.LastName}", null));
+        }
+
         return new DataCompletenessResponse(flags);
     }
 }

@@ -49,11 +49,15 @@ public class ListChildrenQueryHandler(ITenantDbContext db, IProfilePhotoStorage 
 
         var children = await query.ToListAsync(cancellationToken);
 
+        // Feature 022 FR-015 (research.md R8): only a Director reading this shared route sees
+        // verification/NRN fields — Staff and device-token callers (CallerRole null) don't.
+        var includeIdentityVerification = string.Equals(request.CallerRole, "director", StringComparison.OrdinalIgnoreCase);
+
         var results = new List<ChildResponse>(children.Count);
         foreach (var child in children)
         {
             var photoUrl = await photoStorage.CreateDownloadUrlAsync(child.ProfilePhotoObjectPath, cancellationToken);
-            results.Add(ChildMapper.ToResponse(child, photoUrl));
+            results.Add(ChildMapper.ToResponse(child, photoUrl, includeIdentityVerification));
         }
 
         return results;

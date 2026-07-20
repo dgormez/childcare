@@ -20,4 +20,13 @@ public record ChildResponse(
     string? Kindcode,
     DateTime? DeactivatedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    // Feature 022. Null for Staff/device-token callers (FR-015, research.md R8) regardless of
+    // whether the child is actually verified — see ChildMapper.ToResponse.
+    DateTime? IdVerifiedAt,
+    string? IdVerifiedByEmail,
+    string? IdDocumentType,
+    string? IdDocumentNote,
+    DateTime? FirstIdVerifiedAt,
+    string? FirstIdVerifiedByEmail,
+    string? NrnLast4);
