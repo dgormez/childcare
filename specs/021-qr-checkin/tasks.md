@@ -90,6 +90,10 @@ only that location's setting changed (a second location's `GET` still shows disa
   test file as T011
 - [ ] T013 [P] [US1] Integration test: a non-director caller gets `403`; an unknown `locationId`
   gets `404`, in the same test file as T011
+- [ ] T013a [P] [US1] Integration test (FR-015): an `AttendanceRecord` created before a
+  location's QR check-in setting is toggled is byte-identical (all fields) before and after the
+  toggle — enabling or disabling the setting must not touch any existing attendance data, in the
+  same test file as T011
 - [ ] T014 [P] [US1] Integration test: every existing/new `Location` row defaults to
   `QrCheckInEnabled = false` (SC-002), in the same test file as T011
 
@@ -225,12 +229,17 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
   response shape are byte-identical to pre-feature behavior regardless of
   `Location.QrCheckInEnabled`'s value, in
   `backend/ChildCare.Api.Tests/Attendance/QrCheckInManualFallbackTests.cs`
+- [ ] T040a [P] [US3] Jest test: the tablet scan screen renders its camera-permission-denied/
+  camera-unavailable fallback state (with a working link back to manual tap) when
+  `expo-camera`'s permission/availability check fails, in
+  `mobile/__tests__/screens/scan.test.tsx` (write first, expect it to fail against T036's screen
+  until T041 adds the fallback state)
 
 ### Implementation for User Story 3
 
 - [ ] T041 [US3] Add a camera-permission-denied / camera-unavailable fallback state to the
   scan-mode screen (T036) that surfaces a clear path back to the existing manual tap flow
-  (FR-013) rather than a dead end
+  (FR-013) rather than a dead end (satisfies T040a)
 - [ ] T042 [US3] Confirm (code review, no new endpoint) that `CheckInCommand`/`CheckOutCommand`
   received zero modifications by Phase 4 — VerifyCheckInCodeCommandHandler only calls them via
   `IMediator.Send`, per research.md R5's parity requirement
@@ -247,6 +256,12 @@ enabled one, complete a check-in/check-out via the existing manual tap flow with
   simulator)
 - [ ] T045 Verify 48pt minimum touch targets on the tablet's "Scan" quick action and the
   manual-fallback entry point (platform-rules.md)
+- [ ] T046 [P] Integration test (SC-003): time `POST /api/attendance/qr-code/verify` end-to-end
+  (issuance → verify → committed attendance write) against a TestContainers-backed instance and
+  assert it completes well within the 10-second scan-to-confirmation budget, in
+  `backend/ChildCare.Api.Tests/Attendance/QrCheckInVerifyTests.cs` (server-side latency only —
+  the remaining client-side camera-decode-to-API-call time is a manual quickstart timing
+  observation, T043, not automatable in this test suite)
 
 ---
 
