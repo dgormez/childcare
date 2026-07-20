@@ -12,6 +12,13 @@ with a scan for locations that opt in. This must be a per-location setting that 
 manages in the web admin (director) platform, and it MUST be disabled by default for every
 location until a director explicitly turns it on."
 
+## Clarifications
+
+### Session 2026-07-20 (autonomous run — recommended option selected per each question, no precedent conflict found)
+
+- Q: FR-006 says the check-in code has a "short, fixed validity window" but doesn't state a number — what should it be? → A: 30 seconds, refreshed automatically at/before ~20 seconds — short enough to bound replay risk from a captured/photographed screen, long enough to comfortably clear the sub-10-second scan-to-confirmation target (SC-003) without expiring mid-scan under normal conditions.
+- Q: The tablet auto-returns to scan mode after a successful scan (User Story 2); if the parent's phone is still pointed at the camera showing the same code, what stops an immediate accidental re-scan from re-toggling the child right back out? → A: a brief server-side cooldown — a code that was just consumed cannot be consumed again for a short buffer window, so the client's auto-return-to-scan-mode behavior (the fast, one-tap-away UX this feature exists to produce) doesn't need a manual "resume scanning" step or an artificial client-side delay.
+
 ## Product Context
 
 ### Feature Type
@@ -70,7 +77,7 @@ This enables a caregiver at an opted-in location to check a child in or out with
 
 **Performance considerations**: code verification sits in the caregiver's scan-to-confirmation path and must resolve well within the 10-second SC-003 budget — no heavyweight computation beyond a signature/TTL check and the existing attendance-toggle write.
 
-**Testing requirements**: setting-toggle tests (default-disabled for existing + new locations, save/revert-on-failure, structured log entry per FR-016); code lifecycle tests (issuance, expiry, tamper-rejection, wrong-location-rejection); parity tests proving a QR-originated `AttendanceRecord` is indistinguishable from a manually-tapped one for BKR/reporting purposes (FR-014, mirrors feature 031's RBAC-parity test pattern); offline-queue test reusing feature 008's existing reconciliation test harness.
+**Testing requirements**: setting-toggle tests (default-disabled for existing + new locations, save/revert-on-failure, structured log entry per FR-016); code lifecycle tests (issuance, 30-second expiry, tamper-rejection, wrong-location-rejection, post-consumption cooldown rejection per FR-019); parity tests proving a QR-originated `AttendanceRecord` is indistinguishable from a manually-tapped one for BKR/reporting purposes (FR-014, mirrors feature 031's RBAC-parity test pattern); offline-queue test reusing feature 008's existing reconciliation test harness.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -183,6 +190,10 @@ location) and confirming manual tap-based check-in completes exactly as it does 
   the system must not create duplicate or conflicting attendance records; the second scan is
   treated as the current authoritative state transition, consistent with how the existing manual
   tap flow already handles rapid repeated taps.
+- The tablet auto-returns to scan mode immediately after a successful scan, and the parent's code
+  may still be visible in the camera's view. Per FR-019, the just-consumed code is rejected by its
+  cooldown window if scanned again immediately, rather than accidentally re-toggling the child
+  back out.
 - QR check-in must never bypass or weaken the caregiver's physical receipt of the child — this
   feature only changes how the attendance record is created, never the handover ritual itself.
 
@@ -204,8 +215,8 @@ location) and confirming manual tap-based check-in completes exactly as it does 
 - **FR-005**: When a location's QR check-in setting is enabled, the parent app MUST display a
   code, scoped to one child and one parent, that a caregiver's tablet can scan to identify that
   child.
-- **FR-006**: Each displayed code MUST expire after a short, fixed validity window and MUST be
-  refreshed automatically before or upon expiry so a parent does not need to manually request a
+- **FR-006**: Each displayed code MUST expire 30 seconds after issuance and MUST be refreshed
+  automatically at or before the ~20-second mark so a parent does not need to manually request a
   new one under normal use.
 - **FR-007**: Each code MUST be tamper-evident — the system MUST reject any code that has been
   altered or was not issued by the system itself, so a forged or guessed code cannot produce a
@@ -241,6 +252,10 @@ location) and confirming manual tap-based check-in completes exactly as it does 
 - **FR-018**: If saving the setting fails (network error, validation error, or the director is no
   longer authorized), the director MUST see a clear, human-readable error and the toggle MUST
   revert to its last-saved state — never silently appear changed when the save did not succeed.
+- **FR-019**: A code that has just been successfully consumed by a scan MUST NOT be consumable
+  again for a short server-enforced cooldown window, so a tablet auto-returning to scan mode
+  (User Story 2) does not accidentally re-toggle the same child if the parent's still-displayed
+  code remains in view of the camera.
 
 ### Key Entities
 
