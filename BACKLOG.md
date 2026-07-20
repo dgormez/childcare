@@ -63,7 +63,7 @@
 | 030 | `030-family-siblings` | Multi-child family: link siblings under one parent account, family dashboard in parent app, sibling flag on child/contract records, impact on invoicing and day-reservations | 006, 007 | ✅ Done |
 | 031 | `031-photo-lifecycle-governance` | Photo retention/archiving on child departure, GCS storage-class cost tiering, explicit staff/admin/director photo-action RBAC, parent original-download support | 006, 009b, 013b | ✅ Done |
 | 021 | `021-qr-checkin` | QR contactless check-in — parent shows QR on phone, caregiver tablet scans, no staff tap needed at drop-off | 010 | ✅ Done |
-| 022 | `022-id-verified-registration` | Streamlined child/parent registration form with director "ID/birth certificate seen" verification checkbox — replaces eID card reader approach | 006 | 🔲 Not started |
+| 022 | `022-id-verified-registration` | Streamlined child/parent registration form with director "ID/birth certificate seen" verification checkbox — replaces eID card reader approach | 006 | ✅ Done |
 | 023 | `023-digital-enrollment` | Public online enrollment form + parent-initiated waiting list self-registration | 012a | 🔲 Not started |
 | 024 | `024-esignature` | Digital contract e-signature; SEPA direct debit mandate embedded in signing flow | 007 | 🔲 Not started |
 | 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | 🔲 Not started |
