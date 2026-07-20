@@ -1,3 +1,5 @@
+using ChildCare.Domain.Enums;
+
 namespace ChildCare.Domain.Entities;
 
 // Standalone person record. Never deleted; a contact simply accumulates/loses ChildContact
@@ -10,6 +12,18 @@ public class Contact
     public string Phone     { get; set; } = string.Empty;
     public string? Email    { get; set; }
     public string Locale    { get; set; } = "nl";
+
+    // Feature 022: identity-verification audit trail — same shape as Child's, independent of
+    // which children this contact is linked to (spec.md FR-002). See Child.cs for field-by-field
+    // reasoning.
+    public DateTime?       IdVerifiedAt            { get; set; }
+    public Guid?           IdVerifiedByUserId      { get; set; }
+    public string?         IdVerifiedByEmail       { get; set; }
+    public IdDocumentType? IdDocumentType          { get; set; }
+    public string?         IdDocumentNote          { get; set; }
+    public DateTime?       FirstIdVerifiedAt       { get; set; }
+    public Guid?           FirstIdVerifiedByUserId { get; set; }
+    public string?         FirstIdVerifiedByEmail  { get; set; }
 
     // Feature 013: set once this contact accepts a director-issued parent-app invitation
     // (ParentInvitation). Null = no parent account exists yet. One Contact <-> at most one

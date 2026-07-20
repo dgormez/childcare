@@ -37,6 +37,12 @@ const primaryContact: ChildContactResponse = {
   relationship: "Mother",
   canPickup: true,
   isPrimary: true,
+  idVerifiedAt: null,
+  idVerifiedByEmail: null,
+  idDocumentType: null,
+  idDocumentNote: null,
+  firstIdVerifiedAt: null,
+  firstIdVerifiedByEmail: null,
 };
 
 const secondaryContact: ChildContactResponse = {
@@ -49,6 +55,12 @@ const secondaryContact: ChildContactResponse = {
   relationship: "Father",
   canPickup: true,
   isPrimary: false,
+  idVerifiedAt: null,
+  idVerifiedByEmail: null,
+  idDocumentType: null,
+  idDocumentNote: null,
+  firstIdVerifiedAt: null,
+  firstIdVerifiedByEmail: null,
 };
 
 beforeEach(() => {

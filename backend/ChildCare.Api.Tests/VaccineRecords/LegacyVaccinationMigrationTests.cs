@@ -183,8 +183,28 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "FamilyInvoiceBundlingEnabled";
             ALTER TABLE "{schemaName}"."locations"
                 DROP COLUMN "QrCheckInEnabled";
+            ALTER TABLE "{schemaName}"."children"
+                DROP COLUMN "IdVerifiedAt",
+                DROP COLUMN "IdVerifiedByUserId",
+                DROP COLUMN "IdVerifiedByEmail",
+                DROP COLUMN "IdDocumentType",
+                DROP COLUMN "IdDocumentNote",
+                DROP COLUMN "FirstIdVerifiedAt",
+                DROP COLUMN "FirstIdVerifiedByUserId",
+                DROP COLUMN "FirstIdVerifiedByEmail",
+                DROP COLUMN "EncryptedNrn",
+                DROP COLUMN "NrnLast4";
+            ALTER TABLE "{schemaName}"."contacts"
+                DROP COLUMN "IdVerifiedAt",
+                DROP COLUMN "IdVerifiedByUserId",
+                DROP COLUMN "IdVerifiedByEmail",
+                DROP COLUMN "IdDocumentType",
+                DROP COLUMN "IdDocumentNote",
+                DROP COLUMN "FirstIdVerifiedAt",
+                DROP COLUMN "FirstIdVerifiedByUserId",
+                DROP COLUMN "FirstIdVerifiedByEmail";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn';
             """);
     }
 

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Users, Star, Trash2 } from "lucide-react";
+import { Users, Star, Trash2, CheckCircle, Clock, ShieldCheck } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -9,6 +9,7 @@ import { EmptyState } from "../EmptyState";
 import { ErrorState } from "../ErrorState";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { LinkContactDialog } from "./LinkContactDialog";
+import { ContactIdentityVerificationDialog } from "./ContactIdentityVerificationDialog";
 import type { ChildContactResponse } from "../../lib/types";
 
 interface ChildContactsTabProps {
@@ -39,6 +40,8 @@ export function ChildContactsTab({ childId }: ChildContactsTabProps) {
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [primaryError, setPrimaryError] = useState<string | null>(null);
+  const [verifyTarget, setVerifyTarget] = useState<ChildContactResponse | null>(null);
+  const tId = useTranslations("children.contacts.identity");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -111,6 +114,17 @@ export function ChildContactsTab({ childId }: ChildContactsTabProps) {
                     {contact.firstName} {contact.lastName}
                   </span>
                   {contact.isPrimary && <Badge variant="neutral">{t("primaryBadge")}</Badge>}
+                  {contact.idVerifiedAt ? (
+                    <Badge variant="success" className="inline-flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" strokeWidth={2} />
+                      {tId("verifiedBadge")}
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning" className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" strokeWidth={2} />
+                      {tId("unverifiedBadge")}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-text-soft dark:text-text-soft-dark">
                   {t(`relationships.${RELATIONSHIP_WIRE_TO_KEY[contact.relationship] ?? "other"}`)}
@@ -118,6 +132,9 @@ export function ChildContactsTab({ childId }: ChildContactsTabProps) {
                 </p>
               </div>
               <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" aria-label={tId("verifyAction")} onClick={() => setVerifyTarget(contact)}>
+                  <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+                </Button>
                 {!contact.isPrimary && (
                   <Button variant="ghost" size="sm" aria-label={t("setPrimary")} onClick={() => setPrimary(contact)}>
                     <Star className="h-4 w-4" strokeWidth={2} />
@@ -145,6 +162,13 @@ export function ChildContactsTab({ childId }: ChildContactsTabProps) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onLinked={load}
+      />
+
+      <ContactIdentityVerificationDialog
+        contact={verifyTarget}
+        open={!!verifyTarget}
+        onOpenChange={(open) => !open && setVerifyTarget(null)}
+        onVerified={load}
       />
 
       <ConfirmDialog

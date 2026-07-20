@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ChildCare.Application.Contacts;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
@@ -30,6 +31,17 @@ public static class ContactsEndpoints
         contacts.MapPut("/{id:guid}", async (Guid id, UpdateContactRequest req, IMediator mediator) =>
         {
             var result = await mediator.Send(new UpdateContactCommand(id, req.FirstName, req.LastName, req.Phone, req.Email, req.Locale));
+            return MapContactResult(result, onSuccess: Results.Ok);
+        });
+
+        // Feature 022 FR-002/FR-005: create or correct a contact's identity verification.
+        // VerifiedByUserId/VerifiedByEmail resolved server-side, same pattern as
+        // ChildrenEndpoints.cs's ActingUserOf.
+        contacts.MapPost("/{id:guid}/identity-verification", async (Guid id, VerifyContactIdentityRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var (userId, email) = ActingUserOf(ctx);
+            var documentType = IdDocumentTypeExtensions.TryParseWireString(req.DocumentType, out var parsed) ? parsed : (IdDocumentType?)null;
+            var result = await mediator.Send(new VerifyContactIdentityCommand(id, documentType, req.Note, userId, email));
             return MapContactResult(result, onSuccess: Results.Ok);
         });
 
@@ -66,6 +78,12 @@ public static class ContactsEndpoints
             return Results.Ok();
         });
     }
+
+    // Feature 022 — mirrors ChildrenEndpoints.cs's ActingUserOf / PlatformAdminVaccineTypeEndpoints.cs
+    // (013h). Only called on DirectorOnly routes, so both claims are always present.
+    private static (Guid UserId, string Email) ActingUserOf(HttpContext ctx) => (
+        Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value),
+        ctx.User.FindFirst(ClaimTypes.Email)!.Value);
 
     private static IResult MapContactResult(ContactResult result, Func<ContactResponse, IResult> onSuccess) =>
         result.Succeeded ? onSuccess(result.Response!) : MapContactFailure(result.Failure!.Value);

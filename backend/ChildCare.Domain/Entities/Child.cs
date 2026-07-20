@@ -31,6 +31,25 @@ public class Child
     // Phase 1 (FR-009).
     public string? Kindcode { get; set; }
 
+    // Feature 022: identity-verification audit trail. IdVerifiedAt/IdDocumentType together form
+    // the "is this verified" state (spec.md FR-003); *ByUserId has no DB-level FK (attribution
+    // field, not a queried relationship — mirrors VaccineType.DeactivatedByUserId, 013h).
+    // First* is set once and never overwritten by a later correction (FR-006).
+    public DateTime?       IdVerifiedAt            { get; set; }
+    public Guid?           IdVerifiedByUserId      { get; set; }
+    public string?         IdVerifiedByEmail       { get; set; }
+    public IdDocumentType? IdDocumentType          { get; set; }
+    public string?         IdDocumentNote          { get; set; }
+    public DateTime?       FirstIdVerifiedAt       { get; set; }
+    public Guid?           FirstIdVerifiedByUserId { get; set; }
+    public string?         FirstIdVerifiedByEmail  { get; set; }
+
+    // Belgian National Register Number — encrypted at rest (ASP.NET Core Data Protection,
+    // research.md R3). NrnLast4 is plaintext, computed once at write time, never derived by
+    // decrypting EncryptedNrn (FR-011/FR-012).
+    public string? EncryptedNrn { get; set; }
+    public string? NrnLast4     { get; set; }
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

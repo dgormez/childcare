@@ -101,4 +101,78 @@ public class DataCompletenessEndpointsTests(OrganisationOnboardingWebAppFactory 
         var bodyB = (await responseB.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
         Assert.DoesNotContain(bodyB.Flags, f => f.SubjectId == childA.Id);
     }
+
+    // Feature 022 FR-007/FR-008 (research.md R5): the fifth flag type, deliberately scoped
+    // independently of the four checks above.
+
+    [Fact]
+    public async Task DataCompleteness_UnverifiedChild_FlaggedEvenWithoutAttendance()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Completeness Unverified Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+
+        // Deliberately never checked in — proving this flag's scoping is independent of the
+        // other four checks' attendance-linked child set (research.md R5).
+        var newEnrolment = await CreateChildAsync(client, org.AccessToken, "NeverAttendedChild");
+
+        var response = await GetCompletenessAsync(client, org.AccessToken);
+        var body = (await response.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
+        Assert.Contains(body.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == newEnrolment.Id);
+    }
+
+    [Fact]
+    public async Task DataCompleteness_DeactivatedUnverifiedChild_ProducesNoFlag()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Completeness Deactivated Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken, "DeactivatedChild");
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/deactivate", org.AccessToken));
+
+        var response = await GetCompletenessAsync(client, org.AccessToken);
+        var body = (await response.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
+        Assert.DoesNotContain(body.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == child.Id);
+    }
+
+    [Fact]
+    public async Task DataCompleteness_VerifyingFlaggedChild_RemovesFlagOnNextQuery()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Completeness Verify Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken, "ToBeVerifiedChild");
+
+        var beforeResponse = await GetCompletenessAsync(client, org.AccessToken);
+        var beforeBody = (await beforeResponse.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
+        Assert.Contains(beforeBody.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == child.Id);
+
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{child.Id}/identity-verification", org.AccessToken,
+            new VerifyChildIdentityRequest("birth_certificate", null)));
+
+        var afterResponse = await GetCompletenessAsync(client, org.AccessToken);
+        var afterBody = (await afterResponse.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
+        Assert.DoesNotContain(afterBody.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == child.Id);
+    }
+
+    [Fact]
+    public async Task DataCompleteness_LocationFiltered_ExcludesUnverifiedChildAtOtherLocation()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Completeness LocationScope Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var locationA = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var locationB = await CreateLocationAsync(client, org.AccessToken, "Location B");
+        var groupA = await CreateGroupAsync(client, org.AccessToken, "Group A", locationA.Id);
+        var groupB = await CreateGroupAsync(client, org.AccessToken, "Group B", locationB.Id);
+
+        var childAtA = await CreateChildAsync(client, org.AccessToken, "ChildAtLocationA");
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{childAtA.Id}/groups", org.AccessToken,
+            new AssignChildToGroupRequest(groupA.Id, DateOnly.FromDateTime(DateTime.UtcNow))));
+        var childAtB = await CreateChildAsync(client, org.AccessToken, "ChildAtLocationB");
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/children/{childAtB.Id}/groups", org.AccessToken,
+            new AssignChildToGroupRequest(groupB.Id, DateOnly.FromDateTime(DateTime.UtcNow))));
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/reports/data-completeness?locationId={locationA.Id}", org.AccessToken));
+        var body = (await response.Content.ReadFromJsonAsync<DataCompletenessResponse>())!;
+
+        Assert.Contains(body.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == childAtA.Id);
+        Assert.DoesNotContain(body.Flags, f => f.Type == "missing_identity_verification" && f.SubjectId == childAtB.Id);
+    }
 }

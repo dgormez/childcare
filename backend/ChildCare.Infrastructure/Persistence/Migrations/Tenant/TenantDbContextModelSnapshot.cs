@@ -263,6 +263,19 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("EncryptedNrn")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("FirstIdVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FirstIdVerifiedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("FirstIdVerifiedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -284,6 +297,24 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("IdDocumentNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IdDocumentType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("IdVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdVerifiedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("IdVerifiedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Kindcode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -300,6 +331,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<string>("Nationality")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NrnLast4")
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
 
                     b.Property<string>("PediatricianName")
                         .HasMaxLength(200)
@@ -551,10 +586,38 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
 
+                    b.Property<DateTime?>("FirstIdVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FirstIdVerifiedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("FirstIdVerifiedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("IdDocumentNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IdDocumentType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("IdVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdVerifiedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("IdVerifiedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("LastName")
                         .IsRequired()

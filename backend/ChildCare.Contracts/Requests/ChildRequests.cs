@@ -34,6 +34,12 @@ public record UpdateChildRequest(
     string? HealthInsuranceNumber,
     string? Kindcode);
 
+public record VerifyChildIdentityRequest(
+    string DocumentType,
+    string? Note);
+
+public record SetChildNrnRequest(string Nrn);
+
 public record CreateContactRequest(
     string FirstName,
     string LastName,
@@ -47,6 +53,10 @@ public record UpdateContactRequest(
     string Phone,
     string? Email,
     string Locale);
+
+public record VerifyContactIdentityRequest(
+    string DocumentType,
+    string? Note);
 
 public record LinkContactToChildRequest(
     Guid ContactId,

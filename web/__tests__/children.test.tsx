@@ -52,6 +52,13 @@ function makeChild(overrides: Partial<ChildResponse> = {}): ChildResponse {
     deactivatedAt: null,
     createdAt: "2026-01-01T09:00:00Z",
     updatedAt: "2026-01-01T09:00:00Z",
+    idVerifiedAt: null,
+    idVerifiedByEmail: null,
+    idDocumentType: null,
+    idDocumentNote: null,
+    firstIdVerifiedAt: null,
+    firstIdVerifiedByEmail: null,
+    nrnLast4: null,
     ...overrides,
   };
 }
@@ -143,6 +150,24 @@ describe("ChildrenPage", () => {
     mockGet({ "/api/children": [] });
     renderComponent(<ChildrenPage />);
     expect(await screen.findByText("No children yet.")).toBeInTheDocument();
+  });
+
+  // Feature 022 FR-007a
+  it("shows the unverified badge only for an active child with no recorded verification", async () => {
+    mockGet({
+      "/api/children": [
+        makeChild({ id: "child-unverified", firstName: "Unverified" }),
+        makeChild({ id: "child-verified", firstName: "Verified", idVerifiedAt: "2026-07-20T10:00:00Z" }),
+        makeChild({ id: "child-deactivated", firstName: "Deactivated", deactivatedAt: "2026-07-01T00:00:00Z" }),
+      ],
+    });
+    renderComponent(<ChildrenPage />);
+
+    await screen.findByText("Unverified Peeters");
+    const rows = screen.getAllByRole("row");
+    expect(within(rows.find((r) => r.textContent?.includes("Unverified Peeters"))!).getByText("Not verified")).toBeInTheDocument();
+    expect(within(rows.find((r) => r.textContent?.includes("Verified Peeters"))!).queryByText("Not verified")).not.toBeInTheDocument();
+    expect(within(rows.find((r) => r.textContent?.includes("Deactivated Peeters"))!).queryByText("Not verified")).not.toBeInTheDocument();
   });
 
   it("creates a child with only required fields via the New child dialog", async () => {

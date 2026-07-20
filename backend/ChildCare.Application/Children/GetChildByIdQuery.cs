@@ -36,6 +36,9 @@ public class GetChildByIdQueryHandler(ITenantDbContext db, IProfilePhotoStorage 
         }
 
         var photoUrl = await photoStorage.CreateDownloadUrlAsync(child.ProfilePhotoObjectPath, cancellationToken);
-        return ChildResult.Success(ChildMapper.ToResponse(child, photoUrl));
+        // Feature 022 FR-015 (research.md R8): only a Director reading this shared route sees
+        // verification/NRN fields — Staff and device-token callers (CallerRole null) don't.
+        var includeIdentityVerification = string.Equals(request.CallerRole, "director", StringComparison.OrdinalIgnoreCase);
+        return ChildResult.Success(ChildMapper.ToResponse(child, photoUrl, includeIdentityVerification));
     }
 }

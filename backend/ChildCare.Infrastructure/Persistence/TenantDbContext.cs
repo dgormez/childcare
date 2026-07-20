@@ -372,6 +372,15 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.PediatricianPhone).HasMaxLength(30);
             c.Property(x => x.HealthInsuranceNumber).HasMaxLength(50);
             c.Property(x => x.Kindcode).HasMaxLength(20);
+            c.Property(x => x.IdVerifiedByEmail).HasMaxLength(254);
+            c.Property(x => x.IdDocumentType)
+             .HasConversion(
+                 v => v == null ? null : v.ToString(),
+                 v => v == null ? null : (IdDocumentType?)Enum.Parse(typeof(IdDocumentType), v, ignoreCase: true))
+             .HasMaxLength(20);
+            c.Property(x => x.IdDocumentNote).HasMaxLength(500);
+            c.Property(x => x.FirstIdVerifiedByEmail).HasMaxLength(254);
+            c.Property(x => x.NrnLast4).HasMaxLength(4);
             c.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -385,6 +394,14 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.Email).HasMaxLength(254);
             c.Property(x => x.Locale).IsRequired().HasMaxLength(5);
             c.Property(x => x.PushToken).HasMaxLength(200);
+            c.Property(x => x.IdVerifiedByEmail).HasMaxLength(254);
+            c.Property(x => x.IdDocumentType)
+             .HasConversion(
+                 v => v == null ? null : v.ToString(),
+                 v => v == null ? null : (IdDocumentType?)Enum.Parse(typeof(IdDocumentType), v, ignoreCase: true))
+             .HasMaxLength(20);
+            c.Property(x => x.IdDocumentNote).HasMaxLength(500);
+            c.Property(x => x.FirstIdVerifiedByEmail).HasMaxLength(254);
             c.HasOne<TenantUser>().WithMany().HasForeignKey(x => x.TenantUserId);
             // Postgres treats NULLs as distinct in a unique index, so this allows any number of
             // not-yet-invited contacts (TenantUserId = null) while still enforcing at most one
