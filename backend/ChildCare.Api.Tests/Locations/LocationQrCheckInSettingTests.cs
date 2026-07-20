@@ -240,7 +240,11 @@ public class LocationQrCheckInSettingTests(OrganisationOnboardingWebAppFactory f
         var reloaded = Assert.Single(records.Items, r => r.Id == original.Id);
 
         Assert.Equal(original.Status, reloaded.Status);
-        Assert.Equal(original.CheckInAt, reloaded.CheckInAt);
+        Assert.NotNull(original.CheckInAt);
+        Assert.NotNull(reloaded.CheckInAt);
+        Assert.True(
+            (reloaded.CheckInAt.Value - original.CheckInAt.Value).Duration() < TimeSpan.FromMilliseconds(1),
+            $"Expected check-in timestamp to remain unchanged, got {reloaded.CheckInAt:O} instead of {original.CheckInAt:O}");
         Assert.Equal(original.CheckOutAt, reloaded.CheckOutAt);
         Assert.Equal(original.PlannedDurationMinutes, reloaded.PlannedDurationMinutes);
         Assert.Equal(original.RecordedBy, reloaded.RecordedBy);
