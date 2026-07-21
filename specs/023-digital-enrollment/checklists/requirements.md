@@ -44,4 +44,9 @@
   policy pattern) as grounding for planning, consistent with how prior specs (021, 022, 030, 031)
   use that subsection — this is planning-context grounding, not a substitute for the
   business-language Functional Requirements section, which stays implementation-free.
-- Ready for `/speckit-clarify` (optional, no open markers) or directly for `/speckit-plan`.
+- 2026-07-21 `/speckit-clarify` pass (autonomous run, no product owner present): one question
+  resolved with the industry-standard default — FR-008's reference number is a short,
+  human-legible alphanumeric code (excluding 0/O, 1/I/l), not a GUID or sequential integer,
+  since no comparable short-code generator exists elsewhere in this codebase to match instead.
+  All checklist items still pass after integration.
+- Ready for `/speckit-plan`.

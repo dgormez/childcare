@@ -13,6 +13,20 @@ director converts an entry. Includes anti-spam protection (honeypot + IP rate li
 parent-facing confirmation with a reference number, and a director-initiated tour-invitation
 email with an accept/decline link and a manually recorded outcome."
 
+## Clarifications
+
+### Session 2026-07-21 (autonomous run — recommended/industry-standard option selected, no
+product-owner ambiguity)
+
+- Q: FR-008's reference number needs to be usable when a family calls, emails, or visits the
+  center to inquire about their submission (per the Assumptions section) — what format should it
+  take? → A: a short, human-legible alphanumeric code (recommended default for this exact use
+  case — a "quote this when you contact us" reference — the same well-established pattern as a
+  booking/order confirmation code), excluding visually-confusable characters (0/O, 1/I/l), rather
+  than an opaque GUID or a sequential integer. No comparable short-code generator exists
+  elsewhere in this codebase to follow instead (confirmed by search), so this is a fresh,
+  industry-standard default, not a precedent match.
+
 ## Product Context
 
 ### Feature Type
@@ -353,9 +367,10 @@ re-enabling it and verifying the form works again with all prior entries intact.
 - **FR-007**: A successful, non-honeypot, non-rate-limited submission MUST create a
   `WaitingListEntry` (012a) with status `waiting` for the specified location, marked as
   self-registered and distinguishable from director-entered entries.
-- **FR-008**: The system MUST generate a unique reference number for each self-registered entry
-  and include it in the confirmation shown to the parent and the confirmation email sent to
-  them.
+- **FR-008**: The system MUST generate a unique, short, human-legible alphanumeric reference
+  code (excluding visually-confusable characters such as 0/O and 1/I/l) for each self-registered
+  entry and include it in the confirmation shown to the parent and the confirmation email sent
+  to them.
 - **FR-009**: The system MUST send a confirmation email immediately after a successful
   submission, in the language selected on the form.
 - **FR-010**: The system MUST create an in-app notification for the location's director(s) when
