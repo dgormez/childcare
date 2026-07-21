@@ -123,9 +123,8 @@ backend/
 │   │   └── PublicContractSigningEndpoints.cs                       # new — /api/public/contracts/sign, AllowAnonymous + RequireTenantExempt
 │   └── Services/EmailService.cs                                    # + SendContractSigningInvitationAsync, SendSignedContractAsync
 └── ChildCare.Infrastructure/
-    ├── Common/
-    │   ├── DataProtectionContractSigningTokenService.cs             # new — implements IContractSigningTokenService
-    │   └── IbanProtector.cs                                        # new — implements IIbanProtector
+    ├── Email/DataProtectionContractSigningTokenService.cs           # new — implements IContractSigningTokenService (feature-named Email/ folder, matching where DataProtectionTourInvitationTokenService actually lives — not a generic Common/ bucket, which Infrastructure doesn't use)
+    ├── Contracts/IbanProtector.cs                                   # new — implements IIbanProtector (mirrors NrnProtector's feature-named-folder placement)
     ├── Storage/GcsSignedContractStorage.cs                          # new — implements ISignedContractStorage
     ├── Pdf/QuestPdfContractGenerator.cs                             # + signature block + SEPA mandate section for the final signed PDF
     ├── Persistence/Migrations/{Tenant,Public}/<timestamp>_AddContractSigningAndSepaMandate.cs  # new

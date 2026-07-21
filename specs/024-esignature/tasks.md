@@ -265,8 +265,10 @@ while `Contract.Status` remains unaffected (per spec.md's Clarifications, FR-015
 - [ ] T037 [US1] [P] Create `web/app/sign/page.tsx` (new public route, outside `(app)`/`(auth)`)
   — fetches contract-for-signing data via `web/lib/publicApiClient.ts`, renders the contract
   content with scroll-to-bottom gating on the signature controls (FR-006), embeds
-  `SignatureCapture`, an IBAN field with inline validation, and submit/loading/error/completion
-  states per spec.md's UX Requirements (depends on T035, T036)
+  `SignatureCapture`, an IBAN field with inline validation, a manual language toggle defaulting
+  to the fetched contract's resolved locale (FR-019 — not just the i18n string plumbing from
+  T001/T043, an actual visible control), and submit/loading/error/completion states per
+  spec.md's UX Requirements (depends on T035, T036)
 
 **Checkpoint**: The full send → sign → activate-independently loop works end-to-end — this
 completes the MVP (User Stories 1 + 2, both P1).
@@ -293,13 +295,27 @@ and verify the previously issued link 404s afterward.
   outstanding, unsigned signing token clears `SigningToken`/`SigningTokenExpiresAt` (the
   previously issued link now 404s), and does **not** auto-send a new invitation, in
   `backend/ChildCare.Api.Tests/Contracts/UpdateContractTests.cs` (extend existing file)
+- [ ] T040 [P] [US3] Integration test: `PUT /api/contracts/{id}` on a contract with `SignedAt`
+  set is rejected (a new `409 errors.contract.already_signed`-style failure), even though the
+  contract's `Status` may still be `Draft` (signing doesn't gate activation, FR-015) — confirming
+  FR-014's protection holds independent of `Status`, not just the pre-existing Draft-only check,
+  in `backend/ChildCare.Api.Tests/Contracts/UpdateContractTests.cs` (fixes a gap
+  `/speckit-analyze` found: the existing `Status != Draft` check alone does not block edits to a
+  signed-but-still-Draft contract)
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Add a step to `UpdateContractCommandHandler`
-  (`backend/ChildCare.Application/Contracts/UpdateContractCommand.cs`): if the contract being
-  updated has a non-null `SigningToken`, clear `SigningToken`/`SigningTokenExpiresAt` as part of
-  the same save (FR-013) (depends on T003)
+- [ ] T041 [US3] Add an `AlreadySigned` case to `ContractFailure`
+  (`backend/ChildCare.Application/Contracts/ContractResult.cs`) and two steps to
+  `UpdateContractCommandHandler`
+  (`backend/ChildCare.Application/Contracts/UpdateContractCommand.cs`): (1) if `contract.SignedAt`
+  is set, fail with `ContractFailure.AlreadySigned` before applying any changes (FR-014 — this is
+  a distinct guard from the existing `Status != Draft` check, since a signed contract can still be
+  `Draft`); (2) otherwise, if the contract has a non-null `SigningToken`, clear
+  `SigningToken`/`SigningTokenExpiresAt` as part of the same save (FR-013) (depends on T003, T040)
+- [ ] T042 [US3] Map `ContractFailure.AlreadySigned` to `409 errors.contract.already_signed` in
+  `backend/ChildCare.Api/Endpoints/ContractsEndpoints.cs`'s existing `MapFailure` switch (depends
+  on T041)
 
 **Checkpoint**: All four user stories are independently functional.
 
@@ -307,12 +323,12 @@ and verify the previously issued link 404s afterward.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T041 [P] Add `contractSigning.*`/`contracts.*` translated copy (not just empty
+- [ ] T043 [P] Add `contractSigning.*`/`contracts.*` translated copy (not just empty
   namespaces from T001) to `web/i18n/locales/{en,nl,fr}.json` for every new string introduced by
   US1/US2/US4 (signing page, both emails, director-web contract screen, creditor-ID setting)
-- [ ] T042 [P] Run `quickstart.md`'s six scenarios end-to-end against local dev and confirm each
+- [ ] T044 [P] Run `quickstart.md`'s six scenarios end-to-end against local dev and confirm each
   passes
-- [ ] T043 Confirm `ContractSigningStatus`'s `Pending`/`Expired` boundary (FR-003's 72-hour
+- [ ] T045 Confirm `ContractSigningStatus`'s `Pending`/`Expired` boundary (FR-003's 72-hour
   window) is exercised by an automated test using a controllable clock rather than a real
   72-hour wait, in `backend/ChildCare.Api.Tests/Contracts/ContractSigningTests.cs`
 

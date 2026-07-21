@@ -100,15 +100,17 @@ separate resend route, since the operation is identical either way.
 
 ## `PUT /api/contracts/{id}` (existing, feature 007 — extended)
 
-No new route. `UpdateContractCommandHandler` gains one additional step: if the contract being
-updated has a non-null `SigningToken` (an outstanding, unsigned invitation), clear
-`SigningToken`/`SigningTokenExpiresAt` as part of the same save (FR-013). `UpdateContractCommand`
-already rejects edits to a non-`Draft` contract, and a signed contract is never touched by this
-path at all (`SignedAt` being set doesn't change `Status`, but this feature adds no new rejection
-here beyond the token-clearing side effect, since the existing Draft-only edit restriction is
-unrelated to signing state — see spec.md's Clarifications on post-signing editability, which is
-actually enforced via the *amendment* mechanism freezing terms, not via `UpdateContractCommand`
-gaining a new signed-contract check).
+No new route. `UpdateContractCommandHandler` gains two additional steps (correction from an
+earlier draft of this doc, caught by `/speckit-analyze`: since signing does **not** change
+`Status` — FR-015 — the existing `Status != Draft` check alone does **not** block edits to a
+signed-but-still-`Draft` contract; a dedicated check is required):
+
+1. If `contract.SignedAt` is set, reject with a new `ContractFailure.AlreadySigned` (`409
+   errors.contract.already_signed`) **before** the existing `Status != Draft` check even runs —
+   this is what actually enforces FR-014's "a signed contract's terms are frozen; revise via
+   amendment instead," independent of `Status`.
+2. Otherwise, if the contract has a non-null `SigningToken` (an outstanding, unsigned
+   invitation), clear `SigningToken`/`SigningTokenExpiresAt` as part of the same save (FR-013).
 
 ## `PUT /api/organisations/me` (existing, feature 014 — extended)
 
