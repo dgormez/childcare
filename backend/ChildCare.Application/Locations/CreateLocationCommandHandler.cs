@@ -15,6 +15,7 @@ public class CreateLocationCommandHandler(ITenantDbContext db) : IRequestHandler
             Phone = request.Phone,
             Email = request.Email,
             MaxCapacity = request.MaxCapacity,
+            PublicEnrollmentSlug = await LocationSlugGenerator.GenerateAsync(db, request.Name, cancellationToken),
         };
 
         db.Locations.Add(location);

@@ -69,6 +69,14 @@ public static class LocationEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 023 — contracts/023-digital-enrollment/enrollment-api.md.
+        group.MapPut("/{id:guid}/public-enrollment-setting", async (Guid id, UpdateLocationPublicEnrollmentSettingRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var directorId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new UpdateLocationPublicEnrollmentSettingCommand(id, directorId, req.Enabled));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
         group.MapPut("/{id:guid}/menu-variant-settings", async (Guid id, UpdateLocationMenuVariantSettingsRequest req, IMediator mediator) =>
         {
             var result = await mediator.Send(new UpdateLocationMenuVariantSettingsCommand(

@@ -306,7 +306,8 @@
     "occupancyFrom": "From",
     "occupancyTo": "To",
     "viewOccupancy": "View occupancy",
-    "tourInvitation": {}
+    "tourInvitation": {},
+    "selfRegisteredBadge": "Online application"
   },
   "dayReservations": {
     "title": "Requests",

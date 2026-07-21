@@ -103,79 +103,79 @@ provided.
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Integration test: `GET /api/public/enrollment/{orgSlug}/{locationSlug}`
+- [X] T013 [P] [US1] Integration test: `GET /api/public/enrollment/{orgSlug}/{locationSlug}`
   returns `{locationName, enabled, defaultLocale}` correctly and collapses a bad org/location
   slug to a single `404 errors.public_enrollment.not_found`, in
   `backend/ChildCare.Api.Tests/WaitingList/PublicEnrollmentTests.cs`
-- [ ] T014 [P] [US1] Integration test: a valid `POST` creates a `WaitingListEntry` with
+- [X] T014 [P] [US1] Integration test: a valid `POST` creates a `WaitingListEntry` with
   `Source = SelfRegistered`, `Status = Waiting`, a unique `ReferenceCode`, and the submitted
   `SubmittedLocale` (FR-007/FR-008), in the same test file as T013
-- [ ] T015 [P] [US1] Integration test: a submission with the honeypot field filled returns `200`
+- [X] T015 [P] [US1] Integration test: a submission with the honeypot field filled returns `200`
   with a `referenceCode`-shaped response but creates **no** entry and sends **no** email
   (FR-005), in the same test file as T013
-- [ ] T016 [P] [US1] Integration test: missing required fields and a future `dateOfBirth` are
+- [X] T016 [P] [US1] Integration test: missing required fields and a future `dateOfBirth` are
   rejected `422` with per-field, locale-aware `errorKey`s (FR-004), in the same test file as
   T013
-- [ ] T017 [P] [US1] Integration test: a missing `contactEmail` is rejected (required
+- [X] T017 [P] [US1] Integration test: a missing `contactEmail` is rejected (required
   specifically for self-registered entries, data-model.md's validation delta from 012a), in the
   same test file as T013
-- [ ] T018 [P] [US1] Integration test: submitting to a location with `PublicEnrollmentEnabled =
+- [X] T018 [P] [US1] Integration test: submitting to a location with `PublicEnrollmentEnabled =
   false` returns `403 errors.public_enrollment.disabled` (FR-013), in the same test file as T013
-- [ ] T019 [P] [US1] Integration test: a 4th submission from the same source IP within a rolling
+- [X] T019 [P] [US1] Integration test: a 4th submission from the same source IP within a rolling
   hour is rejected `429`, while the first 3 valid submissions succeed (FR-006/SC-004), in the
   same test file as T013
-- [ ] T020 [P] [US1] Integration test: a successful submission sends a confirmation email (via
+- [X] T020 [P] [US1] Integration test: a successful submission sends a confirmation email (via
   `FakeEmailSender`, this repo's existing test convention) in the submitted locale, containing
   the reference code (FR-009), in the same test file as T013
-- [ ] T021 [P] [US1] Integration test: a successful submission creates a `Notification`
+- [X] T021 [P] [US1] Integration test: a successful submission creates a `Notification`
   (`Type = EnrollmentSubmitted`) for every director `TenantUser` in the tenant (FR-010,
   data-model.md), in the same test file as T013
-- [ ] T021a [P] [US1] Integration test (FR-020): a successful submission creates exactly one
+- [X] T021a [P] [US1] Integration test (FR-020): a successful submission creates exactly one
   `WaitingListEntry` and writes **zero** `Child`/`Contact` rows — self-registration never
   touches the tenant's authoritative records until a director explicitly converts the entry
   (012a's existing constraint, re-affirmed for this path), in the same test file as T013
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] Create `SubmitPublicEnrollmentCommand` + `SubmitPublicEnrollmentCommandHandler`
+- [X] T022 [US1] Create `SubmitPublicEnrollmentCommand` + `SubmitPublicEnrollmentCommandHandler`
   (resolves `orgSlug` → tenant via `OrganisationSlugResolver`, resolves the location by
   `PublicEnrollmentSlug` within that schema, checks `PublicEnrollmentEnabled`, generates a
   unique reference code per research.md R5, creates the `WaitingListEntry`) in
   `backend/ChildCare.Application/WaitingList/SubmitPublicEnrollmentCommand.cs` and
   `SubmitPublicEnrollmentCommandHandler.cs` (depends on T006–T008)
-- [ ] T023 [US1] Create `GetPublicEnrollmentLocationInfoQuery` + handler in
+- [X] T023 [US1] Create `GetPublicEnrollmentLocationInfoQuery` + handler in
   `backend/ChildCare.Application/WaitingList/GetPublicEnrollmentLocationInfoQuery.cs` (same
   org/location resolution as T022)
-- [ ] T024 [US1] Add `SendEnrollmentConfirmationAsync` to `IEmailSender`/`EmailService`
+- [X] T024 [US1] Add `SendEnrollmentConfirmationAsync` to `IEmailSender`/`EmailService`
   (`backend/ChildCare.Application/Common/IEmailSender.cs`,
   `backend/ChildCare.Api/Services/EmailService.cs`), a new
   `enrollment-confirmation.scriban` template
   (`backend/ChildCare.Infrastructure/Email/Templates/`), and an `EnrollmentEmailLabels.For(locale)`
   provider (`backend/ChildCare.Api/Services/EnrollmentEmailLabels.cs`), mirroring
   `DailyReportEmailLabels`'s exact shape (depends on T022)
-- [ ] T025 [US1] Create `EnrollmentNotificationService` (one `Notification` row per director
+- [X] T025 [US1] Create `EnrollmentNotificationService` (one `Notification` row per director
   `TenantUser` in the tenant schema, per data-model.md) in
   `backend/ChildCare.Application/WaitingList/EnrollmentNotificationService.cs`
-- [ ] T026 [P] [US1] Add `SubmitPublicEnrollmentRequest`/`Response` and
+- [X] T026 [P] [US1] Add `SubmitPublicEnrollmentRequest`/`Response` and
   `GetPublicEnrollmentLocationInfoResponse` to
   `backend/ChildCare.Contracts/Requests/WaitingListRequests.cs` and
   `Responses/WaitingListResponses.cs` per contracts/enrollment-api.md
-- [ ] T027 [US1] Create `backend/ChildCare.Api/Endpoints/PublicEnrollmentEndpoints.cs`
+- [X] T027 [US1] Create `backend/ChildCare.Api/Endpoints/PublicEnrollmentEndpoints.cs`
   (`MapGroup("/api/public/enrollment")`, `.AllowAnonymous()` + `.RequireTenantExempt()`; `GET
   /{orgSlug}/{locationSlug}`; `POST /{orgSlug}/{locationSlug}` with
   `.RequireRateLimiting("public-enrollment")` and the honeypot short-circuit per contracts/
   enrollment-api.md) (depends on T022, T023, T026)
-- [ ] T028 [US1] Register `app.MapPublicEnrollmentEndpoints()` in
+- [X] T028 [US1] Register `app.MapPublicEnrollmentEndpoints()` in
   `backend/ChildCare.Api/Program.cs` (depends on T027)
-- [ ] T029 [US1] Create `web/lib/publicApiClient.ts` — an unauthenticated fetch wrapper (no
+- [X] T029 [US1] Create `web/lib/publicApiClient.ts` — an unauthenticated fetch wrapper (no
   session/JWT attached, distinct from the existing `apiClient` which assumes a director session)
-- [ ] T030 [US1] Create the public enrollment page
+- [X] T030 [US1] Create the public enrollment page
   `web/app/enroll/[orgSlug]/[locationSlug]/page.tsx` — form per spec.md's UX Requirements (child
   first/last name, date of birth, requested start date, parent/guardian name, email, phone,
   notes, NL/FR/EN language toggle defaulting to the fetched `defaultLocale`, hidden honeypot
   field), loading/inline-validation/rate-limited/disabled-location states, and a confirmation
   screen showing the reference code (depends on T029)
-- [ ] T031 [P] [US1] Populate `publicEnrollment` i18n keys (form labels, validation messages,
+- [X] T031 [P] [US1] Populate `publicEnrollment` i18n keys (form labels, validation messages,
   confirmation screen, disabled-location message, rate-limit message) in
   `web/i18n/locales/{en,nl,fr}.json`
 
@@ -196,44 +196,58 @@ submitted data with no manual retyping.
 
 ### Tests for User Story 2
 
-- [ ] T032 [P] [US2] Integration test: `ListWaitingListEntriesQuery`'s response includes
+- [X] T032 [P] [US2] Integration test: `ListWaitingListEntriesQuery`'s response includes
   `Source`/`ReferenceCode` and flags a self-registered entry as a possible duplicate when its
   child name + date of birth match another entry at the same location, regardless of that other
   entry's status (FR-011, research.md R3), in
   `backend/ChildCare.Api.Tests/WaitingList/WaitingListDuplicateFlagTests.cs`
-- [ ] T033 [P] [US2] Integration test: two entries with matching name + date of birth are both
+- [X] T033 [P] [US2] Integration test: two entries with matching name + date of birth are both
   created and both remain independently visible/actionable — neither is auto-rejected, in the
   same test file as T032
-- [ ] T034 [P] [US2] Integration test: converting a self-registered entry via the existing
+- [X] T034 [P] [US2] Integration test: converting a self-registered entry via the existing
   `TransitionWaitingListStatusCommand` → `LinkChildToWaitingListEntryCommand` flow pre-fills the
   created child's name/date of birth and the created contact's name/email/phone from the entry
   (FR-014/SC-003), in `backend/ChildCare.Api.Tests/WaitingList/PublicEnrollmentConversionTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] Extend `ListWaitingListEntriesQuery`/`WaitingListResult` to include `Source`,
+- [X] T035 [US2] Extend `ListWaitingListEntriesQuery`/`WaitingListResult` to include `Source`,
   `ReferenceCode`, and a computed `IsPossibleDuplicate` flag (self-join on
   `ChildFirstName`/`ChildLastName`/`DateOfBirth` within `LocationId`, research.md R3) in
-  `backend/ChildCare.Application/WaitingList/ListWaitingListEntriesQuery.cs`
-- [ ] T036 [P] [US2] Extend `WaitingListEntryResponse` in
+  `backend/ChildCare.Application/WaitingList/ListWaitingListEntriesQuery.cs` — discovered during
+  implementation that this duplicate-detection self-join already exists in 012a's
+  `WaitingListQueries.BuildFilteredList` (source-agnostic, keyed only on name+DOB+location), so
+  no query-level change was needed; T036's `WaitingListMapper.ToResponse` extension alone
+  threads `Source`/`ReferenceCode`/tour fields through automatically for every existing caller
+- [X] T036 [P] [US2] Extend `WaitingListEntryResponse` in
   `backend/ChildCare.Contracts/Responses/WaitingListResponses.cs` with `Source`,
   `ReferenceCode`, `IsPossibleDuplicate`, and the tour-invitation fields (`TourProposedAt`,
   `TourInvitationStatus`, `TourInvitationSentAt`, `TourOutcome`)
-- [ ] T037 [US2] Verify (extend if needed) that `LinkChildToWaitingListEntryCommandHandler`'s
+- [X] T037 [US2] Verify (extend if needed) that `LinkChildToWaitingListEntryCommandHandler`'s
   existing pre-fill-on-create-new-child path (012a) correctly sources
   `ChildFirstName`/`ChildLastName`/`DateOfBirth` for a self-registered entry identically to a
   director-entered one, in
   `backend/ChildCare.Application/WaitingList/LinkChildToWaitingListEntryCommand.cs`
-- [ ] T038 [US2] Add contact-creation pre-fill (`ContactName`/`ContactEmail`/`ContactPhone`) to
+- [X] T038 [US2] Add contact-creation pre-fill (`ContactName`/`ContactEmail`/`ContactPhone`) to
   the same conversion flow so the director-facing contact-creation step opens pre-populated from
-  the entry (FR-014) — locate and extend wherever contact creation is invoked during conversion
-  (`LinkChildToWaitingListEntryCommandHandler` or the web conversion flow, whichever currently
-  creates the `Contact` row)
-- [ ] T039 [US2] Update `web/app/(app)/waiting-list/page.tsx`: show a "self-registered" tag and
+  the entry (FR-014) — discovered during implementation that no integration point existed at
+  all: the backend's `link-child` endpoint only ever created a `Child` (012a), and
+  `web/components/children/LinkContactDialog.tsx` (feature 030) was a fully separate,
+  child-detail-page-only flow with no caller passing initial values. Added optional
+  `initialFirstName`/`initialLastName`/`initialPhone`/`initialEmail`/`initialRelationship` props
+  to `LinkContactDialog` (backward-compatible — feature 030's existing caller in
+  `ChildContactsTab.tsx` is unaffected) and wired `web/app/(app)/waiting-list/page.tsx` to open
+  it, pre-filled from the entry (best-effort first/last split of `ContactName`, since the entry
+  stores a single field), immediately after a successful child link/create. Contact creation
+  itself remains a director-confirmed web action, not an automatic backend side effect — no FR
+  requires the latter, and this stays consistent with 012a's separation of concerns. No backend
+  API surface exists for this pre-fill, so it's covered by code review, not an integration test
+  (see PublicEnrollmentConversionTests.cs's doc comment)
+- [X] T039 [US2] Update `web/app/(app)/waiting-list/page.tsx`: show a "self-registered" tag and
   a "possible duplicate" badge (design-system.md's badge pattern — pill, paired icon, no color
   alone) on flagged rows, and pass the entry's data into the existing child/contact creation
   flow's pre-fill props on conversion
-- [ ] T040 [P] [US2] Populate `waitingList` i18n keys (self-registered tag, duplicate badge
+- [X] T040 [P] [US2] Populate `waitingList` i18n keys (self-registered tag, duplicate badge
   label) in `web/i18n/locales/{en,nl,fr}.json`
 
 **Checkpoint**: User Stories 1 AND 2 both work independently — the full submit-to-enrolled loop

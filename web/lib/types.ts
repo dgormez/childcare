@@ -278,6 +278,12 @@ export interface WaitingListEntryResponse {
   isDuplicate: boolean;
   registeredAt: string;
   updatedAt: string | null;
+  source: "directorEntered" | "selfRegistered";
+  referenceCode: string | null;
+  tourProposedAt: string | null;
+  tourInvitationStatus: "notSent" | "sent" | "accepted" | "declined";
+  tourInvitationSentAt: string | null;
+  tourOutcome: string | null;
 }
 
 export interface OccupancyDayResponse {

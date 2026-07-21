@@ -272,6 +272,58 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
         await SendAsync(message);
     }
 
+    // ── Feature 023: public online enrollment ────────────────────────────────
+
+    public async Task SendEnrollmentConfirmationAsync(
+        string toEmail, string locale, string childName, string locationName, string referenceCode,
+        CancellationToken cancellationToken = default)
+    {
+        var labels = EnrollmentEmailLabels.For(locale);
+        if (!TryBuildMessage(toEmail, labels.Subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Enrollment confirmation for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("enrollment-confirmation", locale, new
+        {
+            Title = string.Format(labels.TitleFormat, WebUtility.HtmlEncode(childName)),
+            Body = string.Format(labels.BodyFormat, WebUtility.HtmlEncode(childName), WebUtility.HtmlEncode(locationName)),
+            ReferenceLabel = labels.ReferenceLabel,
+            ReferenceCode = referenceCode,
+        }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
+    public async Task SendTourInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, DateTime proposedAt,
+        string acceptUrl, string declineUrl, CancellationToken cancellationToken = default)
+    {
+        var labels = TourInvitationEmailLabels.For(locale);
+        if (!TryBuildMessage(toEmail, labels.Subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Tour invitation for {Email} not sent.", toEmail);
+            return;
+        }
+
+        // Locale-aware day/month names (matches QuestPdfInvoiceGenerator's precedent) — the
+        // server's default thread culture must never leak English day/month names into an
+        // NL/FR tour-invitation email.
+        var culture = System.Globalization.CultureInfo.GetCultureInfo(locale == "en" ? "en-US" : locale);
+        var html = await templateRenderer.RenderAsync("tour-invitation", locale, new
+        {
+            Title = string.Format(labels.TitleFormat, WebUtility.HtmlEncode(childName)),
+            Body = string.Format(culture, labels.BodyFormat, WebUtility.HtmlEncode(childName), WebUtility.HtmlEncode(locationName), proposedAt),
+            AcceptUrl = acceptUrl,
+            DeclineUrl = declineUrl,
+            AcceptLabel = labels.AcceptButton,
+            DeclineLabel = labels.DeclineButton,
+        }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
     /// <summary>HTML-encodes free text, then converts newlines to paragraph breaks — the one
     /// piece of "formatting" a director's plain-text compose box gets (research.md R1: no raw
     /// HTML from the director, to avoid template-injection risk).</summary>

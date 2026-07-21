@@ -58,4 +58,17 @@ public interface IEmailSender
 
     /// <summary>Feature 020, FR-011 — announcement email alongside the existing push/in-app channel.</summary>
     Task SendAnnouncementEmailAsync(string toEmail, string locale, string subject, string body, CancellationToken cancellationToken = default);
+
+    /// <summary>Feature 023, FR-009 — sent immediately after a public enrollment submission, in
+    /// the language the parent selected on the form.</summary>
+    Task SendEnrollmentConfirmationAsync(
+        string toEmail, string locale, string childName, string locationName, string referenceCode,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Feature 023, FR-015 — a director-initiated tour invitation with accept/decline
+    /// links; re-sending overwrites the previous invitation rather than accumulating a history
+    /// (research.md R2).</summary>
+    Task SendTourInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, DateTime proposedAt,
+        string acceptUrl, string declineUrl, CancellationToken cancellationToken = default);
 }

@@ -306,7 +306,8 @@
     "occupancyFrom": "Du",
     "occupancyTo": "Au",
     "viewOccupancy": "Voir l'occupation",
-    "tourInvitation": {}
+    "tourInvitation": {},
+    "selfRegisteredBadge": "Demande en ligne"
   },
   "dayReservations": {
     "title": "Demandes",

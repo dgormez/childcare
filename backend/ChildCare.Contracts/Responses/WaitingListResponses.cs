@@ -16,6 +16,18 @@ public record WaitingListEntryResponse(
     Guid? ChildId,
     bool IsDuplicate,
     DateTime RegisteredAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    string Source,
+    string? ReferenceCode,
+    DateTime? TourProposedAt,
+    string TourInvitationStatus,
+    DateTime? TourInvitationSentAt,
+    string? TourOutcome);
 
 public record OccupancyDayResponse(DateOnly Date, int? FreeCapacity, bool Closed);
+
+// Feature 023 — Digital Online Enrollment
+
+public record GetPublicEnrollmentLocationInfoResponse(string LocationName, bool Enabled, string DefaultLocale);
+
+public record SubmitPublicEnrollmentResponse(string ReferenceCode);

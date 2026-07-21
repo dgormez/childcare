@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { ArrowUp, ArrowDown, Clock, Send, CheckCircle2, XCircle, Copy, Link2, CalendarRange } from "lucide-react";
+import { ArrowUp, ArrowDown, Clock, Send, CheckCircle2, XCircle, Copy, Link2, CalendarRange, Globe } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -56,6 +56,12 @@ export function WaitingListTable({ entries, onEdit, onReorder, onTransition, onL
                 >
                   {entry.childFirstName} {entry.childLastName}
                 </button>
+                {entry.source === "selfRegistered" && (
+                  <Badge variant="neutral" className="ml-2">
+                    <Globe className="mr-1 inline h-3 w-3" strokeWidth={2} />
+                    {t("selfRegisteredBadge")}
+                  </Badge>
+                )}
                 {entry.isDuplicate && (
                   <Badge variant="danger" className="ml-2">
                     <Copy className="mr-1 inline h-3 w-3" strokeWidth={2} />

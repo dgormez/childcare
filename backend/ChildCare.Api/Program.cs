@@ -350,6 +350,7 @@ builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkReso
 // Reuses the AddDataProtection() registration above — ITourInvitationTokenService follows
 // IUnsubscribeTokenService's exact pattern (research.md R5), not a second DataProtection setup.
 builder.Services.AddScoped<ITourInvitationTokenService, ChildCare.Infrastructure.Email.DataProtectionTourInvitationTokenService>();
+builder.Services.AddScoped<ChildCare.Application.WaitingList.EnrollmentNotificationService>();
 // Registered on the main host too (not just the send-daily-reports CLI builder in Program.cs's
 // early-exit block above) so integration tests can call SendDailyReportsCommand.RunAsync against
 // the ordinary WebApplicationFactory-built ServiceProvider, matching every other CLI command's
@@ -839,6 +840,7 @@ app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
 app.MapWaitingListEndpoints();
+app.MapPublicEnrollmentEndpoints();
 app.MapParentInvitationEndpoints();
 app.MapMessageThreadEndpoints();
 app.MapAnnouncementEndpoints();

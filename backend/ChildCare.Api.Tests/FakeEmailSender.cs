@@ -119,4 +119,26 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
 
         return inner.SendAnnouncementEmailAsync(toEmail, locale, subject, body, cancellationToken);
     }
+
+    // ── Feature 023 ──────────────────────────────────────────────────────────
+
+    public List<(string ToEmail, string Locale, string ChildName, string LocationName, string ReferenceCode)> EnrollmentConfirmationCalls { get; } = [];
+
+    public Task SendEnrollmentConfirmationAsync(
+        string toEmail, string locale, string childName, string locationName, string referenceCode,
+        CancellationToken cancellationToken = default)
+    {
+        EnrollmentConfirmationCalls.Add((toEmail, locale, childName, locationName, referenceCode));
+        return inner.SendEnrollmentConfirmationAsync(toEmail, locale, childName, locationName, referenceCode, cancellationToken);
+    }
+
+    public List<(string ToEmail, string Locale, string ChildName, string LocationName, DateTime ProposedAt, string AcceptUrl, string DeclineUrl)> TourInvitationCalls { get; } = [];
+
+    public Task SendTourInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, DateTime proposedAt,
+        string acceptUrl, string declineUrl, CancellationToken cancellationToken = default)
+    {
+        TourInvitationCalls.Add((toEmail, locale, childName, locationName, proposedAt, acceptUrl, declineUrl));
+        return inner.SendTourInvitationAsync(toEmail, locale, childName, locationName, proposedAt, acceptUrl, declineUrl, cancellationToken);
+    }
 }

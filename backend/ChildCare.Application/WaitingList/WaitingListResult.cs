@@ -73,9 +73,31 @@ public static class WaitingListMapper
         entry.ChildId,
         isDuplicate,
         entry.RegisteredAt,
-        entry.UpdatedAt);
+        entry.UpdatedAt,
+        ToWire(entry.Source),
+        entry.ReferenceCode,
+        entry.TourProposedAt,
+        ToWire(entry.TourInvitationStatus),
+        entry.TourInvitationSentAt,
+        entry.TourOutcome);
 
     public static string ToWire(WaitingListStatus status) => status.ToString().ToLowerInvariant();
+
+    public static string ToWire(WaitingListEntrySource source) => source switch
+    {
+        WaitingListEntrySource.DirectorEntered => "directorEntered",
+        WaitingListEntrySource.SelfRegistered => "selfRegistered",
+        _ => throw new InvalidOperationException($"Unhandled {nameof(WaitingListEntrySource)}: {source}"),
+    };
+
+    public static string ToWire(TourInvitationStatus status) => status switch
+    {
+        TourInvitationStatus.NotSent => "notSent",
+        TourInvitationStatus.Sent => "sent",
+        TourInvitationStatus.Accepted => "accepted",
+        TourInvitationStatus.Declined => "declined",
+        _ => throw new InvalidOperationException($"Unhandled {nameof(TourInvitationStatus)}: {status}"),
+    };
 
     public static bool TryParseStatus(string? value, out WaitingListStatus status)
     {

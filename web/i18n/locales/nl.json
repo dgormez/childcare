@@ -306,7 +306,8 @@
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
     "viewOccupancy": "Bezetting bekijken",
-    "tourInvitation": {}
+    "tourInvitation": {},
+    "selfRegisteredBadge": "Online aanvraag"
   },
   "dayReservations": {
     "title": "Verzoeken",
