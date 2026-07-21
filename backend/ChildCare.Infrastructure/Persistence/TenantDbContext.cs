@@ -515,6 +515,15 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
              .OnDelete(DeleteBehavior.Restrict);
             c.HasIndex(x => new { x.ChildId, x.Status });
             c.HasIndex(x => new { x.LocationId, x.Status });
+
+            // Feature 024-esignature.
+            c.Property(x => x.SignatureType)
+             .HasConversion(
+                 v => v!.Value.ToString().ToLowerInvariant(),
+                 v => (SignatureType)Enum.Parse(typeof(SignatureType), v, ignoreCase: true))
+             .HasMaxLength(20);
+            c.HasIndex(x => x.SigningToken).IsUnique().HasFilter("\"SigningToken\" IS NOT NULL");
+            c.HasIndex(x => x.SepaMandateReference).IsUnique().HasFilter("\"SepaMandateReference\" IS NOT NULL");
         });
 
         modelBuilder.Entity<RoomShift>(rs =>

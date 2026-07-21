@@ -29,4 +29,9 @@ public enum ContractFailure
     DayOverlap,
     AmendmentStartDateInvalid,
     TerminationDateInvalid,
+
+    // Feature 024-esignature.
+    AlreadySigned,
+    NoContactEmail,
+    CreditorIdNotConfigured,
 }

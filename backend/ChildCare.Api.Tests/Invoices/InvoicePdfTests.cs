@@ -21,7 +21,7 @@ public class InvoicePdfTests(OrganisationOnboardingWebAppFactory factory) : ICla
         await client.SendAsync(AuthedRequest(
             HttpMethod.Put, $"/api/locations/{location.Id}/invoice-settings", org.AccessToken,
             new UpdateLocationInvoiceSettingsRequest("KDV-999", "BE68539007547034", 14)));
-        await client.SendAsync(AuthedRequest(HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest("0123.456.789")));
+        await client.SendAsync(AuthedRequest(HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest("0123.456.789", null)));
 
         var child = await CreateChildAsync(client, org.AccessToken);
         var contractRequest = new CreateContractRequest(

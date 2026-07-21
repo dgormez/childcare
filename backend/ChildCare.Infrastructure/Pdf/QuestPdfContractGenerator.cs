@@ -8,7 +8,10 @@ namespace ChildCare.Infrastructure.Pdf;
 /// <summary>
 /// Renders a contract as a PDF via QuestPDF (constitution's fixed Phase 1 PDF library,
 /// research.md R4). All static labels are resolved from ContractPdfModel.Locale — never
-/// hardcoded in one language (constitution Principle IV, FR-011/FR-016).
+/// hardcoded in one language (constitution Principle IV, FR-011/FR-016). When
+/// ContractPdfModel.Signature is set (feature 024-esignature), the signature block and SEPA
+/// mandate section replace the blank signature line — this is the only branch point between the
+/// existing unsigned, on-demand PDF and the final signed one.
 /// </summary>
 public class QuestPdfContractGenerator : IContractPdfGenerator
 {
@@ -31,6 +34,13 @@ public class QuestPdfContractGenerator : IContractPdfGenerator
             ["signature"] = "Handtekening",
             ["yes"] = "Ja",
             ["no"] = "Nee",
+            ["signedOn"] = "Ondertekend op",
+            ["signedFromIp"] = "IP-adres",
+            ["sepaMandate"] = "SEPA-domiciliëringsmandaat",
+            ["sepaIban"] = "IBAN",
+            ["sepaMandateRef"] = "Mandaatreferentie",
+            ["sepaCreditorId"] = "Identificatie schuldeiser (Creditor ID)",
+            ["sepaAuthorisedOn"] = "Gemachtigd op",
         },
         ["fr"] = new()
         {
@@ -49,6 +59,13 @@ public class QuestPdfContractGenerator : IContractPdfGenerator
             ["signature"] = "Signature",
             ["yes"] = "Oui",
             ["no"] = "Non",
+            ["signedOn"] = "Signé le",
+            ["signedFromIp"] = "Adresse IP",
+            ["sepaMandate"] = "Mandat de domiciliation SEPA",
+            ["sepaIban"] = "IBAN",
+            ["sepaMandateRef"] = "Référence du mandat",
+            ["sepaCreditorId"] = "Identifiant créancier (Creditor ID)",
+            ["sepaAuthorisedOn"] = "Autorisé le",
         },
         ["en"] = new()
         {
@@ -67,6 +84,13 @@ public class QuestPdfContractGenerator : IContractPdfGenerator
             ["signature"] = "Signature",
             ["yes"] = "Yes",
             ["no"] = "No",
+            ["signedOn"] = "Signed on",
+            ["signedFromIp"] = "IP address",
+            ["sepaMandate"] = "SEPA Direct Debit Mandate",
+            ["sepaIban"] = "IBAN",
+            ["sepaMandateRef"] = "Mandate reference",
+            ["sepaCreditorId"] = "Creditor Identifier",
+            ["sepaAuthorisedOn"] = "Authorised on",
         },
     };
 
@@ -105,7 +129,35 @@ public class QuestPdfContractGenerator : IContractPdfGenerator
                     column.Item().Text($"{t["videoInternal"]}: {(model.VideoInternal ? t["yes"] : t["no"])}");
                     column.Item().Text($"{t["photosPress"]}: {(model.PhotosPress ? t["yes"] : t["no"])}");
 
-                    column.Item().PaddingTop(30).Text($"{t["signature"]}: _______________________");
+                    if (model.Signature is { } signature)
+                    {
+                        column.Item().PaddingTop(20).Text(t["signature"]).Bold();
+
+                        if (signature.SignatureType == "Drawn")
+                        {
+                            var base64 = signature.SignatureData.Contains(',')
+                                ? signature.SignatureData[(signature.SignatureData.IndexOf(',') + 1)..]
+                                : signature.SignatureData;
+                            column.Item().MaxHeight(80).Image(Convert.FromBase64String(base64));
+                        }
+                        else
+                        {
+                            column.Item().Text(signature.SignatureData).Italic().FontSize(16);
+                        }
+
+                        column.Item().Text($"{t["signedOn"]}: {signature.SignedAtUtc:yyyy-MM-dd HH:mm} UTC");
+                        column.Item().Text($"{t["signedFromIp"]}: {signature.SignedByIp}");
+
+                        column.Item().PaddingTop(20).Text(t["sepaMandate"]).Bold();
+                        column.Item().Text($"{t["sepaIban"]}: {signature.SepaIbanMasked}");
+                        column.Item().Text($"{t["sepaMandateRef"]}: {signature.SepaMandateReference}");
+                        column.Item().Text($"{t["sepaCreditorId"]}: {signature.SepaCreditorIdentifier}");
+                        column.Item().Text($"{t["sepaAuthorisedOn"]}: {signature.SepaAuthorisedAtUtc:yyyy-MM-dd HH:mm} UTC");
+                    }
+                    else
+                    {
+                        column.Item().PaddingTop(30).Text($"{t["signature"]}: _______________________");
+                    }
                 });
             });
         });

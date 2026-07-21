@@ -1,0 +1,2 @@
+<h2 style="margin:0 0 16px;font-size:20px;color:#1F2937">{{ title }}</h2>
+<p style="font-size:15px;line-height:1.6;color:#1F2937">{{ body }}</p>

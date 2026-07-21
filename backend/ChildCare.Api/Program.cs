@@ -365,6 +365,14 @@ builder.Services.AddScoped<ChildCare.Application.Email.DailyReportDigestService>
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ChildCare.Application.Attendance.ICheckInCodeService, ChildCare.Application.Attendance.CheckInCodeService>();
 
+// ── Digital Contract E-Signature (feature 024) ───────────────────────────────
+// Reuses the AddDataProtection() registration above (feature 014a) — both the signing token
+// service and the IBAN protector follow the ITourInvitationTokenService/INrnProtector pattern
+// (research.md R2/R3), each under their own purpose string, not a second DataProtection setup.
+builder.Services.AddScoped<IContractSigningTokenService, ChildCare.Infrastructure.Email.DataProtectionContractSigningTokenService>();
+builder.Services.AddScoped<IIbanProtector, ChildCare.Infrastructure.Contracts.IbanProtector>();
+builder.Services.AddScoped<ISignedContractStorage, GcsSignedContractStorage>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -837,6 +845,7 @@ app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
 app.MapWaitingListEndpoints();
 app.MapPublicEnrollmentEndpoints();
+app.MapPublicContractSigningEndpoints();
 app.MapParentInvitationEndpoints();
 app.MapMessageThreadEndpoints();
 app.MapAnnouncementEndpoints();

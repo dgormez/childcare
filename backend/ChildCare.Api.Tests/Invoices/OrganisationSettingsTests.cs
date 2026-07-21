@@ -19,7 +19,7 @@ public class OrganisationSettingsTests(OrganisationOnboardingWebAppFactory facto
         var org = await RegisterOrgAsync(client, $"KBO Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
 
         var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest("0123.456.789")));
+            HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest("0123.456.789", null)));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updated = (await response.Content.ReadFromJsonAsync<OrganisationResponse>())!;
         Assert.Equal("0123.456.789", updated.KboNumber);
@@ -40,7 +40,7 @@ public class OrganisationSettingsTests(OrganisationOnboardingWebAppFactory facto
         var staffToken = await LoginAsync(client, org.Organisation.Slug, staffEmail, "password123");
 
         var response = await client.SendAsync(AuthedRequest(
-            HttpMethod.Put, "/api/organisations/me", staffToken, new UpdateOrganisationRequest("0123.456.789")));
+            HttpMethod.Put, "/api/organisations/me", staffToken, new UpdateOrganisationRequest("0123.456.789", null)));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }

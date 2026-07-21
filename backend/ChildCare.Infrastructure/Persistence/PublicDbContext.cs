@@ -53,6 +53,8 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
              .IsRequired();
             // Feature 014 — org-wide Belgian company registration number.
             t.Property(x => x.KboNumber).HasMaxLength(20);
+            // Feature 024-esignature — org-wide SEPA Creditor Identifier.
+            t.Property(x => x.SepaCreditorIdentifier).HasMaxLength(35);
         });
 
         modelBuilder.Entity<Invitation>(i =>
