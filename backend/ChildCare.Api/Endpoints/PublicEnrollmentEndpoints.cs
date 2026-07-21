@@ -1,4 +1,6 @@
+using System.Net;
 using ChildCare.Api.Middleware;
+using ChildCare.Api.Services;
 using ChildCare.Application.WaitingList;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
@@ -46,8 +48,15 @@ public static class PublicEnrollmentEndpoints
                 : MapFailure(result.Failure!.Value);
         }).RequireRateLimiting("public-enrollment");
 
-        // GET /tour-response (User Story 3, RespondTourInvitationCommand) is added below this
-        // method once that command exists.
+        // Feature 023, User Story 3 (FR-016/FR-018) — server-rendered HTML, not a JSON API
+        // response, mirroring EmailEndpoints.RenderUnsubscribePage's exact pattern
+        // (research.md R4): a one-click accept/decline confirmation is the same shape of
+        // interaction as unsubscribe/resubscribe, reached only via an emailed link.
+        group.MapGet("/tour-response", async (string token, string org, string response, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new RespondTourInvitationCommand(org, token, response));
+            return Results.Content(RenderTourResponsePage(result), "text/html");
+        });
     }
 
     // Not tied to any real entity — a filled honeypot must never reveal, via a distinguishable
@@ -64,4 +73,38 @@ public static class PublicEnrollmentEndpoints
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(PublicEnrollmentFailure)}: {failure}"),
     };
+
+    private static string RenderTourResponsePage(RespondTourInvitationResult result)
+    {
+        var labels = TourResponsePageLabelsProvider.For(result.Locale);
+
+        if (result.Outcome == TourResponseOutcome.Invalid)
+        {
+            return WrapPage(WebUtility.HtmlEncode(labels.InvalidLinkText));
+        }
+
+        if (result.Outcome == TourResponseOutcome.NoLongerActive)
+        {
+            return WrapPage($"""
+                <h1 style="font-size:18px">{WebUtility.HtmlEncode(labels.NoLongerActiveTitle)}</h1>
+                <p>{WebUtility.HtmlEncode(labels.NoLongerActiveText)}</p>
+                """);
+        }
+
+        var (title, textFormat) = result.Accepted
+            ? (labels.AcceptedTitle, labels.AcceptedText)
+            : (labels.DeclinedTitle, labels.DeclinedText);
+
+        return WrapPage($"""
+            <h1 style="font-size:18px">{WebUtility.HtmlEncode(title)}</h1>
+            <p>{WebUtility.HtmlEncode(string.Format(textFormat, result.ChildName ?? ""))}</p>
+            """);
+    }
+
+    private static string WrapPage(string bodyHtml) => $"""
+        <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+        <body style="font-family:sans-serif;max-width:420px;margin:60px auto;padding:0 16px;color:#1F2937">
+        {bodyHtml}
+        </body></html>
+        """;
 }

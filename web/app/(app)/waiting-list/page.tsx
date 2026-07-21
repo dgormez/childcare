@@ -7,6 +7,7 @@ import { WaitingListTable } from "../../../components/WaitingListTable";
 import { WaitingListEntryDialog, type WaitingListEntryFormValues } from "../../../components/WaitingListEntryDialog";
 import { EnrollChildLinkDialog } from "../../../components/EnrollChildLinkDialog";
 import { LinkContactDialog } from "../../../components/children/LinkContactDialog";
+import { TourInvitationDialog } from "../../../components/TourInvitationDialog";
 import { OccupancyPanel } from "../../../components/OccupancyPanel";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
@@ -49,6 +50,7 @@ export default function WaitingListPage() {
   const [saving, setSaving] = useState(false);
   const [linkTarget, setLinkTarget] = useState<WaitingListEntryResponse | null>(null);
   const [contactPrefillTarget, setContactPrefillTarget] = useState<{ childId: string; entry: WaitingListEntryResponse } | null>(null);
+  const [tourTarget, setTourTarget] = useState<WaitingListEntryResponse | null>(null);
   const [occupancyDate, setOccupancyDate] = useState(todayDateString());
   const [notice, setNotice] = useState("");
 
@@ -186,6 +188,40 @@ export default function WaitingListPage() {
     await load();
   }
 
+  async function sendTourInvitation(proposedAt: string) {
+    if (!tourTarget) return;
+    setSaving(true);
+    const result = await (apiClient.POST as any)("/api/waiting-list/{id}/tour-invitation", {
+      params: { path: { id: tourTarget.id } },
+      body: { proposedAt: new Date(proposedAt).toISOString() },
+    });
+    setSaving(false);
+    if (!result.response.ok) {
+      setNotice(t("genericError"));
+      return;
+    }
+    setNotice("");
+    setTourTarget(null);
+    await load();
+  }
+
+  async function recordTourOutcome(outcome: string) {
+    if (!tourTarget) return;
+    setSaving(true);
+    const result = await (apiClient.POST as any)("/api/waiting-list/{id}/tour-outcome", {
+      params: { path: { id: tourTarget.id } },
+      body: { outcome },
+    });
+    setSaving(false);
+    if (!result.response.ok) {
+      setNotice(t("genericError"));
+      return;
+    }
+    setNotice("");
+    setTourTarget(null);
+    await load();
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -239,6 +275,7 @@ export default function WaitingListPage() {
               onTransition={transition}
               onLinkChild={setLinkTarget}
               onViewOccupancy={(entry) => setOccupancyDate(entry.requestedStartDate ?? todayDateString())}
+              onTourInvitation={setTourTarget}
             />
           )}
         </div>
@@ -275,6 +312,15 @@ export default function WaitingListPage() {
           initialRelationship="Guardian"
         />
       )}
+
+      <TourInvitationDialog
+        open={tourTarget !== null}
+        entry={tourTarget}
+        onOpenChange={(open) => !open && setTourTarget(null)}
+        onSendInvitation={sendTourInvitation}
+        onRecordOutcome={recordTourOutcome}
+        saving={saving}
+      />
     </div>
   );
 }

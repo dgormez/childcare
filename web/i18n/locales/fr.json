@@ -306,7 +306,21 @@
     "occupancyFrom": "Du",
     "occupancyTo": "Au",
     "viewOccupancy": "Voir l'occupation",
-    "tourInvitation": {},
+    "tourInvitation": {
+      "title": "Invitation à une visite",
+      "statusLabel": "Statut",
+      "status": {
+        "notSent": "Non envoyée",
+        "sent": "Envoyée",
+        "accepted": "Confirmée",
+        "declined": "Refusée"
+      },
+      "proposedAtLabel": "Date et heure proposées",
+      "sendAction": "Envoyer l'invitation",
+      "outcomeLabel": "Résultat",
+      "saveOutcomeAction": "Enregistrer le résultat",
+      "close": "Fermer"
+    },
     "selfRegisteredBadge": "Demande en ligne"
   },
   "dayReservations": {

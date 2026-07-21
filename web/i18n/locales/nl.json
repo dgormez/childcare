@@ -306,7 +306,21 @@
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
     "viewOccupancy": "Bezetting bekijken",
-    "tourInvitation": {},
+    "tourInvitation": {
+      "title": "Uitnodiging rondleiding",
+      "statusLabel": "Status",
+      "status": {
+        "notSent": "Niet verzonden",
+        "sent": "Verzonden",
+        "accepted": "Bevestigd",
+        "declined": "Afgewezen"
+      },
+      "proposedAtLabel": "Voorgestelde datum en tijd",
+      "sendAction": "Uitnodiging versturen",
+      "outcomeLabel": "Resultaat",
+      "saveOutcomeAction": "Resultaat opslaan",
+      "close": "Sluiten"
+    },
     "selfRegisteredBadge": "Online aanvraag"
   },
   "dayReservations": {

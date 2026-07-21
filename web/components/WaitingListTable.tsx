@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { ArrowUp, ArrowDown, Clock, Send, CheckCircle2, XCircle, Copy, Link2, CalendarRange, Globe } from "lucide-react";
+import { ArrowUp, ArrowDown, Clock, Send, CheckCircle2, XCircle, Copy, Link2, CalendarRange, Globe, CalendarClock } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -13,6 +13,7 @@ interface WaitingListTableProps {
   onTransition: (entry: WaitingListEntryResponse, status: WaitingListStatus) => void;
   onLinkChild: (entry: WaitingListEntryResponse) => void;
   onViewOccupancy: (entry: WaitingListEntryResponse) => void;
+  onTourInvitation: (entry: WaitingListEntryResponse) => void;
 }
 
 // Statuses aren't one of the platform's four locked semantics (danger/warning/success/info,
@@ -30,7 +31,7 @@ function formatDate(value: string | null): string {
   return new Date(value).toLocaleDateString();
 }
 
-export function WaitingListTable({ entries, onEdit, onReorder, onTransition, onLinkChild, onViewOccupancy }: WaitingListTableProps) {
+export function WaitingListTable({ entries, onEdit, onReorder, onTransition, onLinkChild, onViewOccupancy, onTourInvitation }: WaitingListTableProps) {
   const t = useTranslations("waitingList");
 
   return (
@@ -114,6 +115,11 @@ export function WaitingListTable({ entries, onEdit, onReorder, onTransition, onL
                     <Button variant="ghost" size="sm" onClick={() => onLinkChild(entry)}>
                       <Link2 className="mr-1 h-4 w-4" strokeWidth={2} />
                       {t("linkChild")}
+                    </Button>
+                  )}
+                  {(entry.status === "waiting" || entry.status === "offered") && (
+                    <Button variant="ghost" size="sm" aria-label={t("tourInvitation.title")} onClick={() => onTourInvitation(entry)}>
+                      <CalendarClock className="h-4 w-4" strokeWidth={2} />
                     </Button>
                   )}
                   <Button variant="ghost" size="sm" aria-label={t("viewOccupancy")} onClick={() => onViewOccupancy(entry)}>

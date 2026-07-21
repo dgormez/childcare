@@ -52,6 +52,9 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     siblingDiscountPct: 0,
     familyInvoiceBundlingEnabled: false,
     qrCheckInEnabled: false,
+    publicEnrollmentEnabled: false,
+    publicEnrollmentSlug: "sunshine-house",
+    defaultEnrollmentLocale: "nl",
     deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
@@ -77,6 +80,12 @@ function makeEntry(overrides: Partial<WaitingListEntryResponse> = {}): WaitingLi
     isDuplicate: false,
     registeredAt: "2026-07-01T09:00:00Z",
     updatedAt: null,
+    source: "directorEntered",
+    referenceCode: null,
+    tourProposedAt: null,
+    tourInvitationStatus: "notSent",
+    tourInvitationSentAt: null,
+    tourOutcome: null,
     ...overrides,
   };
 }

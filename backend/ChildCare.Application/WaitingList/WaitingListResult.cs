@@ -13,6 +13,7 @@ public enum WaitingListFailure
     NotReorderableInCurrentStatus,
     AlreadyAtBoundary,
     InvalidLinkRequest,
+    NoContactEmail,
 }
 
 public class WaitingListEntryResult

@@ -266,59 +266,59 @@ and verify it's saved independent of any link response.
 
 ### Tests for User Story 3
 
-- [ ] T041 [P] [US3] Integration test: `POST /api/waiting-list/{id}/tour-invitation` sends an
+- [X] T041 [P] [US3] Integration test: `POST /api/waiting-list/{id}/tour-invitation` sends an
   email containing accept/decline links and sets `TourInvitationStatus = Sent`,
   `TourProposedAt`, `TourInvitationSentAt`; returns `422
   errors.waiting_list.no_contact_email` when the entry has no contact email, in
   `backend/ChildCare.Api.Tests/WaitingList/TourInvitationTests.cs`
-- [ ] T042 [P] [US3] Integration test: `GET /api/public/enrollment/tour-response` with a valid
+- [X] T042 [P] [US3] Integration test: `GET /api/public/enrollment/tour-response` with a valid
   token and `response=accepted` sets `TourInvitationStatus = Accepted` and renders an HTML
   confirmation page in the entry's `SubmittedLocale`; `response=declined` sets `Declined`, in
   the same test file as T041
-- [ ] T043 [P] [US3] Integration test: an invalid, tampered, or unparseable token renders the
+- [X] T043 [P] [US3] Integration test: an invalid, tampered, or unparseable token renders the
   generic "invalid or expired link" HTML page and writes nothing (fails closed, mirrors
   `DigestUnsubscribeLinkResolver`), in the same test file as T041
-- [ ] T044 [P] [US3] Integration test: a tour-response for an entry already `Enrolled` or
+- [X] T044 [P] [US3] Integration test: a tour-response for an entry already `Enrolled` or
   `Withdrawn` renders a "no longer active" page and does **not** alter `TourInvitationStatus`
   (FR-018), in the same test file as T041
-- [ ] T045 [P] [US3] Integration test: `POST /api/waiting-list/{id}/tour-outcome` saves a
+- [X] T045 [P] [US3] Integration test: `POST /api/waiting-list/{id}/tour-outcome` saves a
   free-text outcome independent of `TourInvitationStatus` (callable with or without a prior
   invitation), in the same test file as T041
-- [ ] T045a [P] [US3] Integration test (FR-015): sending a second tour invitation for an entry
+- [X] T045a [P] [US3] Integration test (FR-015): sending a second tour invitation for an entry
   that already has one (e.g. after a `Declined` response) overwrites `TourProposedAt`/
   `TourInvitationSentAt` and resets `TourInvitationStatus` to `Sent` — an entry has at most one
   active invitation, not a history of past ones, in the same test file as T041
 
 ### Implementation for User Story 3
 
-- [ ] T046 [US3] Create `SendTourInvitationCommand` + handler (generates a token via
+- [X] T046 [US3] Create `SendTourInvitationCommand` + handler (generates a token via
   `ITourInvitationTokenService`, builds accept/decline URLs via `EnrollmentLinkBuilder`, sends
   the tour-invitation email, sets `TourInvitationStatus`/`TourProposedAt`/
   `TourInvitationSentAt`, overwriting on re-send per research.md R2) in
   `backend/ChildCare.Application/WaitingList/SendTourInvitationCommand.cs` and
   `SendTourInvitationCommandHandler.cs` (depends on T009, T012)
-- [ ] T047 [US3] Add `SendTourInvitationAsync` to `IEmailSender`/`EmailService`, a new
+- [X] T047 [US3] Add `SendTourInvitationAsync` to `IEmailSender`/`EmailService`, a new
   `tour-invitation.scriban` template, and a `TourInvitationEmailLabels.For(locale)` provider,
   mirroring T024's pattern
-- [ ] T048 [US3] Create `RecordTourOutcomeCommand` + handler in
+- [X] T048 [US3] Create `RecordTourOutcomeCommand` + handler in
   `backend/ChildCare.Application/WaitingList/RecordTourOutcomeCommand.cs` and
   `RecordTourOutcomeCommandHandler.cs`
-- [ ] T049 [US3] Create `RespondTourInvitationCommand` + handler (terminal-status guard per
+- [X] T049 [US3] Create `RespondTourInvitationCommand` + handler (terminal-status guard per
   FR-018/data-model.md, idempotent per contracts/enrollment-api.md) in
   `backend/ChildCare.Application/WaitingList/RespondTourInvitationCommand.cs` and
   `RespondTourInvitationCommandHandler.cs` (depends on T009)
-- [ ] T050 [P] [US3] Add `SendTourInvitationRequest` and `RecordTourOutcomeRequest` to
+- [X] T050 [P] [US3] Add `SendTourInvitationRequest` and `RecordTourOutcomeRequest` to
   `backend/ChildCare.Contracts/Requests/WaitingListRequests.cs`
-- [ ] T051 [US3] Add `POST /api/waiting-list/{id}/tour-invitation` and `POST
+- [X] T051 [US3] Add `POST /api/waiting-list/{id}/tour-invitation` and `POST
   /api/waiting-list/{id}/tour-outcome` (`DirectorOnly`) to
   `backend/ChildCare.Api/Endpoints/WaitingListEndpoints.cs` per contracts/enrollment-api.md
   (depends on T046, T048, T050)
-- [ ] T052 [US3] Add `GET /api/public/enrollment/tour-response` (`.AllowAnonymous()` +
+- [X] T052 [US3] Add `GET /api/public/enrollment/tour-response` (`.AllowAnonymous()` +
   `.RequireTenantExempt()`, server-rendered HTML mirroring `EmailEndpoints.RenderUnsubscribePage`)
   to `PublicEnrollmentEndpoints.cs` per contracts/enrollment-api.md (depends on T049)
-- [ ] T053 [US3] Add a tour-invitation send action (proposed date/time picker) and an
+- [X] T053 [US3] Add a tour-invitation send action (proposed date/time picker) and an
   outcome-entry action to `web/app/(app)/waiting-list/page.tsx`
-- [ ] T054 [P] [US3] Populate `waitingList.tourInvitation` i18n keys (send action, outcome
+- [X] T054 [P] [US3] Populate `waitingList.tourInvitation` i18n keys (send action, outcome
   entry, status labels) in `web/i18n/locales/{en,nl,fr}.json`
 
 **Checkpoint**: User Stories 1, 2, AND 3 all work independently.

@@ -52,6 +52,7 @@ const location: LocationResponse = {
   siblingDiscountPct: 0,
   familyInvoiceBundlingEnabled: false,
   qrCheckInEnabled: false,
+  publicEnrollmentEnabled: false, publicEnrollmentSlug: "loc-1", defaultEnrollmentLocale: "nl",
   deactivatedAt: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",

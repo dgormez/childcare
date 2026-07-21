@@ -306,7 +306,21 @@
     "occupancyFrom": "From",
     "occupancyTo": "To",
     "viewOccupancy": "View occupancy",
-    "tourInvitation": {},
+    "tourInvitation": {
+      "title": "Tour invitation",
+      "statusLabel": "Status",
+      "status": {
+        "notSent": "Not sent",
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      },
+      "proposedAtLabel": "Proposed date and time",
+      "sendAction": "Send invitation",
+      "outcomeLabel": "Outcome",
+      "saveOutcomeAction": "Save outcome",
+      "close": "Close"
+    },
     "selfRegisteredBadge": "Online application"
   },
   "dayReservations": {
