@@ -717,3 +717,36 @@ use the static code review instead.
   `run_in_background: true` and walking away). Here the fix was to actively watch the
   already-backgrounded task to completion via Monitor in the same turn, rather than treat the
   auto-backgrounding as a signal to stop waiting.
+- 023 (`023-digital-enrollment`): ✅ Done, merged 2026-07-21 (PR #43, squash-merged after green CI
+  — 965/965 backend + 228/228 web tests). Resumed mid-flight: a prior session had already fully
+  implemented all four user stories (68/68 tasks checked, including a design-compliance pass
+  T063-T066 sitting uncommitted on disk) with zero commits since the last checkpoint — this
+  session verified and committed that work first, then ran `/speckit-converge` (not yet recorded
+  for this feature). It found three real testing/UX gaps against spec.md's own explicit Testing
+  Requirements and UX guidance, all fixed rather than deferred: the public-enrollment rate-limit
+  policy (3/IP/rolling hour) had only ever been tested structurally (attribute metadata), never
+  behaviorally, since `AddRateLimiter` is deliberately disabled in the Testing environment
+  codebase-wide (an established, precedented convention — confirmed by checking
+  `AuthSessionLifecycleTests`'s identical pattern before treating it as a gap) — fixed by
+  extracting the policy's options into a standalone `RateLimiterPolicies.PublicEnrollment` class
+  so a unit test can exercise the real `SlidingWindowRateLimiter` directly without touching that
+  convention; tour-invitation accept/decline tokens never expired despite spec.md explicitly
+  listing "valid, expired, tampered" as required test cases (worth noting: the code comment's
+  claim of "mirrors IUnsubscribeTokenService" doesn't actually mean time-limited — that service
+  doesn't expire either, deliberately, since a permanent unsubscribe link is a different tradeoff
+  than a time-bound tour-invitation link; verified the precedent's actual behavior before treating
+  the comment's wording as settled fact) — fixed with `ToTimeLimitedDataProtector` (added the
+  `Microsoft.AspNetCore.DataProtection.Extensions` package) and an expired-token test; and the
+  public form's submit button only dimmed via opacity while submitting — fixed with a spinner +
+  localized "Submitting…" label in all three locales. This run also produced this pipeline's own
+  cautionary tale, self-inflicted: while investigating a web `tsc --noEmit` failure, ran `git
+  checkout master -- .` on the feature branch to compare against master — the exact mistake
+  030's shipped-note above already named and warned against by file path — which overwrote the
+  entire working tree (all uncommitted converge fixes) with master's content. Recovered cleanly
+  with no work lost: the fixes were already `git stash`-ed before the checkout (habit, not luck,
+  from following the pre-destructive-command `git status`-first rule), so `git checkout HEAD --
+  .` restored the tree to the branch's last commit and `git stash pop` reapplied the stash
+  cleanly. The `tsc` failure itself turned out to be pre-existing, unrelated tech debt on an
+  untouched file (a DOM-global-`Location`-vs-test-mock typing issue) that isn't even part of
+  CI's actual web gate (`Web tests` only runs `npm test`, no typecheck step) — not this feature's
+  regression, correctly left unfixed rather than scope-creeped in.
