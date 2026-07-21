@@ -91,7 +91,7 @@ infrastructure.
 
 ## R5: Reference-code and signed-token generation
 
-**Decision**: The reference code (FR-008, resolved in spec.md's Clarifications to a short
+**Decision**: The reference code (FR-008, resolved in spec.md's Clarifications to an 8-character
 human-legible alphanumeric string) is generated server-side at entry creation using a
 cryptographically random source, filtered to an unambiguous character set (excludes `0/O`,
 `1/I/l`), and re-rolled on the rare collision (checked via the existing per-tenant uniqueness

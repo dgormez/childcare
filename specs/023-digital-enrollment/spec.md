@@ -26,6 +26,11 @@ product-owner ambiguity)
   than an opaque GUID or a sequential integer. No comparable short-code generator exists
   elsewhere in this codebase to follow instead (confirmed by search), so this is a fresh,
   industry-standard default, not a precedent match.
+- Q: `/speckit-checklist`'s requirements-quality pass flagged FR-008 as not quantifying "short"
+  with an actual length — what length? → A: 8 characters, drawn from a ~32-character unambiguous
+  alphabet (excluding 0/O, 1/I/l) — comfortably matches common booking/order-code conventions
+  (long enough that random collisions are negligible even at this product's scale, short enough
+  to read aloud or type in one breath over the phone, per the code's own stated purpose).
 
 ## Product Context
 
@@ -367,10 +372,10 @@ re-enabling it and verifying the form works again with all prior entries intact.
 - **FR-007**: A successful, non-honeypot, non-rate-limited submission MUST create a
   `WaitingListEntry` (012a) with status `waiting` for the specified location, marked as
   self-registered and distinguishable from director-entered entries.
-- **FR-008**: The system MUST generate a unique, short, human-legible alphanumeric reference
-  code (excluding visually-confusable characters such as 0/O and 1/I/l) for each self-registered
-  entry and include it in the confirmation shown to the parent and the confirmation email sent
-  to them.
+- **FR-008**: The system MUST generate a unique, 8-character, human-legible alphanumeric
+  reference code (excluding visually-confusable characters such as 0/O and 1/I/l) for each
+  self-registered entry and include it in the confirmation shown to the parent and the
+  confirmation email sent to them.
 - **FR-009**: The system MUST send a confirmation email immediately after a successful
   submission, in the language selected on the form.
 - **FR-010**: The system MUST create an in-app notification for the location's director(s) when
@@ -390,7 +395,14 @@ re-enabling it and verifying the form works again with all prior entries intact.
   contact-creation flow MUST be pre-filled from the entry's submitted data, requiring the
   director to confirm rather than retype.
 - **FR-015**: Directors MUST be able to send a tour invitation email, from a waiting-list entry,
-  containing a proposed date/time and an accept/decline link.
+  containing a proposed date/time and an accept/decline link. Sending a new invitation for an
+  entry that already has one (e.g. to propose a different date after a decline, or to
+  reschedule) MUST replace the previous invitation's proposed date/time and reset its
+  accept/decline status — an entry has at most one active invitation at a time, not a history of
+  past ones (mirrors this codebase's established preference against per-change history tables,
+  per feature 022's precedent). The email MUST be sent in the entry's submitted language if it
+  has one (self-registered entries), or the location's default enrollment language otherwise
+  (director-entered entries have no submitted language to fall back to).
 - **FR-016**: A tour invitation's accept/decline link MUST be usable without the recipient
   creating an account or logging in, and MUST record the recipient's response against that
   entry.

@@ -49,4 +49,9 @@
   human-legible alphanumeric code (excluding 0/O, 1/I/l), not a GUID or sequential integer,
   since no comparable short-code generator exists elsewhere in this codebase to match instead.
   All checklist items still pass after integration.
-- Ready for `/speckit-plan`.
+- 2026-07-21 `/speckit-checklist` (security-ux.md) pass surfaced two more completeness/clarity
+  gaps and both were closed in spec.md directly: FR-008's reference code length quantified to 8
+  characters (a second Clarifications entry), and FR-015 expanded to cover tour-invitation
+  re-send/reschedule behavior and the email-locale fallback for director-entered entries (which
+  have no submitted-form language). All checklist items still pass after integration.
+- Ready for `/speckit-analyze`.
