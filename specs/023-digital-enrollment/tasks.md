@@ -122,6 +122,10 @@ provided.
 - [ ] T021 [P] [US1] Integration test: a successful submission creates a `Notification`
   (`Type = EnrollmentSubmitted`) for every director `TenantUser` in the tenant (FR-010,
   data-model.md), in the same test file as T013
+- [ ] T021a [P] [US1] Integration test (FR-020): a successful submission creates exactly one
+  `WaitingListEntry` and writes **zero** `Child`/`Contact` rows — self-registration never
+  touches the tenant's authoritative records until a director explicitly converts the entry
+  (012a's existing constraint, re-affirmed for this path), in the same test file as T013
 
 ### Implementation for User Story 1
 
@@ -258,6 +262,10 @@ and verify it's saved independent of any link response.
 - [ ] T045 [P] [US3] Integration test: `POST /api/waiting-list/{id}/tour-outcome` saves a
   free-text outcome independent of `TourInvitationStatus` (callable with or without a prior
   invitation), in the same test file as T041
+- [ ] T045a [P] [US3] Integration test (FR-015): sending a second tour invitation for an entry
+  that already has one (e.g. after a `Declined` response) overwrites `TourProposedAt`/
+  `TourInvitationSentAt` and resets `TourInvitationStatus` to `Sent` — an entry has at most one
+  active invitation, not a history of past ones, in the same test file as T041
 
 ### Implementation for User Story 3
 

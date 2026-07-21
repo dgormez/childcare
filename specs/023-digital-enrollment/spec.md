@@ -10,7 +10,7 @@
 time, without calling the KDV, and let them add themselves to a location's waiting list
 directly — feeding into feature 012a's waiting list and pre-filling child/contact data when a
 director converts an entry. Includes anti-spam protection (honeypot + IP rate limiting), a
-parent-facing confirmation with a reference number, and a director-initiated tour-invitation
+parent-facing confirmation with a reference code, and a director-initiated tour-invitation
 email with an accept/decline link and a manually recorded outcome."
 
 ## Clarifications
@@ -18,7 +18,7 @@ email with an accept/decline link and a manually recorded outcome."
 ### Session 2026-07-21 (autonomous run — recommended/industry-standard option selected, no
 product-owner ambiguity)
 
-- Q: FR-008's reference number needs to be usable when a family calls, emails, or visits the
+- Q: FR-008's reference code needs to be usable when a family calls, emails, or visits the
   center to inquire about their submission (per the Assumptions section) — what format should it
   take? → A: a short, human-legible alphanumeric code (recommended default for this exact use
   case — a "quote this when you contact us" reference — the same well-established pattern as a
@@ -60,12 +60,12 @@ defines).
   prioritizes, sends tour invitations, converts), System (anti-spam enforcement, confirmation
   email, reference-number generation, director notification).
 - **Actions**: parent submits the public form for a specific location → system creates an
-  unverified `WaitingListEntry` (012a) → system emails a confirmation + reference number and
+  unverified `WaitingListEntry` (012a) → system emails a confirmation + reference code and
   notifies the director in-app → director reviews (duplicate-flagged if applicable), optionally
   sends a tour invitation, and eventually converts the entry to `offered`/`enrolled` (012a's
   existing status lifecycle, unchanged) with the child/contact creation flows pre-filled.
 - **Data Flow**: extends `WaitingListEntry` (012a) with an origin marker (self-registered vs.
-  director-entered), a reference number, the submission's selected locale, and tour-invitation
+  director-entered), a reference code, the submission's selected locale, and tour-invitation
   state (proposed date/time, invitation status, manually recorded outcome) — the entry itself
   remains the same lightweight, pre-child-profile record 012a already defines. Extends
   `Location` with a per-location enable/disable flag and a public identifier for its distinct
@@ -112,7 +112,7 @@ anti-spam enforcement; and duplicate entries always surfaced, never silently dro
 
 **Main flow (parent)**: public URL for a location → form (child first/last name, date of
 birth, requested start date, parent/guardian name, email, phone, optional notes, language
-toggle) → submit → confirmation screen showing the reference number, with the same information
+toggle) → submit → confirmation screen showing the reference code, with the same information
 also emailed.
 
 **Main flow (director)**: in-app notification → the waiting-list view (012a) shows the new
@@ -165,13 +165,13 @@ location's public-enrollment setting (mirrors the existing
   for its distinct URL.
 - `WaitingListEntry` (012a) gains: an origin marker distinguishing self-registered from
   director-entered entries (defaulting existing rows to director-entered, so nothing about
-  012a's shipped behavior changes); a unique reference number; the submission's selected
+  012a's shipped behavior changes); a unique reference code; the submission's selected
   locale; and tour-invitation state (proposed date/time, invitation status, a manually recorded
   outcome) as a single evolving set of fields rather than a history log — mirroring feature
   022's explicit precedent that this codebase has no per-change history table pattern anywhere,
   and the closest analog (013h's catalog deactivation) uses attribution fields, not a log.
 - Contact email becomes a required field specifically for self-registered submissions (needed
-  to deliver the confirmation and reference number), without changing 012a's existing
+  to deliver the confirmation and reference code), without changing 012a's existing
   director-entered flow, where contact email remains optional.
 - An EF Core migration for the above, with a manually run SQL script per this repo's production
   convention (`.claude/CLAUDE.md`).
@@ -209,7 +209,7 @@ on-submission; and locale-respecting confirmation/tour emails.
 A prospective parent finds a KDV location's public enrollment link (e.g. shared from the
 center's own website) and fills in their child's name, date of birth, requested start date,
 their own contact details, and an optional note, picking their preferred language. They submit
-without creating an account. They immediately see a confirmation with a reference number, and
+without creating an account. They immediately see a confirmation with a reference code, and
 the same confirmation arrives by email.
 
 **Why this priority**: This is the entire reason the feature exists — without it, nothing else
@@ -223,9 +223,9 @@ confirmation email sent to the address provided.
 
 1. **Given** a location has public enrollment enabled, **When** a parent completes and submits
    the form with valid data, **Then** a new waiting-list entry is created with status `waiting`,
-   marked as self-registered, and the parent sees a confirmation screen with a reference number.
+   marked as self-registered, and the parent sees a confirmation screen with a reference code.
 2. **Given** the same successful submission, **When** it completes, **Then** a confirmation
-   email containing the reference number is sent to the address the parent provided, in the
+   email containing the reference code is sent to the address the parent provided, in the
    language they selected on the form.
 3. **Given** a parent leaves a required field empty or enters an invalid date of birth (in the
    future), **When** they attempt to submit, **Then** the form shows a specific, inline error
@@ -340,7 +340,7 @@ re-enabling it and verifying the form works again with all prior entries intact.
   location's default.
 - A parent provides a phone number but the email field is left blank — rejected at submission
   time with an inline validation error, since email is required for self-registered entries (the
-  only channel for the confirmation and reference number); this differs from 012a's own
+  only channel for the confirmation and reference code); this differs from 012a's own
   director-entered flow, where contact email remains optional.
 - A director disables the form while a parent already has it open and mid-fill — the submission
   is rejected server-side at submit time with a clear message, not just prevented by hiding the
@@ -424,7 +424,7 @@ re-enabling it and verifying the form works again with all prior entries intact.
 
 - **WaitingListEntry** (existing, feature 012a, extended): gains an origin marker (self-
   registered vs. director-entered, defaulting existing rows to director-entered), a unique
-  reference number, the submission's selected locale, and tour-invitation state (proposed
+  reference code, the submission's selected locale, and tour-invitation state (proposed
   date/time, invitation status, manually recorded outcome) as evolving fields on the entry
   itself, not a separate history log.
 - **Location** (existing, extended): gains a per-location enable/disable flag for public
@@ -449,7 +449,7 @@ re-enabling it and verifying the form works again with all prior entries intact.
 
 ## Assumptions
 
-- The reference number is used by the family to identify themselves when they contact the
+- The reference code is used by the family to identify themselves when they contact the
   center by phone, email, or in person — this feature does not build a self-service public
   status-lookup page, since a full parent portal is explicitly out of scope per the feature's
   own "Out of scope" note.
