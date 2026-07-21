@@ -39,6 +39,19 @@ fact, no product-owner ambiguity)
   amendment mechanism — which produces a new, not-yet-signed contract requiring its own fresh
   signature. This isn't a new rule; it's applying 007's existing "amendment, not mutation"
   design to the one case it didn't yet cover.
+- Q: Does one SEPA mandate/signature cover a whole family's bundled invoicing (feature 030's
+  `Invoice.FamilyGroupId`), or is the mandate captured independently per contract? → A:
+  independently per contract, matching the BACKLOG prompt's own literal schema (the SEPA fields
+  live on `Contract`, not a family/contact-level entity). A family with multiple enrolled
+  children signs once per child's contract; each capture is self-contained and this feature does
+  not attempt to detect or reuse an existing sibling's mandate. This keeps 024 from having to
+  reach into 030's bundling logic or pre-empt how feature 026 (SEPA batch XML generation, not yet
+  started) chooses to deduplicate/aggregate mandates across a family at actual collection time —
+  that decision is explicitly deferred to 026, which owns the collection side and can decide
+  whether one mandate per family is worth the added complexity once it's the feature actually
+  generating collection batches. A redundant second mandate for a second child is not a
+  correctness problem today, only a minor UX one, and is an acceptable, explicitly-chosen
+  trade-off rather than an oversight.
 
 ## Product Context
 
