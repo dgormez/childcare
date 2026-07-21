@@ -383,6 +383,24 @@ works again with all prior entries intact.
 
 ---
 
+## Phase 8: Convergence
+
+- [X] T067 Add a behavioral integration test proving the public enrollment rate-limit policy
+  rejects a 4th submission from the same source within the rolling hour while the first 3
+  succeed (currently only the `EnableRateLimitingAttribute` metadata is asserted, not the actual
+  limiter behavior — `Program.cs` disables `AddRateLimiter` in the `Testing` environment) per
+  Testing Requirements / FR-006 / SC-004 (missing)
+- [X] T068 Make `DataProtectionTourInvitationTokenService` issue time-limited tokens (mirror
+  `ToTimeLimitedDataProtector` on the existing unsubscribe-token pattern) and add an
+  expired-token test to `TourInvitationTests.cs`, per spec.md's explicit Testing Requirements
+  ("tour-invitation token tests: valid, expired, tampered") / FR-016 (missing)
+- [X] T069 [P] Give the public enrollment form's submit button a clear loading indicator
+  (spinner or label change) rather than opacity alone while submitting, in
+  `web/app/enroll/[orgSlug]/[locationSlug]/page.tsx`, per spec.md's UX Requirements
+  loading-state guidance (partial)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using ChildCare.Application.Common;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
@@ -107,6 +108,41 @@ public class TourInvitationTests(OrganisationOnboardingWebAppFactory factory) : 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("niet (meer) geldig", body); // nl fallback InvalidLinkText — no raw error/stack trace
+    }
+
+    // ── Convergence T068: an expired token fails closed, same as a tampered one ───────
+    // ── (spec.md's Testing Requirements explicitly lists "valid, expired, tampered") ──
+
+    [Fact]
+    public async Task TourResponse_ExpiredToken_ReturnsCalmInvalidPage_WritesNothing()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Tour Expired Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Foxglove");
+        var entry = await CreateEntryAsync(client, org.AccessToken, location.Id, "sophie@example.com");
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/waiting-list/{entry.Id}/tour-invitation", org.AccessToken,
+            new SendTourInvitationRequest(DateTime.UtcNow.AddDays(7))));
+
+        // Same purpose string DataProtectionTourInvitationTokenService uses, but protected with
+        // an already-elapsed lifetime — proves the real service's Unprotect call actually
+        // enforces expiry (not just that a malformed string fails), without needing to wait out
+        // the production 30-day window.
+        var dataProtectionProvider = factory.Services.GetRequiredService<IDataProtectionProvider>();
+        var expiredToken = dataProtectionProvider
+            .CreateProtector("WaitingList.TourInvitation")
+            .ToTimeLimitedDataProtector()
+            .Protect(entry.Id.ToString(), TimeSpan.FromMilliseconds(1));
+        await Task.Delay(50);
+
+        var response = await client.GetAsync($"/api/public/enrollment/tour-response?token={Uri.EscapeDataString(expiredToken)}&org={org.Organisation.Slug}&response=accepted");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("niet (meer) geldig", body); // same generic invalid/expired page as a tampered token
+
+        var listResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/waiting-list?locationId={location.Id}&status=all", org.AccessToken));
+        var updatedEntry = (await listResponse.Content.ReadFromJsonAsync<List<WaitingListEntryResponse>>())!.Single(e => e.Id == entry.Id);
+        Assert.Equal("sent", updatedEntry.TourInvitationStatus); // unchanged — the expired response was never applied
     }
 
     // ── T044: terminal-status guard ──────────────────────────────────────────────────

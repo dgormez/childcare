@@ -269,7 +269,13 @@ function PageBody({
           </div>
 
           <Button type="submit" disabled={submitting} className="w-full">
-            {t("submitAction")}
+            {submitting && (
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+              />
+            )}
+            {submitting ? t("submittingAction") : t("submitAction")}
           </Button>
         </form>
       )}

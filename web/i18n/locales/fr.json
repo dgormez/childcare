@@ -1281,6 +1281,7 @@
     "contactPhoneLabel": "Votre téléphone (facultatif)",
     "notesLabel": "Autre chose à nous dire ? (facultatif)",
     "submitAction": "Rejoindre la liste d'attente",
+    "submittingAction": "Envoi en cours…",
     "confirmationBody": "Merci ! Nous avons ajouté votre famille à la liste d'attente et envoyé une confirmation à votre e-mail.",
     "referenceLabel": "Numéro de référence"
   }

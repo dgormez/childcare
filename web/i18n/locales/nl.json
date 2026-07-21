@@ -1281,6 +1281,7 @@
     "contactPhoneLabel": "Jouw telefoonnummer (optioneel)",
     "notesLabel": "Nog iets dat we moeten weten? (optioneel)",
     "submitAction": "Op de wachtlijst zetten",
+    "submittingAction": "Bezig met versturen…",
     "confirmationBody": "Bedankt! We hebben je gezin toegevoegd aan de wachtlijst en een bevestiging naar je e-mail gestuurd.",
     "referenceLabel": "Referentienummer"
   }

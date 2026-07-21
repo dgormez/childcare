@@ -190,6 +190,28 @@ public class PublicEnrollmentTests(OrganisationOnboardingWebAppFactory factory) 
         Assert.Equal("public-enrollment", rateLimitMetadata.PolicyName);
     }
 
+    // ── Convergence T067: the "public-enrollment" sliding-window policy's actual throttling ──
+    // ── behavior (3/IP/rolling hour, FR-006/SC-004) — exercised directly against the same ──
+    // ── options Program.cs wires into the policy (RateLimiterPolicies.PublicEnrollment), ──
+    // ── since AddRateLimiter's middleware itself is disabled in the Testing environment. ──
+
+    [Fact]
+    public void PublicEnrollmentRateLimitPolicy_AllowsThreePerHour_RejectsFourth()
+    {
+        using var limiter = new System.Threading.RateLimiting.SlidingWindowRateLimiter(
+            ChildCare.Api.RateLimiting.RateLimiterPolicies.PublicEnrollment);
+
+        using var first = limiter.AttemptAcquire();
+        using var second = limiter.AttemptAcquire();
+        using var third = limiter.AttemptAcquire();
+        using var fourth = limiter.AttemptAcquire();
+
+        Assert.True(first.IsAcquired);
+        Assert.True(second.IsAcquired);
+        Assert.True(third.IsAcquired);
+        Assert.False(fourth.IsAcquired);
+    }
+
     // ── T020: confirmation email sent in the submitted locale ──────────────────────
 
     [Fact]

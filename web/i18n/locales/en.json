@@ -1281,6 +1281,7 @@
     "contactPhoneLabel": "Your phone (optional)",
     "notesLabel": "Anything else we should know? (optional)",
     "submitAction": "Join the waiting list",
+    "submittingAction": "Submitting…",
     "confirmationBody": "Thank you! We've added your family to the waiting list and sent a confirmation to your email.",
     "referenceLabel": "Reference code"
   }

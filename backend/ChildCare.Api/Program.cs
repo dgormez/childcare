@@ -16,6 +16,7 @@ using ChildCare.Api.Auth;
 using ChildCare.Api.Cli;
 using ChildCare.Api.Endpoints;
 using ChildCare.Api.Middleware;
+using ChildCare.Api.RateLimiting;
 using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
@@ -650,17 +651,12 @@ builder.Services.AddRateLimiter(options =>
 
     // Public enrollment submission (feature 023, spec.md FR-006): unauthenticated, IP-based —
     // same partitioning strategy as auth-strict/auth-refresh, 3 submissions per rolling hour.
+    // Options live in RateLimiterPolicies.PublicEnrollment (single source of truth) so a unit
+    // test can exercise the actual throttling behavior directly (tasks.md T067).
     options.AddPolicy("public-enrollment", httpContext =>
         RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            factory: _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit          = 3,
-                Window               = TimeSpan.FromHours(1),
-                SegmentsPerWindow    = 4,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit           = 0,
-            }));
+            factory: _ => RateLimiterPolicies.PublicEnrollment));
 
     options.OnRejected = async (context, token) =>
     {
