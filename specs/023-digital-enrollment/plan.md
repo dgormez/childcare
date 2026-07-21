@@ -118,7 +118,7 @@ backend/
 │   └── Program.cs                                                  # + "public-enrollment" rate-limit policy (3/IP/hour)
 └── ChildCare.Infrastructure/
     ├── Persistence/Migrations/Tenant/<timestamp>_AddDigitalEnrollment.cs   # new
-    └── Email/Templates/{enrollment-confirmation,tour-invitation}/{nl,fr,en}.sbn  # new (mirrors daily-report/bulk-email template layout)
+    └── Email/Templates/{enrollment-confirmation,tour-invitation}.scriban   # new — one template per type (locale-agnostic; a C# LabelsProvider.For(locale) supplies localized strings into the model), mirrors daily-report.scriban/DailyReportEmailLabels
 
 web/
 ├── app/
