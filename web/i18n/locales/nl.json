@@ -559,6 +559,18 @@
       "saveButton": "Herinneringsinstellingen opslaan",
       "saveSuccess": "Herinneringsinstellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "tabPublicEnrollmentSettings": "Online Inschrijving",
+    "publicEnrollmentSettings": {
+      "description": "Laat gezinnen rechtstreeks via een publieke link op de wachtlijst van deze locatie komen, zonder te bellen.",
+      "toggleLabel": "Publieke online aanvragen toestaan",
+      "explanation": "Wanneer ingeschakeld, kan iedereen met onderstaande link een aanvraag indienen die als onbevestigde, zelfgeregistreerde inschrijving op de wachtlijst van deze locatie terechtkomt — je beoordeelt ze steeds voor je een plaats aanbiedt.",
+      "urlLabel": "Publieke inschrijvingslink",
+      "copyAction": "Kopiëren",
+      "copied": "Gekopieerd",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Instellingen voor online inschrijving opgeslagen.",
+      "saveError": "Kon de wijzigingen niet opslaan. Probeer opnieuw."
     }
   },
   "organisationSettings": {

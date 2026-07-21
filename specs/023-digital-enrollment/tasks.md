@@ -336,32 +336,32 @@ works again with all prior entries intact.
 
 ### Tests for User Story 4
 
-- [ ] T055 [P] [US4] Integration test: `PUT /api/locations/{id}/public-enrollment-setting`
+- [X] T055 [P] [US4] Integration test: `PUT /api/locations/{id}/public-enrollment-setting`
   persists the new value and leaves other locations' settings untouched (mirrors feature 021's
   equivalent test), in `backend/ChildCare.Api.Tests/Locations/PublicEnrollmentSettingTests.cs`
-- [ ] T056 [P] [US4] Integration test: a submission attempted directly against the endpoint
+- [X] T056 [P] [US4] Integration test: a submission attempted directly against the endpoint
   immediately after the director disables the setting is rejected `403` even if the client
   hadn't refreshed its own cached state (FR-013's mid-session edge case), in the same test file
   as T055
-- [ ] T057 [P] [US4] Integration test: re-enabling the setting leaves every previously submitted
+- [X] T057 [P] [US4] Integration test: re-enabling the setting leaves every previously submitted
   entry unchanged, in the same test file as T055
 
 ### Implementation for User Story 4
 
-- [ ] T058 [US4] Create `UpdateLocationPublicEnrollmentSettingCommand` + handler (mirrors
+- [X] T058 [US4] Create `UpdateLocationPublicEnrollmentSettingCommand` + handler (mirrors
   `UpdateLocationQrCheckInSettingCommandHandler` exactly — log-only-on-change, per contracts/
   enrollment-api.md) in
   `backend/ChildCare.Application/Locations/UpdateLocationPublicEnrollmentSettingCommand.cs` and
   `UpdateLocationPublicEnrollmentSettingCommandHandler.cs`
-- [ ] T059 [P] [US4] Add `UpdateLocationPublicEnrollmentSettingRequest` to
+- [X] T059 [P] [US4] Add `UpdateLocationPublicEnrollmentSettingRequest` to
   `backend/ChildCare.Contracts/Requests/LocationRequests.cs`
-- [ ] T060 [US4] Add `PUT /api/locations/{locationId}/public-enrollment-setting`
+- [X] T060 [US4] Add `PUT /api/locations/{locationId}/public-enrollment-setting`
   (`DirectorOnly`) to `backend/ChildCare.Api/Endpoints/LocationEndpoints.cs` (depends on T058,
   T059)
-- [ ] T061 [US4] Add the public-enrollment toggle section (label + explanatory copy + the
+- [X] T061 [US4] Add the public-enrollment toggle section (label + explanatory copy + the
   location's shareable public URL, shown with a copy action) to
   `web/app/(app)/locations/[id]/page.tsx`
-- [ ] T062 [P] [US4] Populate `locations` i18n keys (toggle label, explanatory copy, "copy link"
+- [X] T062 [P] [US4] Populate `locations` i18n keys (toggle label, explanatory copy, "copy link"
   action) in `web/i18n/locales/{en,nl,fr}.json`
 
 **Checkpoint**: All four user stories independently functional.

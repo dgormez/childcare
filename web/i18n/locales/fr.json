@@ -559,6 +559,18 @@
       "saveButton": "Enregistrer les rappels",
       "saveSuccess": "Paramètres de rappel enregistrés.",
       "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+    },
+    "tabPublicEnrollmentSettings": "Inscription en ligne",
+    "publicEnrollmentSettings": {
+      "description": "Permettez aux familles de rejoindre directement la liste d'attente de ce site via un lien public, sans appeler.",
+      "toggleLabel": "Accepter les demandes en ligne publiques",
+      "explanation": "Une fois activé, toute personne disposant du lien ci-dessous peut soumettre une demande qui arrive sur la liste d'attente de ce site en tant qu'inscription auto-enregistrée non vérifiée — vous l'examinez toujours avant de proposer une place.",
+      "urlLabel": "Lien d'inscription public",
+      "copyAction": "Copier",
+      "copied": "Copié",
+      "saveButton": "Enregistrer les modifications",
+      "saveSuccess": "Paramètres d'inscription en ligne enregistrés.",
+      "saveError": "Impossible d'enregistrer les modifications. Veuillez réessayer."
     }
   },
   "organisationSettings": {

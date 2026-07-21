@@ -559,6 +559,18 @@
       "saveButton": "Save reminder settings",
       "saveSuccess": "Reminder settings saved.",
       "saveError": "Couldn't save changes. Please try again."
+    },
+    "tabPublicEnrollmentSettings": "Online Enrollment",
+    "publicEnrollmentSettings": {
+      "description": "Let families join this location's waiting list directly from a public link, without calling.",
+      "toggleLabel": "Accept public online applications",
+      "explanation": "When enabled, anyone with the link below can submit a request that lands in this location's waiting list as an unverified, self-registered entry — you always review it before offering a place.",
+      "urlLabel": "Public enrollment link",
+      "copyAction": "Copy",
+      "copied": "Copied",
+      "saveButton": "Save changes",
+      "saveSuccess": "Public enrollment settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
     }
   },
   "organisationSettings": {
