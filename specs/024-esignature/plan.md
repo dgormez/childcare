@@ -105,21 +105,23 @@ backend/
 │   │   ├── IContractSigningTokenService.cs                        # new — mirrors ITourInvitationTokenService
 │   │   ├── IIbanProtector.cs                                      # new — mirrors INrnProtector
 │   │   └── ISignedContractStorage.cs                              # new — mirrors IFiscalAttestationStorage
-│   └── Contracts/
-│       ├── SendContractSigningInvitationCommand.cs                 # new — director, serves send + resend
-│       ├── GetContractForSigningQuery.cs                          # new — public, tenant-exempt
-│       ├── SubmitContractSigningCommand.cs                        # new — public, tenant-exempt
-│       ├── UpdateContractCommand.cs                                # + clears outstanding SigningToken on save
-│       └── ContractSigningStatus.cs                                # new — derived status helper (data-model.md)
+│   ├── Contracts/
+│   │   ├── SendContractSigningInvitationCommand.cs                 # new — director, serves send + resend
+│   │   ├── GetContractForSigningQuery.cs                          # new — public, tenant-exempt
+│   │   ├── SubmitContractSigningCommand.cs                        # new — public, tenant-exempt
+│   │   ├── UpdateContractCommand.cs                                # + clears outstanding SigningToken on save
+│   │   └── ContractSigningStatus.cs                                # new — derived status helper (data-model.md)
+│   └── Organisations/UpdateOrganisationCommand.cs                  # + SepaCreditorIdentifier alongside existing KboNumber (User Story 4)
 ├── ChildCare.Contracts/
-│   ├── Requests/ContractRequests.cs                                # + signing-invitation, submit-signing, creditor-id requests
-│   └── Responses/ContractResponses.cs                              # + signing status, masked IBAN, mandate reference fields
+│   ├── Requests/ContractRequests.cs                                # + signing-invitation, submit-signing requests
+│   ├── Requests/OrganisationRequests.cs                            # + SepaCreditorIdentifier on UpdateOrganisationRequest
+│   └── Responses/ContractResponses.cs                              # + signing status, masked IBAN, mandate reference fields; OrganisationResponse + SepaCreditorIdentifier
 ├── ChildCare.Api/
 │   ├── Endpoints/
 │   │   ├── ContractsEndpoints.cs                                    # + /signing-invitation route
+│   │   ├── OrganisationEndpoints.cs                                 # PUT/GET /api/organisations/me + SepaCreditorIdentifier
 │   │   └── PublicContractSigningEndpoints.cs                       # new — /api/public/contracts/sign, AllowAnonymous + RequireTenantExempt
-│   ├── Services/EmailService.cs                                    # + SendContractSigningInvitationAsync, SendSignedContractAsync
-│   └── Endpoints/OrganisationSettingsEndpoints.cs                  # + /sepa-creditor-id route (or nearest existing org-settings endpoint file)
+│   └── Services/EmailService.cs                                    # + SendContractSigningInvitationAsync, SendSignedContractAsync
 └── ChildCare.Infrastructure/
     ├── Common/
     │   ├── DataProtectionContractSigningTokenService.cs             # new — implements IContractSigningTokenService

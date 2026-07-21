@@ -110,14 +110,17 @@ unrelated to signing state — see spec.md's Clarifications on post-signing edit
 actually enforced via the *amendment* mechanism freezing terms, not via `UpdateContractCommand`
 gaining a new signed-contract check).
 
-## `PUT /api/organisation/settings/sepa-creditor-id`
+## `PUT /api/organisations/me` (existing, feature 014 — extended)
 
-`DirectorOnly`. Mirrors the existing organisation-settings command shape used for `KboNumber`.
+No new route. `UpdateOrganisationCommand`/`UpdateOrganisationRequest`/`OrganisationResponse` gain
+`SepaCreditorIdentifier` alongside the existing `KboNumber` — same org-wide, `DirectorOnly`,
+public-schema `Tenant` field, updated the same way `KboNumber` already is (User Story 4). No
+dedicated single-field endpoint is introduced; `GetCurrentOrganisationQuery` (`GET
+/api/organisations/me`) is extended the same way so the current value can be read back.
 
-Request:
+Request (extended):
 ```json
-{ "sepaCreditorIdentifier": "string" }
+{ "kboNumber": "string | null", "sepaCreditorIdentifier": "string | null" }
 ```
-- `200`: confirmation of the saved value.
 - Required (non-empty) before `POST /api/contracts/{id}/signing-invitation` will succeed
-  (User Story 4).
+  (FR-016).
