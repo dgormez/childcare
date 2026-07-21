@@ -32,6 +32,15 @@ revising (FR-013), or successfully signing all clear/replace `SigningToken`, whi
 actually invalidates a still-cryptographically-valid-but-superseded token — Data Protection
 tokens cannot be revoked by themselves.
 
+**Concurrency**: `SubmitContractSigningCommandHandler`'s check-and-clear step (match the
+presented token against the stored `SigningToken`, then clear it) MUST be atomic against a
+concurrent second submission of the same token (FR-009, spec.md Edge Cases) — implemented as a
+single conditional `UPDATE ... SET "SigningToken" = NULL, "SignedAt" = @now, ... WHERE "Id" =
+@contractId AND "SigningToken" = @presentedToken` (EF Core's `ExecuteUpdateAsync`, matching the
+row count to detect whether this call actually won the race) rather than a read-then-write
+(load the entity, check in memory, save) sequence, which would leave a window for two concurrent
+requests to both pass the in-memory check before either writes.
+
 **Rationale**: Reuses a proven, already-reviewed pattern (three prior features now use this exact
 token shape) rather than introducing JWT or a new signing mechanism, per the BACKLOG prompt's
 "signed JWT" being illustrative intent ("signed, time-limited link"), not a literal library

@@ -325,6 +325,10 @@ data — independent of the signing flow itself.
   never revealing which failure mode occurred.
 - A parent's IBAN belongs to a non-Belgian SEPA country — accepted, since SEPA direct debit is
   not Belgium-only; only the IBAN's own checksum/format is validated, not its country.
+- Two submissions against the same valid token arrive concurrently (a double-click, or two open
+  browser tabs) — exactly one succeeds; the other is rejected with the same generic "no longer
+  valid" response as a reused token, and only one signature/mandate is ever recorded (FR-009's
+  single-use invalidation is atomic, not a read-then-write race).
 
 ## Requirements *(mandatory)*
 
@@ -353,7 +357,9 @@ data — independent of the signing flow itself.
 - **FR-009**: On successful signing, the system MUST record the signed timestamp, the signature
   (image or typed text), the signer's IP address, and the SEPA mandate (IBAN encrypted at rest,
   a system-generated unique mandate reference, and the authorisation timestamp), and MUST
-  invalidate the signing token so it cannot be used again.
+  invalidate the signing token so it cannot be used again. This check-and-invalidate step MUST
+  be atomic: if two submissions against the same token arrive concurrently, at most one MUST
+  succeed (see Edge Cases).
 - **FR-010**: On successful signing, the system MUST generate a final signed PDF (contract terms
   + signature + SEPA mandate details) and persist it; this stored PDF MUST NOT be regenerated
   from live contract data at any later point, even if the underlying contract is later amended.
