@@ -231,15 +231,20 @@ while `Contract.Status` remains unaffected (per spec.md's Clarifications, FR-015
   `IContractSigningTokenService` + the stored `SigningToken`/`SigningTokenExpiresAt` match,
   returns the same field set `ContractPdfModel` renders) in
   `backend/ChildCare.Application/Contracts/GetContractForSigningQuery.cs` (depends on T007)
-- [ ] T032 [US1] Create `SubmitContractSigningCommand` + handler — re-validates the token
-  server-side, validates the IBAN (T010), and within one transaction: sets `SignedAt`,
-  `SignatureData`/`SignatureType`, `SignedByIp` (from `HttpContext.Connection.RemoteIpAddress`),
-  a newly generated unique `SepaMandateReference` (8-char unambiguous alphabet, re-rolled on
-  collision, per research.md R6/023's precedent), `SepaIbanEncrypted` (via `IIbanProtector`),
-  `SepaAuthorisedAt`; clears `SigningToken`/`SigningTokenExpiresAt`; generates the final signed
-  PDF and uploads via `ISignedContractStorage`; commits; then (fire-and-forget) emails both
-  parties — in `backend/ChildCare.Application/Contracts/SubmitContractSigningCommand.cs`
-  (depends on T007, T008, T009, T010)
+- [ ] T032 [US1] Create `SubmitContractSigningCommand` + handler — re-validates the IBAN (T010),
+  then performs the token check-and-invalidate as a single atomic conditional `UPDATE` (EF Core
+  `ExecuteUpdateAsync`, `WHERE Id = @contractId AND SigningToken = @presentedToken`, matching the
+  affected-row count to detect a lost race — research.md R2's Concurrency note, FR-009) that also
+  sets `SignedAt`, `SignatureData`/`SignatureType`, `SignedByIp` (from
+  `HttpContext.Connection.RemoteIpAddress`), a newly generated unique `SepaMandateReference`
+  (8-char unambiguous alphabet, re-rolled on collision, per research.md R6/023's precedent),
+  `SepaIbanEncrypted` (via `IIbanProtector`), `SepaAuthorisedAt`, and clears
+  `SigningTokenExpiresAt`; a zero-row-affected result (lost the race, or token already invalid)
+  returns the same generic invalid/expired failure as any other bad token; on success, generates
+  the final signed PDF and uploads via `ISignedContractStorage`, commits, then (fire-and-forget)
+  emails both parties — in
+  `backend/ChildCare.Application/Contracts/SubmitContractSigningCommand.cs` (depends on T007,
+  T008, T009, T010)
 - [ ] T033 [US1] Extend `QuestPdfContractGenerator`/`ContractPdfModel`
   (`backend/ChildCare.Infrastructure/Pdf/QuestPdfContractGenerator.cs`,
   `backend/ChildCare.Application/Common/IContractPdfGenerator.cs`) with an optional signature
