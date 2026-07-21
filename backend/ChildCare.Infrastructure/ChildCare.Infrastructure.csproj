@@ -16,6 +16,9 @@
          verify as soon as the CLI job exited. Persisted via PublicDbContext (already shared
          across both hosts) rather than a new GCS dependency. -->
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.10" />
+    <!-- Feature 023 convergence (T068) — ITimeLimitedDataProtector/ToTimeLimitedDataProtector
+         for the tour-invitation token's expiry, not included in the base DataProtection package. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

@@ -1289,6 +1289,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/public-enrollment-setting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateLocationPublicEnrollmentSettingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}/menu-variant-settings": {
         parameters: {
             query?: never;
@@ -4501,6 +4540,181 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/{id}/tour-invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SendTourInvitationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/waiting-list/{id}/tour-outcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordTourOutcomeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/enrollment/{orgSlug}/{locationSlug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgSlug: string;
+                    locationSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgSlug: string;
+                    locationSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SubmitPublicEnrollmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/enrollment/tour-response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    token: string;
+                    org: string;
+                    response: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8475,6 +8689,9 @@ export interface components {
             observedAt: string;
             notes: null | string;
         };
+        RecordTourOutcomeRequest: {
+            outcome: string;
+        };
         RefreshRequest: {
             organisationSlug: string;
             refreshToken: string;
@@ -8531,6 +8748,10 @@ export interface components {
         SendMessageRequest: {
             body: string;
         };
+        SendTourInvitationRequest: {
+            /** Format: date-time */
+            proposedAt: string;
+        };
         SetCaregiverPinRequest: {
             pin: string;
         };
@@ -8551,6 +8772,20 @@ export interface components {
             newTexture: null | string;
             newDietaryType: null | string[];
             notes: null | string;
+        };
+        SubmitPublicEnrollmentRequest: {
+            childFirstName: string;
+            childLastName: string;
+            /** Format: date */
+            dateOfBirth: string;
+            /** Format: date */
+            requestedStartDate: null | string;
+            contactName: string;
+            contactEmail: string;
+            contactPhone: null | string;
+            notes: null | string;
+            locale: string;
+            website: string;
         };
         TerminateContractRequest: {
             /** Format: date */
@@ -8663,6 +8898,9 @@ export interface components {
             delayDays: number | string;
             /** Format: int32 */
             cadenceDays: number | string;
+        };
+        UpdateLocationPublicEnrollmentSettingRequest: {
+            enabled: boolean;
         };
         UpdateLocationQrCheckInSettingRequest: {
             enabled: boolean;

@@ -75,6 +75,10 @@ export interface LocationResponse {
   familyInvoiceBundlingEnabled: boolean;
   // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
   qrCheckInEnabled: boolean;
+  // Feature 023 — contracts/023-digital-enrollment/enrollment-api.md.
+  publicEnrollmentEnabled: boolean;
+  publicEnrollmentSlug: string;
+  defaultEnrollmentLocale: string;
 }
 
 // Feature 014a — contracts/014a-invoice-payments-plus/payments-api.md.
@@ -278,6 +282,22 @@ export interface WaitingListEntryResponse {
   isDuplicate: boolean;
   registeredAt: string;
   updatedAt: string | null;
+  source: "directorEntered" | "selfRegistered";
+  referenceCode: string | null;
+  tourProposedAt: string | null;
+  tourInvitationStatus: "notSent" | "sent" | "accepted" | "declined";
+  tourInvitationSentAt: string | null;
+  tourOutcome: string | null;
+}
+
+export interface GetPublicEnrollmentLocationInfoResponse {
+  locationName: string;
+  enabled: boolean;
+  defaultLocale: string;
+}
+
+export interface SubmitPublicEnrollmentResponse {
+  referenceCode: string;
 }
 
 export interface OccupancyDayResponse {

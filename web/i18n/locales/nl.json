@@ -305,7 +305,23 @@
     "occupancyFreeCapacity": "{count} vrij",
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
-    "viewOccupancy": "Bezetting bekijken"
+    "viewOccupancy": "Bezetting bekijken",
+    "tourInvitation": {
+      "title": "Uitnodiging rondleiding",
+      "statusLabel": "Status",
+      "status": {
+        "notSent": "Niet verzonden",
+        "sent": "Verzonden",
+        "accepted": "Bevestigd",
+        "declined": "Afgewezen"
+      },
+      "proposedAtLabel": "Voorgestelde datum en tijd",
+      "sendAction": "Uitnodiging versturen",
+      "outcomeLabel": "Resultaat",
+      "saveOutcomeAction": "Resultaat opslaan",
+      "close": "Sluiten"
+    },
+    "selfRegisteredBadge": "Online aanvraag"
   },
   "dayReservations": {
     "title": "Verzoeken",
@@ -543,6 +559,18 @@
       "saveButton": "Herinneringsinstellingen opslaan",
       "saveSuccess": "Herinneringsinstellingen opgeslagen.",
       "saveError": "Kan de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "tabPublicEnrollmentSettings": "Online Inschrijving",
+    "publicEnrollmentSettings": {
+      "description": "Laat gezinnen rechtstreeks via een publieke link op de wachtlijst van deze locatie komen, zonder te bellen.",
+      "toggleLabel": "Publieke online aanvragen toestaan",
+      "explanation": "Wanneer ingeschakeld, kan iedereen met onderstaande link een aanvraag indienen die als onbevestigde, zelfgeregistreerde inschrijving op de wachtlijst van deze locatie terechtkomt — je beoordeelt ze steeds voor je een plaats aanbiedt.",
+      "urlLabel": "Publieke inschrijvingslink",
+      "copyAction": "Kopiëren",
+      "copied": "Gekopieerd",
+      "saveButton": "Wijzigingen opslaan",
+      "saveSuccess": "Instellingen voor online inschrijving opgeslagen.",
+      "saveError": "Kon de wijzigingen niet opslaan. Probeer opnieuw."
     }
   },
   "organisationSettings": {
@@ -1236,5 +1264,25 @@
     "resultSent": "{count} verzonden",
     "resultSkipped": "{count} overgeslagen — geen e-mailadres bekend",
     "resultFailed": "{count} niet verzonden"
+  },
+  "publicEnrollment": {
+    "title": "Kom op de wachtlijst",
+    "notFound": "We konden deze pagina niet vinden.",
+    "disabled": "Deze locatie aanvaardt momenteel geen online aanvragen. Neem rechtstreeks contact op.",
+    "rateLimited": "Je hebt recent al enkele aanvragen ingediend — probeer het straks opnieuw.",
+    "languageLabel": "Taal",
+    "intro": "Vertel ons iets over je gezin en we voegen je toe aan de wachtlijst. We nemen contact op zodra er een plaats vrijkomt.",
+    "childFirstNameLabel": "Voornaam kind",
+    "childLastNameLabel": "Achternaam kind",
+    "dateOfBirthLabel": "Geboortedatum kind",
+    "requestedStartDateLabel": "Gewenste startdatum (optioneel)",
+    "contactNameLabel": "Jouw naam",
+    "contactEmailLabel": "Jouw e-mailadres",
+    "contactPhoneLabel": "Jouw telefoonnummer (optioneel)",
+    "notesLabel": "Nog iets dat we moeten weten? (optioneel)",
+    "submitAction": "Op de wachtlijst zetten",
+    "submittingAction": "Bezig met versturen…",
+    "confirmationBody": "Bedankt! We hebben je gezin toegevoegd aan de wachtlijst en een bevestiging naar je e-mail gestuurd.",
+    "referenceLabel": "Referentienummer"
   }
 }

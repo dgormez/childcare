@@ -31,6 +31,7 @@ public class DuplicateLocationCommandHandler(ITenantDbContext db) : IRequestHand
             Verantwoordelijke = source.Verantwoordelijke,
             FlexPermission = source.FlexPermission,
             BoPermission = source.BoPermission,
+            PublicEnrollmentSlug = await LocationSlugGenerator.GenerateAsync(db, source.Name, cancellationToken),
         };
 
         db.Locations.Add(copy);

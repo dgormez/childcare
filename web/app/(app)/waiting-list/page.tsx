@@ -6,6 +6,8 @@ import { apiClient } from "../../../lib/apiClient";
 import { WaitingListTable } from "../../../components/WaitingListTable";
 import { WaitingListEntryDialog, type WaitingListEntryFormValues } from "../../../components/WaitingListEntryDialog";
 import { EnrollChildLinkDialog } from "../../../components/EnrollChildLinkDialog";
+import { LinkContactDialog } from "../../../components/children/LinkContactDialog";
+import { TourInvitationDialog } from "../../../components/TourInvitationDialog";
 import { OccupancyPanel } from "../../../components/OccupancyPanel";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
@@ -14,6 +16,17 @@ import type { ApiErrorBody, LocationResponse, WaitingListEntryResponse, WaitingL
 
 type LoadState = "loading" | "loaded" | "error";
 type StatusFilter = "waiting" | "all" | WaitingListStatus;
+
+// Feature 023 (FR-014): WaitingListEntry only stores a single "contact name" field, but the
+// contact-creation flow (feature 006/030's LinkContactDialog) wants first/last separately — a
+// best-effort split (first token = first name, remainder = last name) still saves the director
+// from retyping the common case, without inventing a first/last split on the entry itself.
+function splitContactName(fullName: string): { firstName: string; lastName: string } {
+  const trimmed = fullName.trim();
+  const spaceIndex = trimmed.indexOf(" ");
+  if (spaceIndex === -1) return { firstName: trimmed, lastName: "" };
+  return { firstName: trimmed.slice(0, spaceIndex), lastName: trimmed.slice(spaceIndex + 1).trim() };
+}
 
 // Deliberately avoids Date.toISOString() (feature 012 precedent: shifts the date backward by
 // a day in positive-UTC-offset timezones) — builds the string from local date components.
@@ -36,6 +49,8 @@ export default function WaitingListPage() {
   const [editing, setEditing] = useState<WaitingListEntryResponse | null>(null);
   const [saving, setSaving] = useState(false);
   const [linkTarget, setLinkTarget] = useState<WaitingListEntryResponse | null>(null);
+  const [contactPrefillTarget, setContactPrefillTarget] = useState<{ childId: string; entry: WaitingListEntryResponse } | null>(null);
+  const [tourTarget, setTourTarget] = useState<WaitingListEntryResponse | null>(null);
   const [occupancyDate, setOccupancyDate] = useState(todayDateString());
   const [notice, setNotice] = useState("");
 
@@ -142,8 +157,12 @@ export default function WaitingListPage() {
       setNotice(t("genericError"));
       return;
     }
+    const linkedEntry = linkTarget;
     setLinkTarget(null);
     setNotice("");
+    // FR-014: offer the pre-filled contact-creation step for the just-linked child, same as a
+    // brand-new child below — a director confirms rather than retypes either way.
+    setContactPrefillTarget({ childId, entry: linkedEntry });
     await load();
   }
 
@@ -159,8 +178,47 @@ export default function WaitingListPage() {
       setNotice(t("genericError"));
       return;
     }
+    const createdChildId = (result.data as WaitingListEntryResponse).childId;
+    const linkedEntry = linkTarget;
     setLinkTarget(null);
     setNotice("");
+    // FR-014: the child-profile creation flow is already pre-filled server-side (feature 012a's
+    // CreateChildCommand call, entry name/DOB); this offers the same for contact creation.
+    if (createdChildId) setContactPrefillTarget({ childId: createdChildId, entry: linkedEntry });
+    await load();
+  }
+
+  async function sendTourInvitation(proposedAt: string) {
+    if (!tourTarget) return;
+    setSaving(true);
+    const result = await (apiClient.POST as any)("/api/waiting-list/{id}/tour-invitation", {
+      params: { path: { id: tourTarget.id } },
+      body: { proposedAt: new Date(proposedAt).toISOString() },
+    });
+    setSaving(false);
+    if (!result.response.ok) {
+      setNotice(t("genericError"));
+      return;
+    }
+    setNotice("");
+    setTourTarget(null);
+    await load();
+  }
+
+  async function recordTourOutcome(outcome: string) {
+    if (!tourTarget) return;
+    setSaving(true);
+    const result = await (apiClient.POST as any)("/api/waiting-list/{id}/tour-outcome", {
+      params: { path: { id: tourTarget.id } },
+      body: { outcome },
+    });
+    setSaving(false);
+    if (!result.response.ok) {
+      setNotice(t("genericError"));
+      return;
+    }
+    setNotice("");
+    setTourTarget(null);
     await load();
   }
 
@@ -217,6 +275,7 @@ export default function WaitingListPage() {
               onTransition={transition}
               onLinkChild={setLinkTarget}
               onViewOccupancy={(entry) => setOccupancyDate(entry.requestedStartDate ?? todayDateString())}
+              onTourInvitation={setTourTarget}
             />
           )}
         </div>
@@ -237,6 +296,29 @@ export default function WaitingListPage() {
         onOpenChange={(open) => !open && setLinkTarget(null)}
         onLinkExisting={linkExisting}
         onCreateNew={createNewChild}
+        saving={saving}
+      />
+
+      {contactPrefillTarget && (
+        <LinkContactDialog
+          childId={contactPrefillTarget.childId}
+          open={contactPrefillTarget !== null}
+          onOpenChange={(open) => !open && setContactPrefillTarget(null)}
+          onLinked={() => setContactPrefillTarget(null)}
+          initialFirstName={splitContactName(contactPrefillTarget.entry.contactName).firstName}
+          initialLastName={splitContactName(contactPrefillTarget.entry.contactName).lastName}
+          initialPhone={contactPrefillTarget.entry.contactPhone ?? ""}
+          initialEmail={contactPrefillTarget.entry.contactEmail ?? ""}
+          initialRelationship="Guardian"
+        />
+      )}
+
+      <TourInvitationDialog
+        open={tourTarget !== null}
+        entry={tourTarget}
+        onOpenChange={(open) => !open && setTourTarget(null)}
+        onSendInvitation={sendTourInvitation}
+        onRecordOutcome={recordTourOutcome}
         saving={saving}
       />
     </div>

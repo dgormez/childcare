@@ -30,4 +30,7 @@ public record LocationResponse(
     int PaymentReminderCadenceDays,
     decimal SiblingDiscountPct,
     bool FamilyInvoiceBundlingEnabled,
-    bool QrCheckInEnabled);
+    bool QrCheckInEnabled,
+    bool PublicEnrollmentEnabled,
+    string PublicEnrollmentSlug,
+    string DefaultEnrollmentLocale);

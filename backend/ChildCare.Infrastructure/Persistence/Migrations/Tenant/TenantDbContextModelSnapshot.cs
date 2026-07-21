@@ -1308,6 +1308,13 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateTime?>("DeactivatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DefaultEnrollmentLocale")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasDefaultValue("nl");
+
                     b.Property<string>("Dossiernummer")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -1372,6 +1379,14 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<bool>("PublicEnrollmentEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PublicEnrollmentSlug")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
                     b.Property<bool>("QrCheckInEnabled")
                         .HasColumnType("boolean");
 
@@ -1420,6 +1435,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.HasIndex("DeactivatedAt");
+
+                    b.HasIndex("PublicEnrollmentSlug")
+                        .IsUnique();
 
                     b.ToTable("locations", "tenant_template", t =>
                         {
@@ -2253,16 +2271,48 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ReferenceCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
                     b.Property<DateTime>("RegisteredAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateOnly?>("RequestedStartDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("directorentered");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SubmittedLocale")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<DateTime?>("TourInvitationSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TourInvitationStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("notsent");
+
+                    b.Property<string>("TourOutcome")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("TourProposedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2271,7 +2321,12 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("ChildId");
 
+                    b.HasIndex("ReferenceCode")
+                        .IsUnique();
+
                     b.HasIndex("LocationId", "Status", "Priority");
+
+                    b.HasIndex("LocationId", "ChildFirstName", "ChildLastName", "DateOfBirth");
 
                     b.ToTable("waiting_list_entries", "tenant_template");
                 });

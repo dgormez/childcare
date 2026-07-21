@@ -29,7 +29,7 @@ function makeLocation(overrides: Partial<LocationResponse> = {}): LocationRespon
     menuVariantPriorityOrder: [], menuVariantsWithPublishedContent: [], deactivatedAt: null,
     erkenningsnummer: null, bankAccountNumber: null, invoiceDueDays: 14,
     paymentRemindersEnabled: false, paymentReminderDelayDays: 3, paymentReminderCadenceDays: 7,
-    siblingDiscountPct: 0, familyInvoiceBundlingEnabled: false, qrCheckInEnabled: false,
+    siblingDiscountPct: 0, familyInvoiceBundlingEnabled: false, qrCheckInEnabled: false, publicEnrollmentEnabled: false, publicEnrollmentSlug: "loc-1", defaultEnrollmentLocale: "nl",
     createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };

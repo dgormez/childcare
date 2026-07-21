@@ -16,6 +16,7 @@ using ChildCare.Api.Auth;
 using ChildCare.Api.Cli;
 using ChildCare.Api.Endpoints;
 using ChildCare.Api.Middleware;
+using ChildCare.Api.RateLimiting;
 using ChildCare.Api.Services;
 using ChildCare.Application.Common;
 using ChildCare.Application.Organisations;
@@ -345,6 +346,12 @@ builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Emai
 builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
 builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
 builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkResolver>();
+
+// ── Digital Online Enrollment (feature 023) ──────────────────────────────────
+// Reuses the AddDataProtection() registration above — ITourInvitationTokenService follows
+// IUnsubscribeTokenService's exact pattern (research.md R5), not a second DataProtection setup.
+builder.Services.AddScoped<ITourInvitationTokenService, ChildCare.Infrastructure.Email.DataProtectionTourInvitationTokenService>();
+builder.Services.AddScoped<ChildCare.Application.WaitingList.EnrollmentNotificationService>();
 // Registered on the main host too (not just the send-daily-reports CLI builder in Program.cs's
 // early-exit block above) so integration tests can call SendDailyReportsCommand.RunAsync against
 // the ordinary WebApplicationFactory-built ServiceProvider, matching every other CLI command's
@@ -642,6 +649,15 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit           = 0,
             }));
 
+    // Public enrollment submission (feature 023, spec.md FR-006): unauthenticated, IP-based —
+    // same partitioning strategy as auth-strict/auth-refresh, 3 submissions per rolling hour.
+    // Options live in RateLimiterPolicies.PublicEnrollment (single source of truth) so a unit
+    // test can exercise the actual throttling behavior directly (tasks.md T067).
+    options.AddPolicy("public-enrollment", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
+            factory: _ => RateLimiterPolicies.PublicEnrollment));
+
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -820,6 +836,7 @@ app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
 app.MapWaitingListEndpoints();
+app.MapPublicEnrollmentEndpoints();
 app.MapParentInvitationEndpoints();
 app.MapMessageThreadEndpoints();
 app.MapAnnouncementEndpoints();

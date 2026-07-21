@@ -13,6 +13,15 @@ interface LinkContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLinked: () => void;
+  /** Feature 023 (FR-014): pre-fills the "create new contact" fields from a waiting-list
+   * entry's contact details when opened from the enrollment-conversion flow, so the director
+   * confirms rather than retypes. Optional — every other caller (feature 030) omits these and
+   * gets the original empty-form behavior. */
+  initialFirstName?: string;
+  initialLastName?: string;
+  initialPhone?: string;
+  initialEmail?: string;
+  initialRelationship?: ContactRelationship;
 }
 
 const RELATIONSHIPS: ContactRelationship[] = ["Mother", "Father", "Guardian", "EmergencyContact", "AuthorisedPickup", "FosterParent", "Other"];
@@ -30,7 +39,10 @@ const RELATIONSHIP_KEY: Record<ContactRelationship, string> = {
  * FR-013, research.md R7): fetches the tenant's full contact list once and filters for an
  * email/phone match as the director types, offering to link the existing contact instead of
  * creating a near-duplicate. */
-export function LinkContactDialog({ childId, open, onOpenChange, onLinked }: LinkContactDialogProps) {
+export function LinkContactDialog({
+  childId, open, onOpenChange, onLinked,
+  initialFirstName, initialLastName, initialPhone, initialEmail, initialRelationship,
+}: LinkContactDialogProps) {
   const t = useTranslations("children.contacts.dialog");
   const tc = useTranslations("children.contacts");
   const [allContacts, setAllContacts] = useState<ContactResponse[]>([]);
@@ -47,19 +59,19 @@ export function LinkContactDialog({ childId, open, onOpenChange, onLinked }: Lin
 
   useEffect(() => {
     if (!open) return;
-    setFirstName("");
-    setLastName("");
-    setPhone("");
-    setEmail("");
+    setFirstName(initialFirstName ?? "");
+    setLastName(initialLastName ?? "");
+    setPhone(initialPhone ?? "");
+    setEmail(initialEmail ?? "");
     setLocale("nl");
-    setRelationship("Mother");
+    setRelationship(initialRelationship ?? "Mother");
     setCanPickup(true);
     setUseExisting(false);
     setError(null);
     apiClient.GET("/api/contacts").then((result) => {
       if (result.response.ok) setAllContacts(result.data as unknown as ContactResponse[]);
     });
-  }, [open]);
+  }, [open, initialFirstName, initialLastName, initialPhone, initialEmail, initialRelationship]);
 
   const matchedContact = useMemo(() => {
     const normalizedEmail = email.trim().toLowerCase();

@@ -60,6 +60,19 @@ public static class WaitingListEndpoints
             var result = await mediator.Send(new LinkChildToWaitingListEntryCommand(id, req.ChildId, req.CreateNewChild));
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
         });
+
+        // Feature 023 — contracts/023-digital-enrollment/enrollment-api.md.
+        group.MapPost("/{id:guid}/tour-invitation", async (Guid id, SendTourInvitationRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new SendTourInvitationCommand(id, req.ProposedAt));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        group.MapPost("/{id:guid}/tour-outcome", async (Guid id, RecordTourOutcomeRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new RecordTourOutcomeCommand(id, req.Outcome));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
     }
 
     private static IResult MapFailure(WaitingListFailure failure) => failure switch
@@ -84,6 +97,9 @@ public static class WaitingListEndpoints
 
         WaitingListFailure.InvalidLinkRequest => Results.Json(
             new { errorKey = "errors.validation" }, statusCode: StatusCodes.Status400BadRequest),
+
+        WaitingListFailure.NoContactEmail => Results.Json(
+            new { errorKey = "errors.waiting_list.no_contact_email" }, statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(WaitingListFailure)}: {failure}"),
     };

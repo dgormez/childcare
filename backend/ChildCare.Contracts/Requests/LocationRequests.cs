@@ -53,3 +53,6 @@ public record UpdateLocationSiblingBillingSettingsRequest(
 
 // Feature 021 — contracts/021-qr-checkin/qr-checkin-api.md.
 public record UpdateLocationQrCheckInSettingRequest(bool Enabled);
+
+// Feature 023 — contracts/023-digital-enrollment/enrollment-api.md.
+public record UpdateLocationPublicEnrollmentSettingRequest(bool Enabled);

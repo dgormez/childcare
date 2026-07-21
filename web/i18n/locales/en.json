@@ -305,7 +305,23 @@
     "occupancyFreeCapacity": "{count} free",
     "occupancyFrom": "From",
     "occupancyTo": "To",
-    "viewOccupancy": "View occupancy"
+    "viewOccupancy": "View occupancy",
+    "tourInvitation": {
+      "title": "Tour invitation",
+      "statusLabel": "Status",
+      "status": {
+        "notSent": "Not sent",
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      },
+      "proposedAtLabel": "Proposed date and time",
+      "sendAction": "Send invitation",
+      "outcomeLabel": "Outcome",
+      "saveOutcomeAction": "Save outcome",
+      "close": "Close"
+    },
+    "selfRegisteredBadge": "Online application"
   },
   "dayReservations": {
     "title": "Requests",
@@ -542,6 +558,18 @@
       "capHint": "Reminders stop automatically after 3 have been sent for an invoice.",
       "saveButton": "Save reminder settings",
       "saveSuccess": "Reminder settings saved.",
+      "saveError": "Couldn't save changes. Please try again."
+    },
+    "tabPublicEnrollmentSettings": "Online Enrollment",
+    "publicEnrollmentSettings": {
+      "description": "Let families join this location's waiting list directly from a public link, without calling.",
+      "toggleLabel": "Accept public online applications",
+      "explanation": "When enabled, anyone with the link below can submit a request that lands in this location's waiting list as an unverified, self-registered entry — you always review it before offering a place.",
+      "urlLabel": "Public enrollment link",
+      "copyAction": "Copy",
+      "copied": "Copied",
+      "saveButton": "Save changes",
+      "saveSuccess": "Public enrollment settings saved.",
       "saveError": "Couldn't save changes. Please try again."
     }
   },
@@ -1236,5 +1264,25 @@
     "resultSent": "{count} sent",
     "resultSkipped": "{count} skipped — no email on file",
     "resultFailed": "{count} failed to send"
+  },
+  "publicEnrollment": {
+    "title": "Join the waiting list",
+    "notFound": "We couldn't find this page.",
+    "disabled": "This location isn't currently accepting online applications. Please contact them directly.",
+    "rateLimited": "You've submitted a few requests recently — please try again a bit later.",
+    "languageLabel": "Language",
+    "intro": "Tell us a little about your family and we'll add you to the waiting list. We'll be in touch as soon as a place becomes available.",
+    "childFirstNameLabel": "Child's first name",
+    "childLastNameLabel": "Child's last name",
+    "dateOfBirthLabel": "Child's date of birth",
+    "requestedStartDateLabel": "Preferred start date (optional)",
+    "contactNameLabel": "Your name",
+    "contactEmailLabel": "Your email",
+    "contactPhoneLabel": "Your phone (optional)",
+    "notesLabel": "Anything else we should know? (optional)",
+    "submitAction": "Join the waiting list",
+    "submittingAction": "Submitting…",
+    "confirmationBody": "Thank you! We've added your family to the waiting list and sent a confirmation to your email.",
+    "referenceLabel": "Reference code"
   }
 }

@@ -29,5 +29,8 @@ internal static class LocationMapper
         l.PaymentReminderCadenceDays,
         l.SiblingDiscountPct,
         l.FamilyInvoiceBundlingEnabled,
-        l.QrCheckInEnabled);
+        l.QrCheckInEnabled,
+        l.PublicEnrollmentEnabled,
+        l.PublicEnrollmentSlug,
+        l.DefaultEnrollmentLocale);
 }
