@@ -67,6 +67,15 @@ public class Location
     // explicitly opts in.
     public bool QrCheckInEnabled { get; set; } = false;
 
+    // Feature 023 — public online enrollment (spec.md FR-001/FR-002/FR-012). Defaults to false
+    // so no location's behavior changes until a director explicitly opts in. Slug is unique
+    // within the tenant schema only (not globally) — the location segment of the public URL
+    // `/enroll/{orgSlug}/{locationSlug}` (research.md R1); every location gets one at creation
+    // or migration-backfill, independent of whether public enrollment is enabled.
+    public bool   PublicEnrollmentEnabled { get; set; } = false;
+    public string PublicEnrollmentSlug    { get; set; } = string.Empty;
+    public string DefaultEnrollmentLocale { get; set; } = "nl";
+
     // Soft-delete: null = active, non-null = deactivated. Cleared on reactivation.
     public DateTime? DeactivatedAt { get; set; }
 

@@ -22,4 +22,20 @@ public class WaitingListEntry
 
     public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    // Feature 023 — public self-registration (spec.md FR-007/FR-008/FR-009). Existing rows
+    // default to DirectorEntered so 012a's shipped behavior is unaffected. ReferenceCode/
+    // SubmittedLocale are set only for SelfRegistered entries (data-model.md).
+    public WaitingListEntrySource Source { get; set; } = WaitingListEntrySource.DirectorEntered;
+    public string? ReferenceCode { get; set; }
+    public string? SubmittedLocale { get; set; }
+
+    // Feature 023 — tour-invitation state (spec.md FR-015/FR-016/FR-017). A single evolving set
+    // of fields, not a history log (research.md R2) — an entry has at most one active
+    // invitation at a time; re-sending overwrites TourProposedAt/TourInvitationSentAt and
+    // resets TourInvitationStatus to Sent.
+    public DateTime? TourProposedAt { get; set; }
+    public TourInvitationStatus TourInvitationStatus { get; set; } = TourInvitationStatus.NotSent;
+    public DateTime? TourInvitationSentAt { get; set; }
+    public string? TourOutcome { get; set; }
 }

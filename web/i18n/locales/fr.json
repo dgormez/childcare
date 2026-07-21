@@ -305,7 +305,8 @@
     "occupancyFreeCapacity": "{count} place(s) libre(s)",
     "occupancyFrom": "Du",
     "occupancyTo": "Au",
-    "viewOccupancy": "Voir l'occupation"
+    "viewOccupancy": "Voir l'occupation",
+    "tourInvitation": {}
   },
   "dayReservations": {
     "title": "Demandes",
@@ -1236,5 +1237,6 @@
     "resultSent": "{count} envoyé(s)",
     "resultSkipped": "{count} ignoré(s) — pas d'adresse e-mail",
     "resultFailed": "{count} échec(s) d'envoi"
-  }
+  },
+  "publicEnrollment": {}
 }

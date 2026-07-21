@@ -305,7 +305,8 @@
     "occupancyFreeCapacity": "{count} free",
     "occupancyFrom": "From",
     "occupancyTo": "To",
-    "viewOccupancy": "View occupancy"
+    "viewOccupancy": "View occupancy",
+    "tourInvitation": {}
   },
   "dayReservations": {
     "title": "Requests",
@@ -1236,5 +1237,6 @@
     "resultSent": "{count} sent",
     "resultSkipped": "{count} skipped — no email on file",
     "resultFailed": "{count} failed to send"
-  }
+  },
+  "publicEnrollment": {}
 }

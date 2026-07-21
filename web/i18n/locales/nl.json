@@ -305,7 +305,8 @@
     "occupancyFreeCapacity": "{count} vrij",
     "occupancyFrom": "Van",
     "occupancyTo": "Tot",
-    "viewOccupancy": "Bezetting bekijken"
+    "viewOccupancy": "Bezetting bekijken",
+    "tourInvitation": {}
   },
   "dayReservations": {
     "title": "Verzoeken",
@@ -1236,5 +1237,6 @@
     "resultSent": "{count} verzonden",
     "resultSkipped": "{count} overgeslagen — geen e-mailadres bekend",
     "resultFailed": "{count} niet verzonden"
-  }
+  },
+  "publicEnrollment": {}
 }

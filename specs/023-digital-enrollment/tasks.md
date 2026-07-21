@@ -30,9 +30,10 @@ Project Structure.
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Add empty `publicEnrollment` and `waitingList.tourInvitation` i18n key
-  namespaces to `web/i18n/locales/{en,nl,fr}.json`
-- [ ] T002 [P] Add a `public-enrollment` rate-limit policy (sliding window,
+- [X] T001 [P] Add empty `publicEnrollment` and `waitingList.tourInvitation` i18n key
+  namespaces to `web/i18n/locales/{en,nl,fr}.json` (reused the existing `waitingList.duplicateBadge`
+  key already present for US2, rather than adding a duplicate)
+- [X] T002 [P] Add a `public-enrollment` rate-limit policy (sliding window,
   `RemoteIpAddress`-partitioned, `PermitLimit = 3`, `Window = 1 hour`, research.md R6) to the
   existing `AddRateLimiter` configuration in `backend/ChildCare.Api/Program.cs`
 
@@ -44,36 +45,43 @@ Project Structure.
 or writes through the `Location`/`WaitingListEntry` schema changes and/or the tour-invitation
 token service.
 
-- [ ] T003 [P] Add `WaitingListEntrySource` enum (`DirectorEntered`, `SelfRegistered`) in
+- [X] T003 [P] Add `WaitingListEntrySource` enum (`DirectorEntered`, `SelfRegistered`) in
   `backend/ChildCare.Domain/Enums/WaitingListEntrySource.cs`
-- [ ] T004 [P] Add `TourInvitationStatus` enum (`NotSent`, `Sent`, `Accepted`, `Declined`) in
+- [X] T004 [P] Add `TourInvitationStatus` enum (`NotSent`, `Sent`, `Accepted`, `Declined`) in
   `backend/ChildCare.Domain/Enums/TourInvitationStatus.cs`
-- [ ] T005 [P] Add `EnrollmentSubmitted` to `backend/ChildCare.Domain/Enums/NotificationType.cs`
-- [ ] T006 Add `PublicEnrollmentEnabled` (`bool`, default `false`), `PublicEnrollmentSlug`
+- [X] T005 [P] Add `EnrollmentSubmitted` to `backend/ChildCare.Domain/Enums/NotificationType.cs`
+- [X] T006 Add `PublicEnrollmentEnabled` (`bool`, default `false`), `PublicEnrollmentSlug`
   (`string`), `DefaultEnrollmentLocale` (`string`, default `"nl"`) to
   `backend/ChildCare.Domain/Entities/Location.cs` per data-model.md
-- [ ] T007 Add `Source` (default `DirectorEntered`), `ReferenceCode`, `SubmittedLocale`,
+- [X] T007 Add `Source` (default `DirectorEntered`), `ReferenceCode`, `SubmittedLocale`,
   `TourProposedAt`, `TourInvitationStatus` (default `NotSent`), `TourInvitationSentAt`,
   `TourOutcome` to `backend/ChildCare.Domain/Entities/WaitingListEntry.cs` per data-model.md
   (depends on T003, T004)
-- [ ] T008 Generate the EF Core tenant migration (`dotnet ef migrations add
+- [X] T008 Generate the EF Core tenant migration (`dotnet ef migrations add
   AddDigitalEnrollment --project backend/ChildCare.Infrastructure --context TenantDbContext
   --output-dir Persistence/Migrations/Tenant`) including a data-backfill step that assigns a
   unique `PublicEnrollmentSlug` to every pre-existing `Location` row (slugified `Name`, numeric
   suffix on collision, per research.md R1), verify it applies cleanly against a fresh dev
   schema, and generate the manually-run SQL script per this repo's EF-Core-never-auto-migrates-
-  in-production convention (`.claude/CLAUDE.md`) (depends on T006, T007)
-- [ ] T009 Create `ITourInvitationTokenService` / `TourInvitationTokenService`
-  (`CreateToken(Guid entryId)` / `TryParseToken(string) : Guid?`, HMAC-signed, fails closed,
-  directly mirrors `IUnsubscribeTokenService`'s shape per research.md R5) in
-  `backend/ChildCare.Application/WaitingList/ITourInvitationTokenService.cs` and
-  `TourInvitationTokenService.cs`
-- [ ] T010 [P] Add a `TourInvitationTokenSigningKey` entry to configuration
-  (`appsettings.json` / environment variable / secrets manager per Constitution VI — never a
-  literal default in source)
-- [ ] T011 Register `ITourInvitationTokenService` in DI in `backend/ChildCare.Api/Program.cs`
+  in-production convention (`.claude/CLAUDE.md`) (depends on T006, T007) — verified by running
+  `migrate-tenants` against all 21 local dev tenant schemas (0 failures) and confirming zero
+  empty/duplicate `PublicEnrollmentSlug` values afterward; the SQL script itself is a gitignored,
+  dev-local artifact (`backend/**/*.sql`, `.gitignore:24`), not a repo deliverable, per this
+  repo's existing convention (confirmed: `migrations.sql` has no git history)
+- [X] T009 Create `ITourInvitationTokenService` (`CreateToken(Guid waitingListEntryId)` /
+  `TryParseToken(string) : Guid?`, fails closed) + `DataProtectionTourInvitationTokenService` —
+  corrected during implementation: this codebase's actual token-signing precedent
+  (`DataProtectionUnsubscribeTokenService`, feature 020) uses ASP.NET Core's built-in Data
+  Protection API via `IDataProtectionProvider.CreateProtector(purpose)`, not a hand-rolled HMAC
+  scheme as research.md R5 assumed before this file was inspected — in
+  `backend/ChildCare.Application/Common/ITourInvitationTokenService.cs` and
+  `backend/ChildCare.Infrastructure/Email/DataProtectionTourInvitationTokenService.cs`
+- [X] ~~T010~~ Not needed — Data Protection API reuses the existing `AddDataProtection()`
+  registration (already called once in `Program.cs` for feature 014a/020); no separate signing
+  key configuration exists to add, per T009's correction
+- [X] T011 Register `ITourInvitationTokenService` in DI in `backend/ChildCare.Api/Program.cs`
   (depends on T009)
-- [ ] T012 Create `EnrollmentLinkBuilder` (mirrors `EmailLinkBuilder`'s exact
+- [X] T012 Create `EnrollmentLinkBuilder` (mirrors `EmailLinkBuilder`'s exact
   `BuildXxxUrl(IConfiguration, ...)` shape) with `BuildPublicEnrollmentUrl(orgSlug,
   locationSlug)` (points at the `web/` app, per research.md R1) and
   `BuildTourResponseUrl(token, orgSlug, response)` (points at the API's own server-rendered

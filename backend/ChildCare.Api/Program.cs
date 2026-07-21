@@ -345,6 +345,11 @@ builder.Services.AddScoped<IEmailTemplateRenderer, ChildCare.Infrastructure.Emai
 builder.Services.AddScoped<IBulkEmailAttachmentStorage, GcsBulkEmailAttachmentStorage>();
 builder.Services.AddScoped<IUnsubscribeTokenService, ChildCare.Infrastructure.Email.DataProtectionUnsubscribeTokenService>();
 builder.Services.AddScoped<ChildCare.Application.Email.DigestUnsubscribeLinkResolver>();
+
+// ── Digital Online Enrollment (feature 023) ──────────────────────────────────
+// Reuses the AddDataProtection() registration above — ITourInvitationTokenService follows
+// IUnsubscribeTokenService's exact pattern (research.md R5), not a second DataProtection setup.
+builder.Services.AddScoped<ITourInvitationTokenService, ChildCare.Infrastructure.Email.DataProtectionTourInvitationTokenService>();
 // Registered on the main host too (not just the send-daily-reports CLI builder in Program.cs's
 // early-exit block above) so integration tests can call SendDailyReportsCommand.RunAsync against
 // the ordinary WebApplicationFactory-built ServiceProvider, matching every other CLI command's
@@ -638,6 +643,20 @@ builder.Services.AddRateLimiter(options =>
                 PermitLimit          = 10,
                 Window               = TimeSpan.FromMinutes(15),
                 SegmentsPerWindow    = 3,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit           = 0,
+            }));
+
+    // Public enrollment submission (feature 023, spec.md FR-006): unauthenticated, IP-based —
+    // same partitioning strategy as auth-strict/auth-refresh, 3 submissions per rolling hour.
+    options.AddPolicy("public-enrollment", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit          = 3,
+                Window               = TimeSpan.FromHours(1),
+                SegmentsPerWindow    = 4,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit           = 0,
             }));

@@ -305,6 +305,11 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Feature 030 — opt-in sibling billing (spec.md FR-004/FR-007).
             l.Property(x => x.SiblingDiscountPct).HasPrecision(5, 2).HasDefaultValue(0m).IsRequired();
             l.Property(x => x.FamilyInvoiceBundlingEnabled).HasDefaultValue(false).IsRequired();
+            // Feature 023 — public online enrollment (spec.md FR-001/FR-002). PublicEnrollmentSlug
+            // is unique within the tenant schema only, not globally (research.md R1).
+            l.Property(x => x.PublicEnrollmentSlug).IsRequired().HasMaxLength(250);
+            l.Property(x => x.DefaultEnrollmentLocale).IsRequired().HasMaxLength(5).HasDefaultValue("nl");
+            l.HasIndex(x => x.PublicEnrollmentSlug).IsUnique();
             l.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -741,6 +746,23 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // List/sort/filter query per location, filtered by status, ordered by priority
             // (data-model.md, plan.md Performance considerations).
             w.HasIndex(x => new { x.LocationId, x.Status, x.Priority });
+            // Feature 023 — self-registration (spec.md FR-007/FR-008/FR-011/FR-015).
+            w.Property(x => x.Source)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (WaitingListEntrySource)Enum.Parse(typeof(WaitingListEntrySource), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(WaitingListEntrySource.DirectorEntered)
+              .IsRequired();
+            w.Property(x => x.ReferenceCode).HasMaxLength(8);
+            w.Property(x => x.SubmittedLocale).HasMaxLength(5);
+            w.Property(x => x.TourInvitationStatus)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (TourInvitationStatus)Enum.Parse(typeof(TourInvitationStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(TourInvitationStatus.NotSent)
+              .IsRequired();
+            w.Property(x => x.TourOutcome).HasMaxLength(2000);
+            w.HasIndex(x => x.ReferenceCode).IsUnique();
+            // Duplicate-flag detection reads name+DOB within a location (research.md R3).
+            w.HasIndex(x => new { x.LocationId, x.ChildFirstName, x.ChildLastName, x.DateOfBirth });
         });
 
         modelBuilder.Entity<DayReservation>(dr =>
