@@ -1265,5 +1265,23 @@
     "resultSkipped": "{count} skipped — no email on file",
     "resultFailed": "{count} failed to send"
   },
-  "publicEnrollment": {}
+  "publicEnrollment": {
+    "title": "Join the waiting list",
+    "notFound": "We couldn't find this page.",
+    "disabled": "This location isn't currently accepting online applications. Please contact them directly.",
+    "rateLimited": "You've submitted a few requests recently — please try again a bit later.",
+    "languageLabel": "Language",
+    "intro": "Tell us a little about your family and we'll add you to the waiting list. We'll be in touch as soon as a place becomes available.",
+    "childFirstNameLabel": "Child's first name",
+    "childLastNameLabel": "Child's last name",
+    "dateOfBirthLabel": "Child's date of birth",
+    "requestedStartDateLabel": "Preferred start date (optional)",
+    "contactNameLabel": "Your name",
+    "contactEmailLabel": "Your email",
+    "contactPhoneLabel": "Your phone (optional)",
+    "notesLabel": "Anything else we should know? (optional)",
+    "submitAction": "Join the waiting list",
+    "confirmationBody": "Thank you! We've added your family to the waiting list and sent a confirmation to your email.",
+    "referenceLabel": "Reference code"
+  }
 }

@@ -1265,5 +1265,23 @@
     "resultSkipped": "{count} ignoré(s) — pas d'adresse e-mail",
     "resultFailed": "{count} échec(s) d'envoi"
   },
-  "publicEnrollment": {}
+  "publicEnrollment": {
+    "title": "Rejoindre la liste d'attente",
+    "notFound": "Nous n'avons pas trouvé cette page.",
+    "disabled": "Ce site n'accepte pas de demandes en ligne pour le moment. Veuillez le contacter directement.",
+    "rateLimited": "Vous avez déjà soumis plusieurs demandes récemment — veuillez réessayer un peu plus tard.",
+    "languageLabel": "Langue",
+    "intro": "Parlez-nous un peu de votre famille et nous vous ajouterons à la liste d'attente. Nous vous contacterons dès qu'une place sera disponible.",
+    "childFirstNameLabel": "Prénom de l'enfant",
+    "childLastNameLabel": "Nom de l'enfant",
+    "dateOfBirthLabel": "Date de naissance de l'enfant",
+    "requestedStartDateLabel": "Date de début souhaitée (facultatif)",
+    "contactNameLabel": "Votre nom",
+    "contactEmailLabel": "Votre e-mail",
+    "contactPhoneLabel": "Votre téléphone (facultatif)",
+    "notesLabel": "Autre chose à nous dire ? (facultatif)",
+    "submitAction": "Rejoindre la liste d'attente",
+    "confirmationBody": "Merci ! Nous avons ajouté votre famille à la liste d'attente et envoyé une confirmation à votre e-mail.",
+    "referenceLabel": "Numéro de référence"
+  }
 }

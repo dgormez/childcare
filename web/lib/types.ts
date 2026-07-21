@@ -290,6 +290,16 @@ export interface WaitingListEntryResponse {
   tourOutcome: string | null;
 }
 
+export interface GetPublicEnrollmentLocationInfoResponse {
+  locationName: string;
+  enabled: boolean;
+  defaultLocale: string;
+}
+
+export interface SubmitPublicEnrollmentResponse {
+  referenceCode: string;
+}
+
 export interface OccupancyDayResponse {
   date: string;
   freeCapacity: number | null;

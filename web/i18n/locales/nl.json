@@ -1265,5 +1265,23 @@
     "resultSkipped": "{count} overgeslagen — geen e-mailadres bekend",
     "resultFailed": "{count} niet verzonden"
   },
-  "publicEnrollment": {}
+  "publicEnrollment": {
+    "title": "Kom op de wachtlijst",
+    "notFound": "We konden deze pagina niet vinden.",
+    "disabled": "Deze locatie aanvaardt momenteel geen online aanvragen. Neem rechtstreeks contact op.",
+    "rateLimited": "Je hebt recent al enkele aanvragen ingediend — probeer het straks opnieuw.",
+    "languageLabel": "Taal",
+    "intro": "Vertel ons iets over je gezin en we voegen je toe aan de wachtlijst. We nemen contact op zodra er een plaats vrijkomt.",
+    "childFirstNameLabel": "Voornaam kind",
+    "childLastNameLabel": "Achternaam kind",
+    "dateOfBirthLabel": "Geboortedatum kind",
+    "requestedStartDateLabel": "Gewenste startdatum (optioneel)",
+    "contactNameLabel": "Jouw naam",
+    "contactEmailLabel": "Jouw e-mailadres",
+    "contactPhoneLabel": "Jouw telefoonnummer (optioneel)",
+    "notesLabel": "Nog iets dat we moeten weten? (optioneel)",
+    "submitAction": "Op de wachtlijst zetten",
+    "confirmationBody": "Bedankt! We hebben je gezin toegevoegd aan de wachtlijst en een bevestiging naar je e-mail gestuurd.",
+    "referenceLabel": "Referentienummer"
+  }
 }
