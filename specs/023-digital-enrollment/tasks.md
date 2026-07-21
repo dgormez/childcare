@@ -370,14 +370,14 @@ works again with all prior entries intact.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T063 [P] Run quickstart.md's six scenarios end-to-end against local dev
-- [ ] T064 [P] Confirm no spacing/radius/motion/nested-card deviations from design-system.md on
+- [X] T063 [P] Run quickstart.md's six scenarios end-to-end against local dev
+- [X] T064 [P] Confirm no spacing/radius/motion/nested-card deviations from design-system.md on
   the new public enrollment page and the waiting-list/location-settings additions (static
   review, no simulator)
-- [ ] T065 Verify the public form's inputs have associated labels, meet WCAG AA contrast, and
+- [X] T065 Verify the public form's inputs have associated labels, meet WCAG AA contrast, and
   that validation errors are `aria-live`-announced rather than color-only (design-system.md
   Accessibility, FR per spec.md UX Requirements)
-- [ ] T066 [P] Test: the migration's slug-backfill (T008) assigns a unique
+- [X] T066 [P] Test: the migration's slug-backfill (T008) assigns a unique
   `PublicEnrollmentSlug` to every pre-existing `Location` row with no collisions, in
   `backend/ChildCare.Api.Tests` (a migration/slug-generator-focused test)
 

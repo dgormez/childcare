@@ -167,7 +167,7 @@ function PageBody({
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-lg px-4 py-16">
+    <main className="mx-auto min-h-screen max-w-lg px-4 py-8">
       <div className="mb-8 flex items-center gap-3">
         <Heart className="h-6 w-6 text-primary dark:text-primary-dark" strokeWidth={2} />
         <h1 className="text-xl font-semibold text-text dark:text-text-dark">
@@ -192,7 +192,7 @@ function PageBody({
       {pageState === "submitted" && (
         <div className="space-y-4">
           <p className="text-sm text-text dark:text-text-dark">{t("confirmationBody")}</p>
-          <p className="rounded-lg bg-surface-soft p-4 text-sm text-text dark:bg-surface-soft-dark dark:text-text-dark">
+          <p className="rounded-xl bg-surface-soft p-4 text-sm text-text dark:bg-surface-soft-dark dark:text-text-dark">
             {t("referenceLabel")}: <strong className="font-mono">{referenceCode}</strong>
           </p>
         </div>

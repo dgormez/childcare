@@ -129,7 +129,16 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// step since invoices is already dropped wholesale above. Feature 021's
     /// "AddLocationQrCheckInEnabled" is the next one — its new locations column
     /// (QrCheckInEnabled) needs its own explicit DROP COLUMN, same reason as
-    /// FamilyInvoiceBundlingEnabled above.
+    /// FamilyInvoiceBundlingEnabled above. Feature 023's "AddDigitalEnrollment" is the next one
+    /// -- its three new locations columns (DefaultEnrollmentLocale, PublicEnrollmentEnabled,
+    /// PublicEnrollmentSlug) need their own explicit DROP COLUMNs, same reason as
+    /// QrCheckInEnabled above; waiting_list_entries is never dropped in this test, so its seven
+    /// new columns (ReferenceCode, Source, SubmittedLocale, TourInvitationSentAt,
+    /// TourInvitationStatus, TourOutcome, TourProposedAt) and its new composite index
+    /// (IX_waiting_list_entries_LocationId_ChildFirstName_ChildLastNam~ -- the other new index,
+    /// on ReferenceCode, is dropped for free along with that column) need their own explicit
+    /// DROP COLUMN/DROP INDEX steps, discovered by this test actually failing after that
+    /// migration shipped, same as every migration-adding feature's note above predicted.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -203,8 +212,21 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "FirstIdVerifiedAt",
                 DROP COLUMN "FirstIdVerifiedByUserId",
                 DROP COLUMN "FirstIdVerifiedByEmail";
+            DROP INDEX "{schemaName}"."IX_waiting_list_entries_LocationId_ChildFirstName_ChildLastNam~";
+            ALTER TABLE "{schemaName}"."waiting_list_entries"
+                DROP COLUMN "ReferenceCode",
+                DROP COLUMN "Source",
+                DROP COLUMN "SubmittedLocale",
+                DROP COLUMN "TourInvitationSentAt",
+                DROP COLUMN "TourInvitationStatus",
+                DROP COLUMN "TourOutcome",
+                DROP COLUMN "TourProposedAt";
+            ALTER TABLE "{schemaName}"."locations"
+                DROP COLUMN "DefaultEnrollmentLocale",
+                DROP COLUMN "PublicEnrollmentEnabled",
+                DROP COLUMN "PublicEnrollmentSlug";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment';
             """);
     }
 
