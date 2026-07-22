@@ -40,7 +40,7 @@ dependencies are met, per its own Independent Test in spec.md.
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Add empty `contractSigning` (signing page + emails) and `contracts` (director-web
+- [X] T001 [P] Add empty `contractSigning` (signing page + emails) and `contracts` (director-web
   screen) i18n key namespaces to `web/i18n/locales/{en,nl,fr}.json`
 
 ---
@@ -51,52 +51,52 @@ dependencies are met, per its own Independent Test in spec.md.
 or writes through the `Contract`/`Tenant` schema changes and/or the new token/encryption/storage
 services.
 
-- [ ] T002 [P] Add `SignatureType` enum (`Drawn`, `Typed`) in
+- [X] T002 [P] Add `SignatureType` enum (`Drawn`, `Typed`) in
   `backend/ChildCare.Domain/Enums/SignatureType.cs`
-- [ ] T003 Add `SigningToken`, `SigningTokenExpiresAt`, `SignedAt`, `SignatureData`,
+- [X] T003 Add `SigningToken`, `SigningTokenExpiresAt`, `SignedAt`, `SignatureData`,
   `SignatureType`, `SignedByIp`, `SepaIbanEncrypted`, `SepaMandateReference`,
   `SepaAuthorisedAt` (all nullable) to `backend/ChildCare.Domain/Entities/Contract.cs` per
   data-model.md (depends on T002)
-- [ ] T004 [P] Add `SepaCreditorIdentifier` (`string?`) to
+- [X] T004 [P] Add `SepaCreditorIdentifier` (`string?`) to
   `backend/ChildCare.Domain/Entities/Tenant.cs`, alongside the existing `KboNumber` field
-- [ ] T005 Generate the EF Core tenant-schema migration (`dotnet ef migrations add
+- [X] T005 Generate the EF Core tenant-schema migration (`dotnet ef migrations add
   AddContractSigningAndSepaMandate --project backend/ChildCare.Infrastructure --context
   TenantDbContext --output-dir Persistence/Migrations/Tenant`) for T003's `Contract` columns,
   verify it applies cleanly against a fresh dev schema, and generate the manually-run SQL script
   under `specs/024-esignature/migrations/` per `.claude/CLAUDE.md` (depends on T003)
-- [ ] T006 Generate the EF Core public-schema migration (`--context PublicDbContext`) for T004's
+- [X] T006 Generate the EF Core public-schema migration (`--context PublicDbContext`) for T004's
   `Tenant.SepaCreditorIdentifier` column, verify it applies cleanly, and generate its manually-run
   SQL script under `specs/024-esignature/migrations/` (depends on T004)
-- [ ] T007 [P] Create `IContractSigningTokenService` (`CreateToken(Guid contractId) : string` /
+- [X] T007 [P] Create `IContractSigningTokenService` (`CreateToken(Guid contractId) : string` /
   `TryParseToken(string) : Guid?`, fails closed) in
   `backend/ChildCare.Application/Common/IContractSigningTokenService.cs`, and
   `DataProtectionContractSigningTokenService` (Data Protection API, purpose
   `"Contract.Signing"`, `ToTimeLimitedDataProtector`, 72-hour lifetime — research.md R2) in
   `backend/ChildCare.Infrastructure/Email/DataProtectionContractSigningTokenService.cs`, directly
   mirroring `DataProtectionTourInvitationTokenService`'s shape
-- [ ] T008 [P] Create `IIbanProtector` (`Protect`/`Unprotect`) in
+- [X] T008 [P] Create `IIbanProtector` (`Protect`/`Unprotect`) in
   `backend/ChildCare.Application/Common/IIbanProtector.cs`, and `IbanProtector` (Data Protection
   API, purpose `"Contract.SepaIban"` — research.md R3) in
   `backend/ChildCare.Infrastructure/Contracts/IbanProtector.cs`, directly mirroring
   `NrnProtector`'s shape
-- [ ] T009 [P] Create `ISignedContractStorage` (`UploadAsync(Guid contractId, byte[] pdfBytes) :
+- [X] T009 [P] Create `ISignedContractStorage` (`UploadAsync(Guid contractId, byte[] pdfBytes) :
   Task<string ObjectPath>`, `CreateDownloadUrlAsync(string objectPath) : Task<string>`) in
   `backend/ChildCare.Application/Common/ISignedContractStorage.cs`, and
   `GcsSignedContractStorage` (deterministic path `signed-contracts/{contractId}.pdf`, V4 signed
   URLs, ADC credentials — research.md R6) in
   `backend/ChildCare.Infrastructure/Storage/GcsSignedContractStorage.cs`, directly mirroring
   `GcsFiscalAttestationStorage`'s shape
-- [ ] T010 [P] Add an IBAN format+checksum (mod-97) validator helper — a static method or small
+- [X] T010 [P] Add an IBAN format+checksum (mod-97) validator helper — a static method or small
   class usable from FluentValidation — in
   `backend/ChildCare.Application/Common/IbanValidation.cs`
-- [ ] T011 Register `IContractSigningTokenService` → `DataProtectionContractSigningTokenService`,
+- [X] T011 Register `IContractSigningTokenService` → `DataProtectionContractSigningTokenService`,
   `IIbanProtector` → `IbanProtector`, and `ISignedContractStorage` → `GcsSignedContractStorage`
   in DI in `backend/ChildCare.Api/Program.cs` (depends on T007, T008, T009)
-- [ ] T012 [P] Create `ContractSigningLinkBuilder` (mirrors `EmailLinkBuilder`'s
+- [X] T012 [P] Create `ContractSigningLinkBuilder` (mirrors `EmailLinkBuilder`'s
   `BuildXxxUrl(IConfiguration, ...)` shape) with `BuildSigningUrl(token, orgSlug)` (points at the
   `web/` app's `/sign` route, per research.md R1) in
   `backend/ChildCare.Application/Contracts/ContractSigningLinkBuilder.cs`
-- [ ] T013 [P] Create a derived-status helper (`ContractSigningStatus`: `NotSent`/`Pending`/
+- [X] T013 [P] Create a derived-status helper (`ContractSigningStatus`: `NotSent`/`Pending`/
   `Expired`/`Signed`, computed per data-model.md's rule, not stored) in
   `backend/ChildCare.Application/Contracts/ContractSigningStatus.cs`
 
@@ -115,22 +115,22 @@ test environment can seed it directly).
 
 ### Tests for User Story 4
 
-- [ ] T014 [P] [US4] Integration test: `PUT /api/organisations/me` with
+- [X] T014 [P] [US4] Integration test: `PUT /api/organisations/me` with
   `sepaCreditorIdentifier` persists the value and `GET /api/organisations/me` returns it, in
   `backend/ChildCare.Api.Tests/Organisations/UpdateOrganisationTests.cs` (extend existing file)
 
 ### Implementation for User Story 4
 
-- [ ] T015 [US4] Add `SepaCreditorIdentifier` to `UpdateOrganisationCommand` (alongside
+- [X] T015 [US4] Add `SepaCreditorIdentifier` to `UpdateOrganisationCommand` (alongside
   `KboNumber`) and its handler in
   `backend/ChildCare.Application/Organisations/UpdateOrganisationCommand.cs`; add it to
   `GetCurrentOrganisationQuery`'s response in the same folder (depends on T004)
-- [ ] T016 [US4] Add `SepaCreditorIdentifier` to `UpdateOrganisationRequest` and
+- [X] T016 [US4] Add `SepaCreditorIdentifier` to `UpdateOrganisationRequest` and
   `OrganisationResponse` in `backend/ChildCare.Contracts/Requests/OrganisationRequests.cs` and
   `backend/ChildCare.Contracts/Responses/OrganisationResponses.cs`; thread it through the
   existing `PUT`/`GET /api/organisations/me` handlers in
   `backend/ChildCare.Api/Endpoints/OrganisationEndpoints.cs` (depends on T015)
-- [ ] T017 [US4] [P] Add a "SEPA Creditor Identifier" field to the existing organisation-settings
+- [X] T017 [US4] [P] Add a "SEPA Creditor Identifier" field to the existing organisation-settings
   screen in `web/` (wherever `KboNumber` is currently edited), with `contracts.creditorId.*`
   i18n keys
 
@@ -150,20 +150,20 @@ rejected (with a clear reason) when the contact has no email or the creditor ID 
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Integration test: `POST /api/contracts/{id}/signing-invitation` on a
+- [X] T018 [P] [US2] Integration test: `POST /api/contracts/{id}/signing-invitation` on a
   `Draft` contract with a primary contact email sends an email and sets `SigningToken`/
   `SigningTokenExpiresAt`, in `backend/ChildCare.Api.Tests/Contracts/ContractSigningTests.cs`
   (new file)
-- [ ] T019 [P] [US2] Integration test: the same endpoint returns `422
+- [X] T019 [P] [US2] Integration test: the same endpoint returns `422
   errors.contract_signing.no_contact_email` when the contract's child has no primary contact
   email, and `422 errors.contract_signing.creditor_id_not_configured` when
   `Tenant.SepaCreditorIdentifier` is unset, in the same test file
-- [ ] T020 [P] [US2] Integration test: the same endpoint returns `409 errors.contract.not_draft`
+- [X] T020 [P] [US2] Integration test: the same endpoint returns `409 errors.contract.not_draft`
   for an `Active`/`Ended` contract, in the same test file
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Create `SendContractSigningInvitationCommand` + handler (resolves primary
+- [X] T021 [US2] Create `SendContractSigningInvitationCommand` + handler (resolves primary
   contact via the `IsPrimary`-ordered `ChildContact`→`Contact` join per research.md R9, checks
   `Status == Draft`, contact email present, `Tenant.SepaCreditorIdentifier` set; generates a
   token via `IContractSigningTokenService`, sets `SigningToken`/`SigningTokenExpiresAt = now +
@@ -171,21 +171,21 @@ rejected (with a clear reason) when the contact has no email or the creditor ID 
   invitation email) in
   `backend/ChildCare.Application/Contracts/SendContractSigningInvitationCommand.cs` (depends on
   T007, T012, T013, T015)
-- [ ] T022 [US2] Add `SendContractSigningInvitationAsync(toEmail, locale, childName,
+- [X] T022 [US2] Add `SendContractSigningInvitationAsync(toEmail, locale, childName,
   locationName, signingUrl)` to `IEmailSender`
   (`backend/ChildCare.Application/Common/IEmailSender.cs`) and `EmailService`
   (`backend/ChildCare.Api/Services/EmailService.cs`), plus a new
   `backend/ChildCare.Infrastructure/Email/Templates/contract-signing-invitation.scriban` template
   (depends on T021)
-- [ ] T023 [US2] Add `POST /api/contracts/{id}/signing-invitation` to
+- [X] T023 [US2] Add `POST /api/contracts/{id}/signing-invitation` to
   `backend/ChildCare.Api/Endpoints/ContractsEndpoints.cs` (`DirectorOnly`, existing
   `/api/contracts` group), mapping `SendContractSigningInvitationCommand` and its failure cases
   (depends on T021)
-- [ ] T024 [US2] Add the derived signing status (`ContractSigningStatus`) and masked IBAN (last
+- [X] T024 [US2] Add the derived signing status (`ContractSigningStatus`) and masked IBAN (last
   4 digits only, per research.md R4) to `ContractResponse` in
   `backend/ChildCare.Contracts/Responses/ContractResponses.cs`, and populate it in
   `GetContractByIdQuery`/`ListChildContractsQuery` (depends on T013)
-- [ ] T025 [US2] [P] Build out `web/app/(app)/contracts/page.tsx` (replacing the
+- [X] T025 [US2] [P] Build out `web/app/(app)/contracts/page.tsx` (replacing the
   `NotYetAvailable` stub) with a contract list showing derived signing status, a "Send for
   signature" action on `Draft` contracts with no outstanding token, and a "Resend" action on
   `Pending`/`Expired` ones (depends on T024)
@@ -206,32 +206,32 @@ while `Contract.Status` remains unaffected (per spec.md's Clarifications, FR-015
 
 ### Tests for User Story 1
 
-- [ ] T026 [P] [US1] Integration test: `GET /api/public/contracts/sign?org=...&token=...` with a
+- [X] T026 [P] [US1] Integration test: `GET /api/public/contracts/sign?org=...&token=...` with a
   valid, unused, unexpired token returns the contract-for-signing fields; with an invalid,
   expired, or already-used token returns the same generic `404
   errors.contract_signing.invalid_or_expired`, in
   `backend/ChildCare.Api.Tests/Contracts/PublicContractSigningTests.cs` (new file)
-- [ ] T027 [P] [US1] Integration test: `POST` the same endpoint with a valid signature + IBAN
+- [X] T027 [P] [US1] Integration test: `POST` the same endpoint with a valid signature + IBAN
   records `SignedAt`/`SignatureData`/`SignedByIp`/`SepaMandateReference`/`SepaIbanEncrypted`/
   `SepaAuthorisedAt`, generates a signed PDF in storage, invalidates the token (a second `GET`/
   `POST` with the same token now 404s), and leaves `Contract.Status` as `Draft`, in the same
   test file
-- [ ] T028 [P] [US1] Integration test: `POST` with an invalid-checksum IBAN returns `422
+- [X] T028 [P] [US1] Integration test: `POST` with an invalid-checksum IBAN returns `422
   errors.contract_signing.invalid_iban` and does not consume the token (a subsequent valid `POST`
   with the same token still succeeds), in the same test file
-- [ ] T029 [P] [US1] Integration test: two concurrent `POST` requests against the same valid
+- [X] T029 [P] [US1] Integration test: two concurrent `POST` requests against the same valid
   token — exactly one succeeds, the other gets `404`, and exactly one `SepaMandateReference`/
   signed PDF exists afterward, in the same test file
-- [ ] T030 [P] [US1] Integration test: signed PDF is emailed to both the parent and the
+- [X] T030 [P] [US1] Integration test: signed PDF is emailed to both the parent and the
   location's director(s), in the same test file
 
 ### Implementation for User Story 1
 
-- [ ] T031 [US1] Create `GetContractForSigningQuery` (public, tenant-exempt — validates token via
+- [X] T031 [US1] Create `GetContractForSigningQuery` (public, tenant-exempt — validates token via
   `IContractSigningTokenService` + the stored `SigningToken`/`SigningTokenExpiresAt` match,
   returns the same field set `ContractPdfModel` renders) in
   `backend/ChildCare.Application/Contracts/GetContractForSigningQuery.cs` (depends on T007)
-- [ ] T032 [US1] Create `SubmitContractSigningCommand` + handler — re-validates the IBAN (T010),
+- [X] T032 [US1] Create `SubmitContractSigningCommand` + handler — re-validates the IBAN (T010),
   then performs the token check-and-invalidate as a single atomic conditional `UPDATE` (EF Core
   `ExecuteUpdateAsync`, `WHERE Id = @contractId AND SigningToken = @presentedToken`, matching the
   affected-row count to detect a lost race — research.md R2's Concurrency note, FR-009) that also
@@ -245,24 +245,24 @@ while `Contract.Status` remains unaffected (per spec.md's Clarifications, FR-015
   emails both parties — in
   `backend/ChildCare.Application/Contracts/SubmitContractSigningCommand.cs` (depends on T007,
   T008, T009, T010)
-- [ ] T033 [US1] Extend `QuestPdfContractGenerator`/`ContractPdfModel`
+- [X] T033 [US1] Extend `QuestPdfContractGenerator`/`ContractPdfModel`
   (`backend/ChildCare.Infrastructure/Pdf/QuestPdfContractGenerator.cs`,
   `backend/ChildCare.Application/Common/IContractPdfGenerator.cs`) with an optional signature
   block (rendered signature image or typed name, signed date, signer IP) and SEPA mandate section
   (masked IBAN, mandate reference, creditor identifier, authorisation date) — used only when
   generating the final signed PDF, unchanged for the existing unsigned on-demand PDF (depends on
   T003)
-- [ ] T034 [US1] Add `SendSignedContractAsync(toEmail, locale, childName, pdfBytes)` (or a
+- [X] T034 [US1] Add `SendSignedContractAsync(toEmail, locale, childName, pdfBytes)` (or a
   signed-URL variant) to `IEmailSender`/`EmailService`, plus a new
   `backend/ChildCare.Infrastructure/Email/Templates/signed-contract-copy.scriban` template
   (depends on T032)
-- [ ] T035 [US1] Create `backend/ChildCare.Api/Endpoints/PublicContractSigningEndpoints.cs` (new
+- [X] T035 [US1] Create `backend/ChildCare.Api/Endpoints/PublicContractSigningEndpoints.cs` (new
   file) mapping `GET`/`POST /api/public/contracts/sign` — `AllowAnonymous()`,
   `.RequireTenantExempt()`, resolving `org` via `OrganisationSlugResolver` before dispatching
   `GetContractForSigningQuery`/`SubmitContractSigningCommand` (depends on T031, T032)
-- [ ] T036 [US1] [P] Create `web/components/SignatureCapture.tsx` — a `<canvas>` + Pointer
+- [X] T036 [US1] [P] Create `web/components/SignatureCapture.tsx` — a `<canvas>` + Pointer
   Events drawing surface with a typed-name fallback tab (research.md R8)
-- [ ] T037 [US1] [P] Create `web/app/sign/page.tsx` (new public route, outside `(app)`/`(auth)`)
+- [X] T037 [US1] [P] Create `web/app/sign/page.tsx` (new public route, outside `(app)`/`(auth)`)
   — fetches contract-for-signing data via `web/lib/publicApiClient.ts`, renders the contract
   content with scroll-to-bottom gating on the signature controls (FR-006), embeds
   `SignatureCapture`, an IBAN field with inline validation, a manual language toggle defaulting
@@ -287,15 +287,15 @@ and verify the previously issued link 404s afterward.
 
 ### Tests for User Story 3
 
-- [ ] T038 [P] [US3] Integration test: resending (calling
+- [X] T038 [P] [US3] Integration test: resending (calling
   `SendContractSigningInvitationCommand` again) issues a new token and immediately invalidates
   the previous one (old token now 404s on `GET`), in
   `backend/ChildCare.Api.Tests/Contracts/ContractSigningTests.cs`
-- [ ] T039 [P] [US3] Integration test: `PUT /api/contracts/{id}` on a `Draft` contract with an
+- [X] T039 [P] [US3] Integration test: `PUT /api/contracts/{id}` on a `Draft` contract with an
   outstanding, unsigned signing token clears `SigningToken`/`SigningTokenExpiresAt` (the
   previously issued link now 404s), and does **not** auto-send a new invitation, in
   `backend/ChildCare.Api.Tests/Contracts/UpdateContractTests.cs` (extend existing file)
-- [ ] T040 [P] [US3] Integration test: `PUT /api/contracts/{id}` on a contract with `SignedAt`
+- [X] T040 [P] [US3] Integration test: `PUT /api/contracts/{id}` on a contract with `SignedAt`
   set is rejected (a new `409 errors.contract.already_signed`-style failure), even though the
   contract's `Status` may still be `Draft` (signing doesn't gate activation, FR-015) — confirming
   FR-014's protection holds independent of `Status`, not just the pre-existing Draft-only check,
@@ -305,7 +305,7 @@ and verify the previously issued link 404s afterward.
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Add an `AlreadySigned` case to `ContractFailure`
+- [X] T041 [US3] Add an `AlreadySigned` case to `ContractFailure`
   (`backend/ChildCare.Application/Contracts/ContractResult.cs`) and two steps to
   `UpdateContractCommandHandler`
   (`backend/ChildCare.Application/Contracts/UpdateContractCommand.cs`): (1) if `contract.SignedAt`
@@ -313,7 +313,7 @@ and verify the previously issued link 404s afterward.
   a distinct guard from the existing `Status != Draft` check, since a signed contract can still be
   `Draft`); (2) otherwise, if the contract has a non-null `SigningToken`, clear
   `SigningToken`/`SigningTokenExpiresAt` as part of the same save (FR-013) (depends on T003, T040)
-- [ ] T042 [US3] Map `ContractFailure.AlreadySigned` to `409 errors.contract.already_signed` in
+- [X] T042 [US3] Map `ContractFailure.AlreadySigned` to `409 errors.contract.already_signed` in
   `backend/ChildCare.Api/Endpoints/ContractsEndpoints.cs`'s existing `MapFailure` switch (depends
   on T041)
 
@@ -323,12 +323,12 @@ and verify the previously issued link 404s afterward.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T043 [P] Add `contractSigning.*`/`contracts.*` translated copy (not just empty
+- [X] T043 [P] Add `contractSigning.*`/`contracts.*` translated copy (not just empty
   namespaces from T001) to `web/i18n/locales/{en,nl,fr}.json` for every new string introduced by
   US1/US2/US4 (signing page, both emails, director-web contract screen, creditor-ID setting)
-- [ ] T044 [P] Run `quickstart.md`'s six scenarios end-to-end against local dev and confirm each
+- [X] T044 [P] Run `quickstart.md`'s six scenarios end-to-end against local dev and confirm each
   passes
-- [ ] T045 Confirm `ContractSigningStatus`'s `Pending`/`Expired` boundary (FR-003's 72-hour
+- [X] T045 Confirm `ContractSigningStatus`'s `Pending`/`Expired` boundary (FR-003's 72-hour
   window) is exercised by an automated test using a controllable clock rather than a real
   72-hour wait, in `backend/ChildCare.Api.Tests/Contracts/ContractSigningTests.cs`
 

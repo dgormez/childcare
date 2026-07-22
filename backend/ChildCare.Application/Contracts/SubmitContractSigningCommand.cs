@@ -4,6 +4,7 @@ using ChildCare.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ChildCare.Application.Contracts;
 
@@ -47,9 +48,12 @@ public class SubmitContractSigningCommandHandler(
     IIbanProtector ibanProtector,
     IContractPdfGenerator pdfGenerator,
     ISignedContractStorage signedContractStorage,
-    IEmailSender emailSender)
+    IEmailSender emailSender,
+    ILogger<SubmitContractSigningCommandHandler> logger)
     : IRequestHandler<SubmitContractSigningCommand, SubmitContractSigningResult>
 {
+    private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(72);
+
     public async Task<SubmitContractSigningResult> Handle(SubmitContractSigningCommand request, CancellationToken cancellationToken)
     {
         var tenant = await slugResolver.ResolveAsync(request.OrganisationSlug, cancellationToken);
@@ -127,18 +131,67 @@ public class SubmitContractSigningCommandHandler(
                 tenant.SepaCreditorIdentifier ?? string.Empty,
                 signedAt));
 
-        var pdfBytes = await pdfGenerator.GenerateAsync(pdfModel, cancellationToken);
-        await signedContractStorage.UploadAsync(contract.Id, pdfBytes, cancellationToken);
+        byte[] pdfBytes;
+        try
+        {
+            pdfBytes = await pdfGenerator.GenerateAsync(pdfModel, cancellationToken);
+            await signedContractStorage.UploadAsync(contract.Id, pdfBytes, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // The atomic UPDATE above already consumed the token — if the PDF never actually
+            // made it to storage, that's not a completed signature (FR-010's persisted PDF is
+            // the whole point), so restore the contract to its pre-signed, still-invitable state
+            // rather than stranding the parent with a burned token and no way to retry the exact
+            // same link. Safe only because nothing downstream (email) has happened yet.
+            logger.LogError(ex, "Failed to generate/store signed PDF for contract {ContractId} — restoring signing token", contractId);
+            await db.Contracts
+                .Where(c => c.Id == contractId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(c => c.SignedAt, (DateTime?)null)
+                    .SetProperty(c => c.SignatureData, (string?)null)
+                    .SetProperty(c => c.SignatureType, (Domain.Enums.SignatureType?)null)
+                    .SetProperty(c => c.SignedByIp, (string?)null)
+                    .SetProperty(c => c.SepaIbanEncrypted, (string?)null)
+                    .SetProperty(c => c.SepaIbanLast4, (string?)null)
+                    .SetProperty(c => c.SepaMandateReference, (string?)null)
+                    .SetProperty(c => c.SepaAuthorisedAt, (DateTime?)null)
+                    .SetProperty(c => c.SigningToken, request.Token)
+                    .SetProperty(c => c.SigningTokenExpiresAt, DateTime.UtcNow.Add(TokenLifetime)),
+                    CancellationToken.None);
+            throw;
+        }
 
+        // FR-006 (staff invitation) precedent: the signature/mandate/PDF are already durably
+        // recorded at this point, so a notification failure must not undo or fail the response —
+        // logged, recoverable via a manual resend, exactly like CreateStaffProfileCommandHandler.
         if (primaryContact?.Email is not null)
-            await emailSender.SendSignedContractAsync(primaryContact.Email, locale, pdfModel.ChildName, pdfBytes, cancellationToken);
+        {
+            try
+            {
+                await emailSender.SendSignedContractAsync(primaryContact.Email, locale, pdfModel.ChildName, pdfBytes, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to email signed contract to parent {Email} for contract {ContractId}", primaryContact.Email, contractId);
+            }
+        }
 
         var directorEmails = await db.Users
             .Where(u => u.Role == UserRole.Director)
             .Select(u => u.Email)
             .ToListAsync(cancellationToken);
         foreach (var directorEmail in directorEmails)
-            await emailSender.SendSignedContractAsync(directorEmail, "nl", pdfModel.ChildName, pdfBytes, cancellationToken);
+        {
+            try
+            {
+                await emailSender.SendSignedContractAsync(directorEmail, "nl", pdfModel.ChildName, pdfBytes, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to email signed contract to director {Email} for contract {ContractId}", directorEmail, contractId);
+            }
+        }
 
         return SubmitContractSigningResult.Success();
     }

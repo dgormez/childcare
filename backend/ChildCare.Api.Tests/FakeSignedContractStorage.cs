@@ -14,8 +14,15 @@ public class FakeSignedContractStorage : ISignedContractStorage
 {
     public ConcurrentDictionary<Guid, byte[]> Uploaded { get; } = new();
 
+    /// <summary>Contract ids this test run should simulate an upload failure for
+    /// (SubmitContractSigningCommandHandler's compensating-restore path).</summary>
+    public HashSet<Guid> ThrowOnUploadFor { get; } = [];
+
     public Task<string> UploadAsync(Guid contractId, byte[] pdfBytes, CancellationToken cancellationToken = default)
     {
+        if (ThrowOnUploadFor.Contains(contractId))
+            throw new InvalidOperationException("Simulated storage failure (test).");
+
         Uploaded[contractId] = pdfBytes;
         return Task.FromResult($"signed-contracts/{contractId}.pdf");
     }

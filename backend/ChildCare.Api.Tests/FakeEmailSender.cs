@@ -156,11 +156,18 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
 
     public List<(string ToEmail, string Locale, string ChildName, byte[] PdfBytes)> SignedContractCalls { get; } = [];
 
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (SubmitContractSigningCommandHandler's "a notification failure must not fail signing" guarantee).</summary>
+    public HashSet<string> ThrowOnSignedContractEmailTo { get; } = [];
+
     public Task SendSignedContractAsync(
         string toEmail, string locale, string childName, byte[] pdfBytes,
         CancellationToken cancellationToken = default)
     {
         SignedContractCalls.Add((toEmail, locale, childName, pdfBytes));
+        if (ThrowOnSignedContractEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
         return inner.SendSignedContractAsync(toEmail, locale, childName, pdfBytes, cancellationToken);
     }
 }

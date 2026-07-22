@@ -197,4 +197,62 @@ public class PublicContractSigningTests(OrganisationOnboardingWebAppFactory fact
         var directorContract = (await directorView.Content.ReadFromJsonAsync<ContractResponse>())!;
         Assert.Equal("expired", directorContract.SigningStatus);
     }
+
+    // ── Manual quickstart finding: a storage failure after the token-consuming UPDATE must not
+    // strand the parent with a burned token and no persisted PDF — the contract is restored to
+    // its pre-signed, still-signable state so the exact same emailed link works on retry ──────
+
+    [Fact]
+    public async Task PostSigning_WhenPdfStorageFails_RestoresTokenAndLeavesNoPartialState()
+    {
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        var client = factory.CreateClient();
+        var (_, org, _, contract) = await SetUpDraftContractWithContactAsync(client, contactEmail);
+        var token = await SendInvitationAndExtractTokenAsync(factory.Services, client, org.AccessToken, contract.Id, contactEmail);
+
+        var storage = factory.Services.GetRequiredService<FakeSignedContractStorage>();
+        storage.ThrowOnUploadFor.Add(contract.Id);
+
+        var failedResponse = await PostSigningAsync(client, org.Organisation.Slug, token, "Typed", "Parent Peeters", ValidTestIban);
+        Assert.Equal(HttpStatusCode.InternalServerError, failedResponse.StatusCode);
+
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        var db = ResolveTenantDb(factory.Services, schema);
+        var afterFailure = await db.Contracts.AsNoTracking().FirstAsync(c => c.Id == contract.Id);
+        Assert.Null(afterFailure.SignedAt);
+        Assert.Null(afterFailure.SepaMandateReference);
+        Assert.Equal(token, afterFailure.SigningToken);
+        Assert.False(storage.Uploaded.ContainsKey(contract.Id));
+
+        // The same link the parent already has still works once storage recovers.
+        storage.ThrowOnUploadFor.Remove(contract.Id);
+        var retryResponse = await PostSigningAsync(client, org.Organisation.Slug, token, "Typed", "Parent Peeters", ValidTestIban);
+        Assert.Equal(HttpStatusCode.OK, retryResponse.StatusCode);
+    }
+
+    // ── A notification failure after a durably-persisted signature must not fail the request or
+    // undo the signature (CreateStaffProfileCommandHandler's existing precedent) ─────────────
+
+    [Fact]
+    public async Task PostSigning_WhenParentEmailFails_StillSucceedsAndPersistsThePdf()
+    {
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        var client = factory.CreateClient();
+        var (_, org, _, contract) = await SetUpDraftContractWithContactAsync(client, contactEmail);
+        var token = await SendInvitationAndExtractTokenAsync(factory.Services, client, org.AccessToken, contract.Id, contactEmail);
+
+        var emailSender = factory.Services.GetRequiredService<FakeEmailSender>();
+        emailSender.ThrowOnSignedContractEmailTo.Add(contactEmail);
+
+        var response = await PostSigningAsync(client, org.Organisation.Slug, token, "Typed", "Parent Peeters", ValidTestIban);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        var db = ResolveTenantDb(factory.Services, schema);
+        var stored = await db.Contracts.AsNoTracking().FirstAsync(c => c.Id == contract.Id);
+        Assert.NotNull(stored.SignedAt);
+
+        var storage = factory.Services.GetRequiredService<FakeSignedContractStorage>();
+        Assert.True(storage.Uploaded.ContainsKey(contract.Id));
+    }
 }
