@@ -927,3 +927,17 @@ export interface SignedContractDownloadUrlResponse {
   downloadUrl: string;
   expiresAt:   string;
 }
+
+// Feature 024-esignature (User Story 2) — one row of the org-wide contracts list
+// (GET /api/contracts), denormalized with child/location name.
+export interface ContractSummaryResponse {
+  id:             string;
+  childId:        string;
+  childName:      string;
+  locationName:   string;
+  startDate:      string;
+  dailyRateCents: number;
+  status:         "draft" | "active" | "ended";
+  signingStatus:  ContractSigningStatus;
+  signedAt:       string | null;
+}

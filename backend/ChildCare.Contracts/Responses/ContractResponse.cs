@@ -41,6 +41,7 @@ public record ContractSummaryResponse(
     string ChildName,
     string LocationName,
     DateOnly StartDate,
+    int DailyRateCents,
     string Status,
     string SigningStatus,
     DateTime? SignedAt);

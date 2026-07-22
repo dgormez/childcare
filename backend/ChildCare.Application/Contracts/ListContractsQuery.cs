@@ -35,6 +35,7 @@ public class ListContractsQueryHandler(ITenantDbContext db) : IRequestHandler<Li
             $"{r.ChildFirstName} {r.ChildLastName}",
             r.LocationName,
             r.Contract.StartDate,
+            r.Contract.DailyRateCents,
             r.Contract.Status.ToString().ToLowerInvariant(),
             ContractSigningStatusResolver.Resolve(r.Contract, utcNow).ToString().ToLowerInvariant(),
             r.Contract.SignedAt)).ToList();
