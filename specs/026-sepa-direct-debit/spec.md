@@ -128,6 +128,15 @@ cash collection with less month-end payment-chasing.
   registered name (`Tenant.Name`, already exists). Resolved directly against the existing data
   model rather than guessed, per this pipeline's standing rule for a BACKLOG premise that
   research shows is factually wrong before planning continues.
+- Q: The SEPA CORE scheme requires each debit instruction to carry a sequence type — `FRST` for
+  the first-ever collection under a given mandate, `RCUR` for every collection after — a
+  business rule the pain.008 XSD itself does not enforce, so schema-validity alone (FR-006) would
+  not catch getting this wrong. How does the system determine which one applies? → A: `FRST` if
+  no earlier batch has ever successfully included an invoice under the contract's *current* SEPA
+  mandate reference (a mandate reference changes on revoke-and-resign, so a re-signed mandate
+  correctly starts at `FRST` again); `RCUR` otherwise. This is the standard SEPA CORE rule, not a
+  product decision — resolved as a recommended default per this pipeline's standing rule, not
+  raised to the product owner.
 - Q: How does the system determine the minimum allowed execution date ("at least 1 business day
   in the future")? Does "business day" mean the location's own closure calendar (feature 011), a
   full Belgian-bank-holiday calendar, or a simple weekday rule? → A: A simple Monday–Friday
@@ -306,8 +315,12 @@ for a family with no mandate at all is excluded with a distinct "no mandate" rea
 - **FR-002**: Directors MUST be able to select some or all eligible invoices, set an execution
   date, and generate a pain.008.001.02 XML batch containing one debit instruction per selected
   invoice: amount, debtor IBAN (decrypted from the contract's mandate), debtor name, mandate
-  reference, mandate signing date, and end-to-end ID equal to the invoice's existing OGM
-  reference.
+  reference, mandate signing date, sequence type, and end-to-end ID equal to the invoice's
+  existing OGM reference.
+- **FR-002a**: Each debit instruction's sequence type MUST be `FRST` if no earlier batch has ever
+  successfully included an invoice under that contract's current SEPA mandate reference, and
+  `RCUR` otherwise — a mandate reference issued after a revoke-and-resign (FR-011/FR-012) MUST
+  correctly restart at `FRST`.
 - **FR-003**: The generated batch's required creditor headers (creditor identifier, creditor
   name, creditor IBAN) MUST come from the location's organisation-level SEPA creditor identifier
   (feature 024) and the location's existing bank account (feature 014) and name — the system MUST
