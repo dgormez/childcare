@@ -75,6 +75,14 @@ if [ -z "$PROMPT" ]; then
   exit 1
 fi
 
+# Gates .specify/scripts/bash/hooks/no-background-in-automation.sh, which
+# denies any Bash call with run_in_background:true. Only set here — never
+# for interactive sessions — because backgrounding a wait (test suite, CI
+# checks) and expecting to be notified later silently abandons the work:
+# this is a one-shot headless process with no later turn for that
+# notification to arrive in.
+export CHILDCARE_AUTOMATION_NO_BACKGROUND=1
+
 claude -p "$PROMPT" \
   --permission-mode bypassPermissions \
   --no-session-persistence \
