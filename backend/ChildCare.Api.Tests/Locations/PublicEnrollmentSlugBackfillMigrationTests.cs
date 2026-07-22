@@ -17,7 +17,8 @@ namespace ChildCare.Api.Tests.Locations;
 /// LegacyVaccinationMigrationTests.
 ///
 /// AddDigitalEnrollment is no longer the newest tenant migration (024-esignature's
-/// AddContractSigningAndSepaMandate, then 025's AddCodaPaymentMatching, shipped after it) —
+/// AddContractSigningAndSepaMandate, then 025's AddCodaPaymentMatching, then 026's
+/// AddSepaDirectDebit, shipped after it) —
 /// TenantDbContext.MigrateAsync() generates
 /// its script from `applied.LastOrDefault()`, the *last recorded* migration, not the first gap;
 /// if a later migration's history row is left in place while an earlier one's is deleted,
@@ -25,6 +26,17 @@ namespace ChildCare.Api.Tests.Locations;
 /// reverted migration entirely. So every migration from AddDigitalEnrollment onward must be
 /// deleted from history here, not just AddDigitalEnrollment alone — keep this list extended
 /// whenever a new tenant migration ships (mirrors TenantMigrationRolloutTests' own list).
+/// Feature 026's "AddSepaDirectDebit" is the next one after AddCodaPaymentMatching — unlike
+/// TenantMigrationRolloutTests/LegacyVaccinationMigrationTests (which each drop `invoices`
+/// wholesale at their own revert point), this test's revert point predates `invoices` even
+/// existing in its dropped form here — `invoices` is untouched by this test's revert, so its
+/// three new columns (SepaBatchId/SepaMandateReferenceUsed/SepaReturnReason) need their own
+/// explicit DROP COLUMN, `contracts`' new SepaRevokedAt needs one alongside its other Sepa*
+/// columns already dropped below, and the new sepa_batches table (FKs to locations, still
+/// present here) needs its own DROP TABLE ordered before `invoices` is altered (invoices is the
+/// table referencing it) — same FK-direction rule 013g's shipped-note first flagged. Found by
+/// this test actually failing after AddSepaDirectDebit shipped, exactly as this comment already
+/// predicted for "any future migration."
 /// </summary>
 public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -37,6 +49,11 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
         await publicDb.Database.ExecuteSqlRawAsync($"""
             DROP TABLE "{schemaName}"."coda_transactions";
             DROP TABLE "{schemaName}"."coda_imports";
+            ALTER TABLE "{schemaName}"."invoices"
+                DROP COLUMN "SepaBatchId",
+                DROP COLUMN "SepaMandateReferenceUsed",
+                DROP COLUMN "SepaReturnReason";
+            DROP TABLE "{schemaName}"."sepa_batches";
             DROP INDEX "{schemaName}"."IX_waiting_list_entries_LocationId_ChildFirstName_ChildLastNam~";
             DROP INDEX "{schemaName}"."IX_waiting_list_entries_ReferenceCode";
             DROP INDEX "{schemaName}"."IX_locations_PublicEnrollmentSlug";
@@ -57,6 +74,7 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
                 DROP COLUMN "SepaIbanEncrypted",
                 DROP COLUMN "SepaIbanLast4",
                 DROP COLUMN "SepaMandateReference",
+                DROP COLUMN "SepaRevokedAt",
                 DROP COLUMN "SignatureData",
                 DROP COLUMN "SignatureType",
                 DROP COLUMN "SignedAt",
@@ -65,7 +83,7 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
                 DROP COLUMN "SigningTokenExpiresAt";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
                 WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate'
-                   OR "MigrationId" LIKE '%AddCodaPaymentMatching';
+                   OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit';
             """);
     }
 
