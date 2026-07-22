@@ -432,6 +432,13 @@ public class StaffScheduleEndpointsTests(OrganisationOnboardingWebAppFactory fac
         var ownEntry = await CreateEntryAsync(client, org.AccessToken, caregiverA.Id, location.Id, null, FutureDate, new TimeOnly(8, 0), new TimeOnly(16, 0));
         await CreateEntryAsync(client, org.AccessToken, caregiverB.Id, location.Id, null, FutureDate, new TimeOnly(8, 0), new TimeOnly(16, 0));
 
+        // Feature 027/FR-001: GetMyScheduleQuery now filters to published rows only — publish
+        // the week before asserting visibility (this test predates the publish/draft gate).
+        var weekStart = FutureDate.AddDays(-(((int)FutureDate.DayOfWeek + 6) % 7));
+        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/staff-schedules/{location.Id}/publish", org.AccessToken,
+            new PublishScheduleWeekRequest(weekStart, false)));
+        Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
+
         var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/staff-schedules/me", caregiverAToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var entries = (await response.Content.ReadFromJsonAsync<List<StaffScheduleResponse>>())!;

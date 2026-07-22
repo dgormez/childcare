@@ -56,8 +56,12 @@ public static class StaffEndpoints
             QualificationLevel? qualification = req.QualificationLevel is null
                 ? null
                 : Enum.Parse<QualificationLevel>(req.QualificationLevel, ignoreCase: true);
+            // Feature 027 (FR-002) — null leaves ContractedDays unchanged.
+            IReadOnlyList<DayOfWeek>? contractedDays = req.ContractedDays?
+                .Select(d => Enum.Parse<DayOfWeek>(d, ignoreCase: true))
+                .ToList();
 
-            var result = await mediator.Send(new UpdateStaffProfileCommand(id, req.FirstName, req.LastName, req.Phone, qualification));
+            var result = await mediator.Send(new UpdateStaffProfileCommand(id, req.FirstName, req.LastName, req.Phone, qualification, contractedDays));
             return MapResult(result, onSuccess: Results.Ok);
         });
 

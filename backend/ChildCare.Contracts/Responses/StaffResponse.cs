@@ -13,7 +13,10 @@ public record StaffResponse(
     IReadOnlyList<Guid> EligibleLocationIds,
     DateTime? DeactivatedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    // Feature 027 (FR-002) — which weekdays this staff member normally works, e.g. "Monday".
+    // Empty = no restriction.
+    IReadOnlyList<string> ContractedDays);
 
 public record RequestPhotoUploadUrlResponse(
     string UploadUrl,
