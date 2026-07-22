@@ -140,6 +140,17 @@ public static class StaffEndpoints
                 ? Results.Ok(result.Response)
                 : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
         }).WithTags("Staff").RequireAuthorization("StaffOrDirector");
+
+        // Feature 027 deviation (see RegisterStaffPushTokenCommand.cs) — mirrors
+        // ParentEndpoints.cs's PUT /api/parent/push-token exactly.
+        app.MapPut("/api/staff/push-token", async (RegisterPushTokenRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var succeeded = await mediator.Send(new RegisterStaffPushTokenCommand(tenantUserId, req.PushToken));
+            return succeeded
+                ? Results.Ok()
+                : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
+        }).WithTags("Staff").RequireAuthorization("StaffOrDirector");
     }
 
     private static IResult MapResult(StaffResult result, Func<StaffResponse, IResult> onSuccess)

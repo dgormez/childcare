@@ -24,6 +24,22 @@ public static class ClosureCalendarEndpoints
             return result.Succeeded ? Results.Ok(result.Closures) : MapFailure(result.Failure!.Value);
         });
 
+        // Feature 027 deviation (see ListStaffVisibleClosureDatesQuery.cs) — mirrors
+        // LocationEndpoints.cs's /names pattern: a separate StaffOrDirector-scoped MapGroup for
+        // the same "/api/closures" path, since a more permissive route can't live inside the
+        // DirectorOnly group above.
+        app.MapGroup("/api/closures")
+            .WithTags("Closures")
+            .RequireAuthorization("StaffOrDirector")
+            .MapGet("/dates", async (DateOnly from, DateOnly to, IMediator mediator) =>
+            {
+                if (to < from)
+                    return ValidationFailure("to", "errors.validation");
+
+                var dates = await mediator.Send(new ListStaffVisibleClosureDatesQuery(from, to));
+                return Results.Ok(dates);
+            });
+
         group.MapPost("/", async (CreateClosureDayRequest req, HttpContext ctx, IMediator mediator) =>
         {
             if (!ClosureCalendarMapper.TryParseClosureType(req.ClosureType, out _))

@@ -26,6 +26,20 @@ public static class LocationEndpoints
             return Results.Ok(locations);
         });
 
+        // Feature 027 deviation (see ListStaffVisibleLocationsQuery.cs) — a separate
+        // StaffOrDirector-scoped MapGroup for the same "/api/locations" path, mirroring
+        // GroupsEndpoints.cs's two-MapGroup-blocks-per-path pattern (research.md R6 there):
+        // ASP.NET Core composes group + route RequireAuthorization additively (AND), so this
+        // more permissive route can't live inside the DirectorOnly group above.
+        app.MapGroup("/api/locations")
+            .WithTags("Locations")
+            .RequireAuthorization("StaffOrDirector")
+            .MapGet("/names", async (IMediator mediator) =>
+            {
+                var locations = await mediator.Send(new ListStaffVisibleLocationsQuery());
+                return Results.Ok(locations);
+            });
+
         group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new GetLocationByIdQuery(id));
