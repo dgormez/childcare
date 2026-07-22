@@ -1,0 +1,82 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Annuler"
+  },
+  "login": {
+    "title": "Connexion Personnel",
+    "organisationSlug": "Organisation",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "showPassword": "Afficher",
+    "hidePassword": "Masquer",
+    "offlineFirstLogin": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Organisation, e-mail ou mot de passe incorrect."
+    }
+  },
+  "schedule": {
+    "title": "Horaire",
+    "weekView": "Semaine",
+    "dayView": "Jour",
+    "empty": "Aucun service prévu pour cette période.",
+    "networkError": "Impossible de joindre le serveur. Tirez vers le bas pour réessayer une fois de nouveau en ligne.",
+    "offlineCached": "Affichage de votre dernier horaire chargé — vous êtes hors ligne.",
+    "closed": "KDV fermée",
+    "nonContractedDay": "Jour non contracté",
+    "noShifts": "Aucun service",
+    "unknownLocation": "Lieu",
+    "weekOf": "Semaine du {{date}}",
+    "reportSickAction": "Je suis malade",
+    "status": {
+      "absent": "Absent(e)",
+      "covered": "Remplacé(e) par un(e) collègue"
+    }
+  },
+  "reportSick": {
+    "title": "Signaler une maladie",
+    "description": "Ceci vous signale malade pour aujourd'hui (ou demain, si c'est après l'heure d'ouverture) et alerte immédiatement la direction.",
+    "action": "Je suis malade",
+    "confirmPrompt": "Êtes-vous sûr(e) de vouloir vous signaler malade ?",
+    "confirm": "Oui, signaler",
+    "success": "Vous avez été signalé(e) malade. La direction a été informée.",
+    "needsConnection": "Une connexion internet est nécessaire pour vous signaler malade.",
+    "genericError": "Impossible d'envoyer ceci. Veuillez réessayer."
+  },
+  "leaveRequests": {
+    "title": "Demandes de congé",
+    "newAction": "Nouvelle demande",
+    "newTitle": "Nouvelle demande de congé",
+    "empty": "Vous n'avez soumis aucune demande de congé.",
+    "loadFailed": "Impossible de charger vos demandes de congé.",
+    "type": {
+      "sick": "Maladie",
+      "annual": "Congé annuel",
+      "other": "Autre"
+    },
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Refusée"
+    },
+    "typeLabel": "Type",
+    "dateFromLabel": "Du",
+    "dateToLabel": "Au",
+    "notesLabel": "Note (optionnel)",
+    "notesPlaceholder": "Ajouter une note…",
+    "submit": "Envoyer la demande",
+    "submitFailed": "Impossible d'envoyer cette demande. Veuillez réessayer.",
+    "needsConnection": "Une connexion internet est nécessaire pour envoyer une demande.",
+    "todayLabel": "Aujourd'hui",
+    "tomorrowLabel": "Demain",
+    "chooseDate": "AAAA-MM-JJ"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification.",
+    "loadFailed": "Impossible de charger les notifications."
+  }
+}

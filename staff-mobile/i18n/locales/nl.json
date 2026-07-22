@@ -1,0 +1,82 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Annuleren"
+  },
+  "login": {
+    "title": "Personeel Inloggen",
+    "organisationSlug": "Organisatie",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "submit": "Inloggen",
+    "showPassword": "Tonen",
+    "hidePassword": "Verbergen",
+    "offlineFirstLogin": "Kan de server niet bereiken. Controleer je verbinding en probeer opnieuw."
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Onjuiste organisatie, e-mail of wachtwoord."
+    }
+  },
+  "schedule": {
+    "title": "Rooster",
+    "weekView": "Week",
+    "dayView": "Dag",
+    "empty": "Nog geen diensten gepland voor deze periode.",
+    "networkError": "Kan de server niet bereiken. Trek naar beneden om opnieuw te proberen zodra je weer online bent.",
+    "offlineCached": "Je laatst geladen rooster wordt getoond — je bent offline.",
+    "closed": "KDV gesloten",
+    "nonContractedDay": "Geen contractdag",
+    "noShifts": "Geen diensten",
+    "unknownLocation": "Locatie",
+    "weekOf": "Week van {{date}}",
+    "reportSickAction": "Ik ben ziek",
+    "status": {
+      "absent": "Afwezig",
+      "covered": "Overgenomen door een collega"
+    }
+  },
+  "reportSick": {
+    "title": "Ziek melden",
+    "description": "Dit meldt je ziek voor vandaag (of morgen, als het na openingstijd is) en waarschuwt de directie meteen.",
+    "action": "Ik ben ziek",
+    "confirmPrompt": "Weet je zeker dat je jezelf ziek wilt melden?",
+    "confirm": "Ja, ziek melden",
+    "success": "Je bent ziek gemeld. De directie is op de hoogte gebracht.",
+    "needsConnection": "Je hebt een internetverbinding nodig om je ziek te melden.",
+    "genericError": "Kon dit niet versturen. Probeer het opnieuw."
+  },
+  "leaveRequests": {
+    "title": "Verlofaanvragen",
+    "newAction": "Nieuwe aanvraag",
+    "newTitle": "Nieuwe verlofaanvraag",
+    "empty": "Je hebt nog geen verlofaanvragen ingediend.",
+    "loadFailed": "Kon je verlofaanvragen niet laden.",
+    "type": {
+      "sick": "Ziekte",
+      "annual": "Jaarlijks verlof",
+      "other": "Overig"
+    },
+    "status": {
+      "pending": "In behandeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen"
+    },
+    "typeLabel": "Type",
+    "dateFromLabel": "Van",
+    "dateToLabel": "Tot",
+    "notesLabel": "Notitie (optioneel)",
+    "notesPlaceholder": "Voeg een notitie toe…",
+    "submit": "Aanvraag versturen",
+    "submitFailed": "Kon deze aanvraag niet versturen. Probeer het opnieuw.",
+    "needsConnection": "Je hebt een internetverbinding nodig om een aanvraag in te dienen.",
+    "todayLabel": "Vandaag",
+    "tomorrowLabel": "Morgen",
+    "chooseDate": "JJJJ-MM-DD"
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "empty": "Nog geen meldingen.",
+    "loadFailed": "Kon meldingen niet laden."
+  }
+}

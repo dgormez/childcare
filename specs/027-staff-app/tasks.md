@@ -35,18 +35,18 @@ Web application + new mobile app, per plan.md's Project Structure: `backend/`, `
 `parent-mobile/`'s established conventions (research.md R7), before any story-specific screen
 work begins.
 
-- [ ] T001 Scaffold `staff-mobile/` Expo project (`package.json`, `app.config.js`,
+- [X] T001 Scaffold `staff-mobile/` Expo project (`package.json`, `app.config.js`,
       `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `tsconfig.json`,
       `expo-env.d.ts`, `nativewind-env.d.ts`, `global.css`) mirroring `parent-mobile/`'s file
       set and dependency versions
-- [ ] T002 [P] Copy the design-system.md token set into `staff-mobile/theme/colors.js`
+- [X] T002 [P] Copy the design-system.md token set into `staff-mobile/theme/colors.js`
       (matches `design-decisions.md`'s "one hand-maintained copy per platform" pattern)
-- [ ] T003 [P] Scaffold `staff-mobile/i18n/` (i18next + `expo-localization` config, empty
+- [X] T003 [P] Scaffold `staff-mobile/i18n/` (i18next + `expo-localization` config, empty
       `locales/{en,fr,nl}.json`) mirroring `parent-mobile/i18n/`
-- [ ] T004 [P] Configure `staff-mobile/jest.config.js` and
+- [X] T004 [P] Configure `staff-mobile/jest.config.js` and
       `staff-mobile/jest-mock-component-transform.js` mirroring `parent-mobile/`'s Jest +
       `@testing-library/react-native` setup
-- [ ] T005 [P] Scaffold a Zustand session/auth store skeleton in `staff-mobile/store/`
+- [X] T005 [P] Scaffold a Zustand session/auth store skeleton in `staff-mobile/store/`
       (token storage via `expo-secure-store`, mirroring `parent-mobile/store/`)
 
 ---
@@ -164,28 +164,28 @@ correctly, and confirm the API never returns another staff member's rows.
       `ReportSickCommand`/`CreateLeaveRequestCommand` always act on the JWT-resolved staff
       profile even if a client-supplied identifier is present in the request (FR-015a), in
       `backend/ChildCare.Api.Tests/StaffScheduling/CrossStaffIsolationTests.cs`
-- [ ] T030 [P] [US2] Component test: the schedule screen renders week/day toggle views, a
+- [X] T030 [P] [US2] Component test: the schedule screen renders week/day toggle views, a
       split-day (two locations, one date), a closure day as "KDV gesloten," and the no-shifts
       empty state, in `staff-mobile/__tests__/screens/schedule.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Build the `staff-mobile` login screen wired to the existing
+- [X] T031 [US2] Build the `staff-mobile` login screen wired to the existing
       `POST /api/auth/login` (`role=staff`) in `staff-mobile/app/(auth)/login.tsx` (uses T005's
       store skeleton)
-- [ ] T032 [US2] Generate the `staff-mobile` openapi-fetch client in
+- [X] T032 [US2] Generate the `staff-mobile` openapi-fetch client in
       `staff-mobile/services/generated/` (depends on T024's contract types)
-- [ ] T033 [US2] [P] Build `ScheduleDayCard.tsx` and `ScheduleWeekList.tsx` in
+- [X] T033 [US2] [P] Build `ScheduleDayCard.tsx` and `ScheduleWeekList.tsx` in
       `staff-mobile/components/`
-- [ ] T034 [US2] Build the schedule home screen (day/week toggle, "KDV gesloten", contracted-day
+- [X] T034 [US2] Build the schedule home screen (day/week toggle, "KDV gesloten", contracted-day
       de-emphasis, loading/empty/error states per spec.md's UX Requirements) in
       `staff-mobile/app/(app)/schedule/index.tsx` (depends on T032, T033)
-- [ ] T035 [US2] Add a cache-fallback read for the schedule query, mirroring
+- [X] T035 [US2] Add a cache-fallback read for the schedule query, mirroring
       `parent-mobile`'s existing offline pattern (feature 013c), in
       `staff-mobile/hooks/useIsOffline.ts`
-- [ ] T036 [US2] Add NL/FR/EN i18n keys for the schedule screen in
+- [X] T036 [US2] Add NL/FR/EN i18n keys for the schedule screen in
       `staff-mobile/i18n/locales/{en,fr,nl}.json`
-- [ ] T037 [US2] Wire the `staff-mobile` Expo Router root layout and `(app)` group navigation
+- [X] T037 [US2] Wire the `staff-mobile` Expo Router root layout and `(app)` group navigation
       in `staff-mobile/app/(app)/_layout.tsx`
 
 **Checkpoint**: User Stories 1 and 2 both work independently.
@@ -239,7 +239,7 @@ is unaffected throughout.
       `backend/ChildCare.Api/Endpoints/StaffScheduleEndpoints.cs`
 - [X] T047 [US3] Build `SickCoverDialog.tsx` and the urgent cover-needed banner in
       `web/components/SickCoverDialog.tsx` and `web/app/(app)/scheduling/page.tsx`
-- [ ] T048 [US3] Build the `staff-mobile` "Ik ben ziek" screen with an explicit confirmation
+- [X] T048 [US3] Build the `staff-mobile` "Ik ben ziek" screen with an explicit confirmation
       step in `staff-mobile/app/(app)/report-sick.tsx`, plus NL/FR/EN i18n keys for both the web
       and `staff-mobile` sick-report/cover UI
 
@@ -290,10 +290,10 @@ then repeat with a rejection and confirm no rota change.
 - [X] T058 [US4] Build `LeaveRequestTable.tsx`, the `/leave-requests` director queue page, and
       a Sidebar nav entry in `web/app/(app)/leave-requests/page.tsx`,
       `web/components/LeaveRequestTable.tsx`, and `web/components/Sidebar.tsx`
-- [ ] T059 [US4] Build the `staff-mobile` leave-request list and new-request form in
+- [X] T059 [US4] Build the `staff-mobile` leave-request list and new-request form in
       `staff-mobile/app/(app)/leave-requests/index.tsx` and
       `staff-mobile/app/(app)/leave-requests/new.tsx`
-- [ ] T060 [US4] Add NL/FR/EN i18n keys for the leave-request UI in the web and `staff-mobile`
+- [X] T060 [US4] Add NL/FR/EN i18n keys for the leave-request UI in the web and `staff-mobile`
       locale files
 
 **Checkpoint**: All four user stories are independently functional.
@@ -302,17 +302,17 @@ then repeat with a rejection and confirm no rota change.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T061 [P] Build the `staff-mobile` notifications screen (`ICON_BY_TYPE` map,
+- [X] T061 [P] Build the `staff-mobile` notifications screen (`ICON_BY_TYPE` map,
       tap-to-navigate) covering `SchedulePublished`/`AssignmentChanged`/`LeaveRequestDecided`
       in `staff-mobile/app/(app)/notifications.tsx`
-- [ ] T062 [P] Regenerate the web and `staff-mobile` openapi-fetch client types from the final
+- [X] T062 [P] Regenerate the web and `staff-mobile` openapi-fetch client types from the final
       backend OpenAPI spec in `web/lib/generated/api-types.ts` and
       `staff-mobile/services/generated/`
 - [ ] T063 Design-compliance static review of every new/changed web and `staff-mobile` screen
       against `design-system.md`/`platform-rules.md` (4/8/12/16/24/32 spacing, no nested cards,
       48pt mobile touch targets, motion under 250ms) — fix findings in place
 - [ ] T064 Run `quickstart.md`'s full validation scenario set end-to-end and fix any gaps found
-- [ ] T065 [P] Regenerate `web/package-lock.json` and `staff-mobile/package-lock.json` via a
+- [X] T065 [P] Regenerate `web/package-lock.json` and `staff-mobile/package-lock.json` via a
       clean install to catch lockfile drift before CI (recurring `npm ci` issue per 007a/010/
       013b/006a/023's shipped-notes)
 
