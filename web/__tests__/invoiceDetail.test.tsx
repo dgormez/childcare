@@ -40,6 +40,8 @@ function makeInvoice(overrides: Partial<InvoiceResponse> = {}): InvoiceResponse 
     paidAt: null,
     createdAt: "2026-07-01T00:00:00Z",
     updatedAt: "2026-07-01T00:00:00Z",
+    sepaBatchId: null,
+    sepaReturnReason: null,
     ...overrides,
   };
 }
@@ -150,5 +152,29 @@ describe("InvoiceDetail", () => {
       "/api/invoices/{id}/regenerate",
       expect.objectContaining({ params: { path: { id: "inv-1" } } }),
     );
+  });
+
+  // Feature 026 — FR-010.
+  it("marks a pending-debit invoice as returned with a reason, and updates the status via onUpdated", async () => {
+    const invoice = makeInvoice({ status: "pendingdebit", dueDate: "2026-07-29", ogmReference: "+++097/0000/00017+++", sepaBatchId: "batch-1" });
+    const returned = makeInvoice({ status: "sent", dueDate: "2026-07-29", ogmReference: "+++097/0000/00017+++", sepaReturnReason: "Insufficient funds" });
+    vi.mocked(apiClient.POST).mockResolvedValue(okResponse(returned) as never);
+    const onUpdated = renderDetail(invoice);
+
+    await userEvent.type(screen.getByLabelText("Reason (e.g. insufficient funds)"), "Insufficient funds");
+    await userEvent.click(screen.getByRole("button", { name: "Mark as returned" }));
+
+    await waitFor(() => expect(onUpdated).toHaveBeenCalledWith(returned));
+    expect(apiClient.POST).toHaveBeenCalledWith(
+      "/api/invoices/{id}/mark-sepa-returned",
+      expect.objectContaining({ params: { path: { id: "inv-1" } }, body: { reason: "Insufficient funds" } }),
+    );
+  });
+
+  it("disables the mark-as-returned action until a reason is entered", () => {
+    const invoice = makeInvoice({ status: "pendingdebit", dueDate: "2026-07-29", ogmReference: "+++097/0000/00017+++" });
+    renderDetail(invoice);
+
+    expect(screen.getByRole("button", { name: "Mark as returned" })).toBeDisabled();
   });
 });

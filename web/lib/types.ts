@@ -109,7 +109,7 @@ export interface InvoiceLineItemsResponse {
   extraCharges: InvoiceExtraChargeResponse[];
 }
 
-export type InvoiceStatus = "draft" | "sent" | "paid";
+export type InvoiceStatus = "draft" | "sent" | "pendingdebit" | "paid";
 
 export interface InvoiceResponse {
   id: string;
@@ -130,6 +130,9 @@ export interface InvoiceResponse {
   paidAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Feature 026 — set while status is "pendingdebit"; reason populated once returned (FR-010).
+  sepaBatchId: string | null;
+  sepaReturnReason: string | null;
 }
 
 export interface DeviceSummaryResponse {
@@ -911,6 +914,9 @@ export interface ContractResponse {
   signedAt:           string | null;
   sepaIbanMasked:      string | null;
   sepaMandateReference: string | null;
+  // Feature 026 — derived (mirrors signingStatus's own precedent).
+  mandateStatus: "none" | "signed" | "revoked";
+  sepaRevokedAt: string | null;
 }
 
 // Feature 024-esignature — the public signing page's read model (GET /api/public/contracts/sign).
@@ -940,6 +946,8 @@ export interface ContractSummaryResponse {
   status:         "draft" | "active" | "ended";
   signingStatus:  ContractSigningStatus;
   signedAt:       string | null;
+  // Feature 026 — none/signed/revoked.
+  mandateStatus:  "none" | "signed" | "revoked";
 }
 
 // Feature 025-coda-payment-matching — contracts/coda-payment-matching-api.md.
@@ -980,4 +988,35 @@ export interface CodaTransactionResponse {
   applied:        boolean;
   matchedInvoice: CodaMatchedInvoiceResponse | null;
   reviewedAt:     string | null;
+}
+
+// Feature 026 — contracts/sepa-direct-debit-api.md.
+export type SepaExclusionReason = "NoMandate" | "MandateRevoked" | "NonPositiveAmount";
+
+export interface SepaBatchEligibleInvoiceResponse {
+  invoiceId:  string;
+  childName:  string;
+  totalCents: number;
+  debtorName: string;
+}
+
+export interface SepaBatchExcludedInvoiceResponse {
+  invoiceId:  string;
+  childName:  string;
+  totalCents: number;
+  reason:     SepaExclusionReason;
+}
+
+export interface SepaBatchEligibilityResponse {
+  creditorConfigured: boolean;
+  eligible:           SepaBatchEligibleInvoiceResponse[];
+  excluded:           SepaBatchExcludedInvoiceResponse[];
+}
+
+export interface SepaBatchResponse {
+  id:            string;
+  executionDate: string;
+  generatedAt:   string;
+  invoiceCount:  number;
+  totalCents:    number;
 }

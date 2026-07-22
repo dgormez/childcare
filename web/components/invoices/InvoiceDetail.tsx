@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Send, CheckCircle2, RefreshCw, Download, Plus, X } from "lucide-react";
+import { Send, CheckCircle2, RefreshCw, Download, Plus, X, Undo2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { apiClient, getAccessToken } from "../../lib/apiClient";
@@ -24,6 +24,7 @@ export function InvoiceDetail({ invoice, onUpdated }: InvoiceDetailProps) {
   const [newLabel, setNewLabel] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
+  const [returnReason, setReturnReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [notice, setNotice] = useState("");
@@ -82,6 +83,24 @@ export function InvoiceDetail({ invoice, onUpdated }: InvoiceDetailProps) {
       return;
     }
     setNotice(t("markPaidSuccess"));
+    onUpdated(result.data as unknown as InvoiceResponse);
+  }
+
+  async function markSepaReturned() {
+    if (!returnReason.trim()) return;
+    setBusy(true);
+    setNotice("");
+    const result = await apiClient.POST("/api/invoices/{id}/mark-sepa-returned", {
+      params: { path: { id: invoice.id } },
+      body: { reason: returnReason },
+    });
+    setBusy(false);
+    if (!result.response.ok) {
+      setNotice(t("markSepaReturnedError"));
+      return;
+    }
+    setNotice(t("markSepaReturnedSuccess"));
+    setReturnReason("");
     onUpdated(result.data as unknown as InvoiceResponse);
   }
 
@@ -200,6 +219,12 @@ export function InvoiceDetail({ invoice, onUpdated }: InvoiceDetailProps) {
             <span className="text-text-soft dark:text-text-soft-dark">{t("ogmReference")}</span>
             <span className="font-mono text-text dark:text-text-dark">{invoice.ogmReference}</span>
           </div>
+          {invoice.sepaReturnReason && (
+            <div className="flex justify-between">
+              <span className="text-text-soft dark:text-text-soft-dark">{t("sepaReturnReason")}</span>
+              <span className="text-text dark:text-text-dark">{invoice.sepaReturnReason}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -224,6 +249,21 @@ export function InvoiceDetail({ invoice, onUpdated }: InvoiceDetailProps) {
             <Button variant="secondary" onClick={markPaid} disabled={busy}>
               <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
               {t("markPaidButton")}
+            </Button>
+          </div>
+        )}
+        {invoice.status === "pendingdebit" && (
+          <div className="flex items-center gap-2">
+            <Input
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              placeholder={t("markSepaReturnedReasonPlaceholder")}
+              aria-label={t("markSepaReturnedReasonPlaceholder")}
+              className="h-10 w-56"
+            />
+            <Button variant="secondary" onClick={markSepaReturned} disabled={busy || !returnReason.trim()}>
+              <Undo2 className="h-4 w-4" strokeWidth={2} />
+              {t("markSepaReturnedButton")}
             </Button>
           </div>
         )}

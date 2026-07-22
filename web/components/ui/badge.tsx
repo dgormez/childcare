@@ -15,6 +15,10 @@ const badgeVariants = cva("inline-flex items-center rounded-full px-2 py-1 text-
       // BkrIndicator/EventTimeline) works equally well at pill size. text-warning-fg has no
       // dark-mode override — it's the same fixed dark text on the amber fill in both themes.
       warning: "bg-warning text-warning-fg dark:bg-warning-dark",
+      // Same reasoning as warning above — no soft tint token for info either
+      // (design-system.md: "solid banner, white text"); reused at pill size for a
+      // PendingDebit invoice (feature 026), matching info's fixed sync/in-progress meaning.
+      info: "bg-info text-white dark:bg-info-dark",
     },
   },
   defaultVariants: { variant: "neutral" },

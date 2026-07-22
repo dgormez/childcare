@@ -48,4 +48,7 @@ public record ContractSummaryResponse(
     int DailyRateCents,
     string Status,
     string SigningStatus,
-    DateTime? SignedAt);
+    DateTime? SignedAt,
+    // Feature 026 — none/signed/revoked, lets director-web offer the revoke action (FR-011)
+    // from the same org-wide list this feature's send/resend action already lives on.
+    string MandateStatus);

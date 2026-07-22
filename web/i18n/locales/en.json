@@ -688,6 +688,44 @@
       "reviewedLabel": "Handled",
       "partialPaymentLabel": "Partial: {received} of {total} received",
       "remainingBalance": "{amount} remaining"
+    },
+    "statusPendingDebit": "Pending debit",
+    "sepaReturnReason": "Return reason",
+    "markSepaReturnedButton": "Mark as returned",
+    "markSepaReturnedReasonPlaceholder": "Reason (e.g. insufficient funds)",
+    "markSepaReturnedSuccess": "Invoice reverted to sent.",
+    "markSepaReturnedError": "Could not revert the invoice.",
+    "sepaBatches": {
+      "title": "SEPA Direct Debit",
+      "backToInvoices": "Back to invoices",
+      "locationLabel": "Location",
+      "monthLabel": "Month",
+      "loadError": "Could not load the data.",
+      "retry": "Retry",
+      "creditorNotConfiguredMessage": "Configure the creditor identifier (organisation settings) and the bank account number (location settings) before generating a SEPA batch.",
+      "emptyState": "No sent invoices for this location and month.",
+      "eligibleSectionTitle": "Eligible invoices",
+      "excludedSectionTitle": "Excluded invoices",
+      "historySectionTitle": "Previously generated batches",
+      "columnChild": "Child",
+      "columnAmount": "Amount",
+      "columnReason": "Reason",
+      "columnExecutionDate": "Execution date",
+      "columnGeneratedAt": "Generated at",
+      "columnInvoiceCount": "Invoice count",
+      "reasonNoMandate": "No mandate",
+      "reasonMandateRevoked": "Mandate revoked",
+      "reasonNonPositiveAmount": "Non-positive amount",
+      "executionDateLabel": "Execution date",
+      "generateButton": "Generate SEPA batch",
+      "generating": "Generating…",
+      "generateSuccess": "SEPA batch generated for {count} invoice(s).",
+      "generateError": "Could not generate the SEPA batch.",
+      "creditorNotConfiguredError": "Creditor identifier or bank account number is missing.",
+      "executionDateTooSoonError": "Choose an execution date at least one business day in the future.",
+      "invoiceNotEligibleError": "One or more invoices are no longer eligible — refresh the list.",
+      "noInvoicesSelectedError": "Select at least one invoice.",
+      "noBatchesYet": "No batches generated yet for this location."
     }
   },
   "fiscalAttestations": {
@@ -1366,7 +1404,11 @@
       "notDraft": "Only draft contracts can be sent for signature.",
       "alreadySigned": "This contract has already been signed.",
       "generic": "Couldn't send the signing invitation. Please try again."
-    }
+    },
+    "revokeMandateAction": "Revoke mandate",
+    "revokingMandate": "Revoking…",
+    "revokeMandateSuccess": "SEPA mandate revoked.",
+    "revokeMandateError": "Could not revoke the mandate."
   },
   "contractSigning": {
     "title": "Sign your enrolment contract",

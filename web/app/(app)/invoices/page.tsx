@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Receipt, Landmark } from "lucide-react";
+import { Receipt, Landmark, CreditCard } from "lucide-react";
 import { apiClient } from "../../../lib/apiClient";
 import { Button } from "../../../components/ui/button";
 import { InvoiceTable } from "../../../components/invoices/InvoiceTable";
@@ -81,6 +81,12 @@ export default function InvoicesPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-text dark:text-text-dark">{t("title")}</h1>
         <div className="flex items-center gap-3">
+          <Link href="/invoices/sepa-batches">
+            <Button variant="secondary" size="sm">
+              <CreditCard className="h-4 w-4" strokeWidth={2} />
+              {t("sepaBatches.title")}
+            </Button>
+          </Link>
           <Link href="/invoices/reconciliation">
             <Button variant="secondary" size="sm">
               <Landmark className="h-4 w-4" strokeWidth={2} />

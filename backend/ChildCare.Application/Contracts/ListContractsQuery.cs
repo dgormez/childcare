@@ -38,6 +38,7 @@ public class ListContractsQueryHandler(ITenantDbContext db) : IRequestHandler<Li
             r.Contract.DailyRateCents,
             r.Contract.Status.ToString().ToLowerInvariant(),
             ContractSigningStatusResolver.Resolve(r.Contract, utcNow).ToString().ToLowerInvariant(),
-            r.Contract.SignedAt)).ToList();
+            r.Contract.SignedAt,
+            ContractMapper.ResolveMandateStatus(r.Contract))).ToList();
     }
 }

@@ -180,9 +180,9 @@ one instruction per eligible invoice, and those invoices become `PendingDebit`.
       .../sepa-batches` (depends on T020-T022).
 - [X] T024 [US1] Register `MapSepaBatchEndpoints` and `ISepaBatchXmlGenerator →
       SepaBatchXmlGenerator` DI registration in `backend/ChildCare.Api/Program.cs`.
-- [ ] T025 [P] [US1] i18n keys (NL/FR/EN) for the eligibility/exclusion-reason labels, batch
+- [X] T025 [P] [US1] i18n keys (NL/FR/EN) for the eligibility/exclusion-reason labels, batch
       screen copy, and `errors.sepa_batch.*` messages in `web/messages/{nl,fr,en}.json` (FR-015).
-- [ ] T026 [US1] SEPA Batches screen in `web/app/(app)/invoices/sepa-batches/page.tsx`: location +
+- [X] T026 [US1] SEPA Batches screen in `web/app/(app)/invoices/sepa-batches/page.tsx`: location +
       month picker, eligible/excluded invoice list with per-row exclusion reason, execution-date
       picker (client-side minimum-date validation per spec.md UX Requirements), Generate action
       triggering the file download, loading/empty/error states (no eligible invoices; creditor
@@ -265,10 +265,10 @@ reason — it reverts to `Sent`, visible for normal follow-up (quickstart.md Sce
       `SepaBatchId`, per data-model.md).
 - [X] T037 [US3] `POST /api/invoices/{id}/mark-sepa-returned` endpoint in
       `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T036).
-- [ ] T038 [P] [US3] i18n keys (NL/FR/EN) for the "mark returned" action, reason prompt, and
+- [X] T038 [P] [US3] i18n keys (NL/FR/EN) for the "mark returned" action, reason prompt, and
       `errors.invoice.not_pending_debit`/`errors.sepa_batch.reason_required` in
       `web/messages/{nl,fr,en}.json`.
-- [ ] T039 [US3] "Mark returned" action + reason display on `PendingDebit` invoices in the
+- [X] T039 [US3] "Mark returned" action + reason display on `PendingDebit` invoices in the
       existing director-web invoice list/detail (`web/app/(app)/invoices/`), following the same
       row-action convention as the existing send/regenerate/mark-paid actions (depends on T037).
 
@@ -315,9 +315,9 @@ future batch, and re-invite signing through the existing 024 flow.
       `backend/ChildCare.Application/Contracts/ContractMapper.cs` with a derived `MandateStatus`
       (`none`/`signed`/`revoked`, mirrors the existing `SigningStatus` derivation) plus
       `SepaRevokedAt`.
-- [ ] T047 [P] [US4] i18n keys (NL/FR/EN) for the revoke action/confirmation and
+- [X] T047 [P] [US4] i18n keys (NL/FR/EN) for the revoke action/confirmation and
       `errors.contract.mandate_not_revocable` in `web/messages/{nl,fr,en}.json`.
-- [ ] T048 [US4] "Revoke SEPA mandate" action on the contract's existing signing-status UI
+- [X] T048 [US4] "Revoke SEPA mandate" action on the contract's existing signing-status UI
       (wherever feature 024 surfaces `SigningStatus`/`SepaMandateReference` in director-web),
       gated on `mandateStatus == "signed"` (depends on T045, T046).
 

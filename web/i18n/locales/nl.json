@@ -688,6 +688,44 @@
       "reviewedLabel": "Afgehandeld",
       "partialPaymentLabel": "Gedeeltelijk: {received} van {total} ontvangen",
       "remainingBalance": "{amount} resterend"
+    },
+    "statusPendingDebit": "In verwerking (domiciliëring)",
+    "sepaReturnReason": "Reden van terugboeking",
+    "markSepaReturnedButton": "Markeer als terugbetaald",
+    "markSepaReturnedReasonPlaceholder": "Reden (bv. onvoldoende saldo)",
+    "markSepaReturnedSuccess": "Factuur teruggezet naar verzonden.",
+    "markSepaReturnedError": "Kon de factuur niet terugzetten.",
+    "sepaBatches": {
+      "title": "SEPA-domiciliëring",
+      "backToInvoices": "Terug naar facturen",
+      "locationLabel": "Locatie",
+      "monthLabel": "Maand",
+      "loadError": "Kon de gegevens niet laden.",
+      "retry": "Opnieuw proberen",
+      "creditorNotConfiguredMessage": "Configureer eerst de crediteuridentificatie (organisatie-instellingen) en het bankrekeningnummer (locatie-instellingen) voor u een SEPA-bestand kunt genereren.",
+      "emptyState": "Geen verzonden facturen voor deze locatie en maand.",
+      "eligibleSectionTitle": "In aanmerking komende facturen",
+      "excludedSectionTitle": "Uitgesloten facturen",
+      "historySectionTitle": "Eerder gegenereerde bestanden",
+      "columnChild": "Kind",
+      "columnAmount": "Bedrag",
+      "columnReason": "Reden",
+      "columnExecutionDate": "Uitvoeringsdatum",
+      "columnGeneratedAt": "Gegenereerd op",
+      "columnInvoiceCount": "Aantal facturen",
+      "reasonNoMandate": "Geen mandaat",
+      "reasonMandateRevoked": "Mandaat ingetrokken",
+      "reasonNonPositiveAmount": "Bedrag niet positief",
+      "executionDateLabel": "Uitvoeringsdatum",
+      "generateButton": "Genereer SEPA-bestand",
+      "generating": "Bezig met genereren…",
+      "generateSuccess": "SEPA-bestand gegenereerd voor {count} factu(u)r(en).",
+      "generateError": "Kon het SEPA-bestand niet genereren.",
+      "creditorNotConfiguredError": "Crediteuridentificatie of bankrekeningnummer ontbreekt.",
+      "executionDateTooSoonError": "Kies een uitvoeringsdatum die minstens één werkdag in de toekomst ligt.",
+      "invoiceNotEligibleError": "Een of meer facturen zijn niet meer geschikt — vernieuw de lijst.",
+      "noInvoicesSelectedError": "Selecteer minstens één factuur.",
+      "noBatchesYet": "Nog geen bestanden gegenereerd voor deze locatie."
     }
   },
   "fiscalAttestations": {
@@ -1366,7 +1404,11 @@
       "notDraft": "Enkel conceptcontracten kunnen ter ondertekening worden verstuurd.",
       "alreadySigned": "Dit contract is al ondertekend.",
       "generic": "Versturen van de uitnodiging is mislukt. Probeer opnieuw."
-    }
+    },
+    "revokeMandateAction": "Mandaat intrekken",
+    "revokingMandate": "Bezig met intrekken…",
+    "revokeMandateSuccess": "SEPA-mandaat ingetrokken.",
+    "revokeMandateError": "Kon het mandaat niet intrekken."
   },
   "contractSigning": {
     "title": "Onderteken uw opvangovereenkomst",
