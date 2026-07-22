@@ -786,3 +786,46 @@ use the static code review instead.
   fresh blocking call (which completed once CI actually finished) while a parallel Monitor polled
   the same PR as a second signal, and confirmed completion via `gh pr view --json state,mergedAt`
   before proceeding — never assumed success from the auto-backgrounded notification alone.
+- 025 (`025-coda-payment-matching`): ✅ Done, merged 2026-07-22 (PR #45, squash-merged after green
+  CI — 1020/1020 backend + 245/245 web tests). Full pipeline run from a clean `master` in a single
+  session. CODA bank-statement import with automatic OGM-reference matching, director-confirmable
+  amount+IBAN suggestions (only possible for families with a SEPA mandate on file, feature 024 —
+  there is no other IBAN-capture point anywhere in this codebase, confirmed during research rather
+  than assumed), and a manual-review queue for unmatched/duplicate/closed-invoice/reversal
+  transactions. During `/speckit-plan` research, discovered a real licensing problem the BACKLOG
+  prompt's "use an existing .NET CODA parser" instruction didn't anticipate: the only two real
+  Belgian-CODA .NET libraries on NuGet are GPL-2.0/GPL-3.0, no MIT/Apache option exists anywhere —
+  paused and asked the product owner per the standing rule (this codebase's own constitution
+  already shows license-consciousness: QuestPDF was picked specifically for being MIT). Resolved
+  after clarifying the actual GPL mechanics (the "distribution" copyleft trigger doesn't apply to
+  running a library server-side in a pure SaaS product with no on-prem distribution — that's what
+  AGPL exists to close, and neither library is AGPL): use the GPL-2.0 `CodaParser` package,
+  revisit only if this product's distribution model ever changes. Reused `MarkInvoicePaidCommand`
+  (014/014a/030's paid-transition, sibling-cascade, receipt-notification) rather than
+  reimplementing it a third time, the same lesson 030's own shipped-note already drew from
+  `ProcessPaymentWebhookCommand` duplicating that logic instead of reusing it. Gave sender IBAN
+  its own Data Protection purpose string (`ICodaSenderIbanProtector`) distinct from `Contract`'s
+  existing `IIbanProtector` (024) — a bank-statement counterparty account and a signed SEPA
+  mandate's account are different data even though both happen to be IBANs; mixing them under one
+  purpose string would have been a real, easy-to-miss bug (Data Protection ciphertext only
+  decrypts under the exact purpose it was encrypted with). `/speckit-checklist`'s safety-focused
+  pass (15 items, all fixed) caught that the spec's first draft treated partial-payment
+  "outstanding total" as a single transaction's shortfall rather than cumulative across multiple
+  partials, and that FR-008's duplicate case and FR-009's closed-invoice case read as the same
+  thing without explicit disambiguating language — both corrected in spec.md before planning
+  continued, not deferred. `/speckit-analyze` then caught that the checklist's own fixes (the
+  cumulative-partial-payment math, IBAN access-logging) had outpaced tasks.md — added T015a/T018a
+  and extended T009/T010/T018 rather than letting the plan drift from the just-updated spec.
+  Running the full test suite before merging surfaced the exact recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper pattern yet again
+  (012a onward) — but this time it also broke two OTHER independent schema-reverting tests
+  (`PaymentReminderTests`' broken-tenant simulation, `PublicEnrollmentSlugBackfillMigrationTests`'
+  own revert helper) that don't live in the two "usual" files, confirming the pattern applies to
+  *any* test that drops/reverts tenant schema objects, not just the two canonically-named ones —
+  worth grepping broadly (`__EFMigrationsHistory`, `DROP TABLE.*invoices`) rather than trusting
+  memory of "the two files that always need this" on the next migration-adding feature. Also
+  self-caught a real i18n authoring bug via the web test suite before it ever reached review: a
+  Python script used to bulk-add the new `codaReconciliation` translation keys nested them at the
+  JSON root instead of under `invoices`, which `next-intl`'s dotted-namespace lookup surfaced
+  immediately as a hard `MISSING_MESSAGE` error rather than a silent fallback — fixed by
+  re-nesting in all three locale files before it became a shipped bug.

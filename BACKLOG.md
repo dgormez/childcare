@@ -66,7 +66,7 @@
 | 022 | `022-id-verified-registration` | Streamlined child/parent registration form with director "ID/birth certificate seen" verification checkbox — replaces eID card reader approach | 006 | ✅ Done |
 | 023 | `023-digital-enrollment` | Public online enrollment form + parent-initiated waiting list self-registration | 012a | ✅ Done |
 | 024 | `024-esignature` | Digital contract e-signature; SEPA direct debit mandate embedded in signing flow | 007 | ✅ Done |
-| 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | 🔲 Not started |
+| 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | ✅ Done |
 | 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | 🔲 Not started |
 | 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | 🔲 Not started |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
