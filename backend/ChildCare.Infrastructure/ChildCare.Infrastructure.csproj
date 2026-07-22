@@ -52,6 +52,9 @@
     <!-- Feature 020, research.md R1 — Scriban templates, embedded so publish/Cloud Run deploy
          never depends on a loose file existing alongside the assembly. -->
     <EmbeddedResource Include="Email\Templates\*.scriban" />
+    <!-- Feature 026, research.md R2 — the official EPC/ISO20022 pain.008.001.02 XSD, embedded so
+         schema validation never depends on a loose file existing alongside the assembly. -->
+    <EmbeddedResource Include="Sepa\Schemas\*.xsd" />
   </ItemGroup>
 
 </Project>

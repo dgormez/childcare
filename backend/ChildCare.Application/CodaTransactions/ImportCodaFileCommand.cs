@@ -148,7 +148,10 @@ public class ImportCodaFileCommandHandler(
         if (exactOgmInvoice is not null)
         {
             exactOgmCandidate = new CodaInvoiceCandidate(exactOgmInvoice.Id, exactOgmInvoice.TotalCents, exactOgmInvoice.Status);
-            if (exactOgmInvoice.Status == InvoiceStatus.Sent)
+            // Feature 026 FR-009 — a PendingDebit invoice (from a generated SEPA batch) is just
+            // as "open" to CODA reconciliation as a Sent one; both need their already-received
+            // total computed the same way.
+            if (exactOgmInvoice.Status is InvoiceStatus.Sent or InvoiceStatus.PendingDebit)
             {
                 alreadyReceivedCents = await db.CodaTransactions
                     .Where(t => t.MatchedInvoiceId == exactOgmInvoice.Id && t.MatchType == CodaMatchType.Ogm)
@@ -166,7 +169,8 @@ public class ImportCodaFileCommandHandler(
             var ibanNormalized = transaction.SenderIban.Replace(" ", string.Empty).ToUpperInvariant();
             var last4 = ibanNormalized.Length >= 4 ? ibanNormalized[^4..] : ibanNormalized;
 
-            var openCandidates = await FindAmountIbanCandidatesAsync(transaction.AmountCents, last4, InvoiceStatus.Sent, null, cancellationToken);
+            // Feature 026 FR-009 — PendingDebit invoices are open/matchable exactly like Sent ones.
+            var openCandidates = await FindAmountIbanCandidatesAsync(transaction.AmountCents, last4, [InvoiceStatus.Sent, InvoiceStatus.PendingDebit], null, cancellationToken);
             var confirmedOpen = new List<CodaInvoiceCandidate>();
             if (openCandidates.Count > 0)
             {
@@ -183,7 +187,7 @@ public class ImportCodaFileCommandHandler(
             // that lines up with NO open invoice, only an already-closed one).
             if (confirmedOpen.Count == 0)
             {
-                var closedCandidates = await FindAmountIbanCandidatesAsync(transaction.AmountCents, last4, InvoiceStatus.Paid, transaction.ValueDate, cancellationToken);
+                var closedCandidates = await FindAmountIbanCandidatesAsync(transaction.AmountCents, last4, [InvoiceStatus.Paid], transaction.ValueDate, cancellationToken);
                 if (closedCandidates.Count > 0)
                 {
                     LogIbanAccess(closedCandidates.Count, "closed-invoice-check");
@@ -221,10 +225,10 @@ public class ImportCodaFileCommandHandler(
             : null;
 
     private async Task<List<(Guid InvoiceId, int TotalCents, InvoiceStatus Status, string EncryptedIban)>> FindAmountIbanCandidatesAsync(
-        int amountCents, string senderIbanLast4, InvoiceStatus status, DateOnly? beforePeriodOf, CancellationToken cancellationToken)
+        int amountCents, string senderIbanLast4, IReadOnlyList<InvoiceStatus> statuses, DateOnly? beforePeriodOf, CancellationToken cancellationToken)
     {
         var query = db.Invoices
-            .Where(i => i.TotalCents == amountCents && i.Status == status)
+            .Where(i => i.TotalCents == amountCents && statuses.Contains(i.Status))
             .Join(db.Contracts, i => i.ContractId, c => c.Id, (i, c) => new { Invoice = i, Contract = c })
             .Where(x => x.Contract.SepaIbanLast4 == senderIbanLast4 && x.Contract.SepaIbanEncrypted != null);
 

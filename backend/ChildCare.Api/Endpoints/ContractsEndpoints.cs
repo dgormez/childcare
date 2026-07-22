@@ -98,6 +98,14 @@ public static class ContractsEndpoints
                 ? Results.Ok(new { downloadUrl = result.Url, expiresAt = result.ExpiresAt })
                 : Results.Json(new { errorKey = "errors.contract_signing.not_signed" }, statusCode: StatusCodes.Status404NotFound);
         });
+
+        // Feature 026 — spec.md FR-011. Re-signing after revocation reuses the existing
+        // /signing-invitation route above unchanged (FR-012) — no new endpoint needed for that.
+        contracts.MapPost("/{id:guid}/revoke-sepa-mandate", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new RevokeSepaMandateCommand(id));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
     }
 
     private static IResult MapResult(ContractResult result, Func<ContractResponse, IResult> onSuccess) =>
@@ -154,6 +162,11 @@ public static class ContractsEndpoints
 
         ContractFailure.CreditorIdNotConfigured => Results.Json(
             new { errorKey = "errors.contract_signing.creditor_id_not_configured" },
+            statusCode: StatusCodes.Status422UnprocessableEntity),
+
+        // Feature 026.
+        ContractFailure.MandateNotRevocable => Results.Json(
+            new { errorKey = "errors.contract.mandate_not_revocable" },
             statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(ContractFailure)}: {failure}"),

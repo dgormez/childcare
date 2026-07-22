@@ -18,7 +18,11 @@ public record ContractResponse(
     // Masked (e.g. last 4 digits only) — the decrypted IBAN is never returned in full after
     // capture (FR-020).
     string? SepaIbanMasked,
-    string? SepaMandateReference);
+    string? SepaMandateReference,
+    // Feature 026 — derived (none/signed/revoked), mirrors SigningStatus's own derived-field
+    // precedent above rather than exposing a raw timestamp read.
+    string MandateStatus,
+    DateTime? SepaRevokedAt);
 
 public record ContractedDayResponse(
     DayOfWeek Weekday,

@@ -378,6 +378,11 @@ builder.Services.AddScoped<ISignedContractStorage, GcsSignedContractStorage>();
 builder.Services.AddScoped<ICodaParser, ChildCare.Infrastructure.Coda.CodaParserAdapter>();
 builder.Services.AddScoped<ICodaSenderIbanProtector, ChildCare.Infrastructure.Coda.CodaSenderIbanProtector>();
 
+// ── SEPA Direct Debit Batch Collection (feature 026) ─────────────────────────
+// Reuses the IIbanProtector registration above unchanged (research.md R4) — same purpose string,
+// same physical IBAN data, not a distinct class like the CODA sender IBAN above.
+builder.Services.AddScoped<ISepaBatchXmlGenerator, ChildCare.Infrastructure.Sepa.SepaBatchXmlGenerator>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -867,6 +872,7 @@ app.MapMonthlyMenuEndpoints();
 app.MapMealPreferenceRequestEndpoints();
 app.MapInvoiceEndpoints();
 app.MapCodaTransactionEndpoints();
+app.MapSepaBatchEndpoints();
 app.MapPaymentEndpoints();
 app.MapFiscalAttestationEndpoints();
 app.MapDevelopmentalMilestoneEndpoints();

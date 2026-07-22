@@ -20,7 +20,11 @@ public record InvoiceResponse(
     DateTime? PaidAt,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    Guid? FamilyGroupId);
+    Guid? FamilyGroupId,
+    // Feature 026 — set while Status is "pendingdebit" (from a generated SEPA batch); reason is
+    // populated once the debit is marked returned (FR-010).
+    Guid? SepaBatchId,
+    string? SepaReturnReason);
 
 public record InvoiceLineItemsResponse(
     int PresentDays,

@@ -24,5 +24,12 @@ internal static class ContractMapper
         ContractSigningStatusResolver.Resolve(c, DateTime.UtcNow).ToString().ToLowerInvariant(),
         c.SignedAt,
         c.SepaIbanLast4 is null ? null : $"•••• {c.SepaIbanLast4}",
-        c.SepaMandateReference);
+        c.SepaMandateReference,
+        ResolveMandateStatus(c),
+        c.SepaRevokedAt);
+
+    // Feature 026 — none/signed/revoked, precedence order matches data-model.md's eligibility
+    // exclusion priority (never-signed vs. signed-then-revoked).
+    private static string ResolveMandateStatus(Contract c) =>
+        c.SepaAuthorisedAt is null ? "none" : c.SepaRevokedAt is null ? "signed" : "revoked";
 }

@@ -53,6 +53,24 @@ public class Invoice
     // ChildId/ContractId/reporting semantics (spec.md Clarifications).
     public Guid? FamilyGroupId { get; set; }
 
+    // Feature 026 — set when this invoice is included in a generated SEPA batch (026 spec.md
+    // FR-007); cleared when it returns to Sent via a returned-debit action (FR-010). Null for
+    // every invoice not currently PendingDebit.
+    public Guid? SepaBatchId { get; set; }
+
+    // Feature 026 — an immutable snapshot of Contract.SepaMandateReference taken at the moment
+    // this invoice was generated into a batch. Unlike SepaBatchId, this is NEVER cleared by a
+    // returned debit (026 spec.md FR-010) or anything else — it's a permanent audit fact ("this
+    // invoice was once debited under mandate reference X"), not a current-state pointer. Exists
+    // solely so SepaSequenceTypeResolver can correctly determine FRST vs RCUR across both a
+    // return and a revoke-and-resign (026 research.md R3) — a query against the live, clearable
+    // SepaBatchId alone cannot do this (026 data-model.md).
+    public string? SepaMandateReferenceUsed { get; set; }
+
+    // Feature 026 — set by the returned-debit action (FR-010) alongside the PendingDebit -> Sent
+    // transition.
+    public string? SepaReturnReason { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
