@@ -308,10 +308,10 @@ then repeat with a rejection and confirm no rota change.
 - [X] T062 [P] Regenerate the web and `staff-mobile` openapi-fetch client types from the final
       backend OpenAPI spec in `web/lib/generated/api-types.ts` and
       `staff-mobile/services/generated/`
-- [ ] T063 Design-compliance static review of every new/changed web and `staff-mobile` screen
+- [X] T063 Design-compliance static review of every new/changed web and `staff-mobile` screen
       against `design-system.md`/`platform-rules.md` (4/8/12/16/24/32 spacing, no nested cards,
       48pt mobile touch targets, motion under 250ms) — fix findings in place
-- [ ] T064 Run `quickstart.md`'s full validation scenario set end-to-end and fix any gaps found
+- [X] T064 Run `quickstart.md`'s full validation scenario set end-to-end and fix any gaps found
 - [X] T065 [P] Regenerate `web/package-lock.json` and `staff-mobile/package-lock.json` via a
       clean install to catch lockfile drift before CI (recurring `npm ci` issue per 007a/010/
       013b/006a/023's shipped-notes)

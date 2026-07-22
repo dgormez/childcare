@@ -186,14 +186,14 @@ export default function ScheduleScreen() {
           <TouchableOpacity
             onPress={() => setViewMode("week")}
             className={`flex-1 items-center py-2 rounded-lg ${viewMode === "week" ? "bg-surface dark:bg-surface-dark" : ""}`}
-            style={{ minHeight: 40 }}
+            style={{ minHeight: 48 }}
           >
             <Text className="text-text dark:text-text-dark text-sm font-medium">{t("schedule.weekView")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setViewMode("day")}
             className={`flex-1 items-center py-2 rounded-lg ${viewMode === "day" ? "bg-surface dark:bg-surface-dark" : ""}`}
-            style={{ minHeight: 40 }}
+            style={{ minHeight: 48 }}
           >
             <Text className="text-text dark:text-text-dark text-sm font-medium">{t("schedule.dayView")}</Text>
           </TouchableOpacity>
@@ -207,7 +207,7 @@ export default function ScheduleScreen() {
         )}
 
         {viewMode === "week" &&
-          weeks.map((weekDates, i) => (
+          weeks.map((weekDates) => (
             <View key={weekDates[0]}>
               <Text className="text-text-soft dark:text-text-soft-dark text-xs font-semibold uppercase mt-2 mb-2">
                 {t("schedule.weekOf", { date: dayjs(weekDates[0]).format("D MMM") })}
