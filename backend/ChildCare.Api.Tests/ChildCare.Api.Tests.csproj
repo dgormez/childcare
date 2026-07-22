@@ -24,4 +24,10 @@
     <ProjectReference Include="../ChildCare.Api/ChildCare.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Feature 025, tasks.md T008 — real Belgian CODA sample files (from CodaParser's own test
+         suite) used to exercise CodaParserAdapter against genuine fixed-width data. -->
+    <None Include="CodaTransactions\Fixtures\*.cod" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

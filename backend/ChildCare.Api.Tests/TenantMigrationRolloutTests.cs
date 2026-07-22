@@ -181,7 +181,11 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// (DefaultEnrollmentLocale, PublicEnrollmentEnabled, PublicEnrollmentSlug) and seven on the
     /// already-dropped waiting_list_entries table (ReferenceCode, Source, SubmittedLocale,
     /// TourInvitationSentAt, TourInvitationStatus, TourOutcome, TourProposedAt), no new table, so
-    /// it only needs its own history-removal entry.
+    /// it only needs its own history-removal entry. Feature 025's "AddCodaPaymentMatching"
+    /// migration adds two new tables — coda_transactions has FKs to both coda_imports and
+    /// invoices, so it must drop before either; coda_imports has no FK of its own, so it only
+    /// needs to precede nothing further — same recurring pattern every migration-adding feature
+    /// since 012a has needed.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -189,6 +193,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."coda_transactions";
+            DROP TABLE "{schemaName}"."coda_imports";
             DROP TABLE "{schemaName}"."day_reservations";
             DROP TABLE "{schemaName}"."waiting_list_entries";
             DROP TABLE "{schemaName}"."attendance_records";
@@ -243,7 +249,7 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
                 DROP COLUMN "PasswordResetToken",
                 DROP COLUMN "Role";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate';
+                WHERE "MigrationId" LIKE '%ExtendUsersAddRefreshTokens' OR "MigrationId" LIKE '%AddUserRole' OR "MigrationId" LIKE '%AddLocations' OR "MigrationId" LIKE '%AddStaff' OR "MigrationId" LIKE '%AddChildren' OR "MigrationId" LIKE '%AddContracts' OR "MigrationId" LIKE '%AddRoomShiftsAndDevicePairings' OR "MigrationId" LIKE '%AddChildEvents' OR "MigrationId" LIKE '%AddContactPushToken' OR "MigrationId" LIKE '%AddAttendanceRecords' OR "MigrationId" LIKE '%AddClosureCalendar' OR "MigrationId" LIKE '%AddStaffSchedules' OR "MigrationId" LIKE '%AddWaitingListEntries' OR "MigrationId" LIKE '%AddParentCommunication' OR "MigrationId" LIKE '%AddGroupActivities' OR "MigrationId" LIKE '%AddDayReservations' OR "MigrationId" LIKE '%AddLocationReservationSettings' OR "MigrationId" LIKE '%AddIncidentReports' OR "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching';
             """);
     }
 
@@ -272,6 +278,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             _ = await db.BulkEmailRecipients.CountAsync();
             _ = await db.Locations.Select(l => l.SiblingDiscountPct).FirstOrDefaultAsync();
             _ = await db.Invoices.Select(i => i.FamilyGroupId).FirstOrDefaultAsync();
+            _ = await db.CodaImports.CountAsync();
+            _ = await db.CodaTransactions.CountAsync();
             return true;
         }
         catch
