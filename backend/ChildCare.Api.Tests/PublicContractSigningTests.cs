@@ -108,6 +108,27 @@ public class PublicContractSigningTests(OrganisationOnboardingWebAppFactory fact
         Assert.Equal(HttpStatusCode.NotFound, reusePost.StatusCode);
     }
 
+    // ── FR-015: signing is not a precondition for Draft → Active — quickstart.md Scenario 1
+    // step 6, the other direction from the Status-stays-Draft assertion above ─────────────────
+
+    [Fact]
+    public async Task PostSigning_ThenActivate_SucceedsExactlyAsForAnUnsignedContract()
+    {
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        var client = factory.CreateClient();
+        var (_, org, _, contract) = await SetUpDraftContractWithContactAsync(client, contactEmail);
+        var token = await SendInvitationAndExtractTokenAsync(factory.Services, client, org.AccessToken, contract.Id, contactEmail);
+
+        var signResponse = await PostSigningAsync(client, org.Organisation.Slug, token, "Typed", "Parent Peeters", ValidTestIban);
+        Assert.Equal(HttpStatusCode.OK, signResponse.StatusCode);
+
+        var activateResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract.Id}/activate", org.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, activateResponse.StatusCode);
+        var activated = (await activateResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+        Assert.Equal("active", activated.Status);
+        Assert.Equal("signed", activated.SigningStatus);
+    }
+
     // ── T028: an invalid-checksum IBAN is rejected and does not consume the token ────────────
 
     [Fact]

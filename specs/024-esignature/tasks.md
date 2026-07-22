@@ -379,3 +379,42 @@ and verify the previously issued link 404s afterward.
 1. Foundation + US4 + US2 + US1 → MVP, validated via quickstart.md Scenario 1.
 2. Add US3 → validated via quickstart.md Scenarios 2–3.
 3. Polish phase → validated via the full quickstart.md suite (Scenarios 0–6).
+
+---
+
+## Phase 8: Convergence
+
+`/speckit-converge` findings against the implementation completed in prior commits — all fixed
+in the same pass (not deferred), since they were discovered while manually validating
+quickstart.md and running the full backend suite.
+
+- [X] T046 Add `GetSignedContractDownloadUrlQuery` + `GET /api/contracts/{id}/signed-pdf-url`
+  per FR-010/FR-018/SC-003/SC-004 (missing) — no endpoint existed for a director to reach the
+  persisted, immutable signed PDF; the existing `GET /{id}/pdf` always regenerates from live
+  data and never renders the signature/mandate block
+- [X] T047 Add `ListContractsQuery` + `GET /api/contracts` per US2/T025 (missing) — the director
+  contracts list web/app/(app)/contracts/page.tsx needs has no way to enumerate contracts across
+  children; the only existing query (`ListChildContractsQuery`, 007) is scoped to one child
+- [X] T048 Fix `SubmitContractSigningCommandHandler` per FR-009/FR-010 (contradicts) — CRITICAL:
+  the atomic token-consuming UPDATE ran before PDF generation/storage with no compensating
+  action, so a storage failure left the contract permanently marked signed with no PDF and a
+  burned token (the parent's link 404s forever with no way to complete signing); added a
+  compensating restore on failure. Also made the two notification emails non-fatal (log and
+  continue), matching CreateStaffProfileCommandHandler's "a notification failure must not fail
+  the request" precedent and this task's own original T032 wording ("(fire-and-forget) emails
+  both parties"), which the as-implemented code didn't actually follow
+- [X] T049 Add an integration test proving FR-015 holds in the activate-after-sign direction
+  (partial) — existing tests only proved `Status` stays `Draft` immediately after signing, not
+  that `POST /activate` still succeeds afterward (quickstart.md Scenario 1 step 6)
+- [X] T050 Generate and commit `specs/024-esignature/migrations/*.sql` per data-model.md's own
+  documented convention and the 008a precedent (missing) — the idempotent SQL scripts a
+  production deploy would run manually were never generated
+- [X] T051 Update the tenant-migration-rollout revert-simulation lists in
+  `TenantMigrationRolloutTests.cs`, `PublicEnrollmentSlugBackfillMigrationTests.cs`, and
+  `LegacyVaccinationMigrationTests.cs` to include `AddContractSigningAndSepaMandate` (contradicts
+  Constitution V — tests must pass against real infrastructure) — each hardcodes the list of
+  tenant-schema migrations to revert/re-apply as a simulated "behind" tenant; `TenantDbContext.
+  MigrateAsync()` generates its script from the *last recorded* migration, so leaving a newer
+  migration's history row in place while deleting an older one creates a gap `MigrateAsync()`
+  silently skips over — broke 4 existing tests, found by running the full suite, not by
+  inspection
