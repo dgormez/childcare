@@ -829,3 +829,42 @@ use the static code review instead.
   JSON root instead of under `invoices`, which `next-intl`'s dotted-namespace lookup surfaced
   immediately as a hard `MISSING_MESSAGE` error rather than a silent fallback — fixed by
   re-nesting in all three locale files before it became a shipped bug.
+- 026 (`026-sepa-direct-debit`): ✅ Done, merged 2026-07-22 (PR #46, squash-merged after green CI —
+  1055/1055 backend + 254/254 web tests). Resumed mid-flight: a prior session had created the
+  branch with zero commits on it (identical to `master`) — this run started the pipeline from
+  scratch on that branch rather than creating a new one. pain.008.001.02 SEPA direct debit batch
+  generation, hand-built via `System.Xml.Linq` and validated against the real, embedded EPC/
+  ISO20022 schema (cross-verified byte-identical from two unrelated open-source projects before
+  trusting it) rather than a third-party SEPA-generation package — avoided the exact licensing
+  question 025's CODA parsing needed to resolve, since generation for this feature's actual scope
+  (one `PmtInf` block per batch) is a small, mechanical, well-documented tree, unlike CODA's real
+  parsing complexity. Corrected two BACKLOG-prompt premises during specify, both resolved against
+  already-shipped code rather than guessed: no new settings entity for creditor identifier/name/
+  IBAN (reuses `Tenant.SepaCreditorIdentifier` from 024, `Location.BankAccountNumber` from 014),
+  and the execution-date "business day" rule is a plain Mon-Fri check, independent of 011's
+  closure calendar. This feature's own safety checklist (CHK008) then surfaced a real data-model
+  gap during planning: determining SEPA sequence type (FRST/RCUR) correctly across a returned
+  debit and a mandate revoke-and-resign needed a new immutable `Invoice.SepaMandateReferenceUsed`
+  snapshot, since the live, clearable `SepaBatchId` pointer alone silently gives the wrong answer
+  in both cases — worth remembering generally: a checklist pass can surface implementation-level
+  data-model gaps, not just requirements-wording issues, when the requirement itself implies a
+  history query the current design can't actually answer. The concurrency test for FR-013 (two
+  requests racing to claim the same invoice) caught a second, more subtle bug of this session's
+  own making: an earlier *tracked* EF Core read of the same invoices left stale instances in the
+  DbContext's change tracker, which identity resolution then silently returned from the later
+  `SELECT ... FOR UPDATE` read instead of the fresh, lock-guaranteed values — the database-level
+  lock was working correctly the whole time, but EF's own change tracker defeated it anyway; fixed
+  with `AsNoTracking()` on the earlier read. `ITenantDbContext` had no raw SQL escape hatch by
+  design (documented in its own doc comment, to keep Application layer Relational-agnostic) — added
+  one narrowly-scoped `LockInvoicesForUpdateAsync` method for this, rather than widening the
+  interface generally. Running the full test suite before merging surfaced the exact recurring
+  `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` pattern yet again (012a onward) —
+  and this time also broke `PublicEnrollmentSlugBackfillMigrationTests`, a *third* revert-helper
+  file 025's own shipped-note had already explicitly named as needing this same fix — worth being
+  honest that this session initially updated only the two "usual" files anyway and caught the third
+  one solely by running the full suite, the exact failure mode that shipped-note already warned
+  against by name. `/speckit-converge` found four real test-coverage gaps (a documented exclusion
+  reason never exercised, two untested asymmetric-configuration edge cases, and a task tasks.md had
+  already checked off without the test it names actually being written) — all fixed, not deferred,
+  same standing rule as every prior feature; the checked-off-but-unwritten task is itself worth
+  remembering as a new variant of "a claim to verify, not trust."
