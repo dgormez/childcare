@@ -141,4 +141,33 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
         TourInvitationCalls.Add((toEmail, locale, childName, locationName, proposedAt, acceptUrl, declineUrl));
         return inner.SendTourInvitationAsync(toEmail, locale, childName, locationName, proposedAt, acceptUrl, declineUrl, cancellationToken);
     }
+
+    // ── Feature 024-esignature ───────────────────────────────────────────────
+
+    public List<(string ToEmail, string Locale, string ChildName, string LocationName, string SigningUrl)> ContractSigningInvitationCalls { get; } = [];
+
+    public Task SendContractSigningInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, string signingUrl,
+        CancellationToken cancellationToken = default)
+    {
+        ContractSigningInvitationCalls.Add((toEmail, locale, childName, locationName, signingUrl));
+        return inner.SendContractSigningInvitationAsync(toEmail, locale, childName, locationName, signingUrl, cancellationToken);
+    }
+
+    public List<(string ToEmail, string Locale, string ChildName, byte[] PdfBytes)> SignedContractCalls { get; } = [];
+
+    /// <summary>Recipient addresses this test run should simulate a provider failure for
+    /// (SubmitContractSigningCommandHandler's "a notification failure must not fail signing" guarantee).</summary>
+    public HashSet<string> ThrowOnSignedContractEmailTo { get; } = [];
+
+    public Task SendSignedContractAsync(
+        string toEmail, string locale, string childName, byte[] pdfBytes,
+        CancellationToken cancellationToken = default)
+    {
+        SignedContractCalls.Add((toEmail, locale, childName, pdfBytes));
+        if (ThrowOnSignedContractEmailTo.Contains(toEmail))
+            throw new InvalidOperationException("Simulated SMTP failure (test).");
+
+        return inner.SendSignedContractAsync(toEmail, locale, childName, pdfBytes, cancellationToken);
+    }
 }

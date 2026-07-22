@@ -10,7 +10,15 @@ public record ContractResponse(
     IReadOnlyList<ContractedDayResponse> ContractedDays,
     int DailyRateCents,
     string Status,
-    ContractConsentResponse Consent);
+    ContractConsentResponse Consent,
+    // Feature 024-esignature — derived (not_sent/pending/expired/signed), never a raw timestamp
+    // read (FR-018).
+    string SigningStatus,
+    DateTime? SignedAt,
+    // Masked (e.g. last 4 digits only) — the decrypted IBAN is never returned in full after
+    // capture (FR-020).
+    string? SepaIbanMasked,
+    string? SepaMandateReference);
 
 public record ContractedDayResponse(
     DayOfWeek Weekday,
@@ -23,3 +31,17 @@ public record ContractConsentResponse(
     bool PhotosSocialMedia,
     bool VideoInternal,
     bool PhotosPress);
+
+// Feature 024-esignature (User Story 2) — one row of the org-wide contracts list
+// (ListContractsQuery), with just enough denormalized data (child/location name) to render
+// without an extra round trip per row.
+public record ContractSummaryResponse(
+    Guid Id,
+    Guid ChildId,
+    string ChildName,
+    string LocationName,
+    DateOnly StartDate,
+    int DailyRateCents,
+    string Status,
+    string SigningStatus,
+    DateTime? SignedAt);

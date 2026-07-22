@@ -7,6 +7,7 @@ using ChildCare.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using static ChildCare.Api.Tests.ContractSigningTestSupport;
 
 namespace ChildCare.Api.Tests;
 
@@ -428,5 +429,73 @@ public class ContractLifecycleTests(OrganisationOnboardingWebAppFactory factory)
             Assert.Equal(HttpStatusCode.Forbidden, (await client.SendAsync(AuthedRequest(
                 HttpMethod.Get, $"/api/contracts/{contract.Id}/pdf", token))).StatusCode);
         }
+    }
+
+    // ── T039 (024-esignature, US3, FR-013): editing a Draft with an outstanding signing
+    // invitation clears the token — the previously issued link now 404s — without auto-sending
+    // a new invitation ──────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateContract_WithOutstandingSigningInvitation_InvalidatesLinkWithoutResending()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Contract EditInvalidates Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        await SetCreditorIdAsync(client, org.AccessToken);
+        var location = await CreateLocationAsync(client, org.AccessToken);
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        await LinkPrimaryContactAsync(client, org.AccessToken, child.Id, contactEmail);
+
+        var createResponse = await CreateContractAsync(client, org.AccessToken, child.Id, MinimalCreateRequest(location.Id));
+        var contract = (await createResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+
+        var token = await SendInvitationAndExtractTokenAsync(factory.Services, client, org.AccessToken, contract.Id, contactEmail);
+        var beforeEdit = await GetSigningAsync(client, org.Organisation.Slug, token);
+        Assert.Equal(HttpStatusCode.OK, beforeEdit.StatusCode);
+
+        var updateRequest = new UpdateContractRequest(new DateOnly(2026, 1, 1), null, Days(DayOfWeek.Monday), 4200, null);
+        var updateResponse = await client.SendAsync(AuthedRequest(HttpMethod.Put, $"/api/contracts/{contract.Id}", org.AccessToken, updateRequest));
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+        Assert.Equal("notsent", updated.SigningStatus);
+
+        var afterEdit = await GetSigningAsync(client, org.Organisation.Slug, token);
+        Assert.Equal(HttpStatusCode.NotFound, afterEdit.StatusCode);
+
+        var emailSender = factory.Services.GetRequiredService<FakeEmailSender>();
+        Assert.Single(emailSender.ContractSigningInvitationCalls, c => c.ToEmail == contactEmail);
+    }
+
+    // ── T040 (024-esignature, FR-014): a signed contract rejects edits even while Status is
+    // still Draft (signing doesn't gate activation, FR-015) — a distinct guard from the existing
+    // Status != Draft check above ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateContract_AfterSigned_Returns409EvenWhileStillDraft()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Contract EditAfterSigned Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        await SetCreditorIdAsync(client, org.AccessToken);
+        var location = await CreateLocationAsync(client, org.AccessToken);
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        await LinkPrimaryContactAsync(client, org.AccessToken, child.Id, contactEmail);
+
+        var createResponse = await CreateContractAsync(client, org.AccessToken, child.Id, MinimalCreateRequest(location.Id));
+        var contract = (await createResponse.Content.ReadFromJsonAsync<ContractResponse>())!;
+
+        var token = await SendInvitationAndExtractTokenAsync(factory.Services, client, org.AccessToken, contract.Id, contactEmail);
+        var signResponse = await PostSigningAsync(client, org.Organisation.Slug, token, "Typed", "Parent Peeters", ValidTestIban);
+        Assert.Equal(HttpStatusCode.OK, signResponse.StatusCode);
+
+        var stillDraft = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/contracts/{contract.Id}", org.AccessToken));
+        var stillDraftContract = (await stillDraft.Content.ReadFromJsonAsync<ContractResponse>())!;
+        Assert.Equal("draft", stillDraftContract.Status);
+        Assert.Equal("signed", stillDraftContract.SigningStatus);
+
+        var updateRequest = new UpdateContractRequest(new DateOnly(2026, 1, 1), null, Days(DayOfWeek.Monday), 4200, null);
+        var updateResponse = await client.SendAsync(AuthedRequest(HttpMethod.Put, $"/api/contracts/{contract.Id}", org.AccessToken, updateRequest));
+        Assert.Equal(HttpStatusCode.Conflict, updateResponse.StatusCode);
+        Assert.Contains("errors.contract.already_signed", await updateResponse.Content.ReadAsStringAsync());
     }
 }

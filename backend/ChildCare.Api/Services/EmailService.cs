@@ -324,6 +324,53 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
         await SendAsync(message);
     }
 
+    // ── Feature 024-esignature: digital contract e-signature ────────────────
+
+    public async Task SendContractSigningInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, string signingUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var labels = ContractSigningEmailLabels.For(locale);
+        if (!TryBuildMessage(toEmail, labels.Subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Signing invitation for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("contract-signing-invitation", locale, new
+        {
+            Title = string.Format(labels.TitleFormat, WebUtility.HtmlEncode(childName)),
+            Body = string.Format(labels.BodyFormat, WebUtility.HtmlEncode(childName), WebUtility.HtmlEncode(locationName)),
+            SigningUrl = signingUrl,
+            SignLabel = labels.SignButton,
+        }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
+    public async Task SendSignedContractAsync(
+        string toEmail, string locale, string childName, byte[] pdfBytes,
+        CancellationToken cancellationToken = default)
+    {
+        var labels = SignedContractEmailLabels.For(locale);
+        if (!TryBuildMessage(toEmail, labels.Subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Signed contract copy for {Email} not sent.", toEmail);
+            return;
+        }
+
+        var html = await templateRenderer.RenderAsync("signed-contract-copy", locale, new
+        {
+            Title = string.Format(labels.TitleFormat, WebUtility.HtmlEncode(childName)),
+            Body = string.Format(labels.BodyFormat, WebUtility.HtmlEncode(childName)),
+        }, cancellationToken);
+
+        var builder = new BodyBuilder { HtmlBody = html };
+        builder.Attachments.Add("contract.pdf", pdfBytes, MimeKit.ContentType.Parse("application/pdf"));
+        message!.Body = builder.ToMessageBody();
+        await SendAsync(message);
+    }
+
     /// <summary>HTML-encodes free text, then converts newlines to paragraph breaks — the one
     /// piece of "formatting" a director's plain-text compose box gets (research.md R1: no raw
     /// HTML from the director, to avoid template-injection risk).</summary>

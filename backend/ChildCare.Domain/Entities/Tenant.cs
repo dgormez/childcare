@@ -19,5 +19,10 @@ public class Tenant
     // of location count), printed on every invoice PDF.
     public string? KboNumber             { get; set; }
 
+    // Feature 024-esignature — the organisation's own SEPA Creditor Identifier (issued by the
+    // National Bank of Belgium), director-entered once. Required before any contract signing
+    // invitation can be sent (FR-016); distinct from a per-signing SepaMandateReference (Contract).
+    public string? SepaCreditorIdentifier { get; set; }
+
     public DateTime CreatedAt            { get; set; } = DateTime.UtcNow;
 }

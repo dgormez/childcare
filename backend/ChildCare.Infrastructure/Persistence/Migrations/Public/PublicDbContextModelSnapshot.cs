@@ -260,6 +260,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                         .HasMaxLength(63)
                         .HasColumnType("character varying(63)");
 
+                    b.Property<string>("SepaCreditorIdentifier")
+                        .HasMaxLength(35)
+                        .HasColumnType("character varying(35)");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(200)

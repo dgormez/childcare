@@ -19,7 +19,7 @@ function renderPage() {
   );
 }
 
-const organisation: OrganisationResponse = { name: "Sunshine Kinderopvang", kboNumber: "0123.456.789" };
+const organisation: OrganisationResponse = { name: "Sunshine Kinderopvang", kboNumber: "0123.456.789", sepaCreditorIdentifier: null };
 const disconnected: PaymentConnectionResponse = { status: "disconnected", providerAccountLabel: null, connectedAt: null };
 const connected: PaymentConnectionResponse = { status: "connected", providerAccountLabel: "Sunshine Kinderopvang (Mollie)", connectedAt: "2026-07-16T00:00:00Z" };
 
@@ -75,9 +75,29 @@ describe("OrganisationSettingsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
-      expect(apiClient.PUT).toHaveBeenCalledWith("/api/organisations/me", { body: { kboNumber: "0987.654.321" } }),
+      expect(apiClient.PUT).toHaveBeenCalledWith("/api/organisations/me", {
+        body: { kboNumber: "0987.654.321", sepaCreditorIdentifier: null },
+      }),
     );
     expect(await screen.findByText("Organisation settings saved.")).toBeInTheDocument();
+  });
+
+  it("loads and saves the SEPA Creditor Identifier alongside the KBO number", async () => {
+    vi.mocked(apiClient.GET).mockResolvedValue(okResponse(organisation) as never);
+    const updated = { ...organisation, sepaCreditorIdentifier: "BE68ZZZ0123456789" };
+    vi.mocked(apiClient.PUT).mockResolvedValue(okResponse(updated) as never);
+    renderPage();
+
+    const input = await screen.findByLabelText("SEPA Creditor Identifier");
+    expect(input).toHaveValue("");
+    await userEvent.type(input, "BE68ZZZ0123456789");
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(apiClient.PUT).toHaveBeenCalledWith("/api/organisations/me", {
+        body: { kboNumber: "0123.456.789", sepaCreditorIdentifier: "BE68ZZZ0123456789" },
+      }),
+    );
   });
 });
 

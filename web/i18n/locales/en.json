@@ -592,7 +592,9 @@
       "loadError": "Couldn't load payment connection status. Please try again.",
       "retry": "Retry",
       "backToSettings": "Back to settings"
-    }
+    },
+    "sepaCreditorIdLabel": "SEPA Creditor Identifier",
+    "sepaCreditorIdHint": "Required before you can send a contract for signature. Issued once by the National Bank of Belgium for your organisation."
   },
   "invoices": {
     "title": "Invoices",
@@ -1284,5 +1286,81 @@
     "submittingAction": "Submitting…",
     "confirmationBody": "Thank you! We've added your family to the waiting list and sent a confirmation to your email.",
     "referenceLabel": "Reference code"
+  },
+  "contracts": {
+    "title": "Contracts",
+    "loadError": "Couldn't load contracts. Please try again.",
+    "retry": "Retry",
+    "empty": "No contracts yet.",
+    "columns": {
+      "child": "Child",
+      "location": "Location",
+      "startDate": "Start date",
+      "dailyRate": "Daily rate",
+      "status": "Status",
+      "signingStatus": "Signature"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "ended": "Ended"
+    },
+    "signingStatus": {
+      "notsent": "Not sent",
+      "pending": "Awaiting signature",
+      "expired": "Link expired",
+      "signed": "Signed"
+    },
+    "signedOnLabel": "Signed on {date}",
+    "sendAction": "Send for signature",
+    "resendAction": "Resend",
+    "sending": "Sending…",
+    "sendSuccess": "Signing invitation sent.",
+    "viewSignedPdf": "View signed PDF",
+    "errors": {
+      "noContactEmail": "This child has no primary contact with an email address on file. Add one before sending a signing invitation.",
+      "creditorIdNotConfigured": "Set your organisation's SEPA Creditor Identifier in settings before sending a signing invitation.",
+      "notDraft": "Only draft contracts can be sent for signature.",
+      "alreadySigned": "This contract has already been signed.",
+      "generic": "Couldn't send the signing invitation. Please try again."
+    }
+  },
+  "contractSigning": {
+    "title": "Sign your enrolment contract",
+    "loading": "Loading your contract…",
+    "invalidLink": "This link is no longer valid. Please contact the childcare organisation for a new one.",
+    "languageLabel": "Language",
+    "intro": "Please review the contract terms below, then sign and authorise payment collection.",
+    "childLabel": "Child",
+    "locationLabel": "Location",
+    "contractedDaysLabel": "Contracted days",
+    "dailyRateLabel": "Daily rate",
+    "consentLabel": "Photo & video consent",
+    "consent": {
+      "photosInternal": "Photos for internal use",
+      "photosWebsite": "Photos on our website",
+      "photosSocialMedia": "Photos on social media",
+      "videoInternal": "Video for internal use",
+      "photosPress": "Photos for press"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "signatureTitle": "Your signature",
+    "signatureDrawTab": "Draw",
+    "signatureTypeTab": "Type",
+    "signatureDrawHint": "Sign with your mouse or finger below.",
+    "signatureTypePlaceholder": "Type your full name",
+    "signatureClear": "Clear",
+    "confirmSignIntent": "I have read and reviewed the contract terms above and I intend to sign this contract.",
+    "sepaTitle": "SEPA direct debit mandate",
+    "sepaIntro": "Authorise the organisation to collect your invoices via direct debit.",
+    "ibanLabel": "IBAN",
+    "ibanInvalid": "This doesn't look like a valid IBAN. Please check and try again.",
+    "confirmSepaMandate": "I authorise the organisation to collect payments from this account via SEPA direct debit.",
+    "submitAction": "Sign contract",
+    "submittingAction": "Signing…",
+    "submitError": "Something went wrong while signing. Please try again.",
+    "confirmationTitle": "Contract signed",
+    "confirmationBody": "Thank you — your contract has been signed and your payment mandate is now active. A copy has been emailed to you."
   }
 }

@@ -20,5 +20,9 @@ internal static class ContractMapper
             c.Consent.PhotosWebsite,
             c.Consent.PhotosSocialMedia,
             c.Consent.VideoInternal,
-            c.Consent.PhotosPress));
+            c.Consent.PhotosPress),
+        ContractSigningStatusResolver.Resolve(c, DateTime.UtcNow).ToString().ToLowerInvariant(),
+        c.SignedAt,
+        c.SepaIbanLast4 is null ? null : $"•••• {c.SepaIbanLast4}",
+        c.SepaMandateReference);
 }

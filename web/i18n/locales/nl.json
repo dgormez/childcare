@@ -592,7 +592,9 @@
       "loadError": "Kan de betaalverbindingsstatus niet laden. Probeer het opnieuw.",
       "retry": "Opnieuw proberen",
       "backToSettings": "Terug naar instellingen"
-    }
+    },
+    "sepaCreditorIdLabel": "SEPA-identificatie schuldeiser (Creditor ID)",
+    "sepaCreditorIdHint": "Vereist voordat u een contract ter ondertekening kunt versturen. Eenmalig toegekend door de Nationale Bank van België aan uw organisatie."
   },
   "invoices": {
     "title": "Facturen",
@@ -1284,5 +1286,81 @@
     "submittingAction": "Bezig met versturen…",
     "confirmationBody": "Bedankt! We hebben je gezin toegevoegd aan de wachtlijst en een bevestiging naar je e-mail gestuurd.",
     "referenceLabel": "Referentienummer"
+  },
+  "contracts": {
+    "title": "Contracten",
+    "loadError": "Contracten laden mislukt. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "empty": "Nog geen contracten.",
+    "columns": {
+      "child": "Kind",
+      "location": "Locatie",
+      "startDate": "Startdatum",
+      "dailyRate": "Dagtarief",
+      "status": "Status",
+      "signingStatus": "Ondertekening"
+    },
+    "status": {
+      "draft": "Concept",
+      "active": "Actief",
+      "ended": "Beëindigd"
+    },
+    "signingStatus": {
+      "notsent": "Niet verstuurd",
+      "pending": "Wacht op ondertekening",
+      "expired": "Link verlopen",
+      "signed": "Ondertekend"
+    },
+    "signedOnLabel": "Ondertekend op {date}",
+    "sendAction": "Versturen voor ondertekening",
+    "resendAction": "Opnieuw versturen",
+    "sending": "Bezig met versturen…",
+    "sendSuccess": "Ondertekeningsuitnodiging verstuurd.",
+    "viewSignedPdf": "Bekijk ondertekend document",
+    "errors": {
+      "noContactEmail": "Dit kind heeft geen hoofdcontactpersoon met een e-mailadres. Voeg er eerst één toe voordat u een uitnodiging verstuurt.",
+      "creditorIdNotConfigured": "Stel eerst de SEPA-identificatie schuldeiser van uw organisatie in bij instellingen voordat u een uitnodiging verstuurt.",
+      "notDraft": "Enkel conceptcontracten kunnen ter ondertekening worden verstuurd.",
+      "alreadySigned": "Dit contract is al ondertekend.",
+      "generic": "Versturen van de uitnodiging is mislukt. Probeer opnieuw."
+    }
+  },
+  "contractSigning": {
+    "title": "Onderteken uw opvangovereenkomst",
+    "loading": "Uw contract wordt geladen…",
+    "invalidLink": "Deze link is niet langer geldig. Neem contact op met de kinderopvang voor een nieuwe link.",
+    "languageLabel": "Taal",
+    "intro": "Bekijk hieronder de contractvoorwaarden en onderteken vervolgens om de betaling te machtigen.",
+    "childLabel": "Kind",
+    "locationLabel": "Locatie",
+    "contractedDaysLabel": "Contractdagen",
+    "dailyRateLabel": "Dagtarief",
+    "consentLabel": "Toestemming foto en video",
+    "consent": {
+      "photosInternal": "Foto's voor intern gebruik",
+      "photosWebsite": "Foto's op onze website",
+      "photosSocialMedia": "Foto's op sociale media",
+      "videoInternal": "Video voor intern gebruik",
+      "photosPress": "Foto's voor pers"
+    },
+    "yes": "Ja",
+    "no": "Nee",
+    "signatureTitle": "Uw handtekening",
+    "signatureDrawTab": "Tekenen",
+    "signatureTypeTab": "Typen",
+    "signatureDrawHint": "Onderteken hieronder met uw muis of vinger.",
+    "signatureTypePlaceholder": "Typ uw volledige naam",
+    "signatureClear": "Wissen",
+    "confirmSignIntent": "Ik heb de contractvoorwaarden hierboven gelezen en nagekeken en ik wil dit contract ondertekenen.",
+    "sepaTitle": "SEPA-domiciliëringsmandaat",
+    "sepaIntro": "Machtig de organisatie om uw facturen via domiciliëring te innen.",
+    "ibanLabel": "IBAN",
+    "ibanInvalid": "Dit lijkt geen geldig IBAN. Controleer het nummer en probeer opnieuw.",
+    "confirmSepaMandate": "Ik machtig de organisatie om betalingen van deze rekening te innen via SEPA-domiciliëring.",
+    "submitAction": "Contract ondertekenen",
+    "submittingAction": "Bezig met ondertekenen…",
+    "submitError": "Er ging iets mis bij het ondertekenen. Probeer opnieuw.",
+    "confirmationTitle": "Contract ondertekend",
+    "confirmationBody": "Bedankt — uw contract is ondertekend en uw betaalmandaat is actief. U ontving een kopie per e-mail."
   }
 }

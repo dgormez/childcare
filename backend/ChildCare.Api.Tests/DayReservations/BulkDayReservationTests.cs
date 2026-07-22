@@ -20,6 +20,14 @@ public class BulkDayReservationTests(OrganisationOnboardingWebAppFactory factory
 {
     private static readonly DateOnly FutureMonday = new(2027, 8, 2);
 
+    private static DateOnly NextWeekdayAtLeastDaysOut(int minDays)
+    {
+        var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(minDays));
+        while (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            date = date.AddDays(1);
+        return date;
+    }
+
     private async Task<(HttpClient Client, RegisterOrganisationResponse Org, LocationResponse Location)> SetupAsync()
     {
         var client = factory.CreateClient();
@@ -114,12 +122,14 @@ public class BulkDayReservationTests(OrganisationOnboardingWebAppFactory factory
         var openLocation = await CreateLocationAsync(client, org.AccessToken, "Open");
         var strictLocation = await CreateLocationAsync(client, org.AccessToken, "Strict");
 
-        // A date 3 days out (rather than the file's fixed FutureMonday constant, which is
-        // eventually too far in the future for any notice window under the 8760h/1-year
+        // A date at least 3 days out (rather than the file's fixed FutureMonday constant, which
+        // is eventually too far in the future for any notice window under the 8760h/1-year
         // validator ceiling — errors.location.reservation_settings.notice_hours_out_of_range)
         // plus a 240h (10 day) notice window guarantees a violation regardless of which
-        // real-world date this test happens to run on.
-        var nearFutureDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(3));
+        // real-world date this test happens to run on. Must also land on Mon-Fri, since
+        // CreateContractCommandValidator only accepts weekdays as contracted days — a plain
+        // AddDays(3) intermittently lands on a weekend and fails contract creation outright.
+        var nearFutureDate = NextWeekdayAtLeastDaysOut(3);
         var strictResponse = await client.SendAsync(AuthedRequest(
             HttpMethod.Put, $"/api/locations/{strictLocation.Id}/reservation-settings", org.AccessToken,
             new UpdateLocationReservationSettingsRequest("approval", "approval", "disabled", 240, false)));

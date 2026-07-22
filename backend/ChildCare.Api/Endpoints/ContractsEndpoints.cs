@@ -33,6 +33,14 @@ public static class ContractsEndpoints
             return MapResult(result, onSuccess: r => Results.Created($"/api/contracts/{r.Id}", r));
         });
 
+        // Feature 024-esignature (User Story 2) — the org-wide list web/app/(app)/contracts/page.tsx
+        // renders (distinct from the existing per-contract GET below and the per-child GET above).
+        contracts.MapGet("/", async (IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ListContractsQuery());
+            return Results.Ok(result);
+        });
+
         contracts.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new GetContractByIdQuery(id));
@@ -71,6 +79,24 @@ public static class ContractsEndpoints
             return result.Found
                 ? Results.File(result.Bytes, "application/pdf")
                 : Results.Json(new { errorKey = "errors.contract.not_found" }, statusCode: StatusCodes.Status404NotFound);
+        });
+
+        // Feature 024-esignature. Serves both "send" and "resend" (User Stories 1/3) — there is
+        // no separate resend route, since the operation is identical either way.
+        contracts.MapPost("/{id:guid}/signing-invitation", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new SendContractSigningInvitationCommand(id));
+            return MapResult(result, onSuccess: Results.Ok);
+        });
+
+        // Feature 024-esignature (User Story 2, FR-018) — the persisted, immutable signed PDF,
+        // distinct from GET /{id}/pdf's on-demand render of the live (unsigned) contract.
+        contracts.MapGet("/{id:guid}/signed-pdf-url", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetSignedContractDownloadUrlQuery(id));
+            return result.Found
+                ? Results.Ok(new { downloadUrl = result.Url, expiresAt = result.ExpiresAt })
+                : Results.Json(new { errorKey = "errors.contract_signing.not_signed" }, statusCode: StatusCodes.Status404NotFound);
         });
     }
 
@@ -115,6 +141,19 @@ public static class ContractsEndpoints
 
         ContractFailure.TerminationDateInvalid => Results.Json(
             new { errorKey = "errors.contract.termination_date_invalid" },
+            statusCode: StatusCodes.Status422UnprocessableEntity),
+
+        // Feature 024-esignature.
+        ContractFailure.AlreadySigned => Results.Json(
+            new { errorKey = "errors.contract.already_signed" },
+            statusCode: StatusCodes.Status409Conflict),
+
+        ContractFailure.NoContactEmail => Results.Json(
+            new { errorKey = "errors.contract_signing.no_contact_email" },
+            statusCode: StatusCodes.Status422UnprocessableEntity),
+
+        ContractFailure.CreditorIdNotConfigured => Results.Json(
+            new { errorKey = "errors.contract_signing.creditor_id_not_configured" },
             statusCode: StatusCodes.Status422UnprocessableEntity),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(ContractFailure)}: {failure}"),

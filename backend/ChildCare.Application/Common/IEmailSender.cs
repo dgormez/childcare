@@ -71,4 +71,16 @@ public interface IEmailSender
     Task SendTourInvitationAsync(
         string toEmail, string locale, string childName, string locationName, DateTime proposedAt,
         string acceptUrl, string declineUrl, CancellationToken cancellationToken = default);
+
+    /// <summary>Feature 024-esignature, FR-003 — the secure signing link, in the resolved
+    /// primary contact's locale.</summary>
+    Task SendContractSigningInvitationAsync(
+        string toEmail, string locale, string childName, string locationName, string signingUrl,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Feature 024-esignature, FR-011 — sent identically to the parent and to every
+    /// director, with the final signed PDF attached.</summary>
+    Task SendSignedContractAsync(
+        string toEmail, string locale, string childName, byte[] pdfBytes,
+        CancellationToken cancellationToken = default);
 }

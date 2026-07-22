@@ -679,6 +679,37 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateOnly?>("RateValidUntil")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("SepaAuthorisedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SepaIbanEncrypted")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SepaIbanLast4")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SepaMandateReference")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SignatureData")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SignatureType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("SignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SignedByIp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SigningToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("SigningTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
@@ -697,6 +728,14 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.HasIndex("PreviousContractId");
+
+                    b.HasIndex("SepaMandateReference")
+                        .IsUnique()
+                        .HasFilter("\"SepaMandateReference\" IS NOT NULL");
+
+                    b.HasIndex("SigningToken")
+                        .IsUnique()
+                        .HasFilter("\"SigningToken\" IS NOT NULL");
 
                     b.HasIndex("ChildId", "Status");
 

@@ -57,6 +57,15 @@ public class UpdateContractCommandHandler(ITenantDbContext db) : IRequestHandler
         if (contract is null)
             return ContractResult.Fail(ContractFailure.NotFound);
 
+        // Feature 024-esignature, FR-014: a signed contract's terms are frozen — this is a
+        // distinct guard from the Status check below, since signing does NOT change Status
+        // (FR-015, additive to the Draft/Active/Ended lifecycle). A signed-but-still-Draft
+        // contract would otherwise pass the Status check and be editable in place, silently
+        // invalidating the parent's signature — any revision after signing must go through the
+        // existing amendment mechanism (007) instead, producing a new, unsigned contract.
+        if (contract.SignedAt is not null)
+            return ContractResult.Fail(ContractFailure.AlreadySigned);
+
         if (contract.Status != ContractStatus.Draft)
             return ContractResult.Fail(ContractFailure.NotDraft);
 
@@ -68,6 +77,14 @@ public class UpdateContractCommandHandler(ITenantDbContext db) : IRequestHandler
         contract.DailyRateCents = request.DailyRateCents;
         contract.Consent = CreateContractCommandHandler.ToConsent(request.Consent);
         contract.UpdatedAt = DateTime.UtcNow;
+
+        // Feature 024-esignature, FR-013: an outstanding (unsigned) signing invitation no longer
+        // reflects the just-saved terms — invalidate it; the director must send a fresh one.
+        if (contract.SigningToken is not null)
+        {
+            contract.SigningToken = null;
+            contract.SigningTokenExpiresAt = null;
+        }
 
         await db.SaveChangesAsync(cancellationToken);
 

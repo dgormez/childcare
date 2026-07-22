@@ -20,9 +20,10 @@ public static class OrganisationEndpoints
         }).RequireAuthorization("DirectorOnly");
 
         // Feature 014 — contracts/014-invoicing/invoicing-api.md. First PUT on this resource.
+        // Feature 024-esignature (User Story 4) extends it with SepaCreditorIdentifier.
         group.MapPut("/me", async (UpdateOrganisationRequest req, IMediator mediator) =>
         {
-            var result = await mediator.Send(new UpdateOrganisationCommand(req.KboNumber));
+            var result = await mediator.Send(new UpdateOrganisationCommand(req.KboNumber, req.SepaCreditorIdentifier));
             return Results.Ok(result);
         }).RequireAuthorization("DirectorOnly");
 

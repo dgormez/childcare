@@ -14,10 +14,16 @@ namespace ChildCare.Api.Tests.Locations;
 /// a tenant that provisioned before this feature shipped, with locations whose names collide
 /// once slugified (exact duplicates, a punctuation-only variant of the same name, and a name
 /// with no alphanumeric characters at all). Same revert-then-reapply pattern as
-/// LegacyVaccinationMigrationTests. AddDigitalEnrollment is currently the newest tenant
-/// migration, so only it needs reverting here — no chain of later migrations to also undo
-/// (unlike TenantMigrationRolloutTests/LegacyVaccinationMigrationTests, which revert the oldest
-/// of several).
+/// LegacyVaccinationMigrationTests.
+///
+/// AddDigitalEnrollment is no longer the newest tenant migration (024-esignature's
+/// AddContractSigningAndSepaMandate shipped after it) — TenantDbContext.MigrateAsync() generates
+/// its script from `applied.LastOrDefault()`, the *last recorded* migration, not the first gap;
+/// if a later migration's history row is left in place while an earlier one's is deleted,
+/// MigrateAsync() sees "already at the latest" and generates nothing, silently skipping the
+/// reverted migration entirely. So every migration from AddDigitalEnrollment onward must be
+/// deleted from history here, not just AddDigitalEnrollment alone — keep this list extended
+/// whenever a new tenant migration ships (mirrors TenantMigrationRolloutTests' own list).
 /// </summary>
 public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -43,8 +49,19 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
                 DROP COLUMN "DefaultEnrollmentLocale",
                 DROP COLUMN "PublicEnrollmentEnabled",
                 DROP COLUMN "PublicEnrollmentSlug";
+            ALTER TABLE "{schemaName}"."contracts"
+                DROP COLUMN "SepaAuthorisedAt",
+                DROP COLUMN "SepaIbanEncrypted",
+                DROP COLUMN "SepaIbanLast4",
+                DROP COLUMN "SepaMandateReference",
+                DROP COLUMN "SignatureData",
+                DROP COLUMN "SignatureType",
+                DROP COLUMN "SignedAt",
+                DROP COLUMN "SignedByIp",
+                DROP COLUMN "SigningToken",
+                DROP COLUMN "SigningTokenExpiresAt";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddDigitalEnrollment';
+                WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate';
             """);
     }
 
