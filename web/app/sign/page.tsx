@@ -178,7 +178,7 @@ function PageBody({
           <p className="text-sm text-text-soft dark:text-text-soft-dark">{t("intro")}</p>
 
           {/* FR-005: the full contract terms render before any signature/IBAN input below. */}
-          <div className="space-y-2 rounded-lg bg-surface-soft p-4 text-sm dark:bg-surface-soft-dark">
+          <div className="space-y-2 rounded-xl bg-surface-soft p-4 text-sm dark:bg-surface-soft-dark">
             <p>
               <span className="font-medium text-text dark:text-text-dark">{t("childLabel")}: </span>
               {contract.childName}
@@ -218,12 +218,12 @@ function PageBody({
             <SignatureCapture onChange={onSignatureChange} />
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-text dark:text-text-dark">
+          <label className="flex items-center gap-2 text-sm text-text dark:text-text-dark">
             <input
               type="checkbox"
               checked={confirmSignIntent}
               onChange={(e) => onConfirmSignIntentChange(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary dark:border-border-dark"
+              className="h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary dark:border-border-dark"
             />
             {t("confirmSignIntent")}
           </label>
@@ -246,12 +246,12 @@ function PageBody({
                 </p>
               )}
             </label>
-            <label className="flex items-start gap-2 text-sm text-text dark:text-text-dark">
+            <label className="flex items-center gap-2 text-sm text-text dark:text-text-dark">
               <input
                 type="checkbox"
                 checked={confirmSepaMandate}
                 onChange={(e) => onConfirmSepaMandateChange(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary dark:border-border-dark"
+                className="h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary dark:border-border-dark"
               />
               {t("confirmSepaMandate")}
             </label>
