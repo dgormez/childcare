@@ -2,7 +2,7 @@
 
 ## R1 — CODA parsing library
 
-**Decision**: Use the `CodaParser` NuGet package (https://github.com/phmatray/coda-parser,
+**Decision**: Use the `CodaParser` NuGet package (<https://github.com/phmatray/coda-parser>,
 `Install-Package CodaParser`), a fork of `supervos/coda-parser`.
 
 **Rationale**: The BACKLOG prompt explicitly requires reusing an existing .NET CODA parser
@@ -119,7 +119,21 @@ family-bundled invoices half-updated (the exact class of bug 030 already found a
 `CodaTransaction` row with `MatchedInvoiceId` set, `Applied = false` (see data-model.md), and
 `AmountCents` less than the invoice's outstanding total. The outstanding/received total for a
 given invoice is computed at read time by summing `AmountCents` across that invoice's applied
-and partial `CodaTransaction` rows — not stored redundantly on `Invoice`.
+and partial `CodaTransaction` rows — not stored redundantly on `Invoice`. Per spec.md FR-010,
+when a transaction's amount combined with that already-received sum meets or exceeds the
+invoice's total, the invoice IS marked paid at that point (via `MarkInvoicePaidCommand`, R4)
+using the completing transaction's date — a partial payment only blocks the paid transition
+while a genuine shortfall remains, it never permanently caps the invoice at "partial." Within a
+single import, transactions are processed in file order so a later line in the same file sees
+the already-received total left by an earlier line (tasks.md T018).
+
+**Access logging (FR-014)**: "Log access" to a decrypted IBAN means a structured `ILogger` log
+line at each `IIbanProtector.Unprotect` call site (who/what triggered it, which
+`CodaTransaction`/invoice), never the decrypted value itself — there is no existing persisted
+audit-log table anywhere in this codebase to extend, and inventing one for this alone would be a
+disproportionate new subsystem for what FR-014 actually asks for. Distinct from feature 024's
+separate, already-established "never log the plaintext IBAN" convention (leak prevention, not an
+access trail) — this feature respects both simultaneously.
 
 **Rationale**: Keeps `Invoice` (feature 014) entirely unchanged — no schema migration to an
 entity three other features (014a, 015, 030) already depend on — and avoids a second source of

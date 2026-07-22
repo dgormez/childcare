@@ -60,8 +60,13 @@ Infrastructure,Contracts,Api}/`, `backend/ChildCare.Api.Tests/`, `web/`.
       correctly, per research.md R1's `StructuredMessage`/`Message` split); a malformed/corrupted
       file throws the typed parse-failure exception, not a raw library exception.
 - [ ] T009 Implement `CodaTransactionMatcher` (pure matching logic, FR-004/005/005a/007/008/009/
-      016) in `backend/ChildCare.Application/CodaTransactions/CodaTransactionMatcher.cs`,
-      unit-testable independent of the MediatR handler and EF Core (depends on T003).
+      010/016) in `backend/ChildCare.Application/CodaTransactions/CodaTransactionMatcher.cs`,
+      unit-testable independent of the MediatR handler and EF Core (depends on T003). The
+      partial-vs-complete decision (FR-010) takes the candidate invoice's already-received total
+      as an input parameter — computed by the caller from prior `CodaTransaction` rows via a DB
+      query — rather than querying the database itself, so a transaction whose amount plus that
+      already-received total meets or exceeds the invoice total is `Applied = true` (using this
+      transaction's date), and otherwise recorded as an unapplied partial payment.
 - [ ] T010 [P] Unit tests for `CodaTransactionMatcher` in
       `backend/ChildCare.Api.Tests/CodaTransactions/CodaTransactionMatcherTests.cs` covering
       every branch: exact OGM match (FR-004, digits-only comparison per research.md R1),
@@ -71,7 +76,10 @@ Infrastructure,Contracts,Api}/`, `backend/ChildCare.Api.Tests/`, `web/`.
       `ClosedInvoice` (FR-009), no match at all → `Unmatched` (FR-007), negative amount →
       `Reversal`, never eligible for matching (FR-016), malformed structured reference (right
       length, bad checksum) falls through to amount+IBAN matching rather than being treated as an
-      exact match (spec.md Edge Cases).
+      exact match (spec.md Edge Cases), a partial amount with zero already-received stays
+      unapplied (FR-010), and a partial amount that combined with a non-zero already-received
+      input meets/exceeds the invoice total becomes `Applied = true` (FR-010's cumulative-
+      completion case, spec.md Edge Cases).
 
 **Checkpoint**: Entities, migration, parser adapter, and matcher exist and are unit-tested —
 user story implementation can begin.
@@ -101,11 +109,19 @@ is flagged `Duplicate` rather than re-applied (quickstart.md Scenario 4).
       test file as T011.
 - [ ] T014 [P] [US1] API test: an OGM match against an invoice already `Paid` is recorded as
       `Duplicate` and does not change the invoice (FR-008, quickstart.md Scenario 4), in the same
-      test file as T011.
+      test file as T011 — including the same-import variant (spec.md Edge Cases): a single
+      uploaded file containing two transactions that both carry the same invoice's exact
+      reference records the first as `Ogm`/`Applied` and the second as `Duplicate` against the
+      now-`Paid` invoice, not just the separate-imports variant.
 - [ ] T015 [P] [US1] API test: an OGM match whose amount is less than the invoice's total is
       recorded as a partial payment (`Applied = false`, invoice stays `Sent`) and a second,
       later `GET /api/coda-transactions` response's `matchedInvoice.receivedCents` reflects it
       (FR-010, quickstart.md Scenario 5), in the same test file as T011.
+- [ ] T015a [P] [US1] API test: two partial-payment transactions against the same invoice,
+      uploaded either in the same import or across two separate imports, whose amounts together
+      meet or exceed the invoice's total — the invoice becomes `Paid` at the point the second one
+      is processed, using that second transaction's date (FR-010's cumulative-completion case,
+      spec.md Edge Cases), in the same test file as T011.
 - [ ] T016 [P] [US1] API test: a negative-amount transaction is recorded as `Reversal`, never
       matched to any invoice (FR-016), in the same test file as T011.
 
@@ -117,11 +133,23 @@ is flagged `Duplicate` rather than re-applied (quickstart.md Scenario 4).
       client, FR-014).
 - [ ] T018 [US1] `ImportCodaFileCommand`/Handler in
       `backend/ChildCare.Application/CodaTransactions/ImportCodaFileCommand.cs`: calls
-      `ICodaParser`, runs each transaction through `CodaTransactionMatcher` (T009), applies
-      `IIbanProtector.Protect` (research.md R2, new purpose string distinct from `Contract`'s) to
-      `SenderIban` before persisting, calls `MarkInvoicePaidCommand` (research.md R4) for every
-      `Ogm`/confirmed match that isn't partial, persists one `CodaImport` + N `CodaTransaction`
-      rows in a single transaction, returns the summary (depends on T006, T007, T009, T017).
+      `ICodaParser`, and for each transaction — in file order, so an invoice's already-received
+      total (FR-010) reflects every transaction already processed earlier in the same import, not
+      just prior imports — queries the candidate invoice's already-received total from existing
+      `CodaTransaction` rows (`Applied = true` OR unapplied-partial sum) and passes it into
+      `CodaTransactionMatcher` (T009) alongside the transaction; applies `IIbanProtector.Protect`
+      (research.md R2, new purpose string distinct from `Contract`'s) to `SenderIban` before
+      persisting; calls `MarkInvoicePaidCommand` (research.md R4) for every transaction the
+      matcher marks `Applied = true` (both an immediate exact match and a completing partial
+      payment, FR-010); persists one `CodaImport` + N `CodaTransaction` rows in a single
+      transaction; returns the summary (depends on T006, T007, T009, T017).
+- [ ] T018a [US1] Wire a structured log line (existing `ILogger` convention, not a new persisted
+      audit-log table — no precedent for the latter exists anywhere in this codebase) into every
+      call site that decrypts `SenderIbanEncrypted` (the matching pass in T018, and T027's
+      confirm-suggestion path in Phase 4), recording which director/request triggered it and
+      which `CodaTransaction`/invoice it was for — never the decrypted IBAN value itself (FR-014;
+      distinct from feature 024's separate "never log the plaintext IBAN" convention, which this
+      still also respects).
 - [ ] T019 [US1] `POST /api/coda-imports` endpoint (multipart `IFormFile`, `DirectorOnly`) in
       `backend/ChildCare.Api/Endpoints/CodaTransactionEndpoints.cs`
       (`MapCodaTransactionEndpoints`), wiring `ImportCodaFileCommand` and mapping its

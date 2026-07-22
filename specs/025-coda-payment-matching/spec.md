@@ -144,8 +144,23 @@ invoice's paid status incorrectly.
   falls through to amount+sender matching, not treated as an exact match.
 - What happens if a suggested match's underlying invoice is marked paid through another path
   (e.g., a director manually marking it paid) before the director acts on the suggestion? The
-  stale suggestion is no longer confirmable and is re-surfaced as a duplicate/closed-invoice case
-  instead.
+  stale suggestion is no longer confirmable — confirming it is subject to the exact same
+  already-paid guard as FR-008, and re-surfaces the transaction as a duplicate/closed-invoice
+  case instead of applying it.
+- What happens when two transactions in the *same* imported file both resolve to the same
+  invoice (e.g., two lines carrying that invoice's exact reference)? The first one processed
+  marks the invoice paid; the second is flagged as a duplicate payment (FR-008) against that
+  now-paid invoice — the once-only-paid rule applies within a single import exactly as it does
+  across separate imports.
+- What happens when a series of partial payments against one invoice reaches or exceeds its full
+  total? The invoice is marked paid at the point the cumulative received amount meets or exceeds
+  its total, using the date of the transaction that completed it — a partial payment only ever
+  blocks the paid transition while a genuine shortfall remains (see FR-010).
+- Could two genuinely distinct real-world transactions ever be wrongly treated as the same
+  already-imported transaction (FR-013)? Only if they share an identical value date, amount,
+  sender IBAN, and communication text — accepted as a vanishingly rare, tolerable false-positive
+  risk for the dedupe rule chosen in Clarifications, not something this feature attempts to
+  disambiguate further.
 
 ## Requirements *(mandatory)*
 
@@ -170,19 +185,32 @@ invoice's paid status incorrectly.
   transaction, the system MUST NOT auto-select one — the transaction is left unmatched for manual
   review rather than guessing.
 - **FR-006**: The director MUST be able to confirm a suggested match, which marks the underlying
-  invoice paid identically to an exact reference match, or reject it, which leaves the invoice
-  untouched and moves the transaction to the unmatched list.
+  invoice paid identically to an exact reference match — subject to the same already-paid guard
+  as FR-008, so confirming a suggestion whose invoice was independently paid in the meantime MUST
+  fail the confirmation and re-surface the transaction as a duplicate/closed-invoice case instead
+  of applying it — or reject it, which leaves the invoice untouched and moves the transaction to
+  the unmatched list.
 - **FR-007**: A transaction that matches neither by reference nor by amount+sender MUST be listed
   as an unrecognized transfer for manual review, and MUST NOT be silently dropped from the import.
-- **FR-008**: An invoice MUST only ever be marked paid once. A transaction whose exact reference
-  matches an invoice that is already paid MUST be flagged as a duplicate payment for director
-  review rather than re-applying or erroring.
-- **FR-009**: A transaction that, by amount and sender, coincidentally lines up with an invoice
-  from an earlier billing period that is already paid MUST be flagged distinctly as a payment
-  against a closed invoice, and MUST NOT reopen or re-credit that invoice.
-- **FR-010**: When a transaction amount is less than the matched invoice's outstanding total, the
-  system MUST NOT mark the invoice paid. The partial payment MUST be recorded and shown against
-  the invoice along with the remaining balance.
+- **FR-008**: An invoice MUST only ever be marked paid once — this guard applies uniformly to
+  every path that can mark an invoice paid (FR-004's exact match, FR-006's confirmed suggestion,
+  and any transaction within the same import as a prior match), with no path exempt. A
+  transaction whose exact reference matches an invoice that is *already* paid MUST be flagged as
+  a duplicate payment ("dubbele betaling") for director review rather than re-applying or
+  erroring — distinct from FR-009's closed-invoice case in that here the transaction's own
+  reference genuinely names the already-paid invoice, rather than merely coinciding with one by
+  amount and sender.
+- **FR-009**: A transaction that, by amount and sender only (no reference naming that invoice),
+  coincidentally lines up with an invoice from an earlier billing period that is already paid
+  MUST be flagged distinctly as a payment against a closed invoice ("betaling voor afgesloten
+  factuur"), and MUST NOT reopen or re-credit that invoice.
+- **FR-010**: An invoice's outstanding total is its full total minus the sum of all amounts
+  already received against it from prior applied or partial transactions (not simply its
+  original total). When a transaction amount is less than that outstanding total, the system
+  MUST NOT mark the invoice paid; the partial payment MUST be recorded and shown against the
+  invoice along with the resulting remaining balance. When a transaction's amount, combined with
+  amounts already received, meets or exceeds the invoice's full total, the invoice MUST be
+  marked paid at that point, using the completing transaction's date.
 - **FR-011**: The director MUST be able to view all imported transactions for the tenant,
   filterable by how each was resolved (auto-matched, suggested/pending confirmation, unmatched,
   duplicate, closed-invoice payment).
@@ -190,11 +218,15 @@ invoice's paid status incorrectly.
   transaction as reviewed/handled, without that action changing any invoice's status.
 - **FR-013**: Re-importing a file whose transactions were already recorded in a prior import MUST
   NOT create duplicate transaction records. A transaction is considered already-imported when an
-  existing record for the same tenant matches on value date, amount, sender IBAN, and
-  communication text together; the system MUST recognize and skip such transactions and tell the
-  director how many were skipped.
-- **FR-014**: Sender account (IBAN) data MUST be stored encrypted at rest, and access to it MUST
-  be logged, consistent with this system's handling of other financial PII.
+  existing record for the same tenant matches on **all of** value date, amount, sender IBAN, and
+  communication text (not any one alone); the system MUST recognize and skip such transactions
+  and tell the director how many were skipped **in that specific import**.
+- **FR-014**: Sender account (IBAN) data MUST be stored encrypted at rest. The system MUST NOT
+  display a sender's full IBAN to a director anywhere in this feature — only a masked/partial
+  form (e.g., last 4 digits) — and MUST log an access record each time the full IBAN is decrypted
+  for internal use (e.g., to confirm a match candidate), consistent with this system's handling
+  of other financial PII. Sender name is not classified as sensitive under this requirement and
+  may be stored and displayed in plain text.
 - **FR-015**: All director-facing strings introduced by this feature MUST be available in Dutch,
   French, and English.
 - **FR-016**: A negative-amount transaction (a reversal/refund on the statement) MUST NOT be
@@ -226,9 +258,11 @@ invoice's paid status incorrectly.
   are automatically matched to the correct invoice with no director action required.
 - **SC-003**: Zero invoices are ever marked paid more than once, and zero already-paid invoices
   are silently re-credited by a later import, across all imports.
-- **SC-004**: Every transaction in an imported statement is accounted for in the review list —
-  none disappear silently — verified by transaction-count parity between the uploaded file and
-  the sum of all resolution categories after import.
+- **SC-004**: Every transaction in an imported statement is accounted for — none disappear
+  silently — verified by transaction-count parity between the uploaded file and the sum of every
+  resolution category after import (auto-matched, suggested, unmatched, duplicate, closed-
+  invoice, reversal) **plus** the count skipped as already-imported (FR-013); a transaction that
+  is skipped is exactly as "accounted for" as one that lands in the review list.
 - **SC-005**: A director can distinguish, at a glance from the review list, which transactions
   were handled automatically, which need a one-click confirmation, and which need real manual
   investigation.

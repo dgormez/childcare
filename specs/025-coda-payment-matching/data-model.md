@@ -11,7 +11,7 @@ this codebase's general preference for an explicit provenance record over inferr
 aggregate queries over child rows.
 
 | Column | Type | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `Id` | `uuid` PK | |
 | `FileName` | `text` | Original uploaded filename, for director-facing display only. |
 | `ImportedAt` | `timestamptz` | Server time of upload. |
@@ -30,7 +30,7 @@ state left behind).
 One row per parsed transaction line, scoped to the import that produced it.
 
 | Column | Type | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `Id` | `uuid` PK | |
 | `ImportId` | `uuid` FK → `coda_imports(Id)` | |
 | `ValueDate` | `date` | `Transaction.ValutaDate` from the parser (research.md R1). |
@@ -75,10 +75,13 @@ describes an unprompted arbitrary manual link beyond confirming/rejecting a syst
 ### Partial payment
 
 Not a `MatchType` value — a partial payment is simply an `Ogm` or confirmed `IbanAmount` row
-whose `AmountCents` is less than the matched invoice's `TotalCents` at read time (research.md
-R5). `Applied` stays `false` for these (the invoice is never marked `Paid` on a partial amount —
-FR-010); the outstanding balance is `Invoice.TotalCents` minus the sum of that invoice's applied-
-or-partial `CodaTransaction.AmountCents`.
+whose `AmountCents`, combined with the invoice's already-received total from earlier
+`CodaTransaction` rows, still falls short of the matched invoice's `TotalCents` (research.md R5).
+`Applied` stays `false` for these — the invoice is never marked `Paid` while a shortfall remains
+(FR-010) — but flips to `true` and triggers `MarkInvoicePaidCommand` the moment a transaction's
+amount, added to that already-received total, meets or exceeds `TotalCents`; the outstanding
+balance shown to a director is `Invoice.TotalCents` minus the sum of that invoice's applied-or-
+partial `CodaTransaction.AmountCents`.
 
 ## Relationships
 
