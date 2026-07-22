@@ -217,6 +217,16 @@ This feature also reuses `errors.location.not_found` (404, feature 004) for the 
 reservation-settings endpoint, and 013a's existing `errors.day_reservations.*` keys unchanged for
 every other submission-time failure mode.
 
+## CODA/CODABOX Payment Matching (feature `025-coda-payment-matching`)
+
+| Key | HTTP Status | Trigger |
+|---|---|---|
+| `errors.coda_import.invalid_file` | 422 | `POST /api/coda-imports` — the uploaded file isn't a well-formed CODA statement (FR-002); the underlying parser exception is logged server-side, never returned to the client. |
+| `errors.coda_transaction.not_found` | 404 | `POST /api/coda-transactions/{id}/confirm\|reject\|review` — no `CodaTransaction` with that id in this tenant. |
+| `errors.coda_transaction.not_confirmable` | 422 | `POST /api/coda-transactions/{id}/confirm` or `/reject` — the transaction isn't a pending `IbanAmount` suggestion (wrong match type, or already `Applied`), or (`confirm` only) the underlying invoice is no longer `Sent` — the transaction is reclassified to `Duplicate`/`Unmatched` server-side as part of this response rather than applied (spec.md Edge Cases). |
+| `errors.coda_transaction.not_reviewable` | 422 | `POST /api/coda-transactions/{id}/review` — the transaction isn't one of `Unmatched`/`Duplicate`/`ClosedInvoice`, or was already reviewed (FR-012). |
+| `errors.coda_transaction.invalid_match_type` | 422 | `GET /api/coda-transactions?matchType=...` — the `matchType` query value doesn't match one of the known `CodaMatchType` values. |
+
 ## Shared / cross-cutting
 
 | Key | HTTP Status | Trigger |
