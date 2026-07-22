@@ -331,11 +331,11 @@ future batch, and re-invite signing through the existing 024 flow.
       `web/app/(app)/invoices/sepa-batches/page.tsx` and any new/changed components against
       design-system.md (spacing scale, no nested cards, motion under 250ms) and platform-rules.md
       (director-web keyboard navigation, focus rings, high-density table conventions).
-- [ ] T050 Self-assessed convergence pass and fix every finding (standing rule — no LOW-severity
+- [X] T050 Self-assessed convergence pass and fix every finding (standing rule — no LOW-severity
       items left as debt): confirm `Workflows/billing.md`'s SEPA section (already added at
       specify-time) accurately describes the shipped flow, and re-check FR-001 through FR-015 each
       have a corresponding passing test.
-- [ ] T051 Run quickstart.md's six scenarios end-to-end against a local TestContainers-backed run
+- [X] T051 Run quickstart.md's six scenarios end-to-end against a local TestContainers-backed run
       as a final sanity check before the full suite.
 
 ---
