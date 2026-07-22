@@ -318,9 +318,12 @@ for a family with no mandate at all is excluded with a distinct "no mandate" rea
   reference, mandate signing date, sequence type, and end-to-end ID equal to the invoice's
   existing OGM reference.
 - **FR-002a**: Each debit instruction's sequence type MUST be `FRST` if no earlier batch has ever
-  successfully included an invoice under that contract's current SEPA mandate reference, and
-  `RCUR` otherwise — a mandate reference issued after a revoke-and-resign (FR-011/FR-012) MUST
-  correctly restart at `FRST`.
+  included an invoice under that contract's current SEPA mandate reference, and `RCUR` otherwise
+  — a mandate reference issued after a revoke-and-resign (FR-011/FR-012) MUST correctly restart
+  at `FRST`. "Included" here means generated into a batch at all, regardless of whether that
+  earlier debit was later returned (FR-010): a returned debit still means the mandate reference
+  was genuinely used at the bank once, so a subsequent debit under the same reference remains
+  `RCUR`, not a second `FRST`.
 - **FR-003**: The generated batch's required creditor headers (creditor identifier, creditor
   name, creditor IBAN) MUST come from the location's organisation-level SEPA creditor identifier
   (feature 024) and the location's existing bank account (feature 014) and name — the system MUST
@@ -334,12 +337,25 @@ for a family with no mandate at all is excluded with a distinct "no mandate" rea
 - **FR-006**: The system MUST validate the generated XML against the official pain.008.001.02
   schema before it is offered for download. A file that fails validation MUST NOT be returned to
   the director, MUST NOT change any invoice's status, and MUST surface a clear, human-readable
-  error rather than raw schema-validator output.
-- **FR-007**: On successful generation, every included invoice MUST transition from `Sent` to a
-  new `PendingDebit` status, and the batch itself MUST be persisted (execution date, location,
-  generated-by, generated-at, and its set of invoices) for later reference.
+  error rather than raw schema-validator output. Independent of structural schema-validity, the
+  message's own declared control totals (number of transactions, control sum) MUST match the
+  actual set of included instructions — a business-rule consistency check the XSD itself cannot
+  enforce, and a mismatch MUST be treated identically to a schema-validation failure (no download,
+  no status change).
+- **FR-006a**: If the debtor IBAN for any selected invoice cannot be decrypted (e.g., corrupted
+  ciphertext, a key-rotation mismatch), the entire batch generation MUST fail with no invoice
+  status changes and no partial file — the same never-partially-applied guarantee FR-006 already
+  gives a schema-validation failure — rather than silently omitting that one invoice from the
+  batch.
+- **FR-007**: On successful generation, every included invoice's transition from `Sent` to a new
+  `PendingDebit` status and the persisted `SepaBatch` record (execution date, location,
+  generated-by, generated-at, and its set of invoices) MUST happen as a single all-or-nothing
+  outcome — a failure partway through MUST leave every invoice at `Sent` and MUST NOT persist a
+  partial batch record, never a mix of some invoices moved and others not.
 - **FR-008**: Directors MUST be able to view a history of previously generated batches for a
-  location, each showing its execution date, invoice count, and total amount.
+  location, each showing its execution date, invoice count, and total amount. This total amount
+  MUST be the same value encoded in that batch's own XML control sum (FR-006) — never a second,
+  independently computed figure that could drift from what the bank actually received.
 - **FR-009**: A `PendingDebit` invoice MUST be treated as an open/matchable invoice by feature
   025's existing CODA reconciliation (exact-reference match and amount+IBAN suggested match)
   exactly as a `Sent` invoice already is, and MUST transition to `Paid` the same way.
@@ -348,15 +364,24 @@ for a family with no mandate at all is excluded with a distinct "no mandate" rea
   eligible for a future batch) and records the reason on the invoice. This action MUST NOT be
   available on a `Paid` invoice.
 - **FR-011**: Directors MUST be able to revoke a contract's SEPA mandate. A revoked mandate MUST
-  make every current and future invoice for that contract ineligible for any batch (FR-001's
-  eligibility check) until a new mandate is signed. Revoking MUST NOT delete the mandate's
-  history (signing date, prior mandate reference) — see FR-012.
+  make every invoice for that contract that is still `Sent` — and any invoice for it that becomes
+  `Sent` afterward — ineligible for any future batch (FR-001's eligibility check) until a new
+  mandate is signed. Revoking has no effect on an invoice already `PendingDebit` from a batch
+  generated before the revocation — that batch has already left the system (downloaded, likely
+  already uploaded to the bank) and is not retroactively recalled; it is handled through FR-009's
+  normal reconciliation or FR-010's returned-debit path like any other `PendingDebit` invoice, not
+  through mandate revocation. Revoking MUST NOT delete the mandate's history (signing date, prior
+  mandate reference) — see FR-012.
 - **FR-012**: The system MUST NOT allow directly editing the IBAN on an existing signed mandate.
   Correcting a changed IBAN MUST go through revoking the current mandate (FR-011) and sending a
   new signing invitation via feature 024's existing invitation flow.
 - **FR-013**: An invoice MUST never appear as eligible in more than one batch at a time — once
   `PendingDebit`, it is excluded from every subsequent batch's eligible list until it returns to
-  `Sent` (FR-010) or becomes `Paid` (FR-009).
+  `Sent` (FR-010) or becomes `Paid` (FR-009). This guarantee MUST hold even when two batch-
+  generation requests for overlapping invoice selections are submitted concurrently — an invoice
+  MUST be claimed by at most one successfully generated batch, never both, regardless of how
+  closely-timed the requests are; a losing concurrent request MUST fail with FR-002's
+  invoice-not-eligible error for that invoice, not silently double-include it.
 - **FR-014**: The debtor IBAN decrypted during batch generation MUST use the same IBAN-protection
   mechanism and purpose string feature 024 already established for a contract's mandate IBAN, and
   each decryption for XML generation MUST be logged as an access event, consistent with this

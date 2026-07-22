@@ -35,8 +35,9 @@ user story depends on.
 
 - [ ] T002 [P] Add `PendingDebit` to `InvoiceStatus` (between `Sent` and `Paid`) in
       `backend/ChildCare.Domain/Enums/InvoiceStatus.cs` (data-model.md).
-- [ ] T003 [P] Add `SepaBatchId` (`Guid?`) and `SepaReturnReason` (`string?`) to `Invoice` in
-      `backend/ChildCare.Domain/Entities/Invoice.cs`.
+- [ ] T003 [P] Add `SepaBatchId` (`Guid?`), `SepaMandateReferenceUsed` (`string?`, immutable
+      snapshot — never cleared by a return, data-model.md), and `SepaReturnReason` (`string?`) to
+      `Invoice` in `backend/ChildCare.Domain/Entities/Invoice.cs`.
 - [ ] T004 [P] Add `SepaRevokedAt` (`DateTime?`) to `Contract` in
       `backend/ChildCare.Domain/Entities/Contract.cs`, next to the existing `SepaAuthorisedAt`
       field.
@@ -48,7 +49,7 @@ user story depends on.
       migration (`dotnet ef migrations add AddSepaDirectDebit --context TenantDbContext`) in
       `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/`. Extend
       `TenantMigrationRolloutTests`'/`LegacyVaccinationMigrationTests`' revert-helper for the new
-      table and the three new columns, per the pattern every migration-adding feature since 012a
+      table and the four new columns, per the pattern every migration-adding feature since 012a
       has needed (see BACKLOG.md's shipped-notes for 012a/013c/006a/013d/013g/013h/014/014a/015/
       025 — check FK drop order against the tables they reference, the exact mistake 013g's
       shipped-note flagged) (depends on T002-T005).
@@ -61,23 +62,29 @@ user story depends on.
       wrapping QuestPDF).
 - [ ] T008 [P] Implement `SepaBatchXmlGenerator : ISepaBatchXmlGenerator` in
       `backend/ChildCare.Infrastructure/Sepa/SepaBatchXmlGenerator.cs`: builds the
-      `pain.008.001.02` `Document` tree via `System.Xml.Linq` (research.md R1 — `GrpHdr`, one
-      `PmtInf` per batch with the creditor headers, one `DrctDbtTxInf` per instruction), then
-      validates the result against the embedded XSD (`GetManifestResourceStream`, cached
-      `XmlSchemaSet`, research.md R2) before returning it — a validation failure throws a typed
-      exception the Application layer maps to `500 errors.sepa_batch.generation_failed` (Principle
-      VI, never a raw `XmlSchemaException` to the client) (depends on T001).
+      `pain.008.001.02` `Document` tree via `System.Xml.Linq` (research.md R1 — `GrpHdr` with
+      `NbOfTxs`/`CtrlSum` computed from the actual instruction list — never a caller-supplied
+      value that could drift from it, per FR-006's control-total requirement — one `PmtInf` per
+      batch with the creditor headers, one `DrctDbtTxInf` per instruction), then validates the
+      result against the embedded XSD (`GetManifestResourceStream`, cached `XmlSchemaSet`,
+      research.md R2) before returning it — a validation failure throws a typed exception the
+      Application layer maps to `500 errors.sepa_batch.generation_failed` (Principle VI, never a
+      raw `XmlSchemaException` to the client) (depends on T001).
 - [ ] T009 [P] Unit tests for `SepaBatchXmlGenerator` in
       `backend/ChildCare.Api.Tests/SepaBatches/SepaBatchXmlGeneratorTests.cs`: a valid input set
       produces XML that passes schema validation with the expected element values (amount,
-      IBAN, mandate reference, `SeqTp`, `EndToEndId`); an input that would produce
-      schema-invalid XML (e.g., an over-length field) throws the typed exception rather than
-      returning an invalid document (depends on T008).
+      IBAN, mandate reference, `SeqTp`, `EndToEndId`) and whose `NbOfTxs`/`CtrlSum` match the
+      input instruction count/sum exactly (FR-006); an input that would produce schema-invalid
+      XML (e.g., an over-length field) throws the typed exception rather than returning an
+      invalid document (depends on T008).
 - [ ] T010 [P] Implement `SepaSequenceTypeResolver` (FR-002a / research.md R3) in
       `backend/ChildCare.Application/SepaBatches/SepaSequenceTypeResolver.cs`: given a contract's
-      current `SepaMandateReference` and a query for whether any existing `SepaBatch`'s invoice
-      set has ever included an invoice for that contract under that reference, returns `FRST` or
-      `RCUR` — unit-testable independent of the MediatR handler and EF Core.
+      current `SepaMandateReference`, queries whether any `Invoice` for that contract has
+      `SepaMandateReferenceUsed` equal to it (the immutable snapshot column, data-model.md — not
+      the live, clearable `SepaBatchId`, so a returned debit still correctly counts as prior use
+      and a revoke-and-resign's new reference correctly does not match any old invoice) — returns
+      `FRST` if none found, `RCUR` otherwise; unit-testable independent of the MediatR handler and
+      EF Core.
 - [ ] T011 [P] Unit tests for `SepaSequenceTypeResolver` in
       `backend/ChildCare.Api.Tests/SepaBatches/SepaSequenceTypeResolverTests.cs`: no prior batch
       under the current reference → `FRST`; a prior batch under the current reference → `RCUR`;
@@ -121,6 +128,15 @@ one instruction per eligible invoice, and those invoices become `PendingDebit`.
       `PendingDebit` from a concurrent/prior batch) returns `422
       errors.sepa_batch.invoice_not_eligible` and changes nothing (FR-013), in
       `GenerateSepaBatchTests.cs`.
+- [ ] T016a [P] [US1] API test: two concurrent `POST .../sepa-batches` requests both including the
+      same invoice — exactly one succeeds and includes it; the other either fails outright
+      (`errors.sepa_batch.invoice_not_eligible`) or succeeds without that invoice, but the invoice
+      is never claimed by both resulting batches (FR-013/CHK003, data-model.md's Concurrency-safe
+      eligibility claim), in `GenerateSepaBatchTests.cs`.
+- [ ] T016b [P] [US1] API test: a contract whose `SepaIbanEncrypted` cannot be decrypted (a
+      corrupted/invalid ciphertext fixture) fails the entire batch generation with no invoice
+      status changes and no `SepaBatch` row persisted, even when other selected invoices in the
+      same request are otherwise valid (FR-006a), in `GenerateSepaBatchTests.cs`.
 - [ ] T017 [P] [US1] API test: an empty `invoiceIds` selection returns `422
       errors.sepa_batch.no_invoices_selected`, in `GenerateSepaBatchTests.cs`.
 - [ ] T018 [P] [US1] API test for `GET /api/locations/{locationId}/sepa-batches` in
@@ -138,12 +154,18 @@ one instruction per eligible invoice, and those invoices become `PendingDebit`.
       `backend/ChildCare.Application/SepaBatches/GenerateSepaBatchCommand.cs`: re-validates
       eligibility and execution date server-side (never trusts the client's prior read),
       resolves creditor headers from `Tenant.SepaCreditorIdentifier`/`Tenant.Name`/
-      `Location.BankAccountNumber` (research.md R5), decrypts each debtor IBAN via
-      `IIbanProtector` (logging the access per FR-014/research.md R4), resolves the debtor name
-      via the primary-contact join (research.md R6), resolves `SeqTp` via
-      `SepaSequenceTypeResolver` (T010), calls `ISepaBatchXmlGenerator` (T008), and — only on
-      successful generation — persists the `SepaBatch` row and updates every included invoice's
-      `Status`/`SepaBatchId` in one transaction (depends on T005, T008, T010, T019, T020).
+      `Location.BankAccountNumber` (research.md R5); decrypts each debtor IBAN via
+      `IIbanProtector` (logging the access per FR-014/research.md R4) — if any decryption fails,
+      aborts the whole command before any persistence (FR-006a, no partial batch); resolves the
+      debtor name via the primary-contact join (research.md R6); resolves `SeqTp` via
+      `SepaSequenceTypeResolver` (T010); calls `ISepaBatchXmlGenerator` (T008); and — only on
+      successful generation — claims each invoice via a conditional update (`Status = 'Sent' →
+      'PendingDebit'` guarded by the current status in the same statement, not read-then-write;
+      data-model.md's Concurrency-safe eligibility claim, FR-013/CHK003) and persists the
+      `SepaBatch` row, all in one database transaction (FR-007's all-or-nothing guarantee) — a
+      losing claim on any invoice (lost a concurrent race) fails the whole command with FR-002's
+      invoice-not-eligible error rather than generating a batch for a partial set (depends on T005,
+      T008, T010, T019, T020).
 - [ ] T022 [US1] `ListSepaBatchesQuery`/Handler in
       `backend/ChildCare.Application/SepaBatches/ListSepaBatchesQuery.cs` (depends on T019).
 - [ ] T023 [US1] `SepaBatchEndpoints.cs` in `backend/ChildCare.Api/Endpoints/` —
@@ -266,6 +288,10 @@ future batch, and re-invite signing through the existing 024 flow.
 - [ ] T042 [P] [US4] API test: after revocation, feature 024's existing
       `POST /api/contracts/{id}/signing-invitation` succeeds identically to a never-signed
       contract (FR-012), in `RevokeSepaMandateTests.cs`.
+- [ ] T042a [P] [US4] API test: revoking a contract's mandate has no effect on an invoice already
+      `PendingDebit` from a batch generated before the revocation — its status/`SepaBatchId` are
+      unchanged, and it still reconciles via FR-009 or FR-010 exactly as before (FR-011's
+      no-retroactive-effect clarification), in `RevokeSepaMandateTests.cs`.
 - [ ] T043 [P] [US4] API test: after a revoke-and-resign cycle (new `SepaMandateReference`), a
       subsequent batch computes `SeqTp = FRST` again, not `RCUR` (research.md R3), in
       `backend/ChildCare.Api.Tests/SepaBatches/SepaSequenceTypeResolverTests.cs` (integration-level

@@ -53,22 +53,33 @@ re-read from disk per batch.
 
 ## R3 — Debit instruction sequence type (FRST/RCUR)
 
-**Decision**: Per spec.md's self-answered clarification, compute `SeqTp` per invoice at
-generation time: `FRST` if no prior `SepaBatch` has ever included an invoice for that contract
-under its *current* `SepaMandateReference`; `RCUR` otherwise. Implemented as a query against
-existing `SepaBatch`/`Invoice.SepaBatchId` rows filtered by `Contract.SepaMandateReference` — no
-new column needed to track "has this mandate been used before," since the batch history itself
-already answers it.
+**Decision**: Per spec.md's self-answered clarification (as tightened by this feature's own
+safety checklist, CHK008), compute `SeqTp` per invoice at generation time: `FRST` if no invoice
+for that contract has ever been generated into a batch under its *current* `SepaMandateReference`
+— regardless of whether that earlier debit was later returned (FR-010) — and `RCUR` otherwise.
+Implemented via a new immutable snapshot column, `Invoice.SepaMandateReferenceUsed` (set once at
+generation time, alongside `SepaBatchId`, and — unlike `SepaBatchId` — never cleared by FR-010's
+return action): the resolver's query is `EXISTS invoice for this ContractId WHERE
+SepaMandateReferenceUsed == Contract.SepaMandateReference (current)`.
 
-**Rationale**: Avoids a redundant, independently-driftable "first use" flag on `Contract` — the
-batch history is already the authoritative record of what has actually been collected, and a
-revoke-and-resign naturally resets the answer because it produces a new
-`SepaMandateReference` (spec.md FR-011/FR-012), which no prior batch could possibly reference.
+**Rationale**: A plain query against the live `Invoice.SepaBatchId` (as the first draft of this
+research entry proposed) breaks in two ways once FR-010's return path is considered: (1)
+`SepaBatchId` is cleared on return, so a returned invoice would stop counting as "ever batched,"
+wrongly resetting to `FRST` — the opposite of this feature's own corrected FR-002a rule; and (2)
+even left uncleared, `SepaBatchId` alone can't distinguish "batched under the current mandate
+reference" from "batched under a since-superseded reference before a revoke-and-resign," since
+`Contract.SepaMandateReference` is mutable and a stale historical batch link would otherwise
+appear to match after being compared only implicitly. `SepaMandateReferenceUsed` snapshots the
+exact reference actually used at generation time, permanently, independent of the invoice's later
+status changes — the only way to answer "was *this specific mandate* ever used before" correctly
+across a return and across a revoke-and-resign.
 
 **Alternatives considered**: A `Contract.SepaFirstDebitDone` boolean, flipped on first batch
 inclusion — rejected as a second source of truth that must be kept in lockstep with the batch
 history for no benefit, at this codebase's batch-history query volumes (a handful of batches per
-tenant per month).
+tenant per month), and it would need its own revoke-triggered reset logic duplicating what a new
+`SepaMandateReference` value already gives for free. Relying on live `Invoice.SepaBatchId` alone —
+rejected per the Rationale above, once CHK008 surfaced the return/revoke interaction.
 
 ## R4 — Reusing `IIbanProtector` for the debtor IBAN
 

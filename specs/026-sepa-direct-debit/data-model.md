@@ -21,6 +21,8 @@ reference has no prior batch history to match against.
 | Column | Type | Notes |
 |---|---|---|
 | `SepaBatchId` | `Guid?` | Set when the invoice is included in a generated batch (FR-007); cleared when the invoice returns to `Sent` via FR-010's returned-debit action. Null for every invoice not currently `PendingDebit`. |
+| `SepaMandateReferenceUsed` | `string?` | Set once at generation time, alongside `SepaBatchId` — an immutable snapshot of `Contract.SepaMandateReference` as it was *at that moment*. Unlike `SepaBatchId`, **never cleared** by a return (FR-010) or by anything else — this is a permanent audit fact ("this invoice was once debited under mandate reference X"), not a current-state pointer. Exists solely to make `SepaSequenceTypeResolver`'s FRST/RCUR query (research.md R3) correct across both a return and a revoke-and-resign, which a query against the live, clearable `SepaBatchId` alone cannot do (research.md R3's Rationale, added after this feature's own safety checklist CHK008). |
+| `SepaReturnReason` | `string?` | Set by FR-010's returned-debit action alongside the `PendingDebit → Sent` transition. |
 
 ### `InvoiceStatus` (existing enum, feature 014)
 
@@ -91,3 +93,15 @@ An invoice is batch-eligible when **all** of:
 Exclusion reason shown to the director (FR-001) is the first of (2)/(3)/(4) that fails, in that
 priority order — "no mandate" takes precedence over "non-positive amount" since a missing mandate
 is the more common and more actionable case for a director to see first.
+
+## Concurrency-safe eligibility claim (FR-013)
+
+`GenerateSepaBatchCommand` (tasks.md T021) MUST claim each invoice via a conditional update —
+`UPDATE invoices SET Status = 'PendingDebit', SepaBatchId = @batchId, SepaMandateReferenceUsed =
+@ref WHERE Id = @id AND Status = 'Sent'` (or the EF Core equivalent, e.g. an optimistic-
+concurrency token check) — checking the affected-row count before treating that invoice as
+successfully included, rather than a read-then-write pattern (read eligibility, then write) that
+two concurrent requests could both pass before either writes. A batch whose invoice set was
+computed against a stale eligibility read MUST re-verify at claim time and fail per FR-013's
+"invoice not eligible" error for any invoice it loses the race on, per this feature's own safety
+checklist (CHK003).
