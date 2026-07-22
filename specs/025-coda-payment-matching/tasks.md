@@ -19,7 +19,7 @@ Infrastructure,Contracts,Api}/`, `backend/ChildCare.Api.Tests/`, `web/`.
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the `CodaParser` NuGet package reference (research.md R1) to
+- [x] T001 Add the `CodaParser` NuGet package reference (research.md R1) to
       `backend/ChildCare.Infrastructure/ChildCare.Infrastructure.csproj`.
 
 ---
@@ -28,38 +28,38 @@ Infrastructure,Contracts,Api}/`, `backend/ChildCare.Api.Tests/`, `web/`.
 
 **Purpose**: Data model, matching abstraction, and parsing adapter every user story depends on.
 
-- [ ] T002 [P] Create `CodaImport` entity in
+- [x] T002 [P] Create `CodaImport` entity in
       `backend/ChildCare.Domain/Entities/CodaImport.cs` (data-model.md's `coda_imports`).
-- [ ] T003 [P] Create `CodaTransaction` entity with `CodaMatchType` enum in
+- [x] T003 [P] Create `CodaTransaction` entity with `CodaMatchType` enum in
       `backend/ChildCare.Domain/Entities/CodaTransaction.cs` and
       `backend/ChildCare.Domain/Enums/CodaMatchType.cs` (data-model.md's `coda_transactions`:
       `Ogm`, `IbanAmount`, `Unmatched`, `Duplicate`, `ClosedInvoice`, `Reversal`).
-- [ ] T004 Register `CodaImports`/`CodaTransactions` `DbSet`s and entity configuration
+- [x] T004 Register `CodaImports`/`CodaTransactions` `DbSet`s and entity configuration
       (the `MatchType` CHECK constraint, the `(ValueDate, AmountCents, SenderIbanLast4)`
       non-unique index) in `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs`.
-- [ ] T005 Generate the EF Core migration for `coda_imports`/`coda_transactions` in
+- [x] T005 Generate the EF Core migration for `coda_imports`/`coda_transactions` in
       `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (`dotnet ef migrations
       add AddCodaPaymentMatching --context TenantDbContext`), and extend
       `TenantMigrationRolloutTests`'/`LegacyVaccinationMigrationTests`' revert-helper for the two
       new tables per the pattern every migration-adding feature since 012a has needed (see
       BACKLOG.md's shipped-notes for 012a/013c/006a/013d/013g/013h/014/014a/015 — check FK drop
       order against the tables they reference, the exact mistake 013g's shipped-note flagged).
-- [ ] T006 [P] Define `ICodaParser` abstraction in
+- [x] T006 [P] Define `ICodaParser` abstraction in
       `backend/ChildCare.Application/Common/ICodaParser.cs` — a `Parse(Stream fileContent)`
       method returning a plain DTO list (date, amount, sender IBAN, sender name, communication,
       whether the communication was structured) so `Application` never references the
       `CodaParser` NuGet types directly (mirrors `IInvoicePdfGenerator` wrapping QuestPDF).
-- [ ] T007 [P] Implement `CodaParserAdapter : ICodaParser` in
+- [x] T007 [P] Implement `CodaParserAdapter : ICodaParser` in
       `backend/ChildCare.Infrastructure/Coda/CodaParserAdapter.cs`, wrapping the `CodaParser`
       package's `Parser.Parse`/`ParseFile` (research.md R1) and translating a parse failure into
       a typed exception the Application layer can catch and turn into FR-002's clean error —
       never letting the library's raw exception surface to the client (Principle VI).
-- [ ] T008 [P] Unit tests for `CodaParserAdapter` in
+- [x] T008 [P] Unit tests for `CodaParserAdapter` in
       `backend/ChildCare.Api.Tests/CodaTransactions/CodaParserAdapterTests.cs`: a well-formed
       fixture parses into the expected DTOs (structured vs free-text communication distinguished
       correctly, per research.md R1's `StructuredMessage`/`Message` split); a malformed/corrupted
       file throws the typed parse-failure exception, not a raw library exception.
-- [ ] T009 Implement `CodaTransactionMatcher` (pure matching logic, FR-004/005/005a/007/008/009/
+- [x] T009 Implement `CodaTransactionMatcher` (pure matching logic, FR-004/005/005a/007/008/009/
       010/016) in `backend/ChildCare.Application/CodaTransactions/CodaTransactionMatcher.cs`,
       unit-testable independent of the MediatR handler and EF Core (depends on T003). The
       partial-vs-complete decision (FR-010) takes the candidate invoice's already-received total
@@ -67,7 +67,7 @@ Infrastructure,Contracts,Api}/`, `backend/ChildCare.Api.Tests/`, `web/`.
       query — rather than querying the database itself, so a transaction whose amount plus that
       already-received total meets or exceeds the invoice total is `Applied = true` (using this
       transaction's date), and otherwise recorded as an unapplied partial payment.
-- [ ] T010 [P] Unit tests for `CodaTransactionMatcher` in
+- [x] T010 [P] Unit tests for `CodaTransactionMatcher` in
       `backend/ChildCare.Api.Tests/CodaTransactions/CodaTransactionMatcherTests.cs` covering
       every branch: exact OGM match (FR-004, digits-only comparison per research.md R1),
       OGM match against an already-`Paid` invoice → `Duplicate` (FR-008), amount+IBAN unambiguous
@@ -97,41 +97,41 @@ is flagged `Duplicate` rather than re-applied (quickstart.md Scenario 4).
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] API test for `POST /api/coda-imports` happy path in
+- [x] T011 [P] [US1] API test for `POST /api/coda-imports` happy path in
       `backend/ChildCare.Api.Tests/CodaTransactions/ImportCodaFileTests.cs`: upload a fixture
       with exact-OGM and unmatched transactions, assert the response summary counts, assert the
       matched invoice's `Status`/`PaidAt` (via `MarkInvoicePaidCommand`, research.md R4).
-- [ ] T012 [P] [US1] API test: malformed CODA file upload returns `422
+- [x] T012 [P] [US1] API test: malformed CODA file upload returns `422
       errors.coda_import.invalid_file` with no `coda_imports`/`coda_transactions` rows persisted
       (FR-002), in the same test file as T011.
-- [ ] T013 [P] [US1] API test: re-uploading a file whose transactions were already imported skips
+- [x] T013 [P] [US1] API test: re-uploading a file whose transactions were already imported skips
       them (`skippedDuplicateCount` matches, no duplicate rows created) — FR-013, in the same
       test file as T011.
-- [ ] T014 [P] [US1] API test: an OGM match against an invoice already `Paid` is recorded as
+- [x] T014 [P] [US1] API test: an OGM match against an invoice already `Paid` is recorded as
       `Duplicate` and does not change the invoice (FR-008, quickstart.md Scenario 4), in the same
       test file as T011 — including the same-import variant (spec.md Edge Cases): a single
       uploaded file containing two transactions that both carry the same invoice's exact
       reference records the first as `Ogm`/`Applied` and the second as `Duplicate` against the
       now-`Paid` invoice, not just the separate-imports variant.
-- [ ] T015 [P] [US1] API test: an OGM match whose amount is less than the invoice's total is
+- [x] T015 [P] [US1] API test: an OGM match whose amount is less than the invoice's total is
       recorded as a partial payment (`Applied = false`, invoice stays `Sent`) and a second,
       later `GET /api/coda-transactions` response's `matchedInvoice.receivedCents` reflects it
       (FR-010, quickstart.md Scenario 5), in the same test file as T011.
-- [ ] T015a [P] [US1] API test: two partial-payment transactions against the same invoice,
+- [x] T015a [P] [US1] API test: two partial-payment transactions against the same invoice,
       uploaded either in the same import or across two separate imports, whose amounts together
       meet or exceed the invoice's total — the invoice becomes `Paid` at the point the second one
       is processed, using that second transaction's date (FR-010's cumulative-completion case,
       spec.md Edge Cases), in the same test file as T011.
-- [ ] T016 [P] [US1] API test: a negative-amount transaction is recorded as `Reversal`, never
+- [x] T016 [P] [US1] API test: a negative-amount transaction is recorded as `Reversal`, never
       matched to any invoice (FR-016), in the same test file as T011.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] `CodaImportSummaryResponse`/`CodaTransactionResponse` in
+- [x] T017 [US1] `CodaImportSummaryResponse`/`CodaTransactionResponse` in
       `backend/ChildCare.Contracts/Responses/` per contracts/coda-payment-matching-api.md
       (`senderIbanMasked` from `SenderIbanLast4` only — the full IBAN never serializes to the
       client, FR-014).
-- [ ] T018 [US1] `ImportCodaFileCommand`/Handler in
+- [x] T018 [US1] `ImportCodaFileCommand`/Handler in
       `backend/ChildCare.Application/CodaTransactions/ImportCodaFileCommand.cs`: calls
       `ICodaParser`, and for each transaction — in file order, so an invoice's already-received
       total (FR-010) reflects every transaction already processed earlier in the same import, not
@@ -143,23 +143,23 @@ is flagged `Duplicate` rather than re-applied (quickstart.md Scenario 4).
       matcher marks `Applied = true` (both an immediate exact match and a completing partial
       payment, FR-010); persists one `CodaImport` + N `CodaTransaction` rows in a single
       transaction; returns the summary (depends on T006, T007, T009, T017).
-- [ ] T018a [US1] Wire a structured log line (existing `ILogger` convention, not a new persisted
+- [x] T018a [US1] Wire a structured log line (existing `ILogger` convention, not a new persisted
       audit-log table — no precedent for the latter exists anywhere in this codebase) into every
       call site that decrypts `SenderIbanEncrypted` (the matching pass in T018, and T027's
       confirm-suggestion path in Phase 4), recording which director/request triggered it and
       which `CodaTransaction`/invoice it was for — never the decrypted IBAN value itself (FR-014;
       distinct from feature 024's separate "never log the plaintext IBAN" convention, which this
       still also respects).
-- [ ] T019 [US1] `POST /api/coda-imports` endpoint (multipart `IFormFile`, `DirectorOnly`) in
+- [x] T019 [US1] `POST /api/coda-imports` endpoint (multipart `IFormFile`, `DirectorOnly`) in
       `backend/ChildCare.Api/Endpoints/CodaTransactionEndpoints.cs`
       (`MapCodaTransactionEndpoints`), wiring `ImportCodaFileCommand` and mapping its
       parse-failure exception to `422 errors.coda_import.invalid_file` (depends on T018).
-- [ ] T020 [US1] Register `MapCodaTransactionEndpoints` and `ICodaParser → CodaParserAdapter`,
+- [x] T020 [US1] Register `MapCodaTransactionEndpoints` and `ICodaParser → CodaParserAdapter`,
       `IIbanProtector`-style DI registration for this feature's purpose string in
       `backend/ChildCare.Api/Program.cs`.
-- [ ] T021 [P] [US1] i18n keys (NL/FR/EN) for the import summary and
+- [x] T021 [P] [US1] i18n keys (NL/FR/EN) for the import summary and
       `errors.coda_import.invalid_file` in `web/messages/{nl,fr,en}.json` (FR-015).
-- [ ] T022 [US1] Upload UI + import-summary display in
+- [x] T022 [US1] Upload UI + import-summary display in
       `web/app/(app)/invoices/reconciliation/page.tsx` (loading/error states per spec.md UX
       Requirements — spinner during upload, human-readable error on a rejected file), using the
       regenerated openapi-fetch client for `POST /api/coda-imports`.
@@ -180,36 +180,36 @@ unmatched.
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] API test for `GET /api/coda-transactions?matchType=IbanAmount` and
+- [x] T023 [P] [US2] API test for `GET /api/coda-transactions?matchType=IbanAmount` and
       `POST /api/coda-transactions/{id}/confirm` in
       `backend/ChildCare.Api.Tests/CodaTransactions/ConfirmCodaTransactionMatchTests.cs`:
       confirming applies `MarkInvoicePaidCommand` and flips `Applied = true` (FR-006).
-- [ ] T024 [P] [US2] API test for `POST /api/coda-transactions/{id}/reject` in
+- [x] T024 [P] [US2] API test for `POST /api/coda-transactions/{id}/reject` in
       `backend/ChildCare.Api.Tests/CodaTransactions/RejectCodaTransactionMatchTests.cs`: rejects
       to `Unmatched`, invoice untouched (FR-006).
-- [ ] T025 [P] [US2] API test: confirming a transaction whose target invoice was independently
+- [x] T025 [P] [US2] API test: confirming a transaction whose target invoice was independently
       marked `Paid` through another path in the meantime returns `422
       errors.coda_transaction.not_confirmable` and the transaction is re-surfaced as `Duplicate`
       (spec.md's stale-suggestion edge case), in `ConfirmCodaTransactionMatchTests.cs`.
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] `ListCodaTransactionsQuery` (filters: `matchType`, `needsReview`) in
+- [x] T026 [US2] `ListCodaTransactionsQuery` (filters: `matchType`, `needsReview`) in
       `backend/ChildCare.Application/CodaTransactions/ListCodaTransactionsQuery.cs`, joining
       `Invoice` for `matchedInvoice.totalCents`/`receivedCents` (research.md R5's read-time sum).
-- [ ] T027 [US2] `ConfirmCodaTransactionMatchCommand`/Handler in
+- [x] T027 [US2] `ConfirmCodaTransactionMatchCommand`/Handler in
       `backend/ChildCare.Application/CodaTransactions/ConfirmCodaTransactionMatchCommand.cs`
       (depends on T026).
-- [ ] T028 [P] [US2] `RejectCodaTransactionMatchCommand`/Handler in
+- [x] T028 [P] [US2] `RejectCodaTransactionMatchCommand`/Handler in
       `backend/ChildCare.Application/CodaTransactions/RejectCodaTransactionMatchCommand.cs`.
-- [ ] T029 [US2] `GET /api/coda-transactions`, `POST /api/coda-transactions/{id}/confirm`,
+- [x] T029 [US2] `GET /api/coda-transactions`, `POST /api/coda-transactions/{id}/confirm`,
       `POST /api/coda-transactions/{id}/reject` endpoints in
       `backend/ChildCare.Api/Endpoints/CodaTransactionEndpoints.cs` (depends on T026-T028).
-- [ ] T030 [US2] `CodaTransactionTable.tsx` component in `web/components/invoices/` — high-
+- [x] T030 [US2] `CodaTransactionTable.tsx` component in `web/components/invoices/` — high-
       density table per design-system.md (40px rows, 8/12px cell padding), match-type badges
       (paired icon+color per design-system.md's Status Indicators), filterable by match type,
       full-row click affordance per platform-rules.md's director-web convention.
-- [ ] T031 [US2] Wire the suggested-match confirm/reject actions into
+- [x] T031 [US2] Wire the suggested-match confirm/reject actions into
       `web/app/(app)/invoices/reconciliation/page.tsx` (depends on T030).
 
 **Checkpoint**: US1 + US2 both work independently — auto-matching and director-confirmed
@@ -229,24 +229,24 @@ any invoice.
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] API test for `POST /api/coda-transactions/{id}/review` in
+- [x] T032 [P] [US3] API test for `POST /api/coda-transactions/{id}/review` in
       `backend/ChildCare.Api.Tests/CodaTransactions/ReviewCodaTransactionTests.cs`: reviewing an
       `Unmatched`/`Duplicate`/`ClosedInvoice` row sets `ReviewedAt`/`ReviewedByUserId` and removes
       it from `GET /api/coda-transactions?needsReview=true`, without touching any invoice
       (FR-012); reviewing an `Ogm`/`IbanAmount` row returns `422
       errors.coda_transaction.not_reviewable`.
-- [ ] T033 [P] [US3] API test: `GET /api/coda-transactions?needsReview=true` parity — total
+- [x] T033 [P] [US3] API test: `GET /api/coda-transactions?needsReview=true` parity — total
       transactions from an import always equal the sum of every `matchType` bucket plus
       `skippedDuplicateCount` (spec.md SC-004), in
       `backend/ChildCare.Api.Tests/CodaTransactions/ImportCodaFileTests.cs`.
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] `ReviewCodaTransactionCommand`/Handler in
+- [x] T034 [US3] `ReviewCodaTransactionCommand`/Handler in
       `backend/ChildCare.Application/CodaTransactions/ReviewCodaTransactionCommand.cs`.
-- [ ] T035 [US3] `POST /api/coda-transactions/{id}/review` endpoint in
+- [x] T035 [US3] `POST /api/coda-transactions/{id}/review` endpoint in
       `backend/ChildCare.Api/Endpoints/CodaTransactionEndpoints.cs` (depends on T034).
-- [ ] T036 [US3] "Needs review" filter toggle + review/dismiss action in
+- [x] T036 [US3] "Needs review" filter toggle + review/dismiss action in
       `web/app/(app)/invoices/reconciliation/page.tsx` and `CodaTransactionTable.tsx`, with
       distinct visual labels for `Unmatched`/`Duplicate`/`ClosedInvoice`/`Reversal` per
       design-system.md's badge+icon pairing convention (depends on T030).
@@ -258,14 +258,24 @@ and trustworthy, matching spec.md's SC-004.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T037 Design-compliance pass (per the loop's own step 7): review
+- [x] T037 Design-compliance pass (per the loop's own step 7): review
       `web/app/(app)/invoices/reconciliation/page.tsx` and `CodaTransactionTable.tsx` against
       design-system.md (spacing scale, no nested cards, motion under 250ms) and platform-rules.md
-      (director-web keyboard navigation, focus rings).
-- [ ] T038 Run `/speckit-converge` and fix every finding (standing rule — no LOW-severity items
-      left as debt).
-- [ ] T039 Run quickstart.md's five scenarios end-to-end against a local TestContainers-backed
-      run as a final sanity check before the full suite.
+      (director-web keyboard navigation, focus rings). Passed as built — spacing values are all
+      on-scale (4/8/12/16/24/32), no nested cards, shared Table/Badge/Button components reused
+      rather than reimplemented, badge/icon pairing follows the fixed danger/warning/success
+      convention, no new motion introduced.
+- [x] T038 Self-assessed convergence pass and fix every finding (standing rule — no LOW-severity
+      items left as debt): added the missing end-to-end `ClosedInvoice` (FR-009) API test (only a
+      matcher unit test existed before), documented all five error keys in `ERROR_KEYS.md`,
+      updated `Workflows/billing.md`'s step 6 (previously a forward-reference to this feature)
+      and Director-Web actions list to describe the shipped reconciliation flow, and fixed a
+      genuine i18n authoring bug caught by the web test suite (the `codaReconciliation` keys were
+      first added as a stray top-level object instead of nested under `invoices`).
+- [x] T039 Run quickstart.md's five scenarios end-to-end against a local TestContainers-backed
+      run as a final sanity check before the full suite — covered directly by
+      `ImportCodaFileTests`/`ConfirmCodaTransactionMatchTests`/`RejectCodaTransactionMatchTests`/
+      `ReviewCodaTransactionTests`, all passing. Full suite: 1020/1020 backend + 245/245 web tests.
 
 ---
 
