@@ -54,6 +54,16 @@ describe("SepaBatchesPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows an empty state when the creditor is configured but no invoices exist either way", async () => {
+    vi.mocked(apiClient.GET)
+      .mockResolvedValueOnce(okResponse([location]) as never)
+      .mockResolvedValueOnce(okResponse({ creditorConfigured: true, eligible: [], excluded: [] }) as never)
+      .mockResolvedValueOnce(okResponse(noBatches) as never);
+    renderPage();
+
+    expect(await screen.findByText("No sent invoices for this location and month.")).toBeInTheDocument();
+  });
+
   it("splits invoices into eligible and excluded lists", async () => {
     vi.mocked(apiClient.GET)
       .mockResolvedValueOnce(okResponse([location]) as never)

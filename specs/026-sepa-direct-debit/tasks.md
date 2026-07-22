@@ -327,7 +327,7 @@ future batch, and re-invite signing through the existing 024 flow.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T049 Design-compliance pass (per the loop's own step 7): review
+- [X] T049 Design-compliance pass (per the loop's own step 7): review
       `web/app/(app)/invoices/sepa-batches/page.tsx` and any new/changed components against
       design-system.md (spacing scale, no nested cards, motion under 250ms) and platform-rules.md
       (director-web keyboard navigation, focus rings, high-density table conventions).
@@ -388,3 +388,23 @@ future batch, and re-invite signing through the existing 024 flow.
    US4 (exclusion/revocation UI) → Polish.
 2. Each story's checkpoint is independently demoable per spec.md's own Independent Test
    descriptions.
+
+---
+
+## Phase 8: Convergence
+
+`/speckit-converge` found four real test-coverage gaps, all fixed rather than deferred:
+
+- [X] T052 Add a test for data-model.md's third eligibility exclusion reason
+      (`NonPositiveAmount`), never exercised by any test until now, in
+      `backend/ChildCare.Api.Tests/SepaBatches/SepaBatchEligibilityTests.cs` (missing, FR-001).
+- [X] T053 Add the two asymmetric creditor-configuration test cases (CID set with no bank
+      account; bank account set with no CID) — only the "neither configured" case existed, in
+      `SepaBatchEligibilityTests.cs` (partial, FR-004 Edge Cases).
+- [X] T054 Write the test tasks.md's own T042a had already been checked off without —
+      proving FR-011's no-retroactive-effect clarification (revoking a mandate doesn't touch an
+      already-`PendingDebit` invoice from an earlier batch) — in
+      `backend/ChildCare.Api.Tests/Contracts/RevokeSepaMandateTests.cs` (missing, FR-011).
+- [X] T055 Add a web test for the "creditor configured, zero eligible and zero excluded
+      invoices" empty state, distinct from the creditor-not-configured empty state already
+      covered, in `web/__tests__/sepaBatches.test.tsx` (missing, spec.md Edge Cases).

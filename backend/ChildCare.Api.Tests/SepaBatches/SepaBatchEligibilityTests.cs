@@ -1,5 +1,8 @@
 using System.Net;
+using ChildCare.Application.Common;
 using ChildCare.Contracts.Requests;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
@@ -57,5 +60,69 @@ public class SepaBatchEligibilityTests(OrganisationOnboardingWebAppFactory facto
         var eligibility = await GetEligibilityAsync(client, org.AccessToken, location.Id, 2027, 4);
 
         Assert.False(eligibility.CreditorConfigured);
+    }
+
+    // Convergence pass F2 — the two asymmetric configuration cases, distinct from "neither
+    // configured" above.
+    [Fact]
+    public async Task Eligibility_OnlyCreditorIdentifierConfigured_StillReportsNotConfigured()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Sepa Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var orgResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest(null, "BE68ZZZ0123456789")));
+        Assert.Equal(HttpStatusCode.OK, orgResponse.StatusCode);
+
+        var eligibility = await GetEligibilityAsync(client, org.AccessToken, location.Id, 2027, 4);
+
+        Assert.False(eligibility.CreditorConfigured);
+    }
+
+    [Fact]
+    public async Task Eligibility_OnlyBankAccountConfigured_StillReportsNotConfigured()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Sepa Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var locationResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/locations/{location.Id}/invoice-settings", org.AccessToken,
+            new UpdateLocationInvoiceSettingsRequest(null, "BE68539007547034", 14)));
+        Assert.Equal(HttpStatusCode.OK, locationResponse.StatusCode);
+
+        var eligibility = await GetEligibilityAsync(client, org.AccessToken, location.Id, 2027, 4);
+
+        Assert.False(eligibility.CreditorConfigured);
+    }
+
+    // Convergence pass F1 — the third documented exclusion reason (data-model.md's Eligibility
+    // rule), never exercised until now.
+    [Fact]
+    public async Task Eligibility_NonPositiveAmountInvoice_IsExcludedWithReason()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Sepa Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await ConfigureSepaCreditorAsync(client, org.AccessToken, location.Id, "BE68ZZZ0123456789", "BE68539007547034");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        var contract = await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, new DateOnly(2027, 4, 1));
+        await SeedFullSepaMandateAsync(factory.Services, schema, contract.Id, "BE71096123456769");
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, factory.Services, schema, child.Id, location.Id, 2027, 4);
+
+        // Zero-amount invoices shouldn't occur via normal billing (feature 014), but the
+        // eligibility rule's defensive boundary (data-model.md) needs a real row to exercise it.
+        using (var scope = factory.Services.CreateScope())
+        {
+            var resolver = scope.ServiceProvider.GetRequiredService<ITenantDbContextResolver>();
+            var db = resolver.ForSchema(schema);
+            var invoiceEntity = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
+            invoiceEntity.TotalCents = 0;
+            await db.SaveChangesAsync();
+        }
+
+        var eligibility = await GetEligibilityAsync(client, org.AccessToken, location.Id, 2027, 4);
+
+        Assert.Single(eligibility.Excluded, e => e.InvoiceId == invoice.Id && e.Reason == "NonPositiveAmount");
     }
 }

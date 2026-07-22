@@ -83,4 +83,39 @@ public class RevokeSepaMandateTests(OrganisationOnboardingWebAppFactory factory)
 
         Assert.Equal(HttpStatusCode.OK, invitationResponse.StatusCode);
     }
+
+    // Convergence pass F2 — tasks.md T042a had been checked off without this test ever being
+    // written. Proves spec.md FR-011's no-retroactive-effect clarification: revoking a mandate
+    // does not touch an invoice already PendingDebit from a batch generated before the revoke.
+    [Fact]
+    public async Task Revoke_HasNoEffectOnAnAlreadyPendingDebitInvoice()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Sepa Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await ConfigureSepaCreditorAsync(client, org.AccessToken, location.Id, "BE68ZZZ0123456789", "BE68539007547034");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        await SeedPrimaryContactAsync(factory.Services, schema, child.Id);
+        var contract = await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, new DateOnly(2027, 6, 1));
+        await SeedFullSepaMandateAsync(factory.Services, schema, contract.Id, "BE71096123456769");
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, factory.Services, schema, child.Id, location.Id, 2027, 6);
+
+        var batchResponse = await GenerateBatchAsync(client, org.AccessToken, location.Id, [invoice.Id], NextBusinessDay());
+        Assert.Equal(HttpStatusCode.OK, batchResponse.StatusCode);
+
+        var revokeResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/contracts/{contract.Id}/revoke-sepa-mandate", org.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, revokeResponse.StatusCode);
+
+        var invoiceResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice.Id}", org.AccessToken));
+        var unchangedInvoice = (await invoiceResponse.Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        Assert.Equal("pendingdebit", unchangedInvoice.Status);
+        Assert.NotNull(unchangedInvoice.SepaBatchId);
+
+        // Still reconciles/returns exactly as any other PendingDebit invoice would (FR-009/FR-010).
+        var returnResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, $"/api/invoices/{invoice.Id}/mark-sepa-returned", org.AccessToken,
+            new ChildCare.Contracts.Requests.MarkInvoiceSepaReturnedRequest("Insufficient funds")));
+        Assert.Equal(HttpStatusCode.OK, returnResponse.StatusCode);
+    }
 }
