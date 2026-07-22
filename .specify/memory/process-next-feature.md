@@ -750,3 +750,39 @@ use the static code review instead.
   untouched file (a DOM-global-`Location`-vs-test-mock typing issue) that isn't even part of
   CI's actual web gate (`Web tests` only runs `npm test`, no typecheck step) — not this feature's
   regression, correctly left unfixed rather than scope-creeped in.
+- 024 (`024-esignature`): ✅ Done, merged 2026-07-22 (PR #44, squash-merged after green CI — 986/986
+  backend + 240/240 web tests). Resumed mid-flight: a prior session had already fully implemented
+  all four user stories (51/51 tasks checked) and applied its own `/speckit-converge` findings
+  (signed-PDF-download endpoint, org-wide contracts-list endpoint, an atomic-signing bug that
+  could permanently mark a contract signed with no PDF on a storage failure, FR-015 coverage,
+  generated production SQL scripts, the recurring tenant-migration-rollout revert-helper fix) —
+  all committed, nothing left to implement. This session only needed to run the test suite,
+  push, PR, and merge. Signing is additive to the existing Draft→Active lifecycle (007) rather
+  than a precondition for it — confirmed against 010/012a/014's existing assumptions before
+  merging, per this feature's own spec.md Clarifications. The organisation's SEPA Creditor
+  Identifier (CID) is configured once at the org level (mirrors `Tenant.KboNumber`, 014), not
+  generated per signing — only the per-mandate reference is generated per signing; worth
+  remembering as a concrete example of a BACKLOG prompt conflating two distinct concepts that
+  needed correcting before implementation, not during it. Running the full backend suite before
+  pushing surfaced a real, deterministic, date-dependent bug unrelated to this feature:
+  `BulkDayReservationTests.Submit_SiblingsAtDifferentLocations_EachEvaluatesOwnLocationNoticeHours`
+  computes its contract date as a plain `AddDays(3)` with no weekend check, but
+  `CreateContractCommandValidator` only accepts Monday–Friday as contracted days — whenever
+  "today + 3 days" lands on a weekend (as it did today, 2026-07-22 + 3 = Saturday), contract
+  creation fails validation and the test's own downstream assertion reports a misleading 404 on
+  activation. Confirmed present on a clean `master` before this branch touched anything (same
+  failure, same date), so unlike 023's precedent (an unrelated `tsc` issue that wasn't part of
+  CI's actual gate and was correctly left unfixed) this one WAS part of the CI gate and would
+  have blocked this PR's merge on an unrelated red check — fixed by skipping forward to the next
+  weekday instead of a raw offset, rather than left as debt. Worth remembering as a new variant
+  of the recurring "date-dependent test breaks on the day it happens to run" class 013h's and
+  023's shipped-notes already logged (hardcoded dates expiring, `git checkout master -- .`
+  overwriting a working tree) — this time neither a hardcoded date nor a git accident, but a
+  relative-date computation that doesn't account for a business-day constraint elsewhere in the
+  system. `gh pr checks 44 --watch` was auto-backgrounded by the tool harness after its own
+  timeout mid-run (not a deliberate `run_in_background: true`) — per 031's precedent, the
+  correct response is to actively watch the already-backgrounded task to completion rather than
+  treat the auto-backgrounding as license to stop waiting; re-ran `gh pr checks 44 --watch` as a
+  fresh blocking call (which completed once CI actually finished) while a parallel Monitor polled
+  the same PR as a second signal, and confirmed completion via `gh pr view --json state,mergedAt`
+  before proceeding — never assumed success from the auto-backgrounded notification alone.
