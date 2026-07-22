@@ -29,6 +29,25 @@ public class OrganisationSettingsTests(OrganisationOnboardingWebAppFactory facto
         Assert.Equal("0123.456.789", fetched.KboNumber);
     }
 
+    // ── T014 (024-esignature, US4): SEPA Creditor Identifier round-trips alongside KboNumber ──
+
+    [Fact]
+    public async Task PutMe_PersistsSepaCreditorIdentifier()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"SEPA Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, "/api/organisations/me", org.AccessToken, new UpdateOrganisationRequest(null, "BE68ZZZ0123456789")));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = (await response.Content.ReadFromJsonAsync<OrganisationResponse>())!;
+        Assert.Equal("BE68ZZZ0123456789", updated.SepaCreditorIdentifier);
+
+        var getResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/organisations/me", org.AccessToken));
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<OrganisationResponse>())!;
+        Assert.Equal("BE68ZZZ0123456789", fetched.SepaCreditorIdentifier);
+    }
+
     [Fact]
     public async Task PutMe_AsNonDirector_Returns403()
     {

@@ -80,6 +80,16 @@ public static class ContractsEndpoints
             var result = await mediator.Send(new SendContractSigningInvitationCommand(id));
             return MapResult(result, onSuccess: Results.Ok);
         });
+
+        // Feature 024-esignature (User Story 2, FR-018) — the persisted, immutable signed PDF,
+        // distinct from GET /{id}/pdf's on-demand render of the live (unsigned) contract.
+        contracts.MapGet("/{id:guid}/signed-pdf-url", async (Guid id, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetSignedContractDownloadUrlQuery(id));
+            return result.Found
+                ? Results.Ok(new { downloadUrl = result.Url, expiresAt = result.ExpiresAt })
+                : Results.Json(new { errorKey = "errors.contract_signing.not_signed" }, statusCode: StatusCodes.Status404NotFound);
+        });
     }
 
     private static IResult MapResult(ContractResult result, Func<ContractResponse, IResult> onSuccess) =>
