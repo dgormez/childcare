@@ -69,6 +69,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<StaffSchedule> StaffSchedules => Set<StaffSchedule>();
 
+    public DbSet<StaffLeaveRequest> StaffLeaveRequests => Set<StaffLeaveRequest>();
+
     public DbSet<WaitingListEntry> WaitingListEntries => Set<WaitingListEntry>();
 
     public DbSet<DayReservation> DayReservations => Set<DayReservation>();
@@ -238,6 +240,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             ? parsed
             : throw new FormatException($"Unknown DietaryType: {value}");
 
+    private static DayOfWeek ParseDayOfWeek(string value) => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), value, ignoreCase: true);
+
     private static MilestoneObservationStatus ParseMilestoneObservationStatus(string value) =>
         MilestoneObservationStatusExtensions.TryParseWireString(value, out var parsed)
             ? parsed
@@ -355,6 +359,23 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
              .HasMaxLength(30);
             s.Property(x => x.ProfilePhotoObjectPath).HasMaxLength(500);
             s.Property(x => x.PinHash).HasMaxLength(100);
+            // Feature 027 (research.md R2) — plain text[] of DayOfWeek names, same simple
+            // pattern as MealPreference.DietaryType below (no sub-fields, so a converted flat
+            // array is simpler than Contract.ContractedDay's owned-JSON collection). A
+            // ValueComparer is required for EF Core to detect in-place List<DayOfWeek> mutations.
+            s.Property(x => x.ContractedDays)
+              .HasConversion(
+                  v => v.Select(d => d.ToString()).ToArray(),
+                  v => v.Select(ParseDayOfWeek).ToList(),
+                  new ValueComparer<List<DayOfWeek>>(
+                      (a, b) => a!.SequenceEqual(b!),
+                      v => v.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
+                      v => v.ToList()))
+              .HasColumnType("text[]")
+              .HasDefaultValueSql("'{}'");
+            // Feature 027 deviation (see StaffProfile.cs field comment) — mirrors
+            // Contact.PushToken's shape/max length.
+            s.Property(x => x.PushToken).HasMaxLength(200);
             s.HasIndex(x => x.DeactivatedAt);
             s.HasOne<TenantUser>().WithOne().HasForeignKey<StaffProfile>(x => x.TenantUserId);
         });
@@ -746,14 +767,27 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         {
             ss.ToTable("staff_schedules");
             ss.HasKey(x => x.Id);
+            ss.Property(x => x.Status)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (StaffScheduleStatus)Enum.Parse(typeof(StaffScheduleStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(StaffScheduleStatus.Scheduled)
+              .IsRequired();
             ss.Property(x => x.AbsenceReason)
               .HasConversion(
                   v => v == null ? null : v.ToString()!.ToLowerInvariant(),
                   v => v == null ? null : (AbsenceReason?)Enum.Parse(typeof(AbsenceReason), v, ignoreCase: true))
               .HasMaxLength(20);
+            // Feature 027 additions (data-model.md) — Notes mirrors feature 012a's free-text cap.
+            ss.Property(x => x.Notes).HasMaxLength(2000);
+            ss.Property(x => x.IsPublished).HasDefaultValue(false).IsRequired();
+            ss.Ignore(x => x.IsAbsent);
             ss.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
             ss.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
             ss.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            // CoverStaffId/CreatedBy are deliberately unmapped FKs (no HasOne navigation) — same
+            // "polymorphic reference, no DB-level FK" reasoning as Notification.SourceId, since a
+            // cover assignment must remain writable even if the referenced StaffProfile/TenantUser
+            // row is later deactivated/removed.
             // BACKLOG.md's original UNIQUE(staff_id, date, start_time) — prevents exact-duplicate
             // entries; range-overlap is a validator concern (IAdvisoryLockService), not
             // expressible as a unique index (data-model.md).
@@ -761,6 +795,27 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Rota-builder week view and feature 010-adjacent projected on-duty lookups
             // (data-model.md, spec.md Technical Requirements).
             ss.HasIndex(x => new { x.LocationId, x.Date });
+        });
+
+        modelBuilder.Entity<StaffLeaveRequest>(lr =>
+        {
+            lr.ToTable("staff_leave_requests");
+            lr.HasKey(x => x.Id);
+            lr.Property(x => x.Type)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (StaffLeaveRequestType)Enum.Parse(typeof(StaffLeaveRequestType), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            lr.Property(x => x.Status)
+              .HasConversion(v => v.ToString().ToLowerInvariant(), v => (StaffLeaveRequestStatus)Enum.Parse(typeof(StaffLeaveRequestStatus), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .HasDefaultValue(StaffLeaveRequestStatus.Pending)
+              .IsRequired();
+            lr.Property(x => x.Notes).HasMaxLength(2000);
+            lr.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            // Director-facing queue read (contracts/staff-app-api.md) and staff's own-history
+            // read, both ordered newest-first (data-model.md).
+            lr.HasIndex(x => new { x.StaffProfileId, x.CreatedAt });
+            lr.HasIndex(x => x.Status);
         });
 
         modelBuilder.Entity<WaitingListEntry>(w =>

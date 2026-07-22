@@ -33,6 +33,18 @@ public class StaffProfile
     public DateTime? PinFirstFailedAttemptAt { get; set; }
     public DateTime? PinLockedUntil { get; set; }
 
+    // Feature 027 (data-model.md, research.md R2): which weekdays this staff member normally
+    // works. Empty list = no restriction (safe default for pre-existing profiles). Drives the
+    // grey-out behavior in both the director rota grid and the staff app's own schedule view.
+    public List<DayOfWeek> ContractedDays { get; set; } = [];
+
+    // Feature 027 deviation (not specified by data-model.md/research.md — flagged in the
+    // implementation report): staff-mobile needs somewhere to register its Expo push token so
+    // StaffScheduleNotificationService/StaffLeaveRequestNotificationService have a token to send
+    // to. Mirrors Contact.PushToken's existing shape (feature 013b) — a single active token per
+    // staff account, overwritten on each registration.
+    public string? PushToken { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

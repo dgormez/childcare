@@ -25,7 +25,7 @@ public class GetProjectedOnDutyQueryHandler(ITenantDbContext db) : IRequestHandl
         var staffIds = await db.StaffSchedules
             .Where(s => s.LocationId == request.LocationId && s.Date == request.Date
                         && s.StartTime <= request.Time && request.Time < s.EndTime
-                        && !s.IsAbsent)
+                        && s.Status != StaffScheduleStatus.Absent)
             .Join(db.StaffProfiles, s => s.StaffProfileId, p => p.Id, (s, p) => p)
             .Where(p => p.QualificationLevel != QualificationLevel.StudentVolunteer && p.DeactivatedAt == null)
             .Select(p => p.Id)

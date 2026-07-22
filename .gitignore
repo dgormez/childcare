@@ -16,6 +16,15 @@ parent-mobile/ios/
 parent-mobile/android/
 parent-mobile/*.log
 
+# Staff mobile
+staff-mobile/node_modules/
+staff-mobile/.expo/
+staff-mobile/dist/
+staff-mobile/.env
+staff-mobile/ios/
+staff-mobile/android/
+staff-mobile/*.log
+
 # Backend
 backend/**/bin/
 backend/**/obj/

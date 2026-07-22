@@ -41,6 +41,7 @@ public interface ITenantDbContext
     DbSet<ClosureNotificationDelivery> ClosureNotificationDeliveries { get; }
     DbSet<ParentClosureMessage> ParentClosureMessages { get; }
     DbSet<StaffSchedule> StaffSchedules { get; }
+    DbSet<StaffLeaveRequest> StaffLeaveRequests { get; }
     DbSet<WaitingListEntry> WaitingListEntries { get; }
     DbSet<DayReservation> DayReservations { get; }
     DbSet<ParentInvitation> ParentInvitations { get; }

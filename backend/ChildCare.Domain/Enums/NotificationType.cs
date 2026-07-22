@@ -12,4 +12,9 @@ public enum NotificationType
     InvoicePaid,
     FiscalAttestationGenerated,
     EnrollmentSubmitted,
+
+    // Feature 027 — research.md R6.
+    SchedulePublished,
+    AssignmentChanged,
+    LeaveRequestDecided,
 }
