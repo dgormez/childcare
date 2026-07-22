@@ -373,6 +373,11 @@ builder.Services.AddScoped<IContractSigningTokenService, ChildCare.Infrastructur
 builder.Services.AddScoped<IIbanProtector, ChildCare.Infrastructure.Contracts.IbanProtector>();
 builder.Services.AddScoped<ISignedContractStorage, GcsSignedContractStorage>();
 
+// ── CODA/CODABOX Payment Matching (feature 025) ──────────────────────────────
+// Reuses the AddDataProtection() registration above, its own purpose string (research.md R2).
+builder.Services.AddScoped<ICodaParser, ChildCare.Infrastructure.Coda.CodaParserAdapter>();
+builder.Services.AddScoped<ICodaSenderIbanProtector, ChildCare.Infrastructure.Coda.CodaSenderIbanProtector>();
+
 var deviceJwtSecret = builder.Configuration["DeviceJwt:Secret"]
     ?? throw new InvalidOperationException("DeviceJwt:Secret is not configured.");
 
@@ -861,6 +866,7 @@ app.MapMealListEndpoints();
 app.MapMonthlyMenuEndpoints();
 app.MapMealPreferenceRequestEndpoints();
 app.MapInvoiceEndpoints();
+app.MapCodaTransactionEndpoints();
 app.MapPaymentEndpoints();
 app.MapFiscalAttestationEndpoints();
 app.MapDevelopmentalMilestoneEndpoints();

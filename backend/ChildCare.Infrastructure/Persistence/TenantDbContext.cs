@@ -111,6 +111,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<ChildMilestoneObservation> ChildMilestoneObservations => Set<ChildMilestoneObservation>();
 
+    public DbSet<CodaImport> CodaImports => Set<CodaImport>();
+
+    public DbSet<CodaTransaction> CodaTransactions => Set<CodaTransaction>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -1036,6 +1040,41 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             fa.HasIndex(x => new { x.ChildId, x.LocationId, x.TaxYear }).IsUnique();
             fa.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             fa.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        // Feature 025, data-model.md. One row per uploaded CODA file.
+        modelBuilder.Entity<CodaImport>(ci =>
+        {
+            ci.ToTable("coda_imports");
+            ci.HasKey(x => x.Id);
+            ci.Property(x => x.FileName).IsRequired();
+        });
+
+        // Feature 025, data-model.md. MatchType extends the BACKLOG draft's four-value sketch to
+        // the six states spec.md's FRs distinguish (see data-model.md's "Match Type" section).
+        modelBuilder.Entity<CodaTransaction>(ct =>
+        {
+            ct.ToTable("coda_transactions", t => t.HasCheckConstraint("CK_coda_transactions_match_type",
+                "\"MatchType\" IN ('Ogm','IbanAmount','Unmatched','Duplicate','ClosedInvoice','Reversal')"));
+            ct.HasKey(x => x.Id);
+            ct.Property(x => x.SenderIbanEncrypted).IsRequired();
+            ct.Property(x => x.SenderIbanLast4).HasMaxLength(4).IsRequired();
+            ct.Property(x => x.SenderName).IsRequired();
+            ct.Property(x => x.Communication).IsRequired();
+            ct.Property(x => x.MatchType)
+              .HasConversion(
+                  v => v.ToString(),
+                  v => (CodaMatchType)Enum.Parse(typeof(CodaMatchType), v, ignoreCase: true))
+              .HasMaxLength(20)
+              .IsRequired();
+            ct.HasOne<CodaImport>().WithMany().HasForeignKey(x => x.ImportId);
+            ct.HasOne<Invoice>().WithMany().HasForeignKey(x => x.MatchedInvoiceId);
+            // Non-unique — FR-013's dedupe and FR-005's amount+IBAN candidate narrowing both use
+            // this to find candidate rows cheaply; exact confirmation always requires decrypting
+            // SenderIbanEncrypted for the narrowed set (research.md R2 — Data Protection
+            // ciphertext isn't equality-comparable in SQL).
+            ct.HasIndex(x => new { x.ValueDate, x.AmountCents, x.SenderIbanLast4 });
+            ct.HasIndex(x => x.ImportId);
         });
 
         modelBuilder.Entity<ChildMilestoneObservation>(o =>

@@ -149,6 +149,11 @@ public class OrganisationOnboardingWebAppFactory : TestWebAppFactoryBase, IAsync
             // Feature 014a — never call the real Mollie API in tests.
             services.AddSingleton<FakePaymentProvider>();
             services.AddSingleton<IPaymentProvider>(sp => sp.GetRequiredService<FakePaymentProvider>());
+
+            // Feature 025 — avoid hand-authoring the real CODA fixed-width format for every test
+            // scenario (see FakeCodaParser's own doc comment); real-format parsing is proven
+            // separately in CodaParserAdapterTests.
+            services.AddSingleton<ICodaParser, FakeCodaParser>();
         });
     }
 }

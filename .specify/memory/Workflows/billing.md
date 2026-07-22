@@ -40,9 +40,15 @@ reflecting that month's attendance.
 5. The parent views their invoice list and downloads the PDF. The OGM structured reference on
    the PDF is what they use for the bank transfer — the app never collects or processes a
    payment itself (Phase 1; see feature 014's Out of scope).
-6. The director manually records payment (marks `paid`, with a payment date) once the bank
-   transfer clears — there is no automatic bank-statement reconciliation yet (that's feature
-   025, a later phase).
+6. The director records payment once the bank transfer clears — manually (marks `paid` with a
+   payment date), or automatically by uploading their bank's CODA statement export (feature
+   025): the system matches each statement transaction against an invoice's structured payment
+   reference (or, failing that, a director-confirmable amount+IBAN suggestion) and marks the
+   matching invoice paid the same way a manual mark-paid does. An invoice can never be marked
+   paid twice — a transaction that would re-credit an already-paid invoice is instead flagged
+   for the director's review, never silently reapplied. A payment less than an invoice's
+   remaining total is recorded as a partial payment without closing the invoice, until later
+   payments bring the total to zero.
 7. An invoice past its due date with no payment recorded is treated as overdue for display and
    filtering purposes — this is a computed view of `status = sent AND due_date < today`, not a
    separate stored transition, since no background-job infrastructure exists in this codebase
@@ -64,6 +70,9 @@ Director Web:
 - Filterable/sortable invoice list (status, location, month) — high-density table, per
   `platform-rules.md`'s Director Web section.
 - Download any invoice's PDF.
+- Upload a CODA bank statement and review the resulting reconciliation: auto-matched
+  transactions, director-confirmable suggested matches, and a manual-review queue for anything
+  unrecognized, a duplicate payment, or a payment against an already-closed invoice (feature 025).
 
 Parent Mobile:
 

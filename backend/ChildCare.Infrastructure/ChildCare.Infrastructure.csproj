@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Feature 025, research.md R1 — Belgian CODA bank-statement parsing. GPL-2.0-licensed (the
+         only two real .NET CODA parsers on NuGet are GPL-2.0/GPL-3.0, no permissive option
+         exists) — acceptable per research.md's analysis since this product is SaaS-only with no
+         on-prem distribution, so GPL's copyleft "distribution" trigger doesn't apply; revisit if
+         that distribution model ever changes. -->
+    <PackageReference Include="CodaParser" Version="1.0.2" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.10" />
     <!-- Feature 020, research.md R5 — the unsubscribe token is created by the send-daily-reports

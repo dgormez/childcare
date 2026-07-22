@@ -209,6 +209,8 @@ public class PaymentReminderTests(OrganisationOnboardingWebAppFactory factory) :
         {
             var publicDb = scope.ServiceProvider.GetRequiredService<ChildCare.Infrastructure.Persistence.PublicDbContext>();
             var brokenTenant = publicDb.Tenants.Single(t => t.Slug == brokenOrg.Organisation.Slug);
+            // Feature 025 added coda_transactions with an FK to invoices — must drop before it.
+            await publicDb.Database.ExecuteSqlRawAsync($"""DROP TABLE "{brokenTenant.SchemaName}"."coda_transactions";""");
             await publicDb.Database.ExecuteSqlRawAsync($"""DROP TABLE "{brokenTenant.SchemaName}"."invoices";""");
         }
 

@@ -62,6 +62,8 @@ public interface ITenantDbContext
     DbSet<Invoice> Invoices { get; }
     DbSet<FiscalAttestation> FiscalAttestations { get; }
     DbSet<ChildMilestoneObservation> ChildMilestoneObservations { get; }
+    DbSet<CodaImport> CodaImports { get; }
+    DbSet<CodaTransaction> CodaTransactions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

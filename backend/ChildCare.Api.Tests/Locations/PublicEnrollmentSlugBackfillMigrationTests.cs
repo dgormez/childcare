@@ -17,7 +17,8 @@ namespace ChildCare.Api.Tests.Locations;
 /// LegacyVaccinationMigrationTests.
 ///
 /// AddDigitalEnrollment is no longer the newest tenant migration (024-esignature's
-/// AddContractSigningAndSepaMandate shipped after it) — TenantDbContext.MigrateAsync() generates
+/// AddContractSigningAndSepaMandate, then 025's AddCodaPaymentMatching, shipped after it) —
+/// TenantDbContext.MigrateAsync() generates
 /// its script from `applied.LastOrDefault()`, the *last recorded* migration, not the first gap;
 /// if a later migration's history row is left in place while an earlier one's is deleted,
 /// MigrateAsync() sees "already at the latest" and generates nothing, silently skipping the
@@ -34,6 +35,8 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP TABLE "{schemaName}"."coda_transactions";
+            DROP TABLE "{schemaName}"."coda_imports";
             DROP INDEX "{schemaName}"."IX_waiting_list_entries_LocationId_ChildFirstName_ChildLastNam~";
             DROP INDEX "{schemaName}"."IX_waiting_list_entries_ReferenceCode";
             DROP INDEX "{schemaName}"."IX_locations_PublicEnrollmentSlug";
@@ -61,7 +64,8 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
                 DROP COLUMN "SigningToken",
                 DROP COLUMN "SigningTokenExpiresAt";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate';
+                WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate'
+                   OR "MigrationId" LIKE '%AddCodaPaymentMatching';
             """);
     }
 

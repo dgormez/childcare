@@ -941,3 +941,43 @@ export interface ContractSummaryResponse {
   signingStatus:  ContractSigningStatus;
   signedAt:       string | null;
 }
+
+// Feature 025-coda-payment-matching — contracts/coda-payment-matching-api.md.
+export type CodaMatchType = "ogm" | "ibanamount" | "unmatched" | "duplicate" | "closedinvoice" | "reversal";
+
+export interface CodaImportSummaryCountsResponse {
+  ogm:              number;
+  ibanAmountSuggested: number;
+  unmatched:        number;
+  duplicate:        number;
+  closedInvoice:    number;
+  reversal:         number;
+}
+
+export interface CodaImportSummaryResponse {
+  importId:             string;
+  transactionCount:     number;
+  skippedDuplicateCount: number;
+  summary:              CodaImportSummaryCountsResponse;
+}
+
+export interface CodaMatchedInvoiceResponse {
+  id:            string;
+  childName:     string;
+  totalCents:    number;
+  receivedCents: number;
+}
+
+export interface CodaTransactionResponse {
+  id:             string;
+  importId:       string;
+  valueDate:      string;
+  amountCents:    number;
+  senderIbanMasked: string;
+  senderName:     string;
+  communication:  string;
+  matchType:      CodaMatchType;
+  applied:        boolean;
+  matchedInvoice: CodaMatchedInvoiceResponse | null;
+  reviewedAt:     string | null;
+}
