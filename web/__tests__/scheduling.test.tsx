@@ -79,6 +79,7 @@ function makeStaff(overrides: Partial<StaffResponse> = {}): StaffResponse {
     deactivatedAt: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
+    contractedDays: [],
     ...overrides,
   };
 }
@@ -96,8 +97,11 @@ function makeEntry(overrides: Partial<StaffScheduleResponse> = {}): StaffSchedul
     date: new Date().toISOString().slice(0, 10),
     startTime: "08:00:00",
     endTime: "16:00:00",
-    isAbsent: false,
+    status: "scheduled",
     absenceReason: null,
+    coverStaffId: null,
+    notes: null,
+    isPublished: true,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -189,7 +193,7 @@ describe("SchedulingPage", () => {
     });
     vi.mocked(apiClient.POST).mockImplementation((path: unknown) => {
       if (path === "/api/staff-schedules/{id}/absence") {
-        currentEntries = [makeEntry({ isAbsent: true, absenceReason: "sick" })];
+        currentEntries = [makeEntry({ status: "absent", absenceReason: "sick" })];
         currentProjectedCount = 0;
         return Promise.resolve(okResponse(currentEntries[0])) as never;
       }

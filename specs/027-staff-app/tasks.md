@@ -118,7 +118,7 @@ member is notified.
       staff member has exactly one `SchedulePublished` push recorded (fake sender) after publish
       (FR-008, SC-004), in
       `backend/ChildCare.Api.Tests/StaffScheduling/PublishVisibilityTests.cs`
-- [ ] T020a [P] [US1] Component test: `SchedulingGrid.tsx` renders a non-contracted-day cell and
+- [X] T020a [P] [US1] Component test: `SchedulingGrid.tsx` renders a non-contracted-day cell and
       a closure-day column as greyed/non-interactive for new-assignment purposes (FR-002), in
       `web/__tests__/SchedulingGrid.test.tsx` (matches this codebase's flat `__tests__/`
       convention, e.g. `web/__tests__/checkInSettings.test.tsx`)
@@ -137,11 +137,11 @@ member is notified.
       `backend/ChildCare.Contracts/Responses/StaffScheduleResponses.cs`
 - [X] T025 [US1] Add `POST /api/staff-schedules/{locationId}/publish` in
       `backend/ChildCare.Api/Endpoints/StaffScheduleEndpoints.cs`
-- [ ] T026 [US1] Extend `SchedulingGrid.tsx` with contracted-day and closure-day greying in
+- [X] T026 [US1] Extend `SchedulingGrid.tsx` with contracted-day and closure-day greying in
       `web/components/SchedulingGrid.tsx`
-- [ ] T027 [US1] Add a publish/unpublish control and published-state indicator to
+- [X] T027 [US1] Add a publish/unpublish control and published-state indicator to
       `web/app/(app)/scheduling/page.tsx`
-- [ ] T028 [US1] Add NL/FR/EN i18n keys for the publish UI in
+- [X] T028 [US1] Add NL/FR/EN i18n keys for the publish UI in
       `web/i18n/locales/{en,fr,nl}.json`
 
 **Checkpoint**: User Story 1 is fully functional and independently testable.
@@ -237,7 +237,7 @@ is unaffected throughout.
       `backend/ChildCare.Application/StaffScheduling/StaffScheduleNotificationService.cs`
 - [X] T046 [US3] Add `report-sick`, `sick-cover-candidates`, and `assign-cover` endpoints in
       `backend/ChildCare.Api/Endpoints/StaffScheduleEndpoints.cs`
-- [ ] T047 [US3] Build `SickCoverDialog.tsx` and the urgent cover-needed banner in
+- [X] T047 [US3] Build `SickCoverDialog.tsx` and the urgent cover-needed banner in
       `web/components/SickCoverDialog.tsx` and `web/app/(app)/scheduling/page.tsx`
 - [ ] T048 [US3] Build the `staff-mobile` "Ik ben ziek" screen with an explicit confirmation
       step in `staff-mobile/app/(app)/report-sick.tsx`, plus NL/FR/EN i18n keys for both the web
@@ -287,7 +287,7 @@ then repeat with a rejection and confirm no rota change.
       `backend/ChildCare.Contracts/Responses/StaffLeaveRequestResponses.cs`
 - [X] T057 [US4] Add `StaffLeaveRequestEndpoints.cs` in
       `backend/ChildCare.Api/Endpoints/StaffLeaveRequestEndpoints.cs`
-- [ ] T058 [US4] Build `LeaveRequestTable.tsx`, the `/leave-requests` director queue page, and
+- [X] T058 [US4] Build `LeaveRequestTable.tsx`, the `/leave-requests` director queue page, and
       a Sidebar nav entry in `web/app/(app)/leave-requests/page.tsx`,
       `web/components/LeaveRequestTable.tsx`, and `web/components/Sidebar.tsx`
 - [ ] T059 [US4] Build the `staff-mobile` leave-request list and new-request form in

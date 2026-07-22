@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, CalendarRange, ListPlus, MessageSquare, Megaphone, Mail, Sparkles, Inbox, ShieldAlert, LayoutDashboard, UtensilsCrossed, Syringe, Receipt, FileCheck2, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tablet, MapPin, FileText, Baby, LogOut, CalendarClock, CalendarX, CalendarDays, CalendarRange, ListPlus, MessageSquare, Megaphone, Mail, Sparkles, Inbox, ShieldAlert, LayoutDashboard, UtensilsCrossed, Syringe, Receipt, FileCheck2, Settings, ClipboardCheck } from "lucide-react";
 import { cn } from "../lib/cn";
 import { apiClient } from "../lib/apiClient";
 import type { Session } from "../lib/auth";
@@ -21,6 +21,7 @@ const REAL_NAV = [
   { href: "/groups", labelKey: "groups", icon: Sparkles },
   { href: "/closures", labelKey: "closures", icon: CalendarX },
   { href: "/scheduling", labelKey: "scheduling", icon: CalendarDays },
+  { href: "/leave-requests", labelKey: "leaveRequests", icon: ClipboardCheck },
   { href: "/waiting-list", labelKey: "waitingList", icon: ListPlus },
   { href: "/requests", labelKey: "dayReservations", icon: Inbox },
   { href: "/messages", labelKey: "messages", icon: MessageSquare },
