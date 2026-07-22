@@ -64,6 +64,7 @@ public interface ITenantDbContext
     DbSet<ChildMilestoneObservation> ChildMilestoneObservations { get; }
     DbSet<CodaImport> CodaImports { get; }
     DbSet<CodaTransaction> CodaTransactions { get; }
+    DbSet<SepaBatch> SepaBatches { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
@@ -76,4 +77,18 @@ public interface ITenantDbContext
 
     /// <summary>True if this schema has migrations that MigrateAsync would apply (research.md R8, migrate-tenants-cli.md).</summary>
     Task<bool> HasPendingMigrationsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Feature 026, FR-013/CHK003. Re-selects the given invoices with a row lock (`SELECT ...
+    /// FOR UPDATE`) — MUST be called inside an active transaction (ExecuteInTransactionAsync).
+    /// A concurrent caller racing for the same invoice(s) blocks on this lock until the first
+    /// transaction commits or rolls back, then sees the invoice's post-commit state — a genuine
+    /// DB-level concurrency guard, not a read-then-write race. Returns the locked, tracked
+    /// entities (fewer than requested if some IDs no longer exist). This is the one place
+    /// Application needs a provider-specific locking read; exposed here (rather than each caller
+    /// reaching for raw SQL) so Application's own package references stay Relational-agnostic —
+    /// only TenantDbContext's Infrastructure implementation needs
+    /// Microsoft.EntityFrameworkCore.Relational's FromSqlInterpolated.
+    /// </summary>
+    Task<IReadOnlyList<Invoice>> LockInvoicesForUpdateAsync(IReadOnlyList<Guid> invoiceIds, CancellationToken cancellationToken = default);
 }

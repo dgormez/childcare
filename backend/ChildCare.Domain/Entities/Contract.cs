@@ -52,6 +52,12 @@ public class Contract
     public string?   SepaMandateReference  { get; set; }
     public DateTime? SepaAuthorisedAt      { get; set; }
 
+    // Feature 026 — null = never revoked (or never signed). Set by FR-011's revoke action; a
+    // contract is batch-eligible only when SepaAuthorisedAt IS NOT NULL AND SepaRevokedAt IS
+    // NULL. Re-signing after revocation (FR-012, via this feature's existing invitation flow)
+    // assigns a new SepaMandateReference and clears this field.
+    public DateTime? SepaRevokedAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

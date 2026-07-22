@@ -14,11 +14,14 @@ reflecting that month's attendance.
 ### Actors
 
 - Director (generates invoices, reviews/edits a draft before sending, marks an invoice sent,
-  records payment, regenerates an invoice after correcting an attendance record)
+  records payment, regenerates an invoice after correcting an attendance record, generates a
+  SEPA direct debit batch, marks a returned debit, revokes a SEPA mandate — feature 026)
 - Parent (views and downloads their child's invoices — no billing action of their own; payment
-  happens by bank transfer outside the app, per feature 014's Phase 1 scope)
+  happens by bank transfer or, once a SEPA mandate is signed via feature 024, by direct debit
+  collection the director initiates — feature 026)
 - System (computes billable days from attendance/absence/closure records, generates the OGM
-  structured payment reference, renders the PDF)
+  structured payment reference, renders the PDF, generates and schema-validates a SEPA pain.008
+  batch — feature 026)
 
 ### Flow — monthly invoicing (feature 014)
 
@@ -60,6 +63,33 @@ reflecting that month's attendance.
    correction after payment would need a credit-note/adjustment mechanism, which is out of this
    feature's scope.
 
+### Flow — SEPA direct debit batch collection (feature 026)
+
+An alternative collection-initiation method to step 5's bank transfer, for families with a
+signed SEPA mandate (feature 024). Plugs into the existing paid-tracking mechanism (step 6)
+rather than replacing it.
+
+1. For a location and month, the director reviews `sent` invoices split into eligible (the
+   family's contract has a signed, non-revoked SEPA mandate) and excluded (no mandate, revoked
+   mandate, or a non-positive amount) groups.
+2. The director selects some or all eligible invoices, sets an execution date (at least one
+   business day out), and generates a pain.008.001.02 XML batch. The system validates the file
+   against the official schema before offering it for download; a failure blocks the download
+   and changes nothing. On success, every included invoice transitions `sent → pending_debit`
+   and the batch is recorded for later reference (location, execution date, who generated it,
+   which invoices).
+3. The director uploads the downloaded file to their bank's portal — outside this system.
+4. When the bank's CODA statement later confirms the collection, step 6's existing CODA import
+   (feature 025) matches and marks the invoice `paid` exactly as it would a regular transfer — a
+   `pending_debit` invoice is just as "open" to that reconciliation as a `sent` one.
+5. If a debit is instead returned by the bank (insufficient funds, closed account, disputed
+   mandate), the director marks the invoice returned with a reason; it reverts to `sent`,
+   re-entering normal overdue follow-up and eligible for a future batch. No auto-retry.
+6. A parent's mandate can be revoked by the director on the family's request (e.g., a closed
+   bank account) — this immediately excludes every current and future invoice for that contract
+   from step 1's eligible group until a new mandate is signed via feature 024's existing
+   invitation flow. There is no direct edit of a signed mandate's IBAN — only revoke-and-resign.
+
 ### Applications
 
 Director Web:
@@ -73,6 +103,8 @@ Director Web:
 - Upload a CODA bank statement and review the resulting reconciliation: auto-matched
   transactions, director-confirmable suggested matches, and a manual-review queue for anything
   unrecognized, a duplicate payment, or a payment against an already-closed invoice (feature 025).
+- Review batch-eligible invoices, generate and download a SEPA pain.008 batch, view batch
+  history, mark a returned debit, and revoke a family's SEPA mandate (feature 026).
 
 Parent Mobile:
 

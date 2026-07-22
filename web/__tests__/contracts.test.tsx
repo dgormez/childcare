@@ -38,6 +38,7 @@ function makeContract(overrides: Partial<ContractSummaryResponse> = {}): Contrac
     status: "draft",
     signingStatus: "notsent",
     signedAt: null,
+    mandateStatus: "none",
     ...overrides,
   };
 }
@@ -128,5 +129,28 @@ describe("ContractsPage", () => {
 
     expect(openSpy).toHaveBeenCalledWith("https://storage.test/signed-contracts/contract-1.pdf", "_blank", "noopener,noreferrer");
     openSpy.mockRestore();
+  });
+
+  // Feature 026 — FR-011.
+  it("shows a Revoke mandate action for a signed mandate, and calls the revoke endpoint", async () => {
+    mockGet({ "/api/contracts": [makeContract({ mandateStatus: "signed" })] });
+    vi.mocked(apiClient.POST).mockResolvedValue(okResponse({ mandateStatus: "revoked" }) as never);
+    renderPage();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Revoke mandate" }));
+
+    expect(apiClient.POST).toHaveBeenCalledWith(
+      "/api/contracts/{id}/revoke-sepa-mandate",
+      expect.objectContaining({ params: { path: { id: "contract-1" } } }),
+    );
+    expect(await screen.findByText("SEPA mandate revoked.")).toBeInTheDocument();
+  });
+
+  it("does not show a Revoke mandate action when no mandate has been signed", async () => {
+    mockGet({ "/api/contracts": [makeContract({ mandateStatus: "none" })] });
+    renderPage();
+
+    await screen.findByRole("table");
+    expect(screen.queryByRole("button", { name: "Revoke mandate" })).not.toBeInTheDocument();
   });
 });

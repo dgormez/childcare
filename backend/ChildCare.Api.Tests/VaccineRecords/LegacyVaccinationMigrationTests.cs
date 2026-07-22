@@ -141,7 +141,14 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// migration shipped, same as every migration-adding feature's note above predicted.
     /// Feature 025's "AddCodaPaymentMatching" is the next one — its coda_transactions table (FKs
     /// to both coda_imports and invoices) needs its own DROP TABLE ordered before both, and
-    /// coda_imports needs its own DROP TABLE ordered after coda_transactions.
+    /// coda_imports needs its own DROP TABLE ordered after coda_transactions. Feature 026's
+    /// "AddSepaDirectDebit" is the next one — unlike TenantMigrationRolloutTests (which drops
+    /// contracts/locations wholesale), this test keeps both, so its new sepa_batches table (FKs
+    /// to locations, still present here) needs its own DROP TABLE ordered after invoices (the
+    /// table referencing it) and before nothing further, and its new contracts column
+    /// (SepaRevokedAt) needs its own explicit DROP COLUMN, same reason as SepaMandateReference
+    /// above — invoices' three new columns need no separate step since invoices is dropped
+    /// wholesale here.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -156,6 +163,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             DROP TABLE "{schemaName}"."child_milestone_observations";
             DROP TABLE "{schemaName}"."fiscal_attestations";
             DROP TABLE "{schemaName}"."invoices";
+            DROP TABLE "{schemaName}"."sepa_batches";
             DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."meal_preference_change_requests";
             DROP TABLE "{schemaName}"."monthly_menu_days";
@@ -235,6 +243,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "SepaIbanEncrypted",
                 DROP COLUMN "SepaIbanLast4",
                 DROP COLUMN "SepaMandateReference",
+                DROP COLUMN "SepaRevokedAt",
                 DROP COLUMN "SignatureData",
                 DROP COLUMN "SignatureType",
                 DROP COLUMN "SignedAt",
@@ -242,7 +251,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
                 DROP COLUMN "SigningToken",
                 DROP COLUMN "SigningTokenExpiresAt";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit';
             """);
     }
 

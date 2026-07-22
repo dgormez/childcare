@@ -787,6 +787,9 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<string>("SepaMandateReference")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("SepaRevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("SignatureData")
                         .HasColumnType("text");
 
@@ -1294,6 +1297,16 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("SepaBatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SepaMandateReferenceUsed")
+                        .HasMaxLength(35)
+                        .HasColumnType("character varying(35)");
+
+                    b.Property<string>("SepaReturnReason")
+                        .HasColumnType("text");
+
                     b.Property<long>("SequenceNumber")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
@@ -1322,6 +1335,8 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("OgmReference")
                         .IsUnique();
+
+                    b.HasIndex("SepaBatchId");
 
                     b.HasIndex("SequenceNumber")
                         .IsUnique();
@@ -2005,6 +2020,40 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("CheckedOutAt", "LocationId", "GroupId");
 
                     b.ToTable("room_shifts", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.SepaBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("ExecutionDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GeneratedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("InvoiceCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalCents")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationId", "GeneratedAt");
+
+                    b.ToTable("sepa_batches", "tenant_template");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.StaffInvitation", b =>
@@ -2876,6 +2925,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.SepaBatch", null)
+                        .WithMany()
+                        .HasForeignKey("SepaBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.KdvClosureDay", b =>
@@ -3054,6 +3108,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasOne("ChildCare.Domain.Entities.StaffProfile", null)
                         .WithMany()
                         .HasForeignKey("StaffProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.SepaBatch", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

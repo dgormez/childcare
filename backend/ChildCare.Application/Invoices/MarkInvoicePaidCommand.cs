@@ -8,8 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.Invoices;
 
-// Feature 014 — spec.md FR-009/FR-013. Only valid on Sent (including overdue) — a one-way
-// transition, no "unmark paid" action in this phase.
+// Feature 014 — spec.md FR-009/FR-013. Only valid on Sent (including overdue) or, since feature
+// 026, PendingDebit (an invoice collected via a generated SEPA batch — 026 spec.md FR-009) — a
+// one-way transition, no "unmark paid" action in this phase.
 public record MarkInvoicePaidCommand(Guid InvoiceId, DateOnly PaidAt) : IRequest<MarkInvoicePaidResult>;
 
 public enum MarkInvoicePaidFailure { NotFound, NotSent }
@@ -37,7 +38,7 @@ public class MarkInvoicePaidCommandHandler(ITenantDbContext db, PaymentReceiptNo
         var invoice = await db.Invoices.FirstOrDefaultAsync(i => i.Id == request.InvoiceId, cancellationToken);
         if (invoice is null)
             return MarkInvoicePaidResult.Fail(MarkInvoicePaidFailure.NotFound);
-        if (invoice.Status != InvoiceStatus.Sent)
+        if (invoice.Status is not (InvoiceStatus.Sent or InvoiceStatus.PendingDebit))
             return MarkInvoicePaidResult.Fail(MarkInvoicePaidFailure.NotSent);
 
         var paidAt = request.PaidAt.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);

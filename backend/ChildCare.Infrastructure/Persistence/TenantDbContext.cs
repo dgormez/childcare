@@ -115,6 +115,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     public DbSet<CodaTransaction> CodaTransactions => Set<CodaTransaction>();
 
+    public DbSet<SepaBatch> SepaBatches => Set<SepaBatch>();
+
     public async Task<T> ExecuteInTransactionAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -123,6 +125,27 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         var result = await operation(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return result;
+    }
+
+    // Feature 026, FR-013/CHK003 — see ITenantDbContext's doc comment. FromSqlInterpolated
+    // requires Microsoft.EntityFrameworkCore.Relational (via Npgsql.EntityFrameworkCore.
+    // PostgreSQL, already an Infrastructure dependency) — kept here rather than exposed to
+    // Application so that layer's own package references stay Relational-agnostic.
+    public async Task<IReadOnlyList<Invoice>> LockInvoicesForUpdateAsync(IReadOnlyList<Guid> invoiceIds, CancellationToken cancellationToken = default)
+    {
+        var ids = invoiceIds.ToArray();
+        // Every entity uses HasDefaultSchema(SchemaName) — generated LINQ SQL is always
+        // schema-qualified, never reliant on the connection's search_path, so this raw query
+        // must qualify it too. FromSqlRaw (not FromSqlInterpolated) is deliberate here:
+        // FromSqlInterpolated parameterizes every {…} hole, which would try to bind SchemaName as
+        // a query parameter rather than substitute it as raw identifier text, producing invalid
+        // SQL ("@p0"."invoices" is not a valid table reference). SchemaName comes from this
+        // context's own construction (the trusted tenant record), never request input — safe to
+        // interpolate as identifier text, mirroring GrantPlatformAdminCommand's identical
+        // reasoning; {0} remains a genuine ADO parameter for the actual value (invoiceIds).
+        return await Invoices
+            .FromSqlRaw($"SELECT * FROM \"{SchemaName}\".\"invoices\" WHERE \"Id\" = ANY({{0}}) FOR UPDATE", ids)
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>
@@ -1027,6 +1050,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Clarifications); null for every invoice unless bundling was enabled at generation
             // time. Non-unique — many invoices share one group.
             inv.HasIndex(x => x.FamilyGroupId);
+            // Feature 026 — SepaBatchId non-unique; restricted so a batch can't be deleted while
+            // it still has invoices pointing at it (SepaBatch is otherwise immutable/append-only,
+            // so this never actually fires in practice, but rules out an accidental cascade).
+            inv.HasOne<SepaBatch>().WithMany().HasForeignKey(x => x.SepaBatchId).OnDelete(DeleteBehavior.Restrict);
+            inv.HasIndex(x => x.SepaBatchId);
+            inv.Property(x => x.SepaMandateReferenceUsed).HasMaxLength(35);
         });
 
         // Feature 015 — one row per (ChildId, LocationId, TaxYear); regenerating overwrites this
@@ -1040,6 +1069,16 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             fa.HasIndex(x => new { x.ChildId, x.LocationId, x.TaxYear }).IsUnique();
             fa.HasOne<Child>().WithMany().HasForeignKey(x => x.ChildId);
             fa.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        // Feature 026, data-model.md. One row per successfully generated pain.008 batch.
+        // Immutable once created — included invoices found via Invoice.SepaBatchId, no join table.
+        modelBuilder.Entity<SepaBatch>(sb =>
+        {
+            sb.ToTable("sepa_batches");
+            sb.HasKey(x => x.Id);
+            sb.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            sb.HasIndex(x => new { x.LocationId, x.GeneratedAt });
         });
 
         // Feature 025, data-model.md. One row per uploaded CODA file.

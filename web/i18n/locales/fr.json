@@ -688,6 +688,44 @@
       "reviewedLabel": "Traité",
       "partialPaymentLabel": "Partiel : {received} sur {total} reçu",
       "remainingBalance": "{amount} restant"
+    },
+    "statusPendingDebit": "En cours (domiciliation)",
+    "sepaReturnReason": "Motif du rejet",
+    "markSepaReturnedButton": "Marquer comme rejetée",
+    "markSepaReturnedReasonPlaceholder": "Motif (ex. solde insuffisant)",
+    "markSepaReturnedSuccess": "Facture remise au statut envoyée.",
+    "markSepaReturnedError": "Impossible de remettre la facture à l'état envoyée.",
+    "sepaBatches": {
+      "title": "Domiciliation SEPA",
+      "backToInvoices": "Retour aux factures",
+      "locationLabel": "Lieu d'accueil",
+      "monthLabel": "Mois",
+      "loadError": "Impossible de charger les données.",
+      "retry": "Réessayer",
+      "creditorNotConfiguredMessage": "Configurez d'abord l'identifiant créancier (paramètres de l'organisation) et le numéro de compte bancaire (paramètres du lieu d'accueil) avant de générer un fichier SEPA.",
+      "emptyState": "Aucune facture envoyée pour ce lieu d'accueil et ce mois.",
+      "eligibleSectionTitle": "Factures éligibles",
+      "excludedSectionTitle": "Factures exclues",
+      "historySectionTitle": "Fichiers déjà générés",
+      "columnChild": "Enfant",
+      "columnAmount": "Montant",
+      "columnReason": "Motif",
+      "columnExecutionDate": "Date d'exécution",
+      "columnGeneratedAt": "Généré le",
+      "columnInvoiceCount": "Nombre de factures",
+      "reasonNoMandate": "Aucun mandat",
+      "reasonMandateRevoked": "Mandat révoqué",
+      "reasonNonPositiveAmount": "Montant non positif",
+      "executionDateLabel": "Date d'exécution",
+      "generateButton": "Générer le fichier SEPA",
+      "generating": "Génération en cours…",
+      "generateSuccess": "Fichier SEPA généré pour {count} facture(s).",
+      "generateError": "Impossible de générer le fichier SEPA.",
+      "creditorNotConfiguredError": "Identifiant créancier ou numéro de compte manquant.",
+      "executionDateTooSoonError": "Choisissez une date d'exécution au moins un jour ouvrable dans le futur.",
+      "invoiceNotEligibleError": "Une ou plusieurs factures ne sont plus éligibles — actualisez la liste.",
+      "noInvoicesSelectedError": "Sélectionnez au moins une facture.",
+      "noBatchesYet": "Aucun fichier encore généré pour ce lieu d'accueil."
     }
   },
   "fiscalAttestations": {
@@ -1366,7 +1404,11 @@
       "notDraft": "Seuls les contrats en brouillon peuvent être envoyés pour signature.",
       "alreadySigned": "Ce contrat a déjà été signé.",
       "generic": "Impossible d'envoyer l'invitation à signer. Veuillez réessayer."
-    }
+    },
+    "revokeMandateAction": "Révoquer le mandat",
+    "revokingMandate": "Révocation en cours…",
+    "revokeMandateSuccess": "Mandat SEPA révoqué.",
+    "revokeMandateError": "Impossible de révoquer le mandat."
   },
   "contractSigning": {
     "title": "Signez votre contrat d'accueil",

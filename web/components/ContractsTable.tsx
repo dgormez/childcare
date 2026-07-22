@@ -9,7 +9,9 @@ import type { ContractSummaryResponse, ContractSigningStatus } from "../lib/type
 interface ContractsTableProps {
   contracts: ContractSummaryResponse[];
   sendingId: string | null;
+  revokingId: string | null;
   onSend: (contractId: string) => void;
+  onRevokeMandate: (contractId: string) => void;
   onViewSignedPdf: (contractId: string) => void;
 }
 
@@ -54,7 +56,7 @@ function SigningStatusBadge({ status }: { status: ContractSigningStatus }) {
 
 /** platform-rules.md director-web: high-density table; a row action (send/resend/view PDF)
  * uses the "ghost" button variant designed for this exact row-action convention. */
-export function ContractsTable({ contracts, sendingId, onSend, onViewSignedPdf }: ContractsTableProps) {
+export function ContractsTable({ contracts, sendingId, revokingId, onSend, onRevokeMandate, onViewSignedPdf }: ContractsTableProps) {
   const t = useTranslations("contracts");
 
   return (
@@ -102,6 +104,16 @@ export function ContractsTable({ contracts, sendingId, onSend, onViewSignedPdf }
                 {contract.signingStatus === "signed" && (
                   <Button variant="ghost" size="sm" onClick={() => onViewSignedPdf(contract.id)}>
                     {t("viewSignedPdf")}
+                  </Button>
+                )}
+                {contract.mandateStatus === "signed" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={revokingId === contract.id}
+                    onClick={() => onRevokeMandate(contract.id)}
+                  >
+                    {revokingId === contract.id ? t("revokingMandate") : t("revokeMandateAction")}
                   </Button>
                 )}
               </TableCell>

@@ -39,6 +39,8 @@ internal static class InvoiceMapper
             invoice.PaidAt,
             invoice.CreatedAt,
             invoice.UpdatedAt,
-            invoice.FamilyGroupId);
+            invoice.FamilyGroupId,
+            invoice.SepaBatchId,
+            invoice.SepaReturnReason);
     }
 }

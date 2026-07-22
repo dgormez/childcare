@@ -76,6 +76,20 @@ public static class InvoiceEndpoints
             };
         });
 
+        director.MapPost("/invoices/{id:guid}/mark-sepa-returned", async (Guid id, MarkInvoiceSepaReturnedRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new MarkInvoiceSepaReturnedCommand(id, req.Reason));
+            if (result.Succeeded)
+                return Results.Ok(result.Response);
+            return result.Failure switch
+            {
+                MarkInvoiceSepaReturnedFailure.NotFound => Results.Json(new { errorKey = "errors.invoice.not_found" }, statusCode: StatusCodes.Status404NotFound),
+                MarkInvoiceSepaReturnedFailure.NotPendingDebit => Results.Json(new { errorKey = "errors.invoice.not_pending_debit" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                MarkInvoiceSepaReturnedFailure.ReasonRequired => Results.Json(new { errorKey = "errors.sepa_batch.reason_required" }, statusCode: StatusCodes.Status422UnprocessableEntity),
+                _ => throw new InvalidOperationException($"Unhandled {nameof(MarkInvoiceSepaReturnedFailure)}: {result.Failure}"),
+            };
+        });
+
         director.MapGet("/invoices/{id:guid}/pdf", async (Guid id, IMediator mediator, string? locale) =>
         {
             var result = await mediator.Send(new GenerateInvoicePdfQuery(id, locale));

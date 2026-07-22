@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, AlertTriangle, FileEdit, Clock } from "lucide-react";
+import { CheckCircle2, AlertTriangle, FileEdit, Clock, RefreshCw } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
 import { Badge } from "../ui/badge";
 import type { InvoiceResponse } from "../../lib/types";
@@ -56,6 +56,12 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                 <Badge variant="danger" className="inline-flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" strokeWidth={2} />
                   {t("statusOverdue")}
+                </Badge>
+              )}
+              {invoice.status === "pendingdebit" && (
+                <Badge variant="info" className="inline-flex items-center gap-1">
+                  <RefreshCw className="h-3 w-3" strokeWidth={2} />
+                  {t("statusPendingDebit")}
                 </Badge>
               )}
               {invoice.status === "paid" && (

@@ -28,6 +28,7 @@ export default function ContractsPage() {
   const [contracts, setContracts] = useState<ContractSummaryResponse[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
 
   const load = useCallback(async () => {
@@ -63,6 +64,17 @@ export default function ContractsPage() {
     await load();
   }
 
+  async function revokeMandate(contractId: string) {
+    setRevokingId(contractId);
+    setNotice("");
+    const result = await apiClient.POST("/api/contracts/{id}/revoke-sepa-mandate", {
+      params: { path: { id: contractId } },
+    });
+    setRevokingId(null);
+    setNotice(result.response.ok ? t("revokeMandateSuccess") : t("revokeMandateError"));
+    await load();
+  }
+
   async function viewSignedPdf(contractId: string) {
     const result = await apiClient.GET("/api/contracts/{id}/signed-pdf-url", {
       params: { path: { id: contractId } },
@@ -90,7 +102,9 @@ export default function ContractsPage() {
         <ContractsTable
           contracts={contracts}
           sendingId={sendingId}
+          revokingId={revokingId}
           onSend={sendInvitation}
+          onRevokeMandate={revokeMandate}
           onViewSignedPdf={viewSignedPdf}
         />
       )}

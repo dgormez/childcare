@@ -34,4 +34,7 @@ public enum ContractFailure
     AlreadySigned,
     NoContactEmail,
     CreditorIdNotConfigured,
+
+    // Feature 026 — FR-011: no mandate signed yet, or already revoked.
+    MandateNotRevocable,
 }

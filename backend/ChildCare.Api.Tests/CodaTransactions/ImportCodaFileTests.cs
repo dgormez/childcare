@@ -6,6 +6,7 @@ using Xunit;
 using static ChildCare.Api.Tests.ChildEventTestSupport;
 using static ChildCare.Api.Tests.KioskModeTestSupport;
 using static ChildCare.Api.Tests.CodaTransactions.CodaTransactionsTestSupport;
+using static ChildCare.Api.Tests.SepaBatches.SepaBatchesTestSupport;
 
 namespace ChildCare.Api.Tests.CodaTransactions;
 
@@ -261,5 +262,65 @@ public class ImportCodaFileTests(OrganisationOnboardingWebAppFactory factory) : 
         var s = summary.Summary;
         var sumOfCategories = s.Ogm + s.IbanAmountSuggested + s.Unmatched + s.Duplicate + s.ClosedInvoice + s.Reversal + summary.SkippedDuplicateCount;
         Assert.Equal(summary.TransactionCount, sumOfCategories);
+    }
+
+    // ── Feature 026, tasks.md T027/T028 — a PendingDebit invoice (from a generated SEPA batch)
+    // is just as open/matchable to CODA reconciliation as a Sent one (spec.md FR-009). ──
+
+    [Fact]
+    public async Task Import_ExactOgmMatch_AgainstPendingDebitInvoice_MarksItPaid()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Coda Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await ConfigureSepaCreditorAsync(client, org.AccessToken, location.Id, "BE68ZZZ0123456789", "BE68539007547034");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        await SeedPrimaryContactAsync(factory.Services, schema, child.Id);
+        var contract = await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, new DateOnly(2027, 6, 1));
+        await SeedFullSepaMandateAsync(factory.Services, schema, contract.Id, "BE71096123456769");
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, factory.Services, schema, child.Id, location.Id, 2027, 6);
+
+        var batchResponse = await GenerateBatchAsync(client, org.AccessToken, location.Id, [invoice.Id], NextBusinessDay());
+        Assert.Equal(HttpStatusCode.OK, batchResponse.StatusCode);
+        var pendingDebitCheck = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice.Id}", org.AccessToken));
+        Assert.Equal("pendingdebit", (await pendingDebitCheck.Content.ReadFromJsonAsync<InvoiceResponse>())!.Status);
+
+        var response = await UploadCodaFileAsync(client, org.AccessToken,
+            [FakeCodaLine(new DateOnly(2027, 6, 15), invoice.TotalCents, "BE68539007547034", "Test Parent", OgmDigits(invoice.OgmReference), true)]);
+        var summary = (await response.Content.ReadFromJsonAsync<CodaImportSummaryResponse>())!;
+        Assert.Equal(1, summary.Summary.Ogm);
+
+        var getInvoiceResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/invoices/{invoice.Id}", org.AccessToken));
+        var updatedInvoice = (await getInvoiceResponse.Content.ReadFromJsonAsync<InvoiceResponse>())!;
+        Assert.Equal("paid", updatedInvoice.Status);
+    }
+
+    [Fact]
+    public async Task Import_AmountIbanMatch_AgainstPendingDebitInvoice_IsOfferedAsSuggestion()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Coda Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        await ConfigureSepaCreditorAsync(client, org.AccessToken, location.Id, "BE68ZZZ0123456789", "BE68539007547034");
+        var child = await CreateChildAsync(client, org.AccessToken);
+        var schema = await GetSchemaNameAsync(factory.Services, org.Organisation.Id);
+        await SeedPrimaryContactAsync(factory.Services, schema, child.Id);
+        var contract = await CreateAndActivateContractAsync(client, org.AccessToken, child.Id, location.Id, new DateOnly(2027, 6, 1));
+        const string debtorIban = "BE71096123456769";
+        await SeedFullSepaMandateAsync(factory.Services, schema, contract.Id, debtorIban);
+        var invoice = await CreateSentInvoiceAsync(client, org.AccessToken, factory.Services, schema, child.Id, location.Id, 2027, 6);
+
+        var batchResponse = await GenerateBatchAsync(client, org.AccessToken, location.Id, [invoice.Id], NextBusinessDay());
+        Assert.Equal(HttpStatusCode.OK, batchResponse.StatusCode);
+
+        var response = await UploadCodaFileAsync(client, org.AccessToken,
+            [FakeCodaLine(new DateOnly(2027, 6, 20), invoice.TotalCents, debtorIban, "Test Parent", "no reference", false)]);
+        var summary = (await response.Content.ReadFromJsonAsync<CodaImportSummaryResponse>())!;
+        Assert.Equal(1, summary.Summary.IbanAmountSuggested);
+
+        var suggested = await GetCodaTransactionsAsync(client, org.AccessToken, matchType: "ibanamount");
+        var row = Assert.Single(suggested);
+        Assert.Equal(invoice.Id, row.MatchedInvoice?.Id);
     }
 }
