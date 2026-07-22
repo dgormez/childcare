@@ -21,6 +21,7 @@ export default function OrganisationSettingsPage() {
   const tp = useTranslations("organisationSettings.paymentConnection");
   const [organisation, setOrganisation] = useState<OrganisationResponse | null>(null);
   const [kboNumber, setKboNumber] = useState("");
+  const [sepaCreditorId, setSepaCreditorId] = useState("");
   const [state, setState] = useState<LoadState>("loading");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
@@ -39,6 +40,7 @@ export default function OrganisationSettingsPage() {
     const data = result.data as unknown as OrganisationResponse;
     setOrganisation(data);
     setKboNumber(data.kboNumber ?? "");
+    setSepaCreditorId(data.sepaCreditorIdentifier ?? "");
     setState("loaded");
   }, []);
 
@@ -62,7 +64,7 @@ export default function OrganisationSettingsPage() {
     setSaving(true);
     setNotice("");
     const result = await apiClient.PUT("/api/organisations/me", {
-      body: { kboNumber: kboNumber || null },
+      body: { kboNumber: kboNumber || null, sepaCreditorIdentifier: sepaCreditorId || null },
     });
     setSaving(false);
     if (!result.response.ok) {
@@ -108,6 +110,13 @@ export default function OrganisationSettingsPage() {
               {t("kboNumberLabel")}
             </label>
             <Input id="kboNumber" value={kboNumber} onChange={(e) => setKboNumber(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="sepaCreditorId" className="text-sm font-medium text-text dark:text-text-dark">
+              {t("sepaCreditorIdLabel")}
+            </label>
+            <Input id="sepaCreditorId" value={sepaCreditorId} onChange={(e) => setSepaCreditorId(e.target.value)} />
+            <p className="text-xs text-text-soft dark:text-text-soft-dark">{t("sepaCreditorIdHint")}</p>
           </div>
           {notice && <p className="text-sm text-text-soft dark:text-text-soft-dark">{notice}</p>}
           <Button onClick={save} disabled={saving}>

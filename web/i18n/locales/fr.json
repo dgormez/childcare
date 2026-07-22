@@ -592,7 +592,9 @@
       "loadError": "Impossible de charger le statut de la connexion de paiement. Veuillez réessayer.",
       "retry": "Réessayer",
       "backToSettings": "Retour aux paramètres"
-    }
+    },
+    "sepaCreditorIdLabel": "Identifiant créancier SEPA (Creditor ID)",
+    "sepaCreditorIdHint": "Requis avant de pouvoir envoyer un contrat pour signature. Attribué une seule fois par la Banque nationale de Belgique à votre organisation."
   },
   "invoices": {
     "title": "Factures",
@@ -1284,5 +1286,81 @@
     "submittingAction": "Envoi en cours…",
     "confirmationBody": "Merci ! Nous avons ajouté votre famille à la liste d'attente et envoyé une confirmation à votre e-mail.",
     "referenceLabel": "Numéro de référence"
+  },
+  "contracts": {
+    "title": "Contrats",
+    "loadError": "Impossible de charger les contrats. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "empty": "Aucun contrat pour le moment.",
+    "columns": {
+      "child": "Enfant",
+      "location": "Lieu",
+      "startDate": "Date de début",
+      "dailyRate": "Tarif journalier",
+      "status": "Statut",
+      "signingStatus": "Signature"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "active": "Actif",
+      "ended": "Terminé"
+    },
+    "signingStatus": {
+      "notsent": "Non envoyé",
+      "pending": "En attente de signature",
+      "expired": "Lien expiré",
+      "signed": "Signé"
+    },
+    "signedOnLabel": "Signé le {date}",
+    "sendAction": "Envoyer pour signature",
+    "resendAction": "Renvoyer",
+    "sending": "Envoi en cours…",
+    "sendSuccess": "Invitation à signer envoyée.",
+    "viewSignedPdf": "Voir le document signé",
+    "errors": {
+      "noContactEmail": "Cet enfant n'a pas de contact principal avec une adresse e-mail. Ajoutez-en une avant d'envoyer une invitation.",
+      "creditorIdNotConfigured": "Configurez l'identifiant créancier SEPA de votre organisation dans les paramètres avant d'envoyer une invitation.",
+      "notDraft": "Seuls les contrats en brouillon peuvent être envoyés pour signature.",
+      "alreadySigned": "Ce contrat a déjà été signé.",
+      "generic": "Impossible d'envoyer l'invitation à signer. Veuillez réessayer."
+    }
+  },
+  "contractSigning": {
+    "title": "Signez votre contrat d'accueil",
+    "loading": "Chargement de votre contrat…",
+    "invalidLink": "Ce lien n'est plus valide. Veuillez contacter la structure d'accueil pour obtenir un nouveau lien.",
+    "languageLabel": "Langue",
+    "intro": "Veuillez consulter les conditions du contrat ci-dessous, puis signer et autoriser le prélèvement.",
+    "childLabel": "Enfant",
+    "locationLabel": "Lieu",
+    "contractedDaysLabel": "Jours contractuels",
+    "dailyRateLabel": "Tarif journalier",
+    "consentLabel": "Consentement photo et vidéo",
+    "consent": {
+      "photosInternal": "Photos à usage interne",
+      "photosWebsite": "Photos sur notre site web",
+      "photosSocialMedia": "Photos sur les réseaux sociaux",
+      "videoInternal": "Vidéo à usage interne",
+      "photosPress": "Photos pour la presse"
+    },
+    "yes": "Oui",
+    "no": "Non",
+    "signatureTitle": "Votre signature",
+    "signatureDrawTab": "Dessiner",
+    "signatureTypeTab": "Saisir",
+    "signatureDrawHint": "Signez ci-dessous avec votre souris ou votre doigt.",
+    "signatureTypePlaceholder": "Saisissez votre nom complet",
+    "signatureClear": "Effacer",
+    "confirmSignIntent": "J'ai lu et relu les conditions du contrat ci-dessus et je souhaite signer ce contrat.",
+    "sepaTitle": "Mandat de domiciliation SEPA",
+    "sepaIntro": "Autorisez l'organisation à prélever vos factures par domiciliation.",
+    "ibanLabel": "IBAN",
+    "ibanInvalid": "Ceci ne semble pas être un IBAN valide. Vérifiez le numéro et réessayez.",
+    "confirmSepaMandate": "J'autorise l'organisation à prélever les paiements de ce compte par domiciliation SEPA.",
+    "submitAction": "Signer le contrat",
+    "submittingAction": "Signature en cours…",
+    "submitError": "Une erreur s'est produite lors de la signature. Veuillez réessayer.",
+    "confirmationTitle": "Contrat signé",
+    "confirmationBody": "Merci — votre contrat est signé et votre mandat de paiement est actif. Une copie vous a été envoyée par e-mail."
   }
 }

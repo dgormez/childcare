@@ -22,6 +22,8 @@ export interface AuthResponse {
 export interface OrganisationResponse {
   name: string;
   kboNumber: string | null;
+  // Feature 024-esignature (User Story 4) — required before a signing invitation can be sent.
+  sepaCreditorIdentifier: string | null;
 }
 
 export interface StaffResponse {
@@ -873,4 +875,55 @@ export interface DataCompletenessFlagResponse {
 
 export interface DataCompletenessResponse {
   flags: DataCompletenessFlagResponse[];
+}
+
+// ── Contracts & digital e-signature (features 007, 024-esignature) ─────────────────────────
+
+export interface ContractedDayResponse {
+  weekday:   string;
+  startTime: string;
+  endTime:   string;
+}
+
+export interface ContractConsentResponse {
+  photosInternal:     boolean;
+  photosWebsite:       boolean;
+  photosSocialMedia:  boolean;
+  videoInternal:       boolean;
+  photosPress:         boolean;
+}
+
+// Feature 024-esignature FR-018 — a director-legible derived state, not a raw timestamp read.
+export type ContractSigningStatus = "notsent" | "pending" | "expired" | "signed";
+
+export interface ContractResponse {
+  id:                 string;
+  childId:            string;
+  locationId:         string;
+  previousContractId: string | null;
+  startDate:          string;
+  endDate:            string | null;
+  contractedDays:     ContractedDayResponse[];
+  dailyRateCents:     number;
+  status:             "draft" | "active" | "ended";
+  consent:            ContractConsentResponse;
+  signingStatus:      ContractSigningStatus;
+  signedAt:           string | null;
+  sepaIbanMasked:      string | null;
+  sepaMandateReference: string | null;
+}
+
+// Feature 024-esignature — the public signing page's read model (GET /api/public/contracts/sign).
+export interface ContractForSigningResponse {
+  childName:       string;
+  locationName:    string;
+  contractedDays:  ContractedDayResponse[];
+  dailyRateCents:  number;
+  consent:         ContractConsentResponse;
+  locale:          string;
+}
+
+export interface SignedContractDownloadUrlResponse {
+  downloadUrl: string;
+  expiresAt:   string;
 }
