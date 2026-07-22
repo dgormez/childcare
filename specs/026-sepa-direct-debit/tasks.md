@@ -155,17 +155,22 @@ one instruction per eligible invoice, and those invoices become `PendingDebit`.
       eligibility and execution date server-side (never trusts the client's prior read),
       resolves creditor headers from `Tenant.SepaCreditorIdentifier`/`Tenant.Name`/
       `Location.BankAccountNumber` (research.md R5); decrypts each debtor IBAN via
-      `IIbanProtector` (logging the access per FR-014/research.md R4) — if any decryption fails,
-      aborts the whole command before any persistence (FR-006a, no partial batch); resolves the
-      debtor name via the primary-contact join (research.md R6); resolves `SeqTp` via
-      `SepaSequenceTypeResolver` (T010); calls `ISepaBatchXmlGenerator` (T008); and — only on
-      successful generation — claims each invoice via a conditional update (`Status = 'Sent' →
-      'PendingDebit'` guarded by the current status in the same statement, not read-then-write;
-      data-model.md's Concurrency-safe eligibility claim, FR-013/CHK003) and persists the
-      `SepaBatch` row, all in one database transaction (FR-007's all-or-nothing guarantee) — a
-      losing claim on any invoice (lost a concurrent race) fails the whole command with FR-002's
-      invoice-not-eligible error rather than generating a batch for a partial set (depends on T005,
-      T008, T010, T019, T020).
+      `IIbanProtector` — if any decryption fails, aborts the whole command before any persistence
+      (FR-006a, no partial batch); resolves the debtor name via the primary-contact join
+      (research.md R6); resolves `SeqTp` via `SepaSequenceTypeResolver` (T010); calls
+      `ISepaBatchXmlGenerator` (T008); and — only on successful generation — claims each invoice
+      via a conditional update (`Status = 'Sent' → 'PendingDebit'` guarded by the current status
+      in the same statement, not read-then-write; data-model.md's Concurrency-safe eligibility
+      claim, FR-013/CHK003) and persists the `SepaBatch` row, all in one database transaction
+      (FR-007's all-or-nothing guarantee) — a losing claim on any invoice (lost a concurrent race)
+      fails the whole command with FR-002's invoice-not-eligible error rather than generating a
+      batch for a partial set (depends on T005, T008, T010, T019, T020).
+- [ ] T021a [US1] Wire a structured log line (existing `ILogger` convention, mirrors 025's T018a —
+      not a new persisted audit-log table) into `GenerateSepaBatchCommand`'s `IIbanProtector.
+      Unprotect` call site, recording which director/request triggered it and which
+      invoice/contract it was for — never the decrypted IBAN value itself (FR-014; distinct from
+      feature 024's separate "never log the plaintext IBAN" convention, which this still also
+      respects) (depends on T021).
 - [ ] T022 [US1] `ListSepaBatchesQuery`/Handler in
       `backend/ChildCare.Application/SepaBatches/ListSepaBatchesQuery.cs` (depends on T019).
 - [ ] T023 [US1] `SepaBatchEndpoints.cs` in `backend/ChildCare.Api/Endpoints/` —
@@ -255,7 +260,9 @@ reason — it reverts to `Sent`, visible for normal follow-up (quickstart.md Sce
 - [ ] T036 [US3] `MarkInvoiceSepaReturnedCommand`/Handler in
       `backend/ChildCare.Application/Invoices/MarkInvoiceSepaReturnedCommand.cs`: guards on
       `Status == PendingDebit`, requires a non-empty reason, sets `Status = Sent`, `SepaBatchId =
-      null`, `SepaReturnReason = reason`.
+      null`, `SepaReturnReason = reason` — leaves `SepaMandateReferenceUsed` untouched (it is a
+      permanent audit fact, not a current-state pointer; do not clear it by analogy with
+      `SepaBatchId`, per data-model.md).
 - [ ] T037 [US3] `POST /api/invoices/{id}/mark-sepa-returned` endpoint in
       `backend/ChildCare.Api/Endpoints/InvoiceEndpoints.cs` (depends on T036).
 - [ ] T038 [P] [US3] i18n keys (NL/FR/EN) for the "mark returned" action, reason prompt, and

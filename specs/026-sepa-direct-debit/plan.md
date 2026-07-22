@@ -30,9 +30,11 @@ from the originating BACKLOG description.
 the web client (existing convention).
 
 **Storage**: PostgreSQL 16, tenant schema (Principle I) — one new table (`sepa_batches`), one new
-column each on `contracts` (`SepaRevokedAt`) and `invoices` (`SepaBatchId`, plus a
-`SepaReturnReason` text column for FR-010's reason display), and a new `PendingDebit` value on
-the existing `InvoiceStatus` enum.
+column on `contracts` (`SepaRevokedAt`), three new columns on `invoices` (`SepaBatchId`, an
+immutable `SepaMandateReferenceUsed` snapshot needed for correct FRST/RCUR determination across a
+return or revoke-and-resign — data-model.md, added during this feature's own safety-checklist
+pass, CHK008 — and a `SepaReturnReason` text column for FR-010's reason display), and a new
+`PendingDebit` value on the existing `InvoiceStatus` enum.
 
 **Testing**: xUnit + TestContainers-provisioned PostgreSQL for backend integration/API tests
 (Constitution V) — including a dedicated schema-validation test asserting the generated XML
@@ -99,7 +101,7 @@ backend/
 ├── ChildCare.Domain/
 │   ├── Entities/
 │   │   ├── Contract.cs             # + SepaRevokedAt
-│   │   ├── Invoice.cs              # + SepaBatchId, SepaReturnReason
+│   │   ├── Invoice.cs              # + SepaBatchId, SepaMandateReferenceUsed, SepaReturnReason
 │   │   └── SepaBatch.cs            # new
 │   └── Enums/
 │       └── InvoiceStatus.cs        # + PendingDebit
