@@ -25,8 +25,10 @@ public class GetMyScheduleQueryHandler(ITenantDbContext db) : IRequestHandler<Ge
             return new GetMyScheduleResult(false, []);
 
         var today = BelgianCalendarDay.Today();
+        // FR-001/contracts/staff-app-api.md: only published rows are visible to their own staff
+        // member — an unpublished (draft) week must never leak through this read.
         var entries = await db.StaffSchedules
-            .Where(s => s.StaffProfileId == profile.Id && s.Date >= today)
+            .Where(s => s.StaffProfileId == profile.Id && s.Date >= today && s.IsPublished)
             .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
             .ToListAsync(cancellationToken);
 

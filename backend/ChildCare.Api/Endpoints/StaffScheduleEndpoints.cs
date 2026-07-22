@@ -68,6 +68,29 @@ public static class StaffScheduleEndpoints
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
         });
 
+        // Feature 027/FR-001, contracts/staff-app-api.md.
+        group.MapPost("/{locationId:guid}/publish", async (Guid locationId, PublishScheduleWeekRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new PublishScheduleWeekCommand(locationId, req.WeekStart, req.Unpublish, tenantUserId));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
+        // Feature 027/FR-006, research.md R5.
+        group.MapGet("/{date}/sick-cover-candidates", async (DateOnly date, Guid excludeStaffProfileId, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetSickCoverCandidatesQuery(date, excludeStaffProfileId));
+            return result.Succeeded ? Results.Ok(result.Candidates) : MapFailure(result.Failure!.Value);
+        });
+
+        // Feature 027/FR-007/FR-018.
+        group.MapPost("/{id:guid}/assign-cover", async (Guid id, AssignCoverRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new AssignCoverCommand(id, req.CoverStaffProfileId, tenantUserId));
+            return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
+        });
+
         app.MapGet("/api/staff-schedules/me", async (HttpContext ctx, IMediator mediator) =>
         {
             var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -75,6 +98,17 @@ public static class StaffScheduleEndpoints
             return result.Found
                 ? Results.Ok(result.Entries)
                 : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
+        }).WithTags("StaffSchedules").RequireAuthorization("StaffOrDirector");
+
+        // Feature 027/FR-005/FR-005a/FR-015a — StaffOrDirector, standalone (same reasoning as
+        // /me above: a more permissive per-route policy can't live inside the DirectorOnly group).
+        app.MapPost("/api/staff-schedules/report-sick", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new ReportSickCommand(tenantUserId));
+            if (!result.Succeeded)
+                return MapFailure(result.Failure!.Value);
+            return result.HadAssignment ? Results.Ok(result.Response) : Results.NoContent();
         }).WithTags("StaffSchedules").RequireAuthorization("StaffOrDirector");
     }
 
@@ -106,6 +140,15 @@ public static class StaffScheduleEndpoints
 
         StaffScheduleFailure.InvalidCopyTarget => Results.Json(
             new { errorKey = "errors.staff_schedules.invalid_copy_target" }, statusCode: StatusCodes.Status400BadRequest),
+
+        StaffScheduleFailure.ProfileNotFound => Results.Json(
+            new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound),
+
+        StaffScheduleFailure.InvalidWeekStart => Results.Json(
+            new { errorKey = "errors.validation" }, statusCode: StatusCodes.Status400BadRequest),
+
+        StaffScheduleFailure.NoAbsentAssignment => Results.Json(
+            new { errorKey = "errors.staff_schedules.no_absent_assignment" }, statusCode: StatusCodes.Status404NotFound),
 
         _ => throw new InvalidOperationException($"Unhandled {nameof(StaffScheduleFailure)}: {failure}"),
     };

@@ -47,4 +47,50 @@ public class BkrDecouplingTests(OrganisationOnboardingWebAppFactory factory) : I
         Assert.Equal(bkrBefore.QualifiedStaffCount, bkrAfter.QualifiedStaffCount);
         Assert.Equal(1, bkrAfter.QualifiedStaffCount);
     }
+
+    /// <summary>
+    /// Feature 027/FR-016: extends the decoupling guarantee to the new `Status`/`CoverStaffId`
+    /// fields specifically — an on-the-fly cover assignment (a second, uncheck-in'd staff member
+    /// absent + covered, neither of whom ever touches `RoomShifts`) must have zero effect on the
+    /// live BKR ratio, which stays sourced from the one genuinely checked-in caregiver only.
+    /// </summary>
+    [Fact]
+    public async Task AssigningCover_DoesNotChangeLiveBkrRatio()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Bkr Cover Decoupling Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var group = await CreateGroupAsync(client, org.AccessToken, "Room 1", location.Id);
+        var (_, deviceToken) = await PairDeviceAsync(client, org.AccessToken, location.Id, group.Id);
+        var checkedInCaregiver = await CreateEligibleCaregiverWithPinAsync(client, org.AccessToken, location.Id, "1234");
+        var checkInResponse = await CheckInAsync(client, deviceToken, checkedInCaregiver.Id, "1234");
+        Assert.Equal(System.Net.HttpStatusCode.OK, checkInResponse.StatusCode);
+
+        var bkrBefore = (await (await GetBkrAsync(client, deviceToken, location.Id)).Content.ReadFromJsonAsync<BkrRatioResponse>())!;
+        Assert.Equal(1, bkrBefore.QualifiedStaffCount);
+
+        var absentStaffResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/staff", org.AccessToken,
+            new CreateStaffProfileRequest("Absent", "Staff", $"absent_{Guid.NewGuid():N}@test.com", "+32 9 123 45 67", "QualifiedCaregiver", "Staff", null)));
+        var absentStaff = (await absentStaffResponse.Content.ReadFromJsonAsync<StaffResponse>())!;
+        await AssignEligibilityAsync(client, org.AccessToken, absentStaff.Id, location.Id);
+        var coverStaffResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/staff", org.AccessToken,
+            new CreateStaffProfileRequest("Cover", "Staff", $"cover_{Guid.NewGuid():N}@test.com", "+32 9 123 45 67", "QualifiedCaregiver", "Staff", null)));
+        var coverStaff = (await coverStaffResponse.Content.ReadFromJsonAsync<StaffResponse>())!;
+        await AssignEligibilityAsync(client, org.AccessToken, coverStaff.Id, location.Id);
+
+        var entryResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/staff-schedules", org.AccessToken,
+            new CreateStaffScheduleRequest(absentStaff.Id, location.Id, group.Id, FutureDate, new TimeOnly(8, 0), new TimeOnly(16, 0))));
+        var entry = (await entryResponse.Content.ReadFromJsonAsync<StaffScheduleResponse>())!;
+        var absenceResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/staff-schedules/{entry.Id}/absence", org.AccessToken,
+            new MarkAbsenceRequest(true, "sick")));
+        Assert.Equal(System.Net.HttpStatusCode.OK, absenceResponse.StatusCode);
+
+        var assignCoverResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/staff-schedules/{entry.Id}/assign-cover", org.AccessToken,
+            new AssignCoverRequest(coverStaff.Id)));
+        Assert.Equal(System.Net.HttpStatusCode.OK, assignCoverResponse.StatusCode);
+
+        var bkrAfter = (await (await GetBkrAsync(client, deviceToken, location.Id)).Content.ReadFromJsonAsync<BkrRatioResponse>())!;
+        Assert.Equal(bkrBefore.QualifiedStaffCount, bkrAfter.QualifiedStaffCount);
+        Assert.Equal(1, bkrAfter.QualifiedStaffCount);
+    }
 }

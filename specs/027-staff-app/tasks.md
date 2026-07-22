@@ -110,10 +110,10 @@ member is notified.
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] Integration test: `PublishScheduleWeekCommand` rejects a non-Monday
+- [X] T019 [P] [US1] Integration test: `PublishScheduleWeekCommand` rejects a non-Monday
       `weekStart` and publishes every row for `(locationId, weekStart)` in
       `backend/ChildCare.Api.Tests/StaffScheduling/PublishVisibilityTests.cs`
-- [ ] T020 [P] [US1] Integration test: an unpublished week's entries are excluded from
+- [X] T020 [P] [US1] Integration test: an unpublished week's entries are excluded from
       `GetMyScheduleQuery`; the same entries appear once published, and each distinct affected
       staff member has exactly one `SchedulePublished` push recorded (fake sender) after publish
       (FR-008, SC-004), in
@@ -125,17 +125,17 @@ member is notified.
 
 ### Implementation for User Story 1
 
-- [ ] T021 [US1] Implement `PublishScheduleWeekCommand` in
+- [X] T021 [US1] Implement `PublishScheduleWeekCommand` in
       `backend/ChildCare.Application/StaffScheduling/PublishScheduleWeekCommand.cs`
-- [ ] T022 [US1] Implement `StaffScheduleNotificationService` (`SchedulePublished` case) in
+- [X] T022 [US1] Implement `StaffScheduleNotificationService` (`SchedulePublished` case) in
       `backend/ChildCare.Application/StaffScheduling/StaffScheduleNotificationService.cs`
-- [ ] T023 [US1] Extend `GetMyScheduleQuery` to filter to `IsPublished == true` rows in
+- [X] T023 [US1] Extend `GetMyScheduleQuery` to filter to `IsPublished == true` rows in
       `backend/ChildCare.Application/StaffScheduling/GetMyScheduleQuery.cs`
-- [ ] T024 [US1] Add the publish request/response contracts and extend
+- [X] T024 [US1] Add the publish request/response contracts and extend
       `StaffScheduleResponse` with the new fields in
       `backend/ChildCare.Contracts/Requests/StaffScheduleRequests.cs` and
       `backend/ChildCare.Contracts/Responses/StaffScheduleResponses.cs`
-- [ ] T025 [US1] Add `POST /api/staff-schedules/{locationId}/publish` in
+- [X] T025 [US1] Add `POST /api/staff-schedules/{locationId}/publish` in
       `backend/ChildCare.Api/Endpoints/StaffScheduleEndpoints.cs`
 - [ ] T026 [US1] Extend `SchedulingGrid.tsx` with contracted-day and closure-day greying in
       `web/components/SchedulingGrid.tsx`
@@ -159,7 +159,7 @@ correctly, and confirm the API never returns another staff member's rows.
 
 ### Tests for User Story 2
 
-- [ ] T029 [P] [US2] Integration test: a schedule/leave-request read never returns another
+- [X] T029 [P] [US2] Integration test: a schedule/leave-request read never returns another
       staff member's rows regardless of any client-supplied identifier (FR-015), and
       `ReportSickCommand`/`CreateLeaveRequestCommand` always act on the JWT-resolved staff
       profile even if a client-supplied identifier is present in the request (FR-015a), in
@@ -204,15 +204,15 @@ is unaffected throughout.
 
 ### Tests for User Story 3
 
-- [ ] T038 [P] [US3] Integration test: `ReportSickCommand` flips the day's `StaffSchedule`
+- [X] T038 [P] [US3] Integration test: `ReportSickCommand` flips the day's `StaffSchedule`
       status to `Absent`, creates an auto-approved `sick`-type `StaffLeaveRequest`, notifies the
       director, and is idempotent on a repeated call for an already-`Absent` day (FR-005a — no
       duplicate request, no duplicate alert), in
       `backend/ChildCare.Api.Tests/StaffScheduling/SickCoverAssignmentTests.cs`
-- [ ] T039 [P] [US3] Integration test: `GetSickCoverCandidatesQuery` excludes staff without
+- [X] T039 [P] [US3] Integration test: `GetSickCoverCandidatesQuery` excludes staff without
       `StaffLocationEligibility` and staff with a conflicting overlapping assignment, in
       `backend/ChildCare.Api.Tests/StaffScheduling/SickCoverAssignmentTests.cs`
-- [ ] T040 [P] [US3] Integration test: `AssignCoverCommand` sets `CoverStaffId` on the original
+- [X] T040 [P] [US3] Integration test: `AssignCoverCommand` sets `CoverStaffId` on the original
       row, creates an immediately-visible `Covered`-status row for the replacement, notifies
       both staff members with content limited to their own assignment details (FR-008a — no
       unnecessary third-party PII), rejects an ineligible `coverStaffProfileId` called directly
@@ -220,22 +220,22 @@ is unaffected throughout.
       just `GetSickCoverCandidatesQuery`'s read-side filtering), and is race-safe under two
       concurrent assignment attempts (FR-018), in
       `backend/ChildCare.Api.Tests/StaffScheduling/SickCoverAssignmentTests.cs`
-- [ ] T041 [P] [US3] Extend `BkrDecouplingTests` to prove `Status`/`CoverStaffId` are never read
+- [X] T041 [P] [US3] Extend `BkrDecouplingTests` to prove `Status`/`CoverStaffId` are never read
       by `GetBkrRatioQuery` (FR-016) in
       `backend/ChildCare.Api.Tests/StaffScheduling/BkrDecouplingTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Implement `ReportSickCommand` in
+- [X] T042 [US3] Implement `ReportSickCommand` in
       `backend/ChildCare.Application/StaffScheduling/ReportSickCommand.cs`
-- [ ] T043 [US3] Implement `GetSickCoverCandidatesQuery` in
+- [X] T043 [US3] Implement `GetSickCoverCandidatesQuery` in
       `backend/ChildCare.Application/StaffScheduling/GetSickCoverCandidatesQuery.cs`
-- [ ] T044 [US3] Implement `AssignCoverCommand` under
+- [X] T044 [US3] Implement `AssignCoverCommand` under
       `IAdvisoryLockService.RunExclusiveAsync` in
       `backend/ChildCare.Application/StaffScheduling/AssignCoverCommand.cs`
-- [ ] T045 [US3] Extend `StaffScheduleNotificationService` for the `AssignmentChanged` case in
+- [X] T045 [US3] Extend `StaffScheduleNotificationService` for the `AssignmentChanged` case in
       `backend/ChildCare.Application/StaffScheduling/StaffScheduleNotificationService.cs`
-- [ ] T046 [US3] Add `report-sick`, `sick-cover-candidates`, and `assign-cover` endpoints in
+- [X] T046 [US3] Add `report-sick`, `sick-cover-candidates`, and `assign-cover` endpoints in
       `backend/ChildCare.Api/Endpoints/StaffScheduleEndpoints.cs`
 - [ ] T047 [US3] Build `SickCoverDialog.tsx` and the urgent cover-needed banner in
       `web/components/SickCoverDialog.tsx` and `web/app/(app)/scheduling/page.tsx`
@@ -258,34 +258,34 @@ then repeat with a rejection and confirm no rota change.
 
 ### Tests for User Story 4
 
-- [ ] T049 [P] [US4] Integration test: `CreateLeaveRequestCommand` validates the date range
+- [X] T049 [P] [US4] Integration test: `CreateLeaveRequestCommand` validates the date range
       (`dateTo >= dateFrom`, not entirely in the past) in
       `backend/ChildCare.Api.Tests/StaffLeaveRequests/LeaveRequestApprovalTests.cs`
-- [ ] T050 [P] [US4] Integration test: `DecideLeaveRequestCommand` approval marks every
+- [X] T050 [P] [US4] Integration test: `DecideLeaveRequestCommand` approval marks every
       matching `StaffSchedule` row `Absent` with `AbsenceReason` set per the
       `Sick→Sick`/`Annual→Leave`/`Other→Leave` mapping (research.md R3), leaves unscheduled
       dates untouched, and leaves an already-`Covered` row's `CoverStaffId` intact rather than
       overwriting it (FR-011/FR-011a); rejection makes no rota change, in
       `backend/ChildCare.Api.Tests/StaffLeaveRequests/LeaveRequestApprovalTests.cs`
-- [ ] T051 [P] [US4] Integration test: `GetMyLeaveRequestsQuery` never returns another staff
+- [X] T051 [P] [US4] Integration test: `GetMyLeaveRequestsQuery` never returns another staff
       member's requests (FR-012/015) in
       `backend/ChildCare.Api.Tests/StaffLeaveRequests/CrossStaffLeaveRequestIsolationTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T052 [US4] Implement `CreateLeaveRequestCommand` in
+- [X] T052 [US4] Implement `CreateLeaveRequestCommand` in
       `backend/ChildCare.Application/StaffLeaveRequests/CreateLeaveRequestCommand.cs`
-- [ ] T053 [US4] Implement `DecideLeaveRequestCommand` in
+- [X] T053 [US4] Implement `DecideLeaveRequestCommand` in
       `backend/ChildCare.Application/StaffLeaveRequests/DecideLeaveRequestCommand.cs`
-- [ ] T054 [US4] [P] Implement `ListLeaveRequestsQuery` and `GetMyLeaveRequestsQuery` in
+- [X] T054 [US4] [P] Implement `ListLeaveRequestsQuery` and `GetMyLeaveRequestsQuery` in
       `backend/ChildCare.Application/StaffLeaveRequests/ListLeaveRequestsQuery.cs` and
       `backend/ChildCare.Application/StaffLeaveRequests/GetMyLeaveRequestsQuery.cs`
-- [ ] T055 [US4] Add `LeaveRequestDecided` notification wiring in
+- [X] T055 [US4] Add `LeaveRequestDecided` notification wiring in
       `backend/ChildCare.Application/StaffLeaveRequests/StaffLeaveRequestNotificationService.cs`
-- [ ] T056 [US4] Add the leave-request request/response contracts in
+- [X] T056 [US4] Add the leave-request request/response contracts in
       `backend/ChildCare.Contracts/Requests/StaffLeaveRequestRequests.cs` and
       `backend/ChildCare.Contracts/Responses/StaffLeaveRequestResponses.cs`
-- [ ] T057 [US4] Add `StaffLeaveRequestEndpoints.cs` in
+- [X] T057 [US4] Add `StaffLeaveRequestEndpoints.cs` in
       `backend/ChildCare.Api/Endpoints/StaffLeaveRequestEndpoints.cs`
 - [ ] T058 [US4] Build `LeaveRequestTable.tsx`, the `/leave-requests` director queue page, and
       a Sidebar nav entry in `web/app/(app)/leave-requests/page.tsx`,

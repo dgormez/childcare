@@ -23,8 +23,10 @@ public class UpdateStaffScheduleCommandValidator : AbstractValidator<UpdateStaff
 }
 
 // FR-002/FR-003/FR-004: edit a future-dated entry only; overlap re-checked against the new
-// time/location, excluding the row being edited.
-public class UpdateStaffScheduleCommandHandler(ITenantDbContext db, IAdvisoryLockService advisoryLock)
+// time/location, excluding the row being edited. Feature 027/US3 AC4: any edit to a row whose
+// week is already published notifies the affected staff member (FR-008) — publish only gates
+// forward-planning visibility, not corrections to an already-visible week (research.md R4).
+public class UpdateStaffScheduleCommandHandler(ITenantDbContext db, IAdvisoryLockService advisoryLock, StaffScheduleNotificationService notifications)
     : IRequestHandler<UpdateStaffScheduleCommand, StaffScheduleResult>
 {
     public async Task<StaffScheduleResult> Handle(UpdateStaffScheduleCommand request, CancellationToken cancellationToken)
@@ -65,6 +67,8 @@ public class UpdateStaffScheduleCommandHandler(ITenantDbContext db, IAdvisoryLoc
         if (hasOverlap)
             return StaffScheduleResult.Fail(StaffScheduleFailure.Overlap);
 
+        var wasPublished = entry.IsPublished;
+
         entry.LocationId = request.LocationId;
         entry.GroupId = request.GroupId;
         entry.StartTime = request.StartTime;
@@ -72,6 +76,10 @@ public class UpdateStaffScheduleCommandHandler(ITenantDbContext db, IAdvisoryLoc
         entry.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (wasPublished)
+            await notifications.NotifyAssignmentChangedAsync(entry.StaffProfileId, entry.Id, cancellationToken);
+
         return StaffScheduleResult.Success(StaffScheduleMapper.ToResponse(entry));
     }
 }

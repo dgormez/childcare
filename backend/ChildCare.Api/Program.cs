@@ -284,6 +284,11 @@ builder.Services.AddScoped<ClosureNotificationService>();
 builder.Services.AddScoped<ClosureAttendanceService>();
 builder.Services.AddScoped<IClosureCalendarReader, ClosureCalendarReader>();
 
+// ── Staff app: personal rota & leave (feature 027) ───────────────────────────
+// Reuses IExpoPushSender/IAdvisoryLockService unchanged (research.md).
+builder.Services.AddScoped<ChildCare.Application.StaffScheduling.StaffScheduleNotificationService>();
+builder.Services.AddScoped<ChildCare.Application.StaffLeaveRequests.StaffLeaveRequestNotificationService>();
+
 // ── Parent communication (feature 013) ──────────────────────────────────────
 // Reuses IExpoPushSender (009) unchanged (research.md R3) — no new push registration needed.
 builder.Services.AddScoped<ICurrentParentContactResolver, CurrentParentContactResolver>();
@@ -853,6 +858,7 @@ app.MapGroupActivityEndpoints();
 app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
+app.MapStaffLeaveRequestEndpoints();
 app.MapWaitingListEndpoints();
 app.MapPublicEnrollmentEndpoints();
 app.MapPublicContractSigningEndpoints();
