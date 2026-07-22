@@ -33,6 +33,14 @@ public static class ContractsEndpoints
             return MapResult(result, onSuccess: r => Results.Created($"/api/contracts/{r.Id}", r));
         });
 
+        // Feature 024-esignature (User Story 2) — the org-wide list web/app/(app)/contracts/page.tsx
+        // renders (distinct from the existing per-contract GET below and the per-child GET above).
+        contracts.MapGet("/", async (IMediator mediator) =>
+        {
+            var result = await mediator.Send(new ListContractsQuery());
+            return Results.Ok(result);
+        });
+
         contracts.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new GetContractByIdQuery(id));

@@ -31,3 +31,16 @@ public record ContractConsentResponse(
     bool PhotosSocialMedia,
     bool VideoInternal,
     bool PhotosPress);
+
+// Feature 024-esignature (User Story 2) — one row of the org-wide contracts list
+// (ListContractsQuery), with just enough denormalized data (child/location name) to render
+// without an extra round trip per row.
+public record ContractSummaryResponse(
+    Guid Id,
+    Guid ChildId,
+    string ChildName,
+    string LocationName,
+    DateOnly StartDate,
+    string Status,
+    string SigningStatus,
+    DateTime? SignedAt);

@@ -126,4 +126,25 @@ public class ContractSigningTests(OrganisationOnboardingWebAppFactory factory) :
         var body = await afterSigning.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Contains($"signed-contracts/{contract.Id}.pdf", body.GetProperty("downloadUrl").GetString());
     }
+
+    // ── FR-018/US2: the org-wide list web/app/(app)/contracts/page.tsx needs (converge finding —
+    // ListChildContractsQuery (007) is scoped to one child at a time, no cross-child listing existed) ──
+
+    [Fact]
+    public async Task ListContracts_ReturnsEveryContractAcrossChildrenWithSigningStatus()
+    {
+        var contactEmail = $"parent_{Guid.NewGuid():N}@test.com";
+        var client = factory.CreateClient();
+        var (_, org, child, contract) = await SetUpDraftContractWithContactAsync(client, contactEmail);
+
+        var response = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/contracts", org.AccessToken));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var list = (await response.Content.ReadFromJsonAsync<List<ContractSummaryResponse>>())!;
+
+        var row = Assert.Single(list, r => r.Id == contract.Id);
+        Assert.Equal(child.Id, row.ChildId);
+        Assert.Equal($"{child.FirstName} {child.LastName}", row.ChildName);
+        Assert.Equal("draft", row.Status);
+        Assert.Equal("notsent", row.SigningStatus);
+    }
 }
