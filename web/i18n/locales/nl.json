@@ -114,6 +114,48 @@
       "notesLabel": "Notities",
       "cancel": "Annuleren",
       "save": "Opslaan"
+    },
+    "detail": {
+      "back": "Terug naar personeel",
+      "tabDossier": "Dossier",
+      "tabTimeEntries": "Tijdsregistraties",
+      "loadError": "Kon dit personeelslid niet laden.",
+      "retry": "Opnieuw proberen"
+    },
+    "dossier": {
+      "documentsTitle": "Documenten",
+      "addDocument": "Document toevoegen",
+      "deleteDocument": "Document verwijderen",
+      "emptyState": "Nog geen documenten.",
+      "loadError": "Kon documenten niet laden. Probeer opnieuw.",
+      "retry": "Opnieuw proberen",
+      "validUntilShort": "geldig tot",
+      "timeEntryFunctionsTitle": "Klokfuncties",
+      "noFunctionSelected": "Selecteer minstens één functie.",
+      "saveError": "Kon niet opslaan.",
+      "save": "Opslaan",
+      "saved": "Opgeslagen",
+      "form": {
+        "title": "Document toevoegen",
+        "documentTypeLabel": "Documenttype",
+        "titleLabel": "Titel",
+        "validFromLabel": "Geldig vanaf",
+        "validUntilLabel": "Geldig tot",
+        "fileLabel": "Bestand",
+        "fileRequired": "Kies een bestand om te uploaden.",
+        "invalidType": "Alleen PDF-, JPEG- of PNG-bestanden zijn toegestaan.",
+        "uploadError": "Kon dit bestand niet uploaden. Probeer opnieuw.",
+        "saveError": "Kon dit document niet opslaan.",
+        "cancel": "Annuleren",
+        "save": "Opslaan",
+        "documentTypes": {
+          "employment_contract": "Arbeidsovereenkomst",
+          "amendment": "Addendum",
+          "qualification": "Kwalificatie",
+          "training": "Opleiding",
+          "other": "Overig"
+        }
+      }
     }
   },
   "devices": {
@@ -1220,6 +1262,14 @@
         "missingPin": "Geen PIN-code ingesteld",
         "missingIdentityVerification": "Identiteit nog niet geverifieerd"
       }
+    },
+    "contractsExpiring": {
+      "title": "Personeel — verlopende contracten",
+      "emptyState": "Geen verlopende of vervallen arbeidscontracten.",
+      "loadError": "Kon dit overzicht niet laden. Probeer opnieuw.",
+      "retry": "Opnieuw proberen",
+      "expired": "Vervallen",
+      "dueSoon": "Verloopt binnenkort"
     }
   },
   "mealList": {

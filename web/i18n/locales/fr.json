@@ -114,6 +114,48 @@
       "notesLabel": "Notes",
       "cancel": "Annuler",
       "save": "Enregistrer"
+    },
+    "detail": {
+      "back": "Retour au personnel",
+      "tabDossier": "Dossier",
+      "tabTimeEntries": "Pointages",
+      "loadError": "Impossible de charger ce membre du personnel.",
+      "retry": "Réessayer"
+    },
+    "dossier": {
+      "documentsTitle": "Documents",
+      "addDocument": "Ajouter un document",
+      "deleteDocument": "Supprimer le document",
+      "emptyState": "Aucun document pour le moment.",
+      "loadError": "Impossible de charger les documents. Réessayez.",
+      "retry": "Réessayer",
+      "validUntilShort": "valide jusqu'au",
+      "timeEntryFunctionsTitle": "Fonctions de pointage",
+      "noFunctionSelected": "Sélectionnez au moins une fonction.",
+      "saveError": "Impossible d'enregistrer.",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "form": {
+        "title": "Ajouter un document",
+        "documentTypeLabel": "Type de document",
+        "titleLabel": "Titre",
+        "validFromLabel": "Valide à partir de",
+        "validUntilLabel": "Valide jusqu'au",
+        "fileLabel": "Fichier",
+        "fileRequired": "Choisissez un fichier à téléverser.",
+        "invalidType": "Seuls les fichiers PDF, JPEG ou PNG sont acceptés.",
+        "uploadError": "Impossible de téléverser ce fichier. Réessayez.",
+        "saveError": "Impossible d'enregistrer ce document.",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "documentTypes": {
+          "employment_contract": "Contrat de travail",
+          "amendment": "Avenant",
+          "qualification": "Qualification",
+          "training": "Formation",
+          "other": "Autre"
+        }
+      }
     }
   },
   "devices": {
@@ -1220,6 +1262,14 @@
         "missingPin": "Aucun code PIN configuré",
         "missingIdentityVerification": "Identité pas encore vérifiée"
       }
+    },
+    "contractsExpiring": {
+      "title": "Personnel — contrats expirants",
+      "emptyState": "Aucun contrat de travail expirant ou expiré.",
+      "loadError": "Impossible de charger cet aperçu. Réessayez.",
+      "retry": "Réessayer",
+      "expired": "Expiré",
+      "dueSoon": "Expire bientôt"
     }
   },
   "mealList": {

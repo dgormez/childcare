@@ -42,10 +42,33 @@ export interface StaffResponse {
   updatedAt: string;
   // Feature 027 (FR-002) — e.g. ["Monday", "Tuesday"]. Empty = no restriction.
   contractedDays: string[];
+  // Feature 028 (FR-010) — which medewerkersbeleid function(s) this staff member may clock in
+  // under. Empty = cannot clock in yet.
+  timeEntryFunctions: StaffTimeEntryFunction[];
 }
 
 // Feature 028
 export type StaffTimeEntryFunction = "kinderbegeleider" | "logistiek" | "verantwoordelijke";
+
+export type StaffDocumentType = "employment_contract" | "amendment" | "qualification" | "training" | "other";
+
+export interface StaffDocumentResponse {
+  id: string;
+  staffProfileId: string;
+  documentType: StaffDocumentType;
+  title: string;
+  downloadUrl: string | null;
+  validFrom: string | null;
+  validUntil: string | null;
+  createdAt: string;
+}
+
+export interface ContractExpiringResponse {
+  staffProfileId: string;
+  staffName: string;
+  validUntil: string;
+  isExpired: boolean;
+}
 
 export interface StaffTimeEntryResponse {
   id: string;

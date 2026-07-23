@@ -212,23 +212,23 @@ surfaces on the dashboard block.
 
 ### Tests for User Story 3
 
-- [ ] T037 [P] [US3] Integration test: the upload-URL + confirm flow creates a `StaffDocument`
+- [X] T037 [P] [US3] Integration test: the upload-URL + confirm flow creates a `StaffDocument`
       row with a working signed download URL and `CreatedBy` set to the acting director from the
       JWT, never a client-supplied value (FR-011/FR-012/FR-012a) in
       `backend/ChildCare.Api.Tests/StaffDocuments/StaffDossierTests.cs`
-- [ ] T038 [P] [US3] Integration test: deleting a document soft-deletes the row
+- [X] T038 [P] [US3] Integration test: deleting a document soft-deletes the row
       (`DeletedAt`/`DeletedBy` set, FR-012a), excludes it from the list and contracts-expiring
       queries, and best-effort deletes the underlying GCS object in
       `backend/ChildCare.Api.Tests/StaffDocuments/StaffDossierTests.cs`
-- [ ] T039 [P] [US3] Integration test: `GetContractsExpiringQuery` returns only
+- [X] T039 [P] [US3] Integration test: `GetContractsExpiringQuery` returns only
       `EmploymentContract`-type documents with `ValidUntil <= today + 60d` (inclusive of
       already-past dates), excludes non-contract document types entirely, regardless of their
       own dates (FR-014, Edge Cases) in
       `backend/ChildCare.Api.Tests/StaffDocuments/ContractsExpiringTests.cs`
-- [ ] T040 [P] [US3] Component test: `ContractExpiryBlock` renders loading/empty/error/loaded
+- [X] T040 [P] [US3] Component test: `ContractExpiryBlock` renders loading/empty/error/loaded
       states and navigates to the staff detail page on click (mirrors `DueSoonBlock`'s existing
       test) in `web/__tests__/ContractExpiryBlock.test.tsx`
-- [ ] T040a [P] [US3] Integration test: every dossier endpoint (list/upload-url/confirm/delete
+- [X] T040a [P] [US3] Integration test: every dossier endpoint (list/upload-url/confirm/delete
       documents, `time-entry-functions`, `contracts-expiring`) rejects a staff-authenticated (not
       director) request with `403` (FR-013 — dossier access is director-only, mirrors 027's
       `CrossStaffIsolationTests` precedent for this class of check) in
@@ -236,36 +236,36 @@ surfaces on the dashboard block.
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Implement `CreateStaffDocumentUploadUrlCommand` and `CreateStaffDocumentCommand`
+- [X] T041 [US3] Implement `CreateStaffDocumentUploadUrlCommand` and `CreateStaffDocumentCommand`
       (`CreatedBy` resolved server-side from the JWT, FR-012a) in
       `backend/ChildCare.Application/StaffDocuments/CreateStaffDocumentUploadUrlCommand.cs`
       and `CreateStaffDocumentCommand.cs`
-- [ ] T042 [US3] [P] Implement `DeleteStaffDocumentCommand` (soft-delete: sets `DeletedAt`/
+- [X] T042 [US3] [P] Implement `DeleteStaffDocumentCommand` (soft-delete: sets `DeletedAt`/
       `DeletedBy`, then calls `IStaffDocumentStorage.DeleteAsync`, FR-012a) and
       `ListStaffDocumentsQuery` (filters `DeletedAt IS NULL`) in
       `backend/ChildCare.Application/StaffDocuments/DeleteStaffDocumentCommand.cs` and
       `ListStaffDocumentsQuery.cs`
-- [ ] T043 [US3] Implement `GetContractsExpiringQuery` in
+- [X] T043 [US3] Implement `GetContractsExpiringQuery` in
       `backend/ChildCare.Application/StaffDocuments/GetContractsExpiringQuery.cs`
-- [ ] T044 [US3] Implement `UpdateStaffTimeEntryFunctionsCommand` (FR-010) in
+- [X] T044 [US3] Implement `UpdateStaffTimeEntryFunctionsCommand` (FR-010) in
       `backend/ChildCare.Application/StaffTimeEntries/UpdateStaffTimeEntryFunctionsCommand.cs`
-- [ ] T045 [US3] Add the document request/response contracts in
+- [X] T045 [US3] Add the document request/response contracts in
       `backend/ChildCare.Contracts/Requests/StaffDocumentRequests.cs` and
       `backend/ChildCare.Contracts/Responses/StaffDocumentResponses.cs`
-- [ ] T046 [US3] Extend `StaffEndpoints.cs` with document CRUD, `time-entry-functions`, and
+- [X] T046 [US3] Extend `StaffEndpoints.cs` with document CRUD, `time-entry-functions`, and
       `contracts-expiring` routes (`DirectorOnly`) (depends on T041–T045)
-- [ ] T047 [US3] Build the new staff detail screen shell with **Dossier**/**Tijdsregistraties**
+- [X] T047 [US3] Build the new staff detail screen shell with **Dossier**/**Tijdsregistraties**
       tabs, Dossier as the default/first tab (research.md R9, spec.md SC-002), mirroring
       `children/[id]/page.tsx`'s tab pattern in `web/app/(app)/staff/[id]/page.tsx` (depends on
       T034 for the Tijdsregistraties tab content)
-- [ ] T048 [US3] Build `StaffDossierTab.tsx`, `StaffDocumentForm.tsx`, and
+- [X] T048 [US3] Build `StaffDossierTab.tsx`, `StaffDocumentForm.tsx`, and
       `TimeEntryFunctionsForm.tsx` in `web/components/staff/`
-- [ ] T049 [US3] Make `staff/page.tsx` rows navigate to the new detail page (was inert) in
+- [X] T049 [US3] Make `staff/page.tsx` rows navigate to the new detail page (was inert) in
       `web/app/(app)/staff/page.tsx`
-- [ ] T050 [US3] Build `ContractExpiryBlock.tsx` (mirrors `DueSoonBlock.tsx`, research.md R8) and
+- [X] T050 [US3] Build `ContractExpiryBlock.tsx` (mirrors `DueSoonBlock.tsx`, research.md R8) and
       mount it on the dashboard in `web/components/staff/ContractExpiryBlock.tsx` and
       `web/app/(app)/dashboard/page.tsx`
-- [ ] T051 [US3] Add NL/FR/EN i18n keys for the dossier and contract-expiry UI in
+- [X] T051 [US3] Add NL/FR/EN i18n keys for the dossier and contract-expiry UI in
       `web/i18n/locales/{en,fr,nl}.json`
 
 **Checkpoint**: User Stories 1–3 all work independently.

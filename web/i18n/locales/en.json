@@ -114,6 +114,48 @@
       "notesLabel": "Notes",
       "cancel": "Cancel",
       "save": "Save"
+    },
+    "detail": {
+      "back": "Back to staff",
+      "tabDossier": "Dossier",
+      "tabTimeEntries": "Time entries",
+      "loadError": "Could not load this staff member.",
+      "retry": "Retry"
+    },
+    "dossier": {
+      "documentsTitle": "Documents",
+      "addDocument": "Add document",
+      "deleteDocument": "Delete document",
+      "emptyState": "No documents yet.",
+      "loadError": "Could not load documents. Please try again.",
+      "retry": "Retry",
+      "validUntilShort": "valid until",
+      "timeEntryFunctionsTitle": "Clock-in functions",
+      "noFunctionSelected": "Select at least one function.",
+      "saveError": "Could not save.",
+      "save": "Save",
+      "saved": "Saved",
+      "form": {
+        "title": "Add document",
+        "documentTypeLabel": "Document type",
+        "titleLabel": "Title",
+        "validFromLabel": "Valid from",
+        "validUntilLabel": "Valid until",
+        "fileLabel": "File",
+        "fileRequired": "Choose a file to upload.",
+        "invalidType": "Only PDF, JPEG, or PNG files are supported.",
+        "uploadError": "Could not upload this file. Please try again.",
+        "saveError": "Could not save this document.",
+        "cancel": "Cancel",
+        "save": "Save",
+        "documentTypes": {
+          "employment_contract": "Employment contract",
+          "amendment": "Amendment",
+          "qualification": "Qualification",
+          "training": "Training",
+          "other": "Other"
+        }
+      }
     }
   },
   "devices": {
@@ -1220,6 +1262,14 @@
         "missingPin": "No check-in PIN set",
         "missingIdentityVerification": "Identity not yet verified"
       }
+    },
+    "contractsExpiring": {
+      "title": "Personnel — expiring contracts",
+      "emptyState": "No expiring or lapsed employment contracts.",
+      "loadError": "Could not load this overview. Please try again.",
+      "retry": "Retry",
+      "expired": "Expired",
+      "dueSoon": "Expiring soon"
     }
   },
   "mealList": {

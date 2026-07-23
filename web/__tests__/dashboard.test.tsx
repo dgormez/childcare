@@ -53,6 +53,7 @@ function mockAllEndpoints(overrides: Partial<Record<string, unknown>> = {}) {
     if (key in overrides) return Promise.resolve(okResponse(overrides[key])) as never;
     if (key === "/api/locations") return Promise.resolve(okResponse([])) as never;
     if (key === "/api/vaccine-records/due-soon") return Promise.resolve(okResponse([])) as never;
+    if (key === "/api/staff/contracts-expiring") return Promise.resolve(okResponse([])) as never;
     if (key === "/api/reports/occupancy") return Promise.resolve(okResponse(emptyOccupancy)) as never;
     if (key === "/api/reports/bkr") return Promise.resolve(okResponse(emptyBkr)) as never;
     if (key === "/api/reports/bkr/breaches") return Promise.resolve(okResponse(emptyBreaches)) as never;

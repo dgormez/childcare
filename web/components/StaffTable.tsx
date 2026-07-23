@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
 import { Button } from "./ui/button";
@@ -14,6 +15,7 @@ interface StaffTableProps {
 
 export function StaffTable({ staff, locationsById, onResetPin, onToggleActive }: StaffTableProps) {
   const t = useTranslations("staff");
+  const router = useRouter();
 
   return (
     <Table>
@@ -34,7 +36,11 @@ export function StaffTable({ staff, locationsById, onResetPin, onToggleActive }:
             .filter((name): name is string => Boolean(name));
 
           return (
-            <TableRow key={member.id}>
+            <TableRow
+              key={member.id}
+              className="cursor-pointer"
+              onClick={() => router.push(`/staff/${member.id}`)}
+            >
               <TableCell className="font-medium">
                 {member.firstName} {member.lastName}
               </TableCell>
@@ -48,7 +54,7 @@ export function StaffTable({ staff, locationsById, onResetPin, onToggleActive }:
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" onClick={() => onResetPin(member)}>
                     {t("actionResetPin")}
                   </Button>
