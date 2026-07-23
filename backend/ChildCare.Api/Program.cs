@@ -861,6 +861,7 @@ app.MapGroupActivityEndpoints();
 app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
+app.MapStaffTimeEntryEndpoints();
 app.MapStaffLeaveRequestEndpoints();
 app.MapWaitingListEndpoints();
 app.MapPublicEnrollmentEndpoints();

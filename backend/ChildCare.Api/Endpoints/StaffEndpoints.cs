@@ -95,6 +95,16 @@ public static class StaffEndpoints
             return MapResult(result, onSuccess: Results.Ok);
         });
 
+        // Feature 028 (FR-010): which medewerkersbeleid function(s) this staff member may
+        // clock in under.
+        group.MapPatch("/{id:guid}/time-entry-functions", async (Guid id, UpdateStaffTimeEntryFunctionsRequest req, IMediator mediator) =>
+        {
+            var succeeded = await mediator.Send(new ChildCare.Application.StaffTimeEntries.UpdateStaffTimeEntryFunctionsCommand(id, req.Functions));
+            return succeeded
+                ? Results.Ok()
+                : Results.Json(new { errorKey = "errors.staff.no_function_configured" }, statusCode: StatusCodes.Status400BadRequest);
+        });
+
         group.MapPost("/{id:guid}/photo/upload-url", async (Guid id, IMediator mediator) =>
         {
             var result = await mediator.Send(new RequestPhotoUploadUrlCommand(id));
