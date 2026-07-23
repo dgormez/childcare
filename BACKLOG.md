@@ -70,7 +70,7 @@
 | 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | ✅ Done |
 | 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | ✅ Done |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | ✅ Done |
-| 032 | `032-platform-admin-portal` | Dedicated platform-admin (super-admin) portal — send director/organisation invitations, manage shared platform data (e.g. vaccine catalog) | 001 | 🔲 Not started |
+| 032 | `032-platform-admin-portal` | Dedicated platform-admin (super-admin) portal — send director/organisation invitations, self-service registration page for prospective directors, a directory of every onboarded organisation, manage shared platform data (e.g. vaccine catalog) | 001 | 🔲 Not started |
 | 033 | `033-kinderopvangtoeslag-aaron` | Monthly attendance submission to Opgroeien for the kinderopvangtoeslag (Groeipakket) — REST/JSON webservice (AARON backend, bearer-token auth). Applies to vrije-prijs (free-price) KDVs = the Phase 1 target segment; replaces the director's manual entry in the free AARON web app | 010 | 🔲 Not started |
 | 034 | `034-jaarregistraties-xml` | Annual Opgroeien jaarregistratie forms via XML export (all forms except the medewerkers form, which must stay PDF); import of Opgroeien's pre-filled per-organisation values (Excel) to minimise validation errors | 004, 005, 006, 010 | 🔲 Not started |
 | 035 | `035-safety-risk-register` | Safety & risk-analysis register: the legally required risicoanalyse across 4 domains (injuries/accidents, crises/life-threatening situations, child disappearance, illness/contamination), (near-)incident logbook, digitised actielijst checklists, attest slaaphouding tracking on the child profile | 006, 013b | 🔲 Not started |
@@ -4697,12 +4697,31 @@ Out of scope:
 
 ### 032 — Platform-Admin Portal
 
-**Added 2026-07-13.** No cross-tenant admin surface exists anywhere in this codebase today.
-Two gaps prompted this: (1) feature 001 built the director invitation *acceptance* flow
-(token → registration) but never a way to *create* that invitation — it's currently a manual
-token/DB operation; (2) feature 013h (if/when built) needs a platform-admin role to manage the
-013g vaccine catalog, but no such role or portal exists to host it in. This feature is that
-portal — the first genuinely cross-tenant (not tenant-scoped) admin capability.
+**Added 2026-07-13. Expanded 2026-07-23** (before implementation began — no prior version of
+this feature shipped, so this replaces the block below rather than appending a lettered
+follow-up; the "done features are immutable" rule doesn't apply to a still-🔲 feature). No
+cross-tenant admin surface exists anywhere in this codebase today. Three gaps prompted this:
+(1) feature 001 built the director invitation *acceptance* endpoint (token → registration) but
+never a way to *create* that invitation, nor any web page that actually calls the acceptance
+endpoint — it's currently a fully manual, no-self-service-UI-at-all operation; (2) feature 013h
+needs a platform-admin role to manage the 013g vaccine catalog, but no portal exists to host it
+in (013h shipped its one screen standalone, with no shared shell); (3) discovered during this
+feature's own planning: a platform-admin also has no way to see the organisations/directors
+that already exist on the platform at all — every "who are our customers" question today
+requires a direct DB query.
+
+Product-owner decisions confirmed 2026-07-23 (via AskUserQuestion, before this block was
+rewritten — do not re-litigate):
+- The organisation directory shows **every** organisation on the platform, not just
+  invitation-originated ones (though in practice every `Tenant` row today is invitation-
+  originated — feature 001 has no other creation path).
+- "Approval/accepted states" means **visibility only** — no new approval gate. A director's
+  organisation still activates immediately on registration, exactly as feature 001 already
+  built it. This feature does not add a manual-approval-before-activation workflow.
+- The missing self-service registration web page **is in scope** for this feature — without
+  it, an invitation created by this feature's own Invitations screen has no working
+  destination, and the feature would not actually deliver self-service onboarding.
+- This all lands as **one** feature (032), not split into separate BACKLOG items.
 
 ```
 Build a dedicated platform-admin (super-admin) portal — sits above all
@@ -4713,31 +4732,40 @@ What to build:
 - Director/organisation invitations: platform-admin sends an invitation
   to a prospective KDV director (email + organisation name at minimum).
   Reuse feature 001's existing invitation-token model (signed token,
-  expiry, single-use) — 001 already built acceptance, this builds creation.
-  Platform-admin can see invitation status (pending / accepted / expired)
-  and resend or revoke a pending invitation.
-- Platform data management: a management UI for shared, platform-wide
-  reference data — starting with whatever is the first concrete dataset
-  that needs it (e.g. the vaccine catalog, if feature 013h has not
-  separately built its own screen for this by the time this is picked up).
-  Structure the portal so a second dataset doesn't require rebuilding the
-  shell, but don't build any dataset's screen speculatively.
+  expiry, single-use) — 001 already built the acceptance endpoint, this
+  builds creation. Platform-admin can see invitation status (pending /
+  accepted / expired / revoked) and resend or revoke a pending invitation.
+- Self-service registration page: a public, unauthenticated director-web
+  page that consumes feature 001's existing POST /api/organisations/register
+  endpoint (invitation token from the URL, organisation name, director name,
+  email, password). This does not exist anywhere today — confirmed during
+  032's own planning research, feature 001 only ever built the backend
+  endpoint. No backend change needed, this is purely the missing frontend.
+- Organisation directory: a read-only list, for the platform-admin, of every
+  organisation on the platform — name, plan, provisioning status, KBO
+  number, created date, and the email address that registered it. Answerable
+  entirely from the existing `Tenant` (Public schema) + `Invitation` join,
+  no per-tenant-schema fan-out required. Explicitly NOT a suspend/deactivate
+  tool — `Tenant` has no such flag today and adding one is out of scope
+  (tenant suspension remains deferred per feature 002).
+- Platform data management shell: a shared platform-admin layout/nav
+  (today: Invitations, Organisations, and the existing Vaccine Types from
+  013h, which currently has no shared shell of its own — retrofit it in
+  rather than rebuilding its screen). Structure the shell so a future
+  dataset doesn't require rebuilding it, but don't build any *new* dataset's
+  screen speculatively.
 
-Open questions this feature must resolve before implementation (flag for
-/speckit-clarify, do not assume silently):
-- Where does a platform-admin authenticate? No natural tenant exists to
-  scope a JWT to — a new auth path, a super-admin flag on an existing
-  account, or something else entirely needs deciding.
-- Is this a new gated section in the existing Next.js web app, or a
-  genuinely separate internal tool? Given Constitution Principle VII
-  (monolith-first simplicity), default to "same app, new gated route"
-  unless a concrete reason argues otherwise.
-- Who can become a platform-admin, and how is the very first one
-  provisioned (chicken-and-egg — no invitation mechanism exists yet to
-  invite them)? Likely a seeded/manual account — the spec should say so
-  explicitly.
-- Does revoking an invitation, or editing platform data, need an audit
-  trail (who did it, when)?
+Already resolved — do not re-ask (see feature 013h, already shipped):
+- Platform-admin authentication reuses 013h's existing `IsPlatformAdmin`
+  flag / `PlatformAdminOnly` policy / JWT claim as-is. No new auth path.
+- Same app, new gated route in the existing Next.js web app (013h's own
+  precedent), not a separate tool.
+- The very first platform-admin account is provisioned via 013h's existing
+  `grant-platform-admin` CLI, out-of-band — this feature does not add an
+  in-app way to grant that flag.
+- Audit trail for invitation actions follows 013h's established
+  `VaccineType` deactivation-field convention (nullable acting-user id with
+  no cross-schema FK, denormalized acting-user email, nullable timestamp).
 
 Out of scope:
 - Any change to existing tenant-facing behavior of whatever platform data
@@ -4745,7 +4773,10 @@ Out of scope:
 - Billing/subscription-plan management from this portal (out of scope per
   feature 001; still deferred).
 - Tenant suspension/deletion tooling (out of scope per feature 002; still
-  deferred).
+  deferred) — the organisation directory is read-only, no admin actions on
+  an existing organisation.
+- A manual approval gate between registration and organisation activation
+  (explicitly rejected 2026-07-23 — see product-owner decisions above).
 ```
 
 ---
