@@ -899,3 +899,47 @@ use the static code review instead.
   deliberately walking away) — per that precedent, started a `Monitor` polling `gh pr checks --json`
   to watch it to completion in the same turn, and independently confirmed the merge via `gh pr view
   --json state,mergedAt` before updating BACKLOG.md, rather than trusting either signal alone.
+- 028 (`028-staff-hr-dossier`): ✅ Done, merged 2026-07-23 (PR #48, squash-merged after green CI —
+  1096/1096 backend + 265/265 web tests; staff-mobile's 25/25 also run locally, no staff-mobile CI
+  job exists yet). Full pipeline run from a clean `master` in a single session, invoked
+  interactively rather than by the 4h cron trigger. Staff clock in/out via `staff-mobile` (one-tap;
+  a location picker and a function picker each appear only when genuinely ambiguous — more than one
+  `StaffLocationEligibility` grant or more than one configured function, mirroring the same
+  ambiguity rule), a new director-web HR dossier per staff member (documents + configurable
+  clock-in functions, on this codebase's first staff detail screen), director correction/unlock of
+  time entries past a fixed 7-day lock, a contract-expiry dashboard block, and the medewerkersbeleid
+  subsidy report (child-hours ÷ staff-hours by function, ratios only — no pass/fail evaluation,
+  deferred to feature 041's not-yet-built versioned ruleset per an explicit clarification). New
+  tenant tables `staff_time_entries` (computed lock, `UnlockedBy` attribution) and `staff_documents`
+  (soft-deleted via `DeletedAt`/`DeletedBy`, mirroring this codebase's `DeactivatedAt` idiom rather
+  than losing the audit trail on hard delete); a new **Staff Management** workflow added to
+  `workflows.md` (no existing workflow covered staff HR/time tracking). `/speckit-checklist`'s
+  safety/security/regulatory pass and `/speckit-analyze` together found and fixed 10 real
+  requirements gaps before implementation began — the most consequential: clock-in never validated
+  `StaffLocationEligibility` or the configured-function set (FR-001a/FR-005a/FR-004a), and unlock/
+  document-upload/delete had no attribution (FR-007a/FR-012a) — all genuine subsidy-hours integrity
+  gaps this feature exists to close, not leave open, caught before a single line of implementation
+  code existed. Two design gaps were also found and fixed *during* implementation, not planning:
+  the original contract had no way for staff-mobile to learn its own open-entry state on app
+  reopen (added `GET /api/staff-time-entries/me/current`), and the one-tap clock-in flow had no
+  design for *which location* to clock in at (resolved the same way as the function-ambiguity
+  rule, extended `StaffMeResponse` with `eligibleLocationIds`/`timeEntryFunctions` so the client
+  can decide without an extra round-trip). Running the full backend suite before opening the PR
+  caught a real, environment-dependent bug via the CSV-parity test: `StaffHoursCsvWriter` formatted
+  durations with the server's default culture instead of invariant, so "6.00" silently rendered as
+  "6,00" on a comma-decimal locale — splitting the `DurationHours` field across two CSV columns;
+  fixed with explicit `CultureInfo.InvariantCulture` on every formatted field (this codebase's first
+  CSV writer to touch decimals/dates, so not a repeat of an existing bug, a new class of it). The
+  same full-suite run also confirmed the recurring `TenantMigrationRolloutTests`/
+  `LegacyVaccinationMigrationTests` revert-helper pattern (012a onward) yet again — but this time
+  it also broke a *third* file, `PublicEnrollmentSlugBackfillMigrationTests`, whose own doc comment
+  already named the exact mechanism (`TenantDbContext.MigrateAsync()` computes its pending-migration
+  script from `applied.LastOrDefault()`, the last *recorded* migration, not the first gap — leaving
+  a later migration's history row in place after an otherwise-full revert makes it think the tenant
+  is already current, silently no-op'ing the rest of the forward migration) and predicted it would
+  recur for "any future migration"; this is the first time that file's own DELETE list was still one
+  migration short when the predicted failure actually landed. `gh pr checks --watch` was again
+  auto-backgrounded by the tool harness after its own timeout (the same non-deliberate pattern
+  024/027/031 already logged) — watched it to completion via `Monitor` in the same turn and
+  independently confirmed the merge via `gh pr view --json state,mergedAt` before updating
+  BACKLOG.md, same precedent as every prior recurrence.
