@@ -98,6 +98,20 @@ instead of a paper register.
 - **Testing**: happy-path clock in/out; immutability after the lock period and director unlock;
   the 60-day contract-expiry boundary; subsidy-report hour aggregation by function; CSV export.
 
+## Clarifications
+
+### Session 2026-07-23
+
+- Q: Is the time-entry lock period director-configurable via a settings UI, or a fixed
+  system-wide constant? → A: A fixed system-wide constant (7 days) — no other requirement in this
+  feature needs a settings screen, and the director-facing intervention that actually matters
+  (FR-007's per-entry unlock) is unaffected either way.
+- Q: Does the medewerkersbeleid report evaluate pass/fail against Opgroeien's BKR ratio
+  thresholds (1:5 baby, 1:7 mixed, 1:8 toddler), or just display the computed ratios? → A:
+  Display computed ratios only, with no pass/fail evaluation. Formally evaluating ratios against
+  the versioned, effective-dated ruleset is feature 041's job (BKR 2027 ruleset, not yet built);
+  hardcoding thresholds here would fork that logic and drift once 041 ships.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Staff clocks in and out (Priority: P1)
@@ -149,7 +163,7 @@ correction UI to set `clocked_out_at`, and confirming the entry reflects the cor
 1. **Given** a time entry with `clocked_out_at = null` and within the lock period, **When** the
    director opens the staff member's time entries and fills in a clock-out time, **Then** the
    entry is updated and the staff member's mobile view no longer shows them as clocked in.
-2. **Given** a time entry older than the configured lock period, **When** the director attempts to
+2. **Given** a time entry older than the 7-day lock period, **When** the director attempts to
    edit it, **Then** the edit is rejected until the director explicitly unlocks that entry.
 3. **Given** a locked time entry, **When** the director unlocks it, corrects it, and does not
    re-lock it, **Then** the entry remains editable until the next scheduled lock sweep or an
@@ -250,7 +264,8 @@ calculation.
   them to select the function for that clock-in; when they have exactly one, the system MUST skip
   the prompt and use it automatically.
 - **FR-006**: Time entries MUST become immutable (uneditable, including their `clocked_out_at`)
-  once older than a configurable lock period, defaulting to 7 days.
+  once older than a fixed, system-wide lock period of 7 days (not a director-facing setting — see
+  Clarifications).
 - **FR-007**: A director MUST be able to unlock an individual locked time entry to correct it.
 - **FR-008**: A director MUST be able to fill in or correct `clocked_out_at` (and other editable
   fields) on any unlocked time entry, including one with a null `clocked_out_at`.
@@ -277,7 +292,9 @@ calculation.
 
 - **FR-016**: Directors MUST be able to generate a report, scoped to a selected location and date
   range, showing total child-hours, total staff-hours per function, and the resulting
-  child-hours-to-staff-hours ratio per function.
+  child-hours-to-staff-hours ratio per function. The report displays computed ratios only — it
+  does not evaluate them against Opgroeien's BKR pass/fail thresholds (see Clarifications; that
+  evaluation belongs to feature 041's versioned ruleset).
 - **FR-017**: Child-hours for the report period MUST be computed from attendance records (feature
   010) as the sum of each present child's checked-in duration at that location within the period.
 - **FR-018**: Staff-hours per function for the report period MUST be computed from time entries at
@@ -292,7 +309,7 @@ calculation.
 
 - **StaffTimeEntry**: One clock-in/clock-out record for a staff member at a location (and
   optionally a group), tagged with the function worked. Belongs to a `StaffProfile`, a `Location`,
-  optionally a `Group`. Becomes immutable after the configurable lock period unless a director
+  optionally a `Group`. Becomes immutable after the fixed 7-day lock period unless a director
   explicitly unlocks it.
 - **StaffDocument**: One HR document (contract, amendment, qualification, training, or other) on a
   staff member's dossier, stored via a GCS signed URL, with optional validity dates. Belongs to a
@@ -300,8 +317,8 @@ calculation.
 - **Staff function configuration**: The set of function(s) a given staff member may clock in
   under, configured by a director on the staff member's profile — determines whether the
   clock-in function picker is shown (FR-005/FR-010).
-- **Time-entry lock setting**: The organisation's configurable lock period (default 7 days) after
-  which time entries become immutable pending a director unlock.
+- **Time-entry lock period**: A fixed, system-wide 7-day period after which a time entry becomes
+  immutable pending an explicit director unlock (FR-006/FR-007) — not a per-tenant setting.
 
 ## Success Criteria *(mandatory)*
 
@@ -326,9 +343,9 @@ calculation.
   concept), distinct from the existing `QualificationLevel` enum (training level) — confirmed
   during research that no existing field maps to the medewerkersbeleid function categories, so
   this is new, director-managed data, not a reuse of `QualificationLevel`.
-- **The time-entry lock period is a single, tenant-wide setting** (not per-location) — nothing in
-  the source backlog item or precedent (013f's per-location day-reservation settings) suggests
-  payroll/subsidy record-locking needs to vary by location within one organisation.
+- **The time-entry lock period is a fixed 7-day system-wide constant**, not a per-tenant or
+  per-location setting (see Clarifications) — nothing in the source backlog item suggests
+  payroll/subsidy record-locking needs to vary by organisation or location.
 - **Clock in/out requires connectivity** — staff-mobile has no offline queue anywhere yet (feature
   027's sick-report screen is the precedent: disabled while offline, no queued retry), so this
   feature follows the same pattern rather than building new offline infrastructure.
