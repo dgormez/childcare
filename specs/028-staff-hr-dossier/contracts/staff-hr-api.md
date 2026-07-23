@@ -43,6 +43,13 @@ not match `locationId` — FR-004a).
 
 Response `200`: the updated entry. Errors: `404 errors.staff_time_entries.no_open_entry`.
 
+### GET `/api/staff-time-entries/me/current`
+
+`StaffOrDirector`. Returns the acting staff member's currently open entry, or `null` if none —
+added during implementation (not in the original design) so staff-mobile can show "Einde dienst"
+vs "Begin dienst" correctly on app load/reopen, not only immediately after a clock action
+(FR-001 Acceptance Scenario 3).
+
 ### GET `/api/staff-time-entries?staffProfileId={id}&from={date}&to={date}`
 
 `DirectorOnly`. Lists time entries for one staff member in a date range, each including computed

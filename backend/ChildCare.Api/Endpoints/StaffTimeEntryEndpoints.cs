@@ -29,6 +29,15 @@ public static class StaffTimeEntryEndpoints
             return result.Succeeded ? Results.Ok(result.Response) : MapFailure(result.Failure!.Value);
         }).WithTags("StaffTimeEntries").RequireAuthorization("StaffOrDirector");
 
+        // FR-001 Acceptance Scenario 3 — lets staff-mobile show "Einde dienst" vs "Begin dienst"
+        // correctly on app load/reopen, not only right after a clock-in/out call.
+        app.MapGet("/api/staff-time-entries/me/current", async (HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var entry = await mediator.Send(new GetMyOpenTimeEntryQuery(tenantUserId));
+            return Results.Ok(entry);
+        }).WithTags("StaffTimeEntries").RequireAuthorization("StaffOrDirector");
+
         var group = app.MapGroup("/api/staff-time-entries")
             .WithTags("StaffTimeEntries")
             .RequireAuthorization("DirectorOnly");

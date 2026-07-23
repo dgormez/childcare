@@ -90,25 +90,25 @@ possible, then clock out.
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Integration test: `ClockInCommand` auto-selects the function when exactly
+- [X] T014 [P] [US1] Integration test: `ClockInCommand` auto-selects the function when exactly
       one is configured, requires `function` in the request when more than one is configured,
       and rejects with `400 errors.staff_time_entries.no_function_configured` when none is
       configured (FR-004/FR-005/FR-010) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
-- [ ] T015 [P] [US1] Integration test: a second `ClockInCommand` while one entry is already open
+- [X] T015 [P] [US1] Integration test: a second `ClockInCommand` while one entry is already open
       returns `409 errors.staff_time_entries.already_clocked_in` (FR-003) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
-- [ ] T016 [P] [US1] Integration test: `ClockOutCommand` closes the caller's own open entry;
+- [X] T016 [P] [US1] Integration test: `ClockOutCommand` closes the caller's own open entry;
       returns `404 errors.staff_time_entries.no_open_entry` when none is open (FR-002) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
-- [ ] T016a [P] [US1] Integration test: `ClockInCommand` rejects a `locationId` the caller has no
+- [X] T016a [P] [US1] Integration test: `ClockInCommand` rejects a `locationId` the caller has no
       `StaffLocationEligibility` grant for with `403 errors.staff_time_entries
       .location_not_eligible` (FR-001a), and rejects a `function` not in the caller's own
       `TimeEntryFunctions` with `400 errors.staff_time_entries.function_not_configured`
       (FR-005a) — both checked even when a different, eligible/configured value was never
       offered by the client UI, in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
-- [ ] T016b [P] [US1] Integration test: `ClockInCommand` rejects a `groupId` whose
+- [X] T016b [P] [US1] Integration test: `ClockInCommand` rejects a `groupId` whose
       `Group.LocationId` doesn't match the supplied `locationId` with `400
       errors.staff_time_entries.group_location_mismatch` (FR-004a) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
@@ -119,18 +119,21 @@ possible, then clock out.
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement `ClockInCommand` (identity resolved from the JWT `NameIdentifier`
+- [X] T018 [US1] Implement `ClockInCommand` (identity resolved from the JWT `NameIdentifier`
       claim, research.md R2; function-selection logic FR-005; `StaffLocationEligibility` check
       FR-001a; configured-function check FR-005a; `Group.LocationId` match check FR-004a) in
       `backend/ChildCare.Application/StaffTimeEntries/ClockInCommand.cs` (depends on T003, T005)
-- [ ] T019 [US1] Implement `ClockOutCommand` in
+- [X] T019 [US1] Implement `ClockOutCommand` in
       `backend/ChildCare.Application/StaffTimeEntries/ClockOutCommand.cs`
-- [ ] T020 [US1] [P] Add `StaffTimeEntryResult` and the clock-in/out request/response contracts
+- [X] T020 [US1] [P] Add `StaffTimeEntryResult` and the clock-in/out request/response contracts
       in `backend/ChildCare.Application/StaffTimeEntries/StaffTimeEntryResult.cs`,
       `backend/ChildCare.Contracts/Requests/StaffTimeEntryRequests.cs`, and
       `backend/ChildCare.Contracts/Responses/StaffTimeEntryResponses.cs`
-- [ ] T021 [US1] Create `StaffTimeEntryEndpoints.cs` with `POST /api/staff-time-entries/clock-in`
-      and `/clock-out` (`StaffOrDirector`) in
+- [X] T021 [US1] Create `StaffTimeEntryEndpoints.cs` with `POST /api/staff-time-entries/clock-in`,
+      `/clock-out`, and `GET /me/current` (`StaffOrDirector`; the third route and its
+      `GetMyOpenTimeEntryQuery` were added during implementation — a gap in the original design,
+      needed so staff-mobile can render "Einde dienst" vs "Begin dienst" correctly on app
+      reopen, not only right after a clock action, FR-001 Acceptance Scenario 3) in
       `backend/ChildCare.Api/Endpoints/StaffTimeEntryEndpoints.cs` (depends on T018, T019, T020)
 - [ ] T022 [US1] Implement `timeEntries.ts` (clock-in/clock-out API calls, mirrors `schedule.ts`'s
       shape) in `staff-mobile/services/timeEntries.ts` (depends on T021's contract types)
@@ -156,17 +159,17 @@ correct it, then re-lock it.
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` succeeds within the 7-day
+- [X] T026 [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` succeeds within the 7-day
       window and returns `423 errors.staff_time_entries.locked` once past it (FR-006/FR-008) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
-- [ ] T027 [P] [US2] Integration test: `UnlockStaffTimeEntryCommand` sets `UnlockedAt` and
+- [X] T027 [P] [US2] Integration test: `UnlockStaffTimeEntryCommand` sets `UnlockedAt` and
       `UnlockedBy` to the acting director (FR-007a), the entry stays editable afterward with no
       auto re-lock, and `RelockStaffTimeEntryCommand` clears both fields back to locked (FR-007,
       research.md R4) in `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
-- [ ] T028 [P] [US2] Integration test: a correction that overlaps another entry for the same
+- [X] T028 [P] [US2] Integration test: a correction that overlaps another entry for the same
       staff member returns `overlapWarning: true` and still saves, rather than being blocked
       (FR-009) in `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryOverlapWarningTests.cs`
-- [ ] T028a [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` rejects a corrected
+- [X] T028a [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` rejects a corrected
       `function` that isn't one of the staff member's own `TimeEntryFunctions`, same constraint
       as clock-in (FR-008/FR-005a) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
@@ -175,17 +178,17 @@ correct it, then re-lock it.
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Implement `UpdateStaffTimeEntryCommand` (lock check, overlap detection,
+- [X] T030 [US2] Implement `UpdateStaffTimeEntryCommand` (lock check, overlap detection,
       configured-function check FR-005a) in
       `backend/ChildCare.Application/StaffTimeEntries/UpdateStaffTimeEntryCommand.cs`
-- [ ] T031 [US2] [P] Implement `UnlockStaffTimeEntryCommand` (sets `UnlockedBy` from the acting
+- [X] T031 [US2] [P] Implement `UnlockStaffTimeEntryCommand` (sets `UnlockedBy` from the acting
       director's JWT, FR-007a) and `RelockStaffTimeEntryCommand` (clears both `UnlockedAt`/
       `UnlockedBy`) in
       `backend/ChildCare.Application/StaffTimeEntries/UnlockStaffTimeEntryCommand.cs` and
       `RelockStaffTimeEntryCommand.cs`
-- [ ] T032 [US2] [P] Implement `ListStaffTimeEntriesQuery` in
+- [X] T032 [US2] [P] Implement `ListStaffTimeEntriesQuery` in
       `backend/ChildCare.Application/StaffTimeEntries/ListStaffTimeEntriesQuery.cs`
-- [ ] T033 [US2] Add `GET`/`PATCH`/`unlock`/`relock` routes to `StaffTimeEntryEndpoints.cs`
+- [X] T033 [US2] Add `GET`/`PATCH`/`unlock`/`relock` routes to `StaffTimeEntryEndpoints.cs`
       (`DirectorOnly`) (depends on T030, T031, T032)
 - [ ] T034 [US2] Build `StaffTimeEntriesTab.tsx` (list + correction trigger) in
       `web/components/staff/StaffTimeEntriesTab.tsx`

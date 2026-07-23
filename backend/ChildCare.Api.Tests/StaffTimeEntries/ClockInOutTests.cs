@@ -174,6 +174,31 @@ public class ClockInOutTests(OrganisationOnboardingWebAppFactory factory) : ICla
     }
 
     [Fact]
+    public async Task GetMyOpenTimeEntry_ReflectsCurrentState_AcrossAppReopen()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Time Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Main");
+        var (staff, staffToken) = await CreateAndLoginStaffAsync(client, org.Organisation.Slug, org.AccessToken, location.Id);
+        await SetFunctionsAsync(client, org.AccessToken, staff.Id, "kinderbegeleider");
+
+        var beforeClockIn = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/staff-time-entries/me/current", staffToken));
+        Assert.Equal(HttpStatusCode.OK, beforeClockIn.StatusCode);
+        Assert.True(string.IsNullOrEmpty((await beforeClockIn.Content.ReadAsStringAsync()).Trim()));
+
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/staff-time-entries/clock-in", staffToken, new ClockInRequest(location.Id, null, null)));
+
+        var afterClockIn = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/staff-time-entries/me/current", staffToken));
+        var openEntry = (await afterClockIn.Content.ReadFromJsonAsync<StaffTimeEntryResponse>())!;
+        Assert.True(openEntry.IsOpen);
+
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/staff-time-entries/clock-out", staffToken));
+
+        var afterClockOut = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/staff-time-entries/me/current", staffToken));
+        Assert.True(string.IsNullOrEmpty((await afterClockOut.Content.ReadAsStringAsync()).Trim()));
+    }
+
+    [Fact]
     public async Task ClockIn_GroupNotBelongingToLocation_Rejected()
     {
         var client = factory.CreateClient();
