@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Platform-Admin Portal — Invitations & Shared Shell
+# Specification Quality Checklist: Platform-Admin Portal — Invitations, Registration & Organisation Directory
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-07-23
@@ -34,7 +34,10 @@
 - No [NEEDS CLARIFICATION] markers were needed: the four open questions in BACKLOG.md's
   original feature 032 draft (platform-admin auth, portal-vs-separate-tool, first-admin
   provisioning, audit trail) were all resolved against feature 013h's already-shipped
-  precedent before this spec was written, per this pipeline's standing rule that a
-  no-precedent scope question is the pause condition — these had clear precedent, so no
-  pause was needed.
-- All items pass on first validation pass.
+  precedent before this spec was written.
+- Scope expanded 2026-07-23 after planning-stage research surfaced a genuinely novel,
+  no-precedent question (no web registration page exists at all) — paused and resolved
+  directly with the product owner via `AskUserQuestion` per the standing rule, rather than
+  guessed. The spec above already reflects the expanded scope (registration page +
+  organisation directory), so no further re-validation cycle was needed beyond this one.
+- All items pass.
