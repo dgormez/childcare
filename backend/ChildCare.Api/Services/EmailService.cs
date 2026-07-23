@@ -377,6 +377,34 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
         await SendAsync(message);
     }
 
+    // ── Feature 032: platform-admin invitation portal ────────────────────────
+
+    public async Task SendOrganisationInvitationAsync(
+        string toEmail, string locale, string? organisationNameNote, string registerUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var labels = OrganisationInvitationEmailLabels.For(locale);
+        if (!TryBuildMessage(toEmail, labels.Subject, out var message))
+        {
+            logger.LogWarning("Email:SmtpHost not configured. Organisation invitation link for {Email}: {Link}", toEmail, registerUrl);
+            return;
+        }
+
+        var body = string.IsNullOrWhiteSpace(organisationNameNote)
+            ? labels.BodyNoNoteFormat
+            : string.Format(labels.BodyFormat, WebUtility.HtmlEncode(organisationNameNote));
+
+        var html = await templateRenderer.RenderAsync("organisation-invitation", locale, new
+        {
+            Title = labels.Title,
+            Body = body,
+            RegisterUrl = registerUrl,
+            RegisterLabel = labels.RegisterButton,
+        }, cancellationToken);
+        message!.Body = new TextPart("html") { Text = html };
+        await SendAsync(message);
+    }
+
     /// <summary>HTML-encodes free text, then converts newlines to paragraph breaks — the one
     /// piece of "formatting" a director's plain-text compose box gets (research.md R1: no raw
     /// HTML from the director, to avoid template-injection risk).</summary>

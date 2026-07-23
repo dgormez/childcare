@@ -107,6 +107,13 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -115,13 +122,37 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Public
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasDefaultValue("nl");
+
+                    b.Property<string>("OrganisationNameNote")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RevokedByEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid?>("RevokedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<byte[]>("TokenHash")
                         .IsRequired()
                         .HasColumnType("bytea");
 
                     b.HasKey("Id");
 
-                    b.ToTable("invitations", (string)null);
+                    b.ToTable("invitations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_invitations_locale", "\"Locale\" IN ('nl','fr','en')");
+                        });
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.Payment", b =>

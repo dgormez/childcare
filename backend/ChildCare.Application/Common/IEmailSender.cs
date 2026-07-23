@@ -84,4 +84,17 @@ public interface IEmailSender
     Task SendSignedContractAsync(
         string toEmail, string locale, string childName, byte[] pdfBytes,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Feature 032, FR-003/FR-001. A genuinely new send path (added well after feature 020), so
+    /// it is locale-aware from day one — it does NOT reuse the older English-only gap this
+    /// interface's earlier staff/parent-invitation methods carry (research.md R9). Unlike
+    /// <see cref="SendTourInvitationAsync"/>/<see cref="SendContractSigningInvitationAsync"/>,
+    /// whose locale is resolved from an existing contact record, there is no such record for a
+    /// brand-new prospective director — the platform-admin picks <paramref name="locale"/>
+    /// explicitly at invitation-creation time.
+    /// </summary>
+    Task SendOrganisationInvitationAsync(
+        string toEmail, string locale, string? organisationNameNote, string registerUrl,
+        CancellationToken cancellationToken = default);
 }

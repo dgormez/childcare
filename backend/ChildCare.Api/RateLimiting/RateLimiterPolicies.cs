@@ -21,4 +21,21 @@ public static class RateLimiterPolicies
         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
         QueueLimit           = 0,
     };
+
+    /// <summary>
+    /// Feature 032, FR-011a (research.md R13/R15) — POST /api/organisations/register has existed
+    /// since feature 001 with no rate limiting at all, because no web page ever linked to it;
+    /// this feature is what makes it genuinely public. Same shape as PublicEnrollment above (an
+    /// equivalent newly-public write endpoint), not a compensating control for token strength —
+    /// the invitation token's own 64 bytes of entropy already makes brute-force guessing
+    /// infeasible (spec.md Assumptions); this defends against generic volumetric abuse instead.
+    /// </summary>
+    public static SlidingWindowRateLimiterOptions OrganisationRegister => new()
+    {
+        PermitLimit          = 3,
+        Window               = TimeSpan.FromHours(1),
+        SegmentsPerWindow    = 4,
+        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+        QueueLimit           = 0,
+    };
 }

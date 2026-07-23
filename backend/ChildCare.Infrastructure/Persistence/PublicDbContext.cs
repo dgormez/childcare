@@ -59,11 +59,22 @@ public class PublicDbContext(DbContextOptions<PublicDbContext> options) : DbCont
 
         modelBuilder.Entity<Invitation>(i =>
         {
-            i.ToTable("invitations");
+            i.ToTable("invitations", tb =>
+            {
+                tb.HasCheckConstraint("CK_invitations_locale", "\"Locale\" IN ('nl','fr','en')");
+            });
             i.HasKey(x => x.Id);
             i.Property(x => x.Email).IsRequired().HasMaxLength(254);
             i.Property(x => x.TokenHash).IsRequired();
             i.Property(x => x.ExpiresAt).IsRequired();
+            // Feature 032 — platform-admin invitation portal (data-model.md). No DB-level FK on
+            // CreatedByUserId/RevokedByUserId: the acting TenantUser lives in an arbitrary
+            // tenant's schema, which PublicDbContext cannot statically resolve or FK-enforce
+            // (research.md R4/R12, mirrors VaccineType.DeactivatedByUserId's existing posture).
+            i.Property(x => x.OrganisationNameNote).HasMaxLength(200);
+            i.Property(x => x.Locale).IsRequired().HasMaxLength(2).HasDefaultValue("nl");
+            i.Property(x => x.CreatedByEmail).HasMaxLength(254);
+            i.Property(x => x.RevokedByEmail).HasMaxLength(254);
         });
 
         modelBuilder.Entity<VaccineType>(v =>

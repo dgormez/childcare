@@ -1112,3 +1112,33 @@ export interface SepaBatchResponse {
   invoiceCount:  number;
   totalCents:    number;
 }
+
+// ── Platform-admin invitations & organisation directory (feature 032) ──────────
+export type PlatformAdminInvitationStatus = "pending" | "accepted" | "expired" | "revoked";
+
+export interface PlatformAdminInvitationResponse {
+  id:                   string;
+  email:                string;
+  organisationNameNote: string | null;
+  locale:               string;
+  status:               PlatformAdminInvitationStatus;
+  expiresAt:            string;
+  createdAt:            string;
+  createdByEmail:       string | null;
+  revokedByEmail:       string | null;
+  revokedAt:            string | null;
+}
+
+export interface InvitationInfoResponse {
+  email: string;
+}
+
+export interface PlatformAdminOrganisationResponse {
+  id:                 string;
+  name:               string;
+  plan:               string;
+  provisioningStatus: string;
+  kboNumber:          string | null;
+  createdAt:          string;
+  registeredByEmail:  string | null;
+}

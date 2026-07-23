@@ -19,12 +19,15 @@ public class RegisterOrganisationCommandHandler(
         var tokenHash = InvitationTokenCodec.HashFromPlaintext(request.InvitationToken);
 
         // FR-003, FR-005: not-found and expired both fail the same way — the same generic
-        // outcome regardless of *why* the token doesn't resolve (research.md R5).
+        // outcome regardless of *why* the token doesn't resolve (research.md R5). Feature 032
+        // (/speckit-converge finding F1): a revoked invitation must fail identically — RevokedAt
+        // didn't exist when this handler was first written, so it was never checked here; only
+        // feature 032's own GET pre-check endpoint enforced it, which a direct POST could bypass.
         var invitation = tokenHash is null
             ? null
             : await db.Invitations.FirstOrDefaultAsync(i => i.TokenHash == tokenHash, cancellationToken);
 
-        if (invitation is null || invitation.ExpiresAt <= DateTime.UtcNow)
+        if (invitation is null || invitation.ExpiresAt <= DateTime.UtcNow || invitation.RevokedAt is not null)
             return RegisterOrganisationResult.Fail(RegisterOrganisationFailure.InvitationNotFound);
 
         // FR-018: only checked once we know the caller holds a real invitation — a specific

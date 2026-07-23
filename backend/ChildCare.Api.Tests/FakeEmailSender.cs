@@ -171,4 +171,16 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
 
         return inner.SendSignedContractAsync(toEmail, locale, childName, pdfBytes, cancellationToken);
     }
+
+    // ── Feature 032: platform-admin invitation portal ────────────────────────
+
+    public List<(string ToEmail, string Locale, string? OrganisationNameNote, string RegisterUrl)> OrganisationInvitationCalls { get; } = [];
+
+    public Task SendOrganisationInvitationAsync(
+        string toEmail, string locale, string? organisationNameNote, string registerUrl,
+        CancellationToken cancellationToken = default)
+    {
+        OrganisationInvitationCalls.Add((toEmail, locale, organisationNameNote, registerUrl));
+        return inner.SendOrganisationInvitationAsync(toEmail, locale, organisationNameNote, registerUrl, cancellationToken);
+    }
 }

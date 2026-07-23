@@ -45,7 +45,9 @@
     "organisationSettings": "Organisation",
     "communications": "Email",
     "leaveRequests": "Leave Requests",
-    "staffHoursReport": "Staff hours"
+    "staffHoursReport": "Staff hours",
+    "invitations": "Invitations",
+    "organisations": "Organisations"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -1453,6 +1455,59 @@
     "genericError": "Couldn't save this entry. Please try again.",
     "reorderBoundaryError": "This entry is already at the edge of its category."
   },
+  "platformAdmin": {
+    "nav": {
+      "invitations": "Invitations",
+      "organisations": "Organisations",
+      "vaccineTypes": "Vaccine Catalog"
+    },
+    "invitations": {
+      "title": "Invitations",
+      "add": "Invite director",
+      "addTitle": "Invite a director",
+      "dialogDescription": "Sends a registration link to a prospective KDV director.",
+      "emailLabel": "Email",
+      "organisationNameNoteLabel": "Organisation name (note, optional)",
+      "localeLabel": "Email language",
+      "cancel": "Cancel",
+      "send": "Send invitation",
+      "genericError": "Couldn't complete this action. Please try again.",
+      "loadError": "Couldn't load invitations. Please try again.",
+      "retry": "Retry",
+      "emptyState": "No invitations yet.",
+      "columnEmail": "Email",
+      "columnNote": "Organisation",
+      "columnStatus": "Status",
+      "columnCreated": "Sent",
+      "columnActions": "Actions",
+      "resend": "Resend",
+      "revoke": "Revoke",
+      "revokedBy": "Revoked by {email} on {date}",
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      }
+    },
+    "organisations": {
+      "title": "Organisations",
+      "loadError": "Couldn't load organisations. Please try again.",
+      "retry": "Retry",
+      "emptyState": "No organisations yet.",
+      "columnName": "Name",
+      "columnPlan": "Plan",
+      "columnStatus": "Status",
+      "columnKbo": "KBO number",
+      "columnCreated": "Created",
+      "columnRegisteredBy": "Registered by",
+      "status": {
+        "ready": "Live",
+        "provisioning": "Provisioning",
+        "failed": "Provisioning failed"
+      }
+    }
+  },
   "communications": {
     "title": "Email Communications",
     "compose": "New email",
@@ -1483,6 +1538,19 @@
     "resultSent": "{count} sent",
     "resultSkipped": "{count} skipped — no email on file",
     "resultFailed": "{count} failed to send"
+  },
+  "register": {
+    "title": "Register your organisation",
+    "languageLabel": "Language",
+    "invalidLink": "This invitation link is no longer valid. Please contact the platform administrator who invited you for a new one.",
+    "emailLabel": "Email",
+    "organisationNameLabel": "Organisation name",
+    "directorNameLabel": "Your name",
+    "passwordLabel": "Password",
+    "submitAction": "Create account",
+    "submittingAction": "Creating account…",
+    "confirmationBody": "Your organisation has been created. You can now log in with the email and password you just set.",
+    "goToLogin": "Go to login"
   },
   "publicEnrollment": {
     "title": "Join the waiting list",

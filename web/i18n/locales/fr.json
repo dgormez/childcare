@@ -45,7 +45,9 @@
     "organisationSettings": "Organisation",
     "communications": "E-mail",
     "leaveRequests": "Demandes de congé",
-    "staffHoursReport": "Heures du personnel"
+    "staffHoursReport": "Heures du personnel",
+    "invitations": "Invitations",
+    "organisations": "Organisations"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -1453,6 +1455,59 @@
     "genericError": "Impossible d'enregistrer cette entrée. Veuillez réessayer.",
     "reorderBoundaryError": "Cette entrée est déjà en bordure de sa catégorie."
   },
+  "platformAdmin": {
+    "nav": {
+      "invitations": "Invitations",
+      "organisations": "Organisations",
+      "vaccineTypes": "Catalogue des vaccins"
+    },
+    "invitations": {
+      "title": "Invitations",
+      "add": "Inviter un directeur",
+      "addTitle": "Inviter un directeur",
+      "dialogDescription": "Envoie un lien d'inscription à un(e) directeur/directrice de crèche potentiel(le).",
+      "emailLabel": "E-mail",
+      "organisationNameNoteLabel": "Nom de l'organisation (note, facultatif)",
+      "localeLabel": "Langue de l'e-mail",
+      "cancel": "Annuler",
+      "send": "Envoyer l'invitation",
+      "genericError": "Cette action a échoué. Veuillez réessayer.",
+      "loadError": "Impossible de charger les invitations. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "emptyState": "Aucune invitation pour l'instant.",
+      "columnEmail": "E-mail",
+      "columnNote": "Organisation",
+      "columnStatus": "Statut",
+      "columnCreated": "Envoyée",
+      "columnActions": "Actions",
+      "resend": "Renvoyer",
+      "revoke": "Révoquer",
+      "revokedBy": "Révoquée par {email} le {date}",
+      "status": {
+        "pending": "En attente",
+        "accepted": "Acceptée",
+        "expired": "Expirée",
+        "revoked": "Révoquée"
+      }
+    },
+    "organisations": {
+      "title": "Organisations",
+      "loadError": "Impossible de charger les organisations. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "emptyState": "Aucune organisation pour l'instant.",
+      "columnName": "Nom",
+      "columnPlan": "Formule",
+      "columnStatus": "Statut",
+      "columnKbo": "Numéro BCE",
+      "columnCreated": "Créée",
+      "columnRegisteredBy": "Enregistrée par",
+      "status": {
+        "ready": "Active",
+        "provisioning": "En cours de création",
+        "failed": "Échec de la création"
+      }
+    }
+  },
   "communications": {
     "title": "Communications par e-mail",
     "compose": "Nouvel e-mail",
@@ -1483,6 +1538,19 @@
     "resultSent": "{count} envoyé(s)",
     "resultSkipped": "{count} ignoré(s) — pas d'adresse e-mail",
     "resultFailed": "{count} échec(s) d'envoi"
+  },
+  "register": {
+    "title": "Inscrivez votre organisation",
+    "languageLabel": "Langue",
+    "invalidLink": "Ce lien d'invitation n'est plus valide. Veuillez contacter l'administrateur de la plateforme qui vous a invité(e) pour en obtenir un nouveau.",
+    "emailLabel": "E-mail",
+    "organisationNameLabel": "Nom de l'organisation",
+    "directorNameLabel": "Votre nom",
+    "passwordLabel": "Mot de passe",
+    "submitAction": "Créer le compte",
+    "submittingAction": "Création du compte…",
+    "confirmationBody": "Votre organisation a été créée. Vous pouvez maintenant vous connecter avec l'e-mail et le mot de passe que vous venez de définir.",
+    "goToLogin": "Aller à la connexion"
   },
   "publicEnrollment": {
     "title": "Rejoindre la liste d'attente",
