@@ -57,7 +57,14 @@ public class RevokePlatformAdminInvitationTests(OrganisationOnboardingWebAppFact
         Assert.Equal(HttpStatusCode.OK, secondRevoke.StatusCode);
         var secondResult = (await secondRevoke.Content.ReadFromJsonAsync<PlatformAdminInvitationResponse>())!;
 
-        Assert.Equal(firstResult.RevokedAt, secondResult.RevokedAt);
+        // Tolerant, not exact, equality — PostgreSQL's timestamp round-trip precision can differ
+        // by a few hundred nanoseconds from the in-memory DateTime.UtcNow value the first
+        // response carries (the same recurring CI-only flake 010/013b/013h's DeactivateVaccineTypeTests
+        // already established a tolerant comparison for — caught here on CI, not locally, per that
+        // same precedent). Not `Assert.Equal`.
+        Assert.NotNull(firstResult.RevokedAt);
+        Assert.NotNull(secondResult.RevokedAt);
+        Assert.True((firstResult.RevokedAt!.Value - secondResult.RevokedAt!.Value).Duration() < TimeSpan.FromSeconds(1));
         Assert.Equal(firstResult.RevokedByEmail, secondResult.RevokedByEmail);
     }
 
