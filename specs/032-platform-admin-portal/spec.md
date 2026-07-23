@@ -8,6 +8,12 @@
 
 **Input**: User description: "Build a dedicated platform-admin (super-admin) portal — sits above all tenant boundaries. Director/organisation invitations (create/list/resend/revoke, reusing feature 001's invitation-token model). Platform data management shell reusable by future datasets. Auth, portal-vs-separate-tool, and first-platform-admin-provisioning questions are already resolved by feature 013h's precedent; audit trail follows 013h's established VaccineType convention."
 
+## Clarifications
+
+### Session 2026-07-23
+
+- Q: How should an invitation that's been superseded (by a resend, or by creating a new invitation for the same email) be represented in the status model? → A: Superseded invitations show as "Revoked" — no 5th status; the superseded row's revoke-attribution fields are populated with whichever platform-admin performed the create/resend action that superseded it, at that same moment. The data model makes no distinction between an explicit manual revoke and a supersede-triggered one — both are simply "Revoked" rows in the list.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Platform-admin invites a prospective director (Priority: P1)
@@ -21,7 +27,7 @@ A platform-admin has been in a sales/onboarding conversation with a prospective 
 **Acceptance Scenarios**:
 
 1. **Given** a platform-admin is on the Invitations screen, **When** they submit a prospective director's email and an organisation-name note, **Then** a new invitation is created, shown in the list with status "Pending", and an email containing the registration link is sent to that address.
-2. **Given** an invitation was just created for `jane@example.com`, **When** the platform-admin submits another invitation for the same email, **Then** the prior pending invitation is superseded (its status becomes unavailable for registration) and the new one is the only active one for that email — mirroring the existing supersede behavior in the invitation-creation logic.
+2. **Given** an invitation was just created for `jane@example.com`, **When** the platform-admin submits another invitation for the same email, **Then** the prior invitation's status becomes "Revoked" (superseded, unusable for registration) and the new one is the only active one for that email — mirroring the existing supersede behavior in the invitation-creation logic.
 3. **Given** a platform-admin who is a director but does NOT have platform-admin authority, **When** they attempt to reach the Invitations screen or call its API directly, **Then** access is denied.
 
 ---
@@ -38,7 +44,7 @@ A platform-admin needs to see which invitations are still waiting, which turned 
 
 1. **Given** invitations exist in different states, **When** the platform-admin opens the Invitations screen, **Then** each row shows one of: Pending, Accepted, Expired, or Revoked, each with a distinct semantic color and icon.
 2. **Given** a prospective director completed registration using their invitation link, **When** the platform-admin views the list, **Then** that invitation shows "Accepted" and no longer offers resend/revoke actions.
-3. **Given** a pending invitation, **When** the platform-admin clicks "Resend", **Then** a fresh invitation (new token, new expiry) is created for the same email and email note, the old one is superseded, and a new email is sent.
+3. **Given** a pending invitation, **When** the platform-admin clicks "Resend", **Then** a fresh invitation (new token, new expiry) is created for the same email and email note, the old one's status becomes "Revoked" (superseded), and a new email is sent.
 4. **Given** a pending invitation the platform-admin no longer wants usable (e.g. sent to the wrong address), **When** they click "Revoke", **Then** the invitation immediately stops being usable for registration and its status shows "Revoked", with a record of who revoked it and when.
 5. **Given** an invitation whose expiry date has passed and was never accepted or revoked, **When** the platform-admin views the list, **Then** it shows "Expired" (derived automatically, no manual action required).
 
@@ -75,9 +81,9 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 - **FR-001**: The system MUST allow a platform-admin to create a new director/organisation invitation by providing an email address (required) and an organisation-name note (optional, informational only).
 - **FR-002**: The system MUST reuse the existing invitation-token model (signed opaque token, SHA-256 hash-only persistence, expiry) rather than introducing a second token mechanism.
 - **FR-003**: The system MUST send an email to the invited address containing the registration link, at invitation creation and at resend.
-- **FR-004**: The system MUST derive and display an invitation's status as exactly one of: Pending, Accepted, Expired, or Revoked — never stored as a separately-settable field that could drift from the underlying facts (token expiry, whether a resulting organisation was registered, whether a revoke action was recorded).
-- **FR-005**: The system MUST allow a platform-admin to resend a Pending or Expired invitation, which creates a fresh invitation (new token, new expiry) for the same email/note and supersedes the prior one so only the newest is usable.
-- **FR-006**: The system MUST allow a platform-admin to revoke a Pending invitation, immediately and permanently preventing that invitation from completing registration.
+- **FR-004**: The system MUST derive and display an invitation's status as exactly one of: Pending, Accepted, Expired, or Revoked — never stored as a separately-settable field that could drift from the underlying facts (token expiry, whether a resulting organisation was registered, whether a revoke action was recorded). A superseded invitation (see FR-005) is represented as Revoked — there is no separate "superseded" status.
+- **FR-005**: The system MUST allow a platform-admin to resend a Pending or Expired invitation, which creates a fresh invitation (new token, new expiry) for the same email/note and marks the prior one Revoked (attributed to the platform-admin who triggered the resend, at that moment) so only the newest is usable. Creating a new invitation for an email with an existing Pending or Expired invitation follows the same supersede behavior.
+- **FR-006**: The system MUST allow a platform-admin to revoke a Pending invitation, immediately and permanently preventing that invitation from completing registration. The system MUST NOT distinguish, in the data model or the list view, between this explicit action and a supersede-triggered Revoked state (FR-005) — both are the same Revoked status.
 - **FR-007**: The system MUST NOT allow resend or revoke on an invitation that has already reached the Accepted state.
 - **FR-008**: The system MUST record who performed a create/resend/revoke action and when, resolved from the authenticated platform-admin's session — never accepted as a client-supplied value.
 - **FR-009**: The system MUST restrict every invitation-management capability (view, create, resend, revoke) to an authenticated director account with platform-admin authority, using the existing platform-admin authorization mechanism — no new authentication path.
@@ -88,7 +94,7 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 
 ### Key Entities *(include if feature involves data)*
 
-- **Invitation**: Represents an offer for a prospective director to register a new organisation. Attributes: invited email, an opaque single-use token (persisted only as a hash), expiry timestamp, an optional organisation-name note (informational, not authoritative), and revoke attribution (who revoked it and when, when applicable). Status is a derived, computed view over these facts plus whether a resulting organisation exists — not an independently-editable field. Lives in the platform's shared (cross-tenant) data, not inside any single organisation's data.
+- **Invitation**: Represents an offer for a prospective director to register a new organisation. Attributes: invited email, an opaque single-use token (persisted only as a hash), expiry timestamp, an optional organisation-name note (informational, not authoritative), and revoke attribution (who revoked/superseded it and when, when applicable — the same fields serve both an explicit manual revoke and a resend/duplicate-create-triggered supersede, per the Clarifications above). Status is a derived, computed view over these facts plus whether a resulting organisation exists — not an independently-editable field. Lives in the platform's shared (cross-tenant) data, not inside any single organisation's data.
 
 ## Success Criteria *(mandatory)*
 
