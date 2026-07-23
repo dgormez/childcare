@@ -249,9 +249,13 @@ operation and no ops-assisted registration step.
 
 - **API impact**: new `PlatformAdminOnly`-gated endpoints for invitation create/list/resend/
   revoke and the organisation directory read, under the `/api/platform-admin/*` prefix
-  convention 013h's vaccine-type endpoints already established. The only change to an existing
-  endpoint is adding rate limiting to `POST /api/organisations/register` (FR-011a) — its
-  request/response contract is otherwise reused as-is.
+  convention 013h's vaccine-type endpoints already established. `POST /api/organisations/register`
+  gains rate limiting (FR-011a) but is otherwise reused as-is. One new public, unauthenticated
+  endpoint was found necessary during implementation (research.md R17, not anticipated by the
+  original plan): `GET /api/organisations/register/{token}`, a read-only lookup the registration
+  page needs to pre-fill/lock the email and detect an invalid link before submission — without
+  it, User Story 2's own AC1/AC3 (pre-filled email, invalid state shown on page load) can't be
+  satisfied by feature 001's submission-only validation.
 - **Data-model impact**: a Public-schema migration extending `Invitation` with an
   organisation-name note, creation attribution, and revoke attribution (acting-user id/email,
   timestamp, for both — FR-008). No changes to the `Tenant` entity — the directory reads

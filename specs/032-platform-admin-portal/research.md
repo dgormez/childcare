@@ -283,3 +283,34 @@ behavior into an unrelated, unchanged endpoint. The `Invitation` **entity** is s
 directly, gating the new fields behind an optional parameter — rejected: the ops-key endpoint
 has no reason to ever set `Locale`/`OrganisationNameNote`/attribution, and giving it the
 capability anyway (even unused) blurs a boundary BACKLOG.md deliberately drew.
+
+## R17 — A pre-submission invitation lookup, found necessary during implementation
+
+**Decision**: Add `GetInvitationInfoByTokenQuery`/`GetInvitationInfoByTokenQueryHandler` and
+`GET /api/organisations/register/{token}` (public, `RequireTenantExempt`, rate-limited under
+the same `organisation-register` policy as R13/R15) — a read-only lookup returning just the
+invited email for a still-valid, unused invitation, `404` for anything else.
+
+**Rationale**: Writing `web/app/register/page.tsx` (R7) surfaced a real gap the original plan
+missed: spec.md's User Story 2 AC1 requires the email "pre-filled from the invitation, not
+editable," and AC3 requires an invalid-link message "when the page loads" — both need to know
+the invitation's validity/email *before* the user submits anything. Feature 001's
+`RegisterOrganisationCommand` only validates the token at final submission (it takes `Email` as
+a client-supplied field, checked for a match, not looked up) — there was never a mechanism to
+support a pre-fill/pre-check UX. This is a small, narrowly-scoped read, not a redesign of the
+registration flow itself.
+
+**Validity check mirrors `RegisterOrganisationCommandHandler`'s own logic** exactly, so the two
+endpoints can never disagree about what counts as a valid invitation: not found → invalid;
+`ExpiresAt <= now` → invalid; `RevokedAt` set → invalid (a check the original handler didn't
+need, since `RevokedAt` didn't exist before this feature); a `Ready` `Tenant` already exists for
+it → invalid (mirrors `ClaimOrResumeTenantAsync`'s own "only `Ready` means truly used, a
+still-provisioning tenant is a resumable attempt" distinction — a lookup that blocked a
+legitimately resumable registration from even loading the form would be a regression).
+
+**Alternatives considered**: Skipping the pre-fill/pre-check entirely and letting the user type
+their own email, discovering a stale/invalid link only via the existing `EmailMismatch`/
+`InvitationNotFound` errors on submit — rejected: this doesn't fulfill spec.md's own explicit
+acceptance criteria (written and approved before implementation began), and asking a prospective
+director to guess or remember which email they were invited at is a worse first-run experience
+than the rest of this feature's "no assistance needed" framing (SC-002) promises.

@@ -45,7 +45,9 @@
     "organisationSettings": "Organisatie",
     "communications": "E-mail",
     "leaveRequests": "Verlofaanvragen",
-    "staffHoursReport": "Personeelsuren"
+    "staffHoursReport": "Personeelsuren",
+    "invitations": "Uitnodigingen",
+    "organisations": "Organisaties"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -1453,6 +1455,59 @@
     "genericError": "Kon deze vaccinatie niet opslaan. Probeer opnieuw.",
     "reorderBoundaryError": "Deze vaccinatie staat al aan de rand van zijn categorie."
   },
+  "platformAdmin": {
+    "nav": {
+      "invitations": "Uitnodigingen",
+      "organisations": "Organisaties",
+      "vaccineTypes": "Vaccinatiecatalogus"
+    },
+    "invitations": {
+      "title": "Uitnodigingen",
+      "add": "Directeur uitnodigen",
+      "addTitle": "Een directeur uitnodigen",
+      "dialogDescription": "Stuurt een registratielink naar een kandidaat-KDV-directeur.",
+      "emailLabel": "E-mail",
+      "organisationNameNoteLabel": "Naam organisatie (notitie, optioneel)",
+      "localeLabel": "Taal van de e-mail",
+      "cancel": "Annuleren",
+      "send": "Uitnodiging versturen",
+      "genericError": "Deze actie is niet gelukt. Probeer opnieuw.",
+      "loadError": "De uitnodigingen konden niet geladen worden. Probeer opnieuw.",
+      "retry": "Opnieuw proberen",
+      "emptyState": "Nog geen uitnodigingen.",
+      "columnEmail": "E-mail",
+      "columnNote": "Organisatie",
+      "columnStatus": "Status",
+      "columnCreated": "Verstuurd",
+      "columnActions": "Acties",
+      "resend": "Opnieuw versturen",
+      "revoke": "Intrekken",
+      "revokedBy": "Ingetrokken door {email} op {date}",
+      "status": {
+        "pending": "In afwachting",
+        "accepted": "Geaccepteerd",
+        "expired": "Verlopen",
+        "revoked": "Ingetrokken"
+      }
+    },
+    "organisations": {
+      "title": "Organisaties",
+      "loadError": "De organisaties konden niet geladen worden. Probeer opnieuw.",
+      "retry": "Opnieuw proberen",
+      "emptyState": "Nog geen organisaties.",
+      "columnName": "Naam",
+      "columnPlan": "Plan",
+      "columnStatus": "Status",
+      "columnKbo": "KBO-nummer",
+      "columnCreated": "Aangemaakt",
+      "columnRegisteredBy": "Geregistreerd door",
+      "status": {
+        "ready": "Actief",
+        "provisioning": "Wordt aangemaakt",
+        "failed": "Aanmaken mislukt"
+      }
+    }
+  },
   "communications": {
     "title": "E-mailcommunicatie",
     "compose": "Nieuwe e-mail",
@@ -1483,6 +1538,19 @@
     "resultSent": "{count} verzonden",
     "resultSkipped": "{count} overgeslagen — geen e-mailadres bekend",
     "resultFailed": "{count} niet verzonden"
+  },
+  "register": {
+    "title": "Registreer uw organisatie",
+    "languageLabel": "Taal",
+    "invalidLink": "Deze uitnodigingslink is niet meer geldig. Neem contact op met de platformbeheerder die u heeft uitgenodigd voor een nieuwe link.",
+    "emailLabel": "E-mail",
+    "organisationNameLabel": "Naam organisatie",
+    "directorNameLabel": "Uw naam",
+    "passwordLabel": "Wachtwoord",
+    "submitAction": "Account aanmaken",
+    "submittingAction": "Account wordt aangemaakt…",
+    "confirmationBody": "Uw organisatie is aangemaakt. U kunt nu inloggen met de e-mail en het wachtwoord die u zojuist heeft ingesteld.",
+    "goToLogin": "Naar inloggen"
   },
   "publicEnrollment": {
     "title": "Kom op de wachtlijst",

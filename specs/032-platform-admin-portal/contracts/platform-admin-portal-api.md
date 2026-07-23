@@ -55,7 +55,24 @@ this codebase's general tolerance for idempotent re-clicks on a disabled-looking
 Returns `PlatformAdminOrganisationResponse[]` (see data-model.md), ordered by `createdAt`
 descending. Read-only — no POST/PATCH/DELETE on this resource (FR-013).
 
-## Registration (existing endpoint, unchanged)
+## Registration
+
+### `GET /api/organisations/register/{token}`
+
+**New in this feature** (found necessary during implementation, not in the original plan —
+research.md R17): a public, unauthenticated, rate-limited (`organisation-register`) lookup the
+registration page calls on load to pre-fill/lock the invited email and detect an invalid link
+before the user types anything. Feature 001's `POST /api/organisations/register` alone only
+validates the token at final submission, which can't support spec.md User Story 2's AC1
+("email pre-filled from the invitation, not editable") or AC3 (invalid state shown "when the
+page loads").
+
+Response: `200 OK` with `{ "email": "..." }` for a valid, unexpired, unrevoked, not-yet-used
+invitation. `404` (`errorKey: "errors.invitation.not_found"`) for anything else — expired,
+revoked, already-used (a `Ready` `Tenant` already exists for it), or an unrecognized token —
+deliberately indistinguishable, same posture as the POST endpoint below.
+
+## Registration completion (existing endpoint, unchanged)
 
 ### `POST /api/organisations/register`
 

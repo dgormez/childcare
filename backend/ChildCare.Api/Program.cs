@@ -685,6 +685,15 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
             factory: _ => RateLimiterPolicies.PublicEnrollment));
 
+    // Organisation self-registration (feature 032, spec.md FR-011a): unauthenticated, IP-based,
+    // same shape as public-enrollment above — this endpoint has existed since feature 001 with
+    // no rate limiting because nothing ever linked to it publicly; feature 032's new web page
+    // is what changes that (research.md R13/R15).
+    options.AddPolicy("organisation-register", httpContext =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
+            factory: _ => RateLimiterPolicies.OrganisationRegister));
+
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -877,6 +886,8 @@ app.MapIncidentReportEndpoints();
 app.MapVaccineRecordEndpoints();
 app.MapVaccineTypeEndpoints();
 app.MapPlatformAdminVaccineTypeEndpoints();
+app.MapPlatformAdminInvitationEndpoints();
+app.MapPlatformAdminOrganisationEndpoints();
 app.MapHealthRecordEndpoints();
 app.MapMealListEndpoints();
 app.MapMonthlyMenuEndpoints();
