@@ -206,7 +206,7 @@ reuses unchanged.)
 **Purpose**: Final end-to-end validation and design compliance across all five user stories.
 
 - [ ] T046 [P] Run quickstart.md's full validation sequence end-to-end (invite → email → register → accepted status → directory entry → revoke → resend → non-admin denial → shared shell) manually against a locally-started API + local Postgres + web dev server
-- [ ] T047 [P] Design-compliance pass on `InvitationTable.tsx`/`InvitationFormDialog.tsx`/`OrganisationTable.tsx`/`web/app/register/page.tsx`/the new `platform-admin/layout.tsx` against design-system.md (spacing scale, no nested cards, shared component reuse, status-badge semantic color+icon pairing) and platform-rules.md (director-web density/keyboard-focus requirements)
+- [X] T047 [P] Design-compliance pass on `InvitationTable.tsx`/`InvitationFormDialog.tsx`/`OrganisationTable.tsx`/`web/app/register/page.tsx`/the new `platform-admin/layout.tsx` against design-system.md (spacing scale, no nested cards, shared component reuse, status-badge semantic color+icon pairing) and platform-rules.md (director-web density/keyboard-focus requirements) — no fixes needed: every spacing utility across all new/changed files (`gap-1/2/3/4`, `p-3`, `px-3/4`, `py-2/8`, `mt-1/2`, `mb-4/6/8`, `space-y-4/6`) maps to the 4/8/12/16/24/32 scale; no nested cards or gradients introduced; every table reuses the shared `Table`/`TableRow`/`TableCell` components' existing `40px`/`8px`/`12px` density unmodified (same conclusion as 013h's T051); every status badge pairs its semantic color with a distinct icon (`InvitationStatusBadge`, `OrganisationTable`'s provisioning-status badge); every interactive element is the shared `Button`/`Input`/`Badge`/`Dialog` component, which already carry `focus-visible:ring-2 focus-visible:ring-primary`; the register page's locale-toggle buttons intentionally match the pre-existing `enroll`/`sign` pages' identical unstyled-focus pattern rather than introducing a new one.
 - [ ] T048 Confirm no `TenantMigrationRolloutTests`/`LegacyVaccinationMigrationTests` revert-helper update is needed — this feature's only migration is Public-schema (per data-model.md), and that recurring pattern applies only to tenant-schema migrations; run the full backend suite to verify no unrelated regression
 
 ---
@@ -299,3 +299,9 @@ Task: "PlatformAdminOrganisationEndpoints.cs in backend/ChildCare.Api/Endpoints/
   shippable, per spec.md's explicit "co-equal" framing.
 - Commit after each task or logical group.
 - Stop at any checkpoint to validate story independently.
+
+---
+
+## Phase 9: Convergence
+
+- [X] T049 Add the missing `RevokedAt` check to `RegisterOrganisationCommandHandler`'s invitation-validity guard, and a regression test proving a revoked invitation cannot complete registration via a direct `POST /api/organisations/register` call (not just via the `GET` pre-check) per FR-006/FR-010 (missing) — `backend/ChildCare.Application/Organisations/RegisterOrganisationCommandHandler.cs`, `backend/ChildCare.Api.Tests/PlatformAdmin/RevokedInvitationCannotRegisterTests.cs`
