@@ -68,7 +68,7 @@
 | 024 | `024-esignature` | Digital contract e-signature; SEPA direct debit mandate embedded in signing flow | 007 | ✅ Done |
 | 025 | `025-coda-payment-matching` | CODA/CODABOX bank statement import + automatic payment matching against open invoices | 014 | ✅ Done |
 | 026 | `026-sepa-direct-debit` | SEPA direct debit XML generation for batch collection from parent bank accounts | 014, 024 | ✅ Done |
-| 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | 🔲 Not started |
+| 027 | `027-staff-app` | Staff mobile app (Expo, separate from caregiver group tablet) — personal assignment schedule (which group/room/day), leave requests, director on-the-fly rescheduling for sick cover, push notifications | 012 | ✅ Done |
 | 028 | `028-staff-hr-dossier` | Staff personnel dossier (contracts, training, documents), clock in/out time registration, contract expiry reminders | 005, 012 | 🔲 Not started |
 | 032 | `032-platform-admin-portal` | Dedicated platform-admin (super-admin) portal — send director/organisation invitations, manage shared platform data (e.g. vaccine catalog) | 001 | 🔲 Not started |
 | 033 | `033-kinderopvangtoeslag-aaron` | Monthly attendance submission to Opgroeien for the kinderopvangtoeslag (Groeipakket) — REST/JSON webservice (AARON backend, bearer-token auth). Applies to vrije-prijs (free-price) KDVs = the Phase 1 target segment; replaces the director's manual entry in the free AARON web app | 010 | 🔲 Not started |
