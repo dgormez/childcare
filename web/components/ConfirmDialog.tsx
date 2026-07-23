@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
 
@@ -12,6 +13,9 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   confirmDestructive?: boolean;
   confirming?: boolean;
+  /** Optional extra content between the description and the action buttons (e.g. a checkbox
+   * gathering one more decision as part of confirming), rendered by callers that need it. */
+  children?: ReactNode;
 }
 
 /** Shared confirmation modal for every destructive/state-changing row action in this feature
@@ -27,6 +31,7 @@ export function ConfirmDialog({
   onConfirm,
   confirmDestructive = false,
   confirming = false,
+  children,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -35,6 +40,7 @@ export function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {children}
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={confirming}>
             {cancelLabel}

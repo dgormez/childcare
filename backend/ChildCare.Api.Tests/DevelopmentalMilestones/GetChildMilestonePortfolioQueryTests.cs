@@ -26,7 +26,7 @@ public class GetChildMilestonePortfolioQueryTests(OrganisationOnboardingWebAppFa
         // An 18-month-old child so at least one seeded milestone (13-18 or 19-24 band) is
         // flagged current-focus regardless of exact seed content.
         var childResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken,
-            new CreateChildRequest("Emma", "Peeters", DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-18)), null, null, null, null, null, null, null, null, null, null, null, null)));
+            new CreateChildRequest("Emma", "Peeters", DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-18)), null, null, null, null, null, null, null, null, null, null)));
         var child = (await childResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
 
         var domainsResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, "/api/developmental-domains", org.AccessToken));

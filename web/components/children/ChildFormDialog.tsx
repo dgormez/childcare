@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
@@ -10,15 +10,13 @@ import type { ChildResponse } from "../../lib/types";
 export interface ChildFormValues {
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
+  dateOfBirth: string | null;
   gender: string | null;
   nationality: string | null;
   allergiesDescription: string | null;
   allergySeverity: string | null;
   medicalConditions: string | null;
   dietaryRestrictions: string | null;
-  gpName: string | null;
-  gpPhone: string | null;
   pediatricianName: string | null;
   pediatricianPhone: string | null;
   healthInsuranceNumber: string | null;
@@ -35,21 +33,19 @@ interface ChildFormDialogProps {
   error?: string | null;
 }
 
-const GENDERS = ["Male", "Female", "Other"] as const;
+const GENDERS = ["Male", "Female"] as const;
 const ALLERGY_SEVERITIES = ["Mild", "Moderate", "Severe"] as const;
 
 const emptyValues: ChildFormValues = {
   firstName: "",
   lastName: "",
-  dateOfBirth: "",
+  dateOfBirth: null,
   gender: null,
   nationality: null,
   allergiesDescription: null,
   allergySeverity: null,
   medicalConditions: null,
   dietaryRestrictions: null,
-  gpName: null,
-  gpPhone: null,
   pediatricianName: null,
   pediatricianPhone: null,
   healthInsuranceNumber: null,
@@ -57,13 +53,16 @@ const emptyValues: ChildFormValues = {
 };
 
 /** Director create/edit form for a child's general profile and medical contacts (006a US1/US2).
- * Medical/contact fields never block save (FR-002) — only first/last name and date of birth are
- * required. GP (huisarts) and pediatrician (kinderarts) are independent optional contacts —
- * clearing one never touches the other (FR-006/FR-007). */
+ * Onboarding only requires a name (FR-002) — a child can be registered before birth, or before a
+ * parent knows the exact date, so date of birth and every other field are added later. On an
+ * invalid save, the form scrolls to and focuses the first invalid field rather than leaving the
+ * error off-screen in this dialog's scrollable body. */
 export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, saving, error }: ChildFormDialogProps) {
   const t = useTranslations("children.form");
   const [values, setValues] = useState<ChildFormValues>(emptyValues);
   const [touched, setTouched] = useState(false);
+  const firstNameRef = useRef<HTMLInputElement>(null);
+  const lastNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -80,8 +79,6 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
             allergySeverity: child.allergySeverity,
             medicalConditions: child.medicalConditions,
             dietaryRestrictions: child.dietaryRestrictions,
-            gpName: child.gpName,
-            gpPhone: child.gpPhone,
             pediatricianName: child.pediatricianName,
             pediatricianPhone: child.pediatricianPhone,
             healthInsuranceNumber: child.healthInsuranceNumber,
@@ -97,11 +94,25 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
 
   const firstNameInvalid = touched && !values.firstName.trim();
   const lastNameInvalid = touched && !values.lastName.trim();
-  const dateOfBirthInvalid = touched && !values.dateOfBirth;
-  const canSubmit = !!values.firstName.trim() && !!values.lastName.trim() && !!values.dateOfBirth;
+  const canSubmit = !!values.firstName.trim() && !!values.lastName.trim();
+
+  function scrollToAndFocus(el: HTMLInputElement | null) {
+    // jsdom (unit tests) doesn't implement scrollIntoView at all — guard its presence rather
+    // than assume every DOM environment has it.
+    el?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    el?.focus();
+  }
 
   function handleSubmit() {
     setTouched(true);
+    if (!values.firstName.trim()) {
+      scrollToAndFocus(firstNameRef.current);
+      return;
+    }
+    if (!values.lastName.trim()) {
+      scrollToAndFocus(lastNameRef.current);
+      return;
+    }
     if (!canSubmit) return;
     onSubmit({
       ...values,
@@ -111,8 +122,6 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
       allergiesDescription: values.allergiesDescription?.trim() || null,
       medicalConditions: values.medicalConditions?.trim() || null,
       dietaryRestrictions: values.dietaryRestrictions?.trim() || null,
-      gpName: values.gpName?.trim() || null,
-      gpPhone: values.gpPhone?.trim() || null,
       pediatricianName: values.pediatricianName?.trim() || null,
       pediatricianPhone: values.pediatricianPhone?.trim() || null,
       healthInsuranceNumber: values.healthInsuranceNumber?.trim() || null,
@@ -132,6 +141,7 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
             <label className="block text-sm font-medium text-text dark:text-text-dark">
               {t("firstNameLabel")}
               <Input
+                ref={firstNameRef}
                 className="mt-2"
                 invalid={firstNameInvalid}
                 value={values.firstName}
@@ -142,6 +152,7 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
             <label className="block text-sm font-medium text-text dark:text-text-dark">
               {t("lastNameLabel")}
               <Input
+                ref={lastNameRef}
                 className="mt-2"
                 invalid={lastNameInvalid}
                 value={values.lastName}
@@ -154,11 +165,9 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
               <Input
                 type="date"
                 className="mt-2"
-                invalid={dateOfBirthInvalid}
-                value={values.dateOfBirth}
-                onChange={(e) => set("dateOfBirth", e.target.value)}
+                value={values.dateOfBirth ?? ""}
+                onChange={(e) => set("dateOfBirth", e.target.value || null)}
               />
-              {dateOfBirthInvalid && <p className="mt-1 text-xs text-danger dark:text-danger-dark">{t("dateOfBirthRequired")}</p>}
             </label>
             <label className="block text-sm font-medium text-text dark:text-text-dark">
               {t("genderLabel")}
@@ -211,14 +220,6 @@ export function ChildFormDialog({ open, mode, child, onOpenChange, onSubmit, sav
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-text dark:text-text-dark">{t("contactsSectionTitle")}</h3>
             <div className="grid grid-cols-2 gap-4">
-              <label className="block text-sm font-medium text-text dark:text-text-dark">
-                {t("gpNameLabel")}
-                <Input className="mt-2" value={values.gpName ?? ""} onChange={(e) => set("gpName", e.target.value || null)} />
-              </label>
-              <label className="block text-sm font-medium text-text dark:text-text-dark">
-                {t("gpPhoneLabel")}
-                <Input className="mt-2" value={values.gpPhone ?? ""} onChange={(e) => set("gpPhone", e.target.value || null)} />
-              </label>
               <label className="block text-sm font-medium text-text dark:text-text-dark">
                 {t("pediatricianNameLabel")}
                 <Input className="mt-2" value={values.pediatricianName ?? ""} onChange={(e) => set("pediatricianName", e.target.value || null)} />

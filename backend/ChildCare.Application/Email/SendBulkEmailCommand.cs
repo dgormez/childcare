@@ -17,7 +17,9 @@ public record SendBulkEmailCommand(
     string Body,
     string? AttachmentObjectPath,
     string? AttachmentFileName,
-    string? AttachmentContentType) : IRequest<SendBulkEmailResult>;
+    string? AttachmentContentType,
+    IReadOnlyList<string> Cc,
+    IReadOnlyList<string> Bcc) : IRequest<SendBulkEmailResult>;
 
 public enum SendBulkEmailFailure
 {
@@ -66,6 +68,12 @@ public class SendBulkEmailCommandValidator : AbstractValidator<SendBulkEmailComm
             .Must(command => command.AttachmentObjectPath is null
                 || (command.AttachmentFileName is not null && command.AttachmentContentType is not null))
             .WithMessage("errors.email.invalid_content_type");
+
+        RuleFor(x => x.Cc).Must(cc => cc.Count <= 10).WithMessage("errors.email.too_many_cc");
+        RuleForEach(x => x.Cc).EmailAddress().WithMessage("errors.email.cc_invalid");
+
+        RuleFor(x => x.Bcc).Must(bcc => bcc.Count <= 10).WithMessage("errors.email.too_many_bcc");
+        RuleForEach(x => x.Bcc).EmailAddress().WithMessage("errors.email.bcc_invalid");
     }
 }
 
@@ -139,7 +147,7 @@ public class SendBulkEmailCommandHandler(
         {
             try
             {
-                await emailSender.SendBulkEmailAsync(contact.Email!, contact.Locale, request.Subject, request.Body, attachment, cancellationToken);
+                await emailSender.SendBulkEmailAsync(contact.Email!, contact.Locale, request.Subject, request.Body, attachment, request.Cc, request.Bcc, cancellationToken);
                 outcomes.Add((contact, true, null));
             }
             catch (Exception ex)

@@ -91,7 +91,11 @@ export function Sidebar({ session, onLogout }: SidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-1">
+      {/* min-h-0 overrides the flex item's default min-height:auto, which would otherwise let
+          this grow to fit every link and push the sidebar (and with it, the whole page) taller
+          than the viewport — overflow-y-auto then makes this list itself scroll if it ever has
+          more links than fit, instead of the page. */}
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {REAL_NAV.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (

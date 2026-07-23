@@ -81,14 +81,13 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     private static CreateChildRequest MinimalCreateRequest(string firstName = "Emma", string lastName = "Peeters") =>
-        new(firstName, lastName, new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null);
+        new(firstName, lastName, new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null);
 
     private static CreateChildRequest FullMedicalCreateRequest() => new(
         "Louis", "Janssens", new DateOnly(2022, 1, 15),
         "Male", "Belgian",
         "Peanuts", "Severe",
         "Asthma", "No dairy",
-        "Dr. Peeters", "+32 9 111 22 33",
         "Dr. Claes", "+32 9 444 55 66",
         "12345678901", null);
 
@@ -130,8 +129,6 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal("Severe", reloaded.AllergySeverity);
         Assert.Equal("Asthma", reloaded.MedicalConditions);
         Assert.Equal("No dairy", reloaded.DietaryRestrictions);
-        Assert.Equal("Dr. Peeters", reloaded.GpName);
-        Assert.Equal("+32 9 111 22 33", reloaded.GpPhone);
         Assert.Equal("Dr. Claes", reloaded.PediatricianName);
         Assert.Equal("+32 9 444 55 66", reloaded.PediatricianPhone);
         Assert.Equal("12345678901", reloaded.HealthInsuranceNumber);
@@ -162,7 +159,7 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
 
         var futureRequest = new CreateChildRequest(
             "Future", "Child", DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
-            null, null, null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null);
         var response = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken, futureRequest));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -269,17 +266,16 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
     private static UpdateChildRequest ToUpdateRequest(ChildResponse c) => new(
         c.FirstName, c.LastName, c.DateOfBirth, c.Gender, c.Nationality,
         c.AllergiesDescription, c.AllergySeverity, c.MedicalConditions, c.DietaryRestrictions,
-        c.GpName, c.GpPhone, c.PediatricianName, c.PediatricianPhone,
+        c.PediatricianName, c.PediatricianPhone,
         c.HealthInsuranceNumber, c.Kindcode);
 
     [Fact]
-    public async Task UpdateChild_PediatricianContact_PersistsIndependentlyOfGp()
+    public async Task UpdateChild_PediatricianContact_CanBeSetThenCleared()
     {
         var client = factory.CreateClient();
         var org = await RegisterOrgAsync(client, $"Child Edit Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
 
-        var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken,
-            MinimalCreateRequest() with { GpName = "Dr. Peeters", GpPhone = "+32 9 111 22 33" }));
+        var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken, MinimalCreateRequest()));
         var child = (await createResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
 
         var updateRequest = ToUpdateRequest(child) with { PediatricianName = "Dr. Claes", PediatricianPhone = "+32 9 444 55 66" };
@@ -289,10 +285,7 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
         var afterFirstEdit = (await updateResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
         Assert.Equal("Dr. Claes", afterFirstEdit.PediatricianName);
         Assert.Equal("+32 9 444 55 66", afterFirstEdit.PediatricianPhone);
-        Assert.Equal("Dr. Peeters", afterFirstEdit.GpName);
-        Assert.Equal("+32 9 111 22 33", afterFirstEdit.GpPhone);
 
-        // Clearing the pediatrician contact must not touch the unrelated GP contact.
         var clearRequest = ToUpdateRequest(afterFirstEdit) with { PediatricianName = null, PediatricianPhone = null };
         var clearResponse = await client.SendAsync(AuthedRequest(HttpMethod.Put, $"/api/children/{child.Id}", org.AccessToken, clearRequest));
         Assert.Equal(HttpStatusCode.OK, clearResponse.StatusCode);
@@ -300,8 +293,6 @@ public class ChildCrudTests(OrganisationOnboardingWebAppFactory factory)
         var afterClear = (await clearResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
         Assert.Null(afterClear.PediatricianName);
         Assert.Null(afterClear.PediatricianPhone);
-        Assert.Equal("Dr. Peeters", afterClear.GpName);
-        Assert.Equal("+32 9 111 22 33", afterClear.GpPhone);
     }
 
     [Fact]

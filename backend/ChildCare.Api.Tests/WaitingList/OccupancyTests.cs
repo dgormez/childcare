@@ -19,7 +19,7 @@ public class OccupancyTests(OrganisationOnboardingWebAppFactory factory)
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken, string firstName = "Emma") =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     private static List<ContractedDayRequest> Days(params DayOfWeek[] weekdays) =>
@@ -46,7 +46,7 @@ public class OccupancyTests(OrganisationOnboardingWebAppFactory factory)
         var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
 
         var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken,
-            new PublishClosureDayRequest(false)));
+            new PublishClosureDayRequest(false, false)));
         Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
     }
 

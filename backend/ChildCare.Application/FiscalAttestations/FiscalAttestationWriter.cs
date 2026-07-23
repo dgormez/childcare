@@ -32,6 +32,11 @@ public class FiscalAttestationWriter(
             fa => fa.ChildId == childId && fa.LocationId == locationId && fa.TaxYear == taxYear, cancellationToken);
 
         var child = await db.Children.FirstAsync(c => c.Id == childId, cancellationToken);
+        // A child with paid invoices was actively enrolled and billed, so a birth date should
+        // always be on file by this point — loud failure here surfaces a real data gap rather
+        // than silently rendering a legal tax document with a wrong/blank date.
+        var childDateOfBirth = child.DateOfBirth
+            ?? throw new InvalidOperationException($"Child {childId} has paid invoices but no date of birth on file.");
         var location = await db.Locations.FirstAsync(l => l.Id == locationId, cancellationToken);
         var tenant = await publicDb.Tenants.FirstAsync(t => t.Id == currentTenant.TenantId, cancellationToken);
 
@@ -56,7 +61,7 @@ public class FiscalAttestationWriter(
             primaryContact is null ? string.Empty : $"{primaryContact.FirstName} {primaryContact.LastName}",
             child.FirstName,
             child.LastName,
-            child.DateOfBirth,
+            childDateOfBirth,
             taxYear,
             aggregation.Periods,
             aggregation.TotalAmountCents,

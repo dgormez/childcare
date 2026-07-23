@@ -195,8 +195,6 @@ export async function seedChild(director: SeededDirector): Promise<SeededChild> 
         allergySeverity: null,
         medicalConditions: null,
         dietaryRestrictions: null,
-        gpName: null,
-        gpPhone: null,
         healthInsuranceNumber: null,
         kindcode: null,
       }),

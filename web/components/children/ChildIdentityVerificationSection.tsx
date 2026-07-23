@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
+import { normalizeNrn, isValidNrnChecksum } from "../../lib/rijksregisternummer";
 import type { ChildResponse, IdDocumentType } from "../../lib/types";
 
 const DOCUMENT_TYPES: IdDocumentType[] = ["birth_certificate", "kids_id", "eid", "passport", "other"];
@@ -13,7 +14,8 @@ const DOCUMENT_TYPES: IdDocumentType[] = ["birth_certificate", "kids_id", "eid",
 interface ChildIdentityVerificationSectionProps {
   child: ChildResponse;
   onVerify: (documentType: IdDocumentType, note: string | null) => Promise<boolean>;
-  onSetNrn: (nrn: string) => Promise<boolean>;
+  // Resolves to an errorKey on failure ("errors.child.nrn_already_in_use", etc.), null on success.
+  onSetNrn: (nrn: string) => Promise<string | null>;
 }
 
 /** Feature 022 US1/US3/US5: the "Identiteit bevestigen" section — read-only display of a
@@ -53,18 +55,23 @@ export function ChildIdentityVerificationSection({ child, onVerify, onSetNrn }: 
   }
 
   async function submitNrn() {
-    // Client-side mirror of the backend's structural check (research.md R4) — catches an
-    // obviously-wrong length before a round trip, not a replacement for server validation.
-    if (!/^\d{11}$/.test(nrnInput.replace(/[.\-\s]/g, ""))) {
+    // Client-side mirror of the backend's format + mod-97 checksum check — catches an obviously
+    // wrong number before a round trip, not a replacement for server validation.
+    const normalized = normalizeNrn(nrnInput);
+    if (!/^\d{11}$/.test(normalized)) {
       setNrnError(t("nrnInvalidFormat"));
+      return;
+    }
+    if (!isValidNrnChecksum(normalized)) {
+      setNrnError(t("nrnInvalidChecksum"));
       return;
     }
     setNrnSaving(true);
     setNrnError(null);
-    const success = await onSetNrn(nrnInput.trim());
+    const errorKey = await onSetNrn(nrnInput.trim());
     setNrnSaving(false);
-    if (!success) {
-      setNrnError(t("nrnInvalidFormat"));
+    if (errorKey) {
+      setNrnError(errorKey === "errors.child.nrn_already_in_use" ? t("nrnAlreadyInUse") : t("nrnInvalidFormat"));
       return;
     }
     setNrnInput("");

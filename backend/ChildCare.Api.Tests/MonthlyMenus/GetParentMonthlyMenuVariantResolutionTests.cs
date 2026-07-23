@@ -152,7 +152,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var entry = Assert.Single(await GetParentMenuAsync(client, parentToken, 2027, 6));
 
         Assert.Null(entry.ResolvedVariant);
-        Assert.Equal("Basis soep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Basis soep", Assert.Single(entry.Days).LunchMeal);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var entry = Assert.Single(await GetParentMenuAsync(client, parentToken, 2027, 7));
 
         Assert.Equal("vegetarian", entry.ResolvedVariant);
-        Assert.Equal("Veggie soep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Veggie soep", Assert.Single(entry.Days).LunchMeal);
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var entry = Assert.Single(await GetParentMenuAsync(client, parentToken, 2027, 8));
 
         Assert.Equal("halal", entry.ResolvedVariant);
-        Assert.Equal("Halal soep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Halal soep", Assert.Single(entry.Days).LunchMeal);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var entry = Assert.Single(await GetParentMenuAsync(client, parentToken, 2027, 9));
 
         Assert.Equal("vegetarian", entry.ResolvedVariant);
-        Assert.Equal("Veggie soep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Veggie soep", Assert.Single(entry.Days).LunchMeal);
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var entry = Assert.Single(await GetParentMenuAsync(client, parentToken, 2027, 11));
 
         Assert.Null(entry.ResolvedVariant);
-        Assert.Equal("Basis soep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Basis soep", Assert.Single(entry.Days).LunchMeal);
     }
 
     [Fact]
@@ -261,7 +261,7 @@ public class GetParentMonthlyMenuVariantResolutionTests(
         var secondEntry = Assert.Single(entries, e => e.LocationId == secondLocation.Id);
         Assert.Equal("vegetarian", firstEntry.ResolvedVariant);
         Assert.Null(secondEntry.ResolvedVariant);
-        Assert.Equal("Basis soep 2", Assert.Single(secondEntry.Days).Soup);
+        Assert.Equal("Basis soep 2", Assert.Single(secondEntry.Days).LunchMeal);
     }
 
     [Fact]

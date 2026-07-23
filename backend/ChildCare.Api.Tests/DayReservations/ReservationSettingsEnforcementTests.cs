@@ -111,7 +111,7 @@ public class ReservationSettingsEnforcementTests(OrganisationOnboardingWebAppFac
         var createResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/closures", org.AccessToken,
             new CreateClosureDayRequest(location.Id, Monday, "Sluitingsdag", "holiday", true)));
         var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
-        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", org.AccessToken, new PublishClosureDayRequest(false)));
+        await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", org.AccessToken, new PublishClosureDayRequest(false, false)));
 
         var response = await SubmitRawAsync(client, parentToken, new SubmitDayReservationRequest(child.Id, "absence", Monday, null, null));
 

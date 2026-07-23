@@ -133,13 +133,18 @@ export default function GroupsPage() {
             value={groupId}
             onChange={(e) => setGroupId(e.target.value)}
             aria-label={t("groupLabel")}
-            className="h-10 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark"
+            disabled={groups.length === 0}
+            className="h-10 min-w-40 rounded-lg bg-surface-soft px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surface-soft-dark dark:text-text-dark"
           >
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
+            {groups.length === 0 ? (
+              <option value="">{t("noGroupsOption")}</option>
+            ) : (
+              groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))
+            )}
           </select>
           <div className="relative">
             <CalendarClock className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-soft dark:text-text-soft-dark" strokeWidth={2} />

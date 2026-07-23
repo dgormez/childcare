@@ -13,10 +13,12 @@ public record GetParentMilestonePortfolioQuery(Guid TenantUserId, Guid ChildId) 
 public class ParentMilestonePortfolioResult
 {
     public bool Authorized { get; private init; }
+    public bool DateOfBirthMissing { get; private init; }
     public MilestonePortfolioResponse? Response { get; private init; }
 
     public static ParentMilestonePortfolioResult Ok(MilestonePortfolioResponse response) => new() { Authorized = true, Response = response };
     public static ParentMilestonePortfolioResult Forbidden() => new() { Authorized = false };
+    public static ParentMilestonePortfolioResult MissingDateOfBirth() => new() { Authorized = true, DateOfBirthMissing = true };
 }
 
 public class GetParentMilestonePortfolioQueryHandler(
@@ -36,6 +38,8 @@ public class GetParentMilestonePortfolioQueryHandler(
             return ParentMilestonePortfolioResult.Forbidden();
 
         var full = await mediator.Send(new GetChildMilestonePortfolioQuery(request.ChildId), cancellationToken);
+        if (full.DateOfBirthMissing)
+            return ParentMilestonePortfolioResult.MissingDateOfBirth();
         if (full.Response is null)
             return ParentMilestonePortfolioResult.Forbidden();
 

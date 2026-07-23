@@ -161,7 +161,12 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// none of which are dropped in this test, only referenced; staff_documents: FK to
     /// staff_profiles) each need their own DROP TABLE, and staff_profiles' one new column
     /// (TimeEntryFunctions) needs its own explicit DROP COLUMN, same reason as every other
-    /// column-only addition above.
+    /// column-only addition above. "MakeDateOfBirthOptionalDropGpAddNrnHash" is next — children
+    /// isn't dropped by this revert (only altered), so its NrnHash column (+ unique index) needs
+    /// dropping, DateOfBirth needs SET NOT NULL, and GpName/GpPhone need re-adding, same reason
+    /// as every other column-only addition above; monthly_menu_days is already dropped wholesale
+    /// below, so "RenameMonthlyMenuFields" needs no schema revert of its own, only its
+    /// history-removal entry (same reasoning as this file's other DROP TABLE'd tables).
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
     {
@@ -169,6 +174,14 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            DROP INDEX "{schemaName}"."IX_children_NrnHash";
+            ALTER TABLE "{schemaName}"."children"
+                DROP COLUMN "NrnHash";
+            ALTER TABLE "{schemaName}"."children"
+                ALTER COLUMN "DateOfBirth" SET NOT NULL;
+            ALTER TABLE "{schemaName}"."children"
+                ADD COLUMN "GpName" character varying(200),
+                ADD COLUMN "GpPhone" character varying(30);
             DROP TABLE "{schemaName}"."coda_transactions";
             DROP TABLE "{schemaName}"."coda_imports";
             DROP TABLE "{schemaName}"."bulk_email_recipients";
@@ -281,7 +294,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."staff_profiles"
                 DROP COLUMN "TimeEntryFunctions";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit' OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit' OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration' OR "MigrationId" LIKE '%MakeDateOfBirthOptionalDropGpAddNrnHash' OR "MigrationId" LIKE '%RenameMonthlyMenuFields';
             """);
     }
 
@@ -293,7 +306,7 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
         var schemaName = await GetSchemaNameAsync(org.Organisation.Id);
 
         var childResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, "/api/children", org.AccessToken,
-            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null)));
+            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null)));
         Assert.Equal(HttpStatusCode.Created, childResponse.StatusCode);
         var child = (await childResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
 

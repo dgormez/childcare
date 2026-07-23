@@ -83,9 +83,9 @@ public class MonthlyMenuVariantAuthoringTests(OrganisationOnboardingWebAppFactor
         var baseMenu = await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 6);
         var variantMenu = await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 6, variant: "vegetarian");
 
-        Assert.Equal("Basis soep", Assert.Single(baseMenu.Days).Soup);
+        Assert.Equal("Basis soep", Assert.Single(baseMenu.Days).LunchMeal);
         Assert.False(baseMenu.IsPublished);
-        Assert.Equal("Veggie soep", Assert.Single(variantMenu.Days).Soup);
+        Assert.Equal("Veggie soep", Assert.Single(variantMenu.Days).LunchMeal);
         Assert.True(variantMenu.IsPublished);
     }
 
@@ -157,7 +157,7 @@ public class MonthlyMenuVariantAuthoringTests(OrganisationOnboardingWebAppFactor
         Assert.Equal(HttpStatusCode.OK, reEnableResponse.StatusCode);
 
         var afterReEnable = await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 10, "halal");
-        Assert.Equal("Halal soep", Assert.Single(afterReEnable.Days).Soup);
+        Assert.Equal("Halal soep", Assert.Single(afterReEnable.Days).LunchMeal);
         Assert.True(afterReEnable.IsPublished);
     }
 
@@ -173,8 +173,8 @@ public class MonthlyMenuVariantAuthoringTests(OrganisationOnboardingWebAppFactor
         await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 11,
             [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 11, 1), "Halal", null, null, null)], "halal");
 
-        Assert.Equal("Basis", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11)).Days).Soup);
-        Assert.Equal("Veggie", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11, "vegetarian")).Days).Soup);
-        Assert.Equal("Halal", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11, "halal")).Days).Soup);
+        Assert.Equal("Basis", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11)).Days).LunchMeal);
+        Assert.Equal("Veggie", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11, "vegetarian")).Days).LunchMeal);
+        Assert.Equal("Halal", Assert.Single((await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 11, "halal")).Days).LunchMeal);
     }
 }

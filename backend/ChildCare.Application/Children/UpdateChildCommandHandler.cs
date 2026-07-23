@@ -22,8 +22,6 @@ public class UpdateChildCommandHandler(ITenantDbContext db, IProfilePhotoStorage
         child.AllergySeverity = request.AllergySeverity;
         child.MedicalConditions = request.MedicalConditions;
         child.DietaryRestrictions = request.DietaryRestrictions;
-        child.GpName = request.GpName;
-        child.GpPhone = request.GpPhone;
         child.PediatricianName = request.PediatricianName;
         child.PediatricianPhone = request.PediatricianPhone;
         child.HealthInsuranceNumber = request.HealthInsuranceNumber;

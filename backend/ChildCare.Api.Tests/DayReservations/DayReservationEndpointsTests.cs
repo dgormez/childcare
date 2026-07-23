@@ -77,7 +77,7 @@ public class DayReservationEndpointsTests(OrganisationOnboardingWebAppFactory fa
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
 
-        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken, new PublishClosureDayRequest(false)));
+        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken, new PublishClosureDayRequest(false, false)));
         Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
         return closure;
     }

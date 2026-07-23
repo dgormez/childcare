@@ -14,7 +14,7 @@ interface MilestonePortfolioViewProps {
   childId: string;
 }
 
-type LoadState = "loading" | "loaded" | "error";
+type LoadState = "loading" | "loaded" | "error" | "dateOfBirthRequired";
 
 function localizedName(entry: { nameNl: string; nameFr: string; nameEn: string }, locale: string): string {
   if (locale === "fr") return entry.nameFr;
@@ -74,7 +74,8 @@ export function MilestonePortfolioView({ childId }: MilestonePortfolioViewProps)
     setState("loading");
     const result = await apiClient.GET("/api/children/{childId}/milestone-portfolio", { params: { path: { childId } } });
     if (!result.response.ok) {
-      setState("error");
+      const errorKey = (result.error as { errorKey?: string } | undefined)?.errorKey;
+      setState(errorKey === "errors.children.date_of_birth_required" ? "dateOfBirthRequired" : "error");
       return;
     }
     const data = result.data as unknown as { domains: DevelopmentalDomainResponse[] };
@@ -111,6 +112,7 @@ export function MilestonePortfolioView({ childId }: MilestonePortfolioViewProps)
 
   if (state === "loading") return <div className="h-32 animate-pulse rounded-xl bg-surface-soft dark:bg-surface-soft-dark" />;
   if (state === "error") return <ErrorState message={t("loadError")} retryLabel={t("retry")} onRetry={load} />;
+  if (state === "dateOfBirthRequired") return <EmptyState icon={Sprout} message={t("dateOfBirthRequired")} />;
 
   const hasAnyMilestones = domains.some((d) => d.milestones.length > 0);
 

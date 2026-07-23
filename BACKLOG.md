@@ -89,6 +89,10 @@
 | 047 | `047-sleep-checks` | Rustmoment sleep-check routine: configurable check interval during naps, caregiver tablet prompts + one-tap check-in per sleeping child, log of performed checks — operationalises safe-sleep supervision (complements 035's attests/risk analysis) | 009, 008a | 🔲 Not started |
 | 048 | `048-supplies-requests` | Supplies requests: caregiver flags per child what's running out (diapers, spare clothes...), parent gets a notification + checklist in the parent app; simple acknowledge/brought flow | 006, 013 | 🔲 Not started |
 | 049 | `049-message-translation` | Auto-translation of parent communications: messages/daily reports optionally machine-translated to the parent's preferred language (differentiator for non-Dutch-speaking families); official/regulatory document content stays untranslated | 013 | 🔲 Not started |
+| 050 | `050-director-web-group-builder` | Director-web group creation/management — currently groups can only be created on the caregiver tablet during room setup (009b's own scope note); add create/edit on web with age-mixing ratio type, child assignment, moving a child between groups, and a future-dated reorganisation (stage next week's group configuration without publishing it yet) | 004, 006, 009b | 🔲 Not started |
+| 051 | `051-device-onboarding` | Redesign device onboarding: pairing today only works by a director being physically logged into the tablet's kiosk app (008a's own scope), so there is no way to add/pre-register a device from director web at all — decide and build a remote/manual pairing flow (e.g. a director-generated pairing code shown on web, entered on the tablet) | 008a | 🔲 Not started |
+| 052 | `052-unified-parent-comms` | Merge Announcements (009b-adjacent push+email) and Communications (020's attachment-capable bulk email) into one feature: both channels on by default, a per-send toggle to restrict to one channel, and a shared sent-history view — Communications currently has no history view at all, unlike Announcements | 013, 020 | 🔲 Not started |
+| 053 | `053-id-document-upload` | Document-based identity verification: upload a scan/photo of the ID document as part of confirming a child's identity — reverses 022's deliberate decision to use a director attestation checkbox instead of a document/eID reader; needs a product decision (add upload alongside the checkbox, or replace it) before speccing, not just a straight rebuild | 022 | 🔲 Not started |
 
 ### Phase 3 (post-revenue)
 
@@ -5632,6 +5636,172 @@ Key constraints:
   statement; no child medical free-text translated without the same
   opt-in.
 - i18n keys everywhere for the chrome around it.
+```
+
+---
+
+### 050 — Director-Web Group Builder
+
+```
+Build group creation and management on director web — today it doesn't
+exist there at all.
+
+Context: raised during manual testing of the Groups page (director-web
+audit, 2026-07-23). GroupsPage.tsx only lets a director view a group's
+activity timeline and set its capacity; a code comment on that page
+says groups "are created on the caregiver tablet during room-setup, not
+on director web" (009b's own scope note carried forward from feature
+018's capacity addition). That means there is currently no way to
+create a group, assign children to one, move a child between groups, or
+plan next month's group reshuffle from the web app at all.
+
+What to build:
+- Create/edit a group on director web: name, location, and an
+  age-mixing/ratio type selection (see the BKR ratio rules 010/012
+  already enforce — a group's declared type must resolve to one of the
+  ratio bands those features already compute against, not a new
+  parallel concept).
+- Assign children to a group, and move a child from one group to
+  another, from director web (mirrors whatever child_group_assignments
+  operations 006's data model already supports).
+- Future-dated reorganisation: let a director stage next week's (or next
+  term's) group configuration — which children are in which group,
+  effective a future date — without publishing/activating it
+  immediately, so the changeover happens automatically on the effective
+  date rather than requiring same-day manual re-assignment.
+
+Key constraints:
+- No changes to 010/012's BKR ratio computation — this only needs to
+  feed it a group "type," not reimplement ratio logic.
+- The caregiver-tablet group-creation flow (008a) is unaffected; this
+  adds a second, director-web path, it doesn't replace the first.
+- i18n keys everywhere (NL/FR/EN).
+
+Open question (resolve at spec time): the exact set of allowed
+age-mixing combinations per Kind & Gezin ratio rules — the user
+flagged not remembering the precise mixing table; source it from the
+kindratio reference material already in docs/integrations/opgroeien/
+(041's ratio table sourcing note applies here too) rather than guessing.
+```
+
+---
+
+### 051 — Device Onboarding Redesign
+
+```
+Design and build a way to add/pair a device from director web — today
+there is none.
+
+Context: raised during manual testing (director-web audit,
+2026-07-23) — the question "how is the device onboarding flow, is
+there one?" surfaced that pairing (008a) only happens by a director
+being physically logged into the tablet's kiosk-mode app at setup
+time (POST /api/devices/pair, DirectorOnly auth, called from the
+device itself with location+group+PIN). There is no director-web
+initiated flow — no way to pre-register a device, generate a pairing
+code to hand to whoever is physically setting up the tablet, or see
+an unpaired device before it's paired.
+
+What to build (needs a design decision before speccing, not a
+straight extension of the current model):
+- Likely shape: a director-web action that generates a short-lived
+  pairing code/token; the tablet's kiosk app gains a "enter pairing
+  code" entry point that exchanges it for the same device-authenticated
+  session PairDeviceCommand already creates — no change to what a
+  paired device can do, only how pairing is initiated.
+- Alternative to evaluate at spec time: QR code shown on web, scanned
+  by the tablet (mirrors 021-qr-checkin's existing QR infrastructure —
+  may be reusable).
+- Device list on web should show pairing state clearly (unpaired code
+  generated & waiting vs paired & active) — DeviceEndpoints.cs's
+  existing list/revoke endpoints stay as-is.
+
+Key constraints:
+- Must not weaken 008a's kiosk-mode security model (PIN-gated
+  director-only pairing) — a remote pairing code is an additional
+  initiation path, not a bypass of who can authorize a new device.
+- i18n keys everywhere.
+```
+
+---
+
+### 052 — Unified Parent Communications (Announcements + Communications)
+
+```
+Merge Announcements and Communications into one feature with a shared
+send history.
+
+Context: raised during manual testing (director-web audit,
+2026-07-23) — the director found two separate, similar-but-not-
+identical bulk-messaging surfaces confusing. Investigation found they
+are genuinely different under the hood: Announcements
+(SendAnnouncementCommandHandler) sends both a push notification and an
+email, and already has a history view (GET /api/announcements).
+Communications (SendBulkEmailCommandHandler, feature 020) sends email
+only, supports an attachment, and has NO history view at all — once
+sent, there is currently no way to look back at what was sent via that
+surface.
+
+What to build:
+- One compose surface with both channels (push + email) on by default,
+  and a per-send toggle to restrict a given send to only one channel.
+- Attachment support (020's capability) carried into the merged send
+  path.
+- One shared, persisted send history covering everything sent through
+  either previous surface — this means Communications' sends need a
+  persisted/queryable history for the first time (BulkEmailSend already
+  exists as an entity per feature 020's data model; extend the read side
+  to expose it the way ListAnnouncementsQuery does for Announcements,
+  or converge on one shared history model — decide at spec time).
+- CC/BCC (added to Communications ahead of this merge, 2026-07-23)
+  carries into the merged compose form unchanged.
+
+Key constraints:
+- No breaking change to existing Announcement/BulkEmailSend data unless
+  a migration path is designed — both have real historical data by the
+  time this is built.
+- i18n keys everywhere; sidebar nav collapses from two entries to one.
+```
+
+---
+
+### 053 — Document-Based Identity Verification
+
+```
+Add document upload as part of confirming a child's identity.
+
+Context: raised during manual testing (director-web audit,
+2026-07-23) — the director asked for the ability to upload a document
+(birth certificate/ID) to verify a child's identity. Investigation
+found this was a deliberate product decision already made and shipped:
+feature 022's own spec explicitly replaced an eID-card-reader/document
+-upload approach with a simpler director attestation checkbox ("I have
+seen this document") plus a declared document TYPE (IdDocumentType) —
+no file is stored today. Building real upload isn't a small addition on
+top of what exists; it reverses that decision.
+
+Before speccing, get a product decision: is the checkbox attestation
+being replaced, or is upload an additional option alongside it (e.g.
+upload when available, checkbox attestation when a scan isn't
+practical at drop-off)? The two have different storage/retention/
+compliance implications (a stored ID scan is materially more sensitive
+data than a boolean + a type enum).
+
+What to build once decided:
+- Upload control on ChildIdentityVerificationSection.tsx (mirrors the
+  existing HealthRecordAttachmentControl.tsx pattern already used for
+  vaccine/health-record attachments — same upload-URL + GCS flow, not a
+  new mechanism).
+- Storage/retention rules for the uploaded document (031's photo-
+  lifecycle-governance precedent — an ID scan needs at least as careful
+  a retention/access story as a photo, arguably stricter).
+- RBAC on who can view the raw document vs just the verification status.
+
+Key constraints:
+- Do not silently widen who can see a raw ID scan beyond who can already
+  see identity-verification status today — this is more sensitive data
+  than what 022 currently stores.
+- i18n keys everywhere.
 ```
 
 ---

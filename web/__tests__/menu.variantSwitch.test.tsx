@@ -53,7 +53,7 @@ const baseMenu: MonthlyMenuResponse = {
   isPublished: false,
   publishedAt: null,
   variant: null,
-  days: [{ date: firstOfMonth, soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: null }],
+  days: [{ date: firstOfMonth, lunchMeal: "Tomatensoep", alternativeLunchMeal: "Kip met puree", snack: "Yoghurt", notes: null }],
 };
 
 const halalMenu: MonthlyMenuResponse = {
@@ -61,7 +61,7 @@ const halalMenu: MonthlyMenuResponse = {
   isPublished: false,
   publishedAt: null,
   variant: "halal",
-  days: [{ date: firstOfMonth, soup: "Groentesoep", mainCourse: "Rund met rijst", dessert: "Fruit", notes: null }],
+  days: [{ date: firstOfMonth, lunchMeal: "Groentesoep", alternativeLunchMeal: "Rund met rijst", snack: "Fruit", notes: null }],
 };
 
 function okResponse(data: unknown) {

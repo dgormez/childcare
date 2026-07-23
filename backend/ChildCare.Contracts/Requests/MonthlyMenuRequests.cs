@@ -4,9 +4,9 @@ namespace ChildCare.Contracts.Requests;
 // location/year/month (whole-month replace on write, mirrors 013d's UpsertMealPreference shape).
 public record UpsertMonthlyMenuDayRequest(
     DateOnly Date,
-    string? Soup,
-    string? MainCourse,
-    string? Dessert,
+    string? LunchMeal,
+    string? AlternativeLunchMeal,
+    string? Snack,
     string? Notes);
 
 public record UpsertMonthlyMenuRequest(

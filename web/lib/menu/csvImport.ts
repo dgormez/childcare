@@ -7,14 +7,14 @@ import type { DayFields } from "../../components/menu/MonthlyMenuDayGrid";
 // truth" decision. If the server-side limit ever changes, update both together.
 export const MAX_FIELD_LENGTH = 500;
 
-const RECOGNIZED_COLUMNS = ["date", "soup", "main_course", "dessert", "notes"] as const;
+const RECOGNIZED_COLUMNS = ["date", "lunch_meal", "alternative_lunch_meal", "snack", "notes"] as const;
 const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
 export interface ParsedMenuCsvRow {
   rawDate: string;
-  soup?: string;
-  mainCourse?: string;
-  dessert?: string;
+  lunchMeal?: string;
+  alternativeLunchMeal?: string;
+  snack?: string;
   notes?: string;
   rowNumber: number;
   /** True when this row's column count didn't match the header row (FR-021) — checked before
@@ -87,9 +87,9 @@ export async function parseMenuCsv(file: File): Promise<{ rows: ParsedMenuCsvRow
 
   const rows: ParsedMenuCsvRow[] = result.data.map((raw, index) => ({
     rawDate: (raw.date ?? "").trim(),
-    soup: raw.soup,
-    mainCourse: raw.main_course,
-    dessert: raw.dessert,
+    lunchMeal: raw.lunch_meal,
+    alternativeLunchMeal: raw.alternative_lunch_meal,
+    snack: raw.snack,
     notes: raw.notes,
     rowNumber: index + 1,
     columnMismatch: mismatchedRowIndexes.has(index),
@@ -114,7 +114,7 @@ function fieldValueOrUndefined(value: string | undefined): string | undefined {
 
 function hasNonBlankContent(fields: DayFields | undefined): boolean {
   if (!fields) return false;
-  return Boolean(fields.soup.trim() || fields.mainCourse.trim() || fields.dessert.trim() || fields.notes.trim());
+  return Boolean(fields.lunchMeal.trim() || fields.alternativeLunchMeal.trim() || fields.snack.trim() || fields.notes.trim());
 }
 
 /**
@@ -165,12 +165,12 @@ export function validateMenuCsvRows(
     if (results.has(row.rowNumber) || !candidateDates.has(row.rowNumber) || duplicateRowNumbers.has(row.rowNumber)) continue;
 
     const fields: DayFields = {
-      soup: row.soup?.trim() ?? "",
-      mainCourse: row.mainCourse?.trim() ?? "",
-      dessert: row.dessert?.trim() ?? "",
+      lunchMeal: row.lunchMeal?.trim() ?? "",
+      alternativeLunchMeal: row.alternativeLunchMeal?.trim() ?? "",
+      snack: row.snack?.trim() ?? "",
       notes: row.notes?.trim() ?? "",
     };
-    const tooLong = [fields.soup, fields.mainCourse, fields.dessert, fields.notes].some((v) => v.length > MAX_FIELD_LENGTH);
+    const tooLong = [fields.lunchMeal, fields.alternativeLunchMeal, fields.snack, fields.notes].some((v) => v.length > MAX_FIELD_LENGTH);
     if (tooLong) {
       results.set(row.rowNumber, { status: "invalid", errorReason: "field_too_long", rowNumber: row.rowNumber, rawDate: row.rawDate });
       continue;
@@ -222,6 +222,6 @@ export function buildMenuCsvTemplate(year: number, month: number): string {
   const exampleDate = `${year}-${monthStr}-01`;
   return Papa.unparse({
     fields: [...RECOGNIZED_COLUMNS],
-    data: [[exampleDate, "Tomatensoep", "Kip met puree", "Yoghurt", ""]],
+    data: [[exampleDate, "Kip met puree", "Pasta met groenten", "Fruit", ""]],
   });
 }

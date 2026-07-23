@@ -42,7 +42,7 @@ internal static class ContractSigningTestSupport
     public static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken) =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest("Emma", "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     public static async Task<ContractResponse> CreateDraftContractAsync(HttpClient client, string accessToken, Guid childId, Guid locationId)

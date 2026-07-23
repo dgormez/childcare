@@ -20,13 +20,13 @@ public class GenerateParentMilestonePortfolioPdfQueryHandler(ITenantDbContext db
     public async Task<GenerateParentMilestonePortfolioPdfResult> Handle(GenerateParentMilestonePortfolioPdfQuery request, CancellationToken cancellationToken)
     {
         var authorized = await mediator.Send(new GetParentMilestonePortfolioQuery(request.TenantUserId, request.ChildId), cancellationToken);
-        if (!authorized.Authorized)
+        if (!authorized.Authorized || authorized.Response is null)
             return new GenerateParentMilestonePortfolioPdfResult(false, []);
 
         var child = await db.Children.FirstAsync(c => c.Id == request.ChildId, cancellationToken);
         var locale = request.Locale is not null && SupportedLocales.Contains(request.Locale) ? request.Locale : "nl";
 
-        var model = new MilestonePortfolioPdfModel($"{child.FirstName} {child.LastName}", authorized.Response!, locale);
+        var model = new MilestonePortfolioPdfModel($"{child.FirstName} {child.LastName}", authorized.Response, locale);
         var bytes = await pdfGenerator.GenerateAsync(model, cancellationToken);
         return new GenerateParentMilestonePortfolioPdfResult(true, bytes);
     }

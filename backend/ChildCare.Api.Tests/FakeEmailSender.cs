@@ -58,18 +58,19 @@ public class FakeEmailSender(IEmailSender inner) : IEmailSender
     /// (SendBulkEmailCommandHandler's partial-failure handling, FR-012).</summary>
     public HashSet<string> ThrowOnBulkEmailTo { get; } = [];
 
-    public List<(string ToEmail, string Locale, string Subject, string Body, bool HasAttachment)> BulkEmailCalls { get; } = [];
+    public List<(string ToEmail, string Locale, string Subject, string Body, bool HasAttachment, IReadOnlyList<string> Cc, IReadOnlyList<string> Bcc)> BulkEmailCalls { get; } = [];
 
     public Task SendBulkEmailAsync(
         string toEmail, string locale, string subject, string body,
         (byte[] Bytes, string FileName, string ContentType)? attachment,
+        IReadOnlyList<string>? cc = null, IReadOnlyList<string>? bcc = null,
         CancellationToken cancellationToken = default)
     {
-        BulkEmailCalls.Add((toEmail, locale, subject, body, attachment is not null));
+        BulkEmailCalls.Add((toEmail, locale, subject, body, attachment is not null, cc ?? [], bcc ?? []));
         if (ThrowOnBulkEmailTo.Contains(toEmail))
             throw new InvalidOperationException("Simulated SMTP failure (test).");
 
-        return inner.SendBulkEmailAsync(toEmail, locale, subject, body, attachment, cancellationToken);
+        return inner.SendBulkEmailAsync(toEmail, locale, subject, body, attachment, cc, bcc, cancellationToken);
     }
 
     /// <summary>Recipient addresses this test run should simulate a provider failure for

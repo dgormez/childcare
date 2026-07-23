@@ -8,8 +8,9 @@ public class MonthlyMenuDay
     public Guid MenuId { get; set; }
     public DateOnly MenuDate { get; set; }
 
-    public string? Soup { get; set; }
-    public string? MainCourse { get; set; }
-    public string? Dessert { get; set; }
-    public string? Notes { get; set; }
+    public string? LunchMeal            { get; set; }
+    public string? AlternativeLunchMeal  { get; set; }
+    // 3pm snack (FR: collation, NL: tussendoortje).
+    public string? Snack                { get; set; }
+    public string? Notes                { get; set; }
 }

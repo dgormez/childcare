@@ -43,8 +43,6 @@ function makeChild(overrides: Partial<ChildResponse> = {}): ChildResponse {
     allergySeverity: null,
     medicalConditions: null,
     dietaryRestrictions: null,
-    gpName: null,
-    gpPhone: null,
     pediatricianName: null,
     pediatricianPhone: null,
     healthInsuranceNumber: null,
@@ -221,15 +219,13 @@ describe("ChildDetailPage — Profile tab", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("shows GP and pediatrician contact as distinct fields when both are present", async () => {
+  it("shows the pediatrician contact", async () => {
     mockGet({
-      "/api/children/{id}": makeChild({ gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33", pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }),
+      "/api/children/{id}": makeChild({ pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }),
     });
     renderComponent(<ChildDetailPage />);
 
-    expect(await screen.findByText("Dr. Peeters")).toBeInTheDocument();
-    expect(screen.getByText("+32 9 111 22 33")).toBeInTheDocument();
-    expect(screen.getByText("Dr. Claes")).toBeInTheDocument();
+    expect(await screen.findByText("Dr. Claes")).toBeInTheDocument();
     expect(screen.getByText("+32 9 444 55 66")).toBeInTheDocument();
   });
 
@@ -240,8 +236,8 @@ describe("ChildDetailPage — Profile tab", () => {
     expect((await screen.findAllByText("Not set")).length).toBeGreaterThan(0);
   });
 
-  it("edits the pediatrician contact independently of the GP contact", async () => {
-    const child = makeChild({ gpName: "Dr. Peeters", gpPhone: "+32 9 111 22 33" });
+  it("edits the pediatrician contact", async () => {
+    const child = makeChild();
     mockGet({ "/api/children/{id}": child });
     vi.mocked(apiClient.PUT).mockResolvedValue(
       okResponse({ ...child, pediatricianName: "Dr. Claes", pediatricianPhone: "+32 9 444 55 66" }) as never,
@@ -261,8 +257,6 @@ describe("ChildDetailPage — Profile tab", () => {
       expect.objectContaining({
         params: { path: { id: "child-1" } },
         body: expect.objectContaining({
-          gpName: "Dr. Peeters",
-          gpPhone: "+32 9 111 22 33",
           pediatricianName: "Dr. Claes",
           pediatricianPhone: "+32 9 444 55 66",
         }),

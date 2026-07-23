@@ -9908,15 +9908,13 @@ export interface components {
             firstName: string;
             lastName: string;
             /** Format: date */
-            dateOfBirth: string;
+            dateOfBirth: null | string;
             gender: null | string;
             nationality: null | string;
             allergiesDescription: null | string;
             allergySeverity: null | string;
             medicalConditions: null | string;
             dietaryRestrictions: null | string;
-            gpName: null | string;
-            gpPhone: null | string;
             pediatricianName: null | string;
             pediatricianPhone: null | string;
             healthInsuranceNumber: null | string;
@@ -10187,6 +10185,7 @@ export interface components {
         };
         PublishClosureDayRequest: {
             confirmExistingAttendance: boolean;
+            notifyParents: boolean;
         };
         PublishScheduleWeekRequest: {
             /** Format: date */
@@ -10279,6 +10278,8 @@ export interface components {
             attachmentObjectPath: null | string;
             attachmentFileName: null | string;
             attachmentContentType: null | string;
+            cc: null | string[];
+            bcc: null | string[];
         };
         SendInvoicesRequest: {
             invoiceIds: string[];
@@ -10354,15 +10355,13 @@ export interface components {
             firstName: string;
             lastName: string;
             /** Format: date */
-            dateOfBirth: string;
+            dateOfBirth: null | string;
             gender: null | string;
             nationality: null | string;
             allergiesDescription: null | string;
             allergySeverity: null | string;
             medicalConditions: null | string;
             dietaryRestrictions: null | string;
-            gpName: null | string;
-            gpPhone: null | string;
             pediatricianName: null | string;
             pediatricianPhone: null | string;
             healthInsuranceNumber: null | string;
@@ -10546,9 +10545,9 @@ export interface components {
         UpsertMonthlyMenuDayRequest: {
             /** Format: date */
             date: string;
-            soup: null | string;
-            mainCourse: null | string;
-            dessert: null | string;
+            lunchMeal: null | string;
+            alternativeLunchMeal: null | string;
+            snack: null | string;
             notes: null | string;
         };
         UpsertMonthlyMenuRequest: {

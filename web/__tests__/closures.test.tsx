@@ -184,6 +184,39 @@ describe("ClosuresPage", () => {
     expect(apiClient.POST).toHaveBeenCalledTimes(1);
   });
 
+  it("creates a range of closure days from a start and end date in one submission", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
+      if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;
+      if (path === "/api/closures") return Promise.resolve(okResponse([])) as never;
+      return Promise.resolve(okResponse([])) as never;
+    });
+    vi.mocked(apiClient.POST).mockResolvedValue(okResponse(makeClosure()) as never);
+
+    renderClosuresPage();
+    await screen.findByText("No closure days for this location and year yet.");
+
+    await userEvent.click(screen.getByRole("button", { name: "Add closure" }));
+    const dialog = await screen.findByRole("dialog");
+    const dateInput = within(dialog).getByLabelText("Date");
+    await userEvent.clear(dateInput);
+    await userEvent.type(dateInput, "2026-07-13");
+    await userEvent.type(within(dialog).getByLabelText("End date (optional)"), "2026-07-15");
+    await userEvent.type(within(dialog).getByLabelText("Label"), "Zomersluiting");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(apiClient.POST).toHaveBeenCalledTimes(3));
+    expect(apiClient.POST).toHaveBeenNthCalledWith(1, "/api/closures", expect.objectContaining({
+      body: expect.objectContaining({ date: "2026-07-13", notifyParents: false }),
+    }));
+    expect(apiClient.POST).toHaveBeenNthCalledWith(2, "/api/closures", expect.objectContaining({
+      body: expect.objectContaining({ date: "2026-07-14" }),
+    }));
+    expect(apiClient.POST).toHaveBeenNthCalledWith(3, "/api/closures", expect.objectContaining({
+      body: expect.objectContaining({ date: "2026-07-15" }),
+    }));
+    expect(await screen.findByText("3 closure days created, 0 skipped.")).toBeInTheDocument();
+  });
+
   it("cancels a published closure after confirmation", async () => {
     vi.mocked(apiClient.GET).mockImplementation((path: unknown) => {
       if (path === "/api/locations") return Promise.resolve(okResponse([makeLocation()])) as never;

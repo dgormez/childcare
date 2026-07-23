@@ -9,6 +9,18 @@ import type { GroupResponse, LocationResponse } from "../../../lib/types";
 
 const ALLOWED_CONTENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // FR-003/FR-017, matches contracts/email-communications-api.md
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Comma-separated free text -> a trimmed, deduplicated list of addresses; empty entries
+ * (trailing commas, blank input) are dropped rather than treated as invalid. */
+function parseEmailList(raw: string): string[] {
+  const seen = new Set<string>();
+  for (const entry of raw.split(",")) {
+    const trimmed = entry.trim();
+    if (trimmed) seen.add(trimmed);
+  }
+  return [...seen];
+}
 
 interface Attachment {
   objectPath: string;
@@ -32,6 +44,8 @@ export default function CommunicationsPage() {
   const [groupId, setGroupId] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [cc, setCc] = useState("");
+  const [bcc, setBcc] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachmentStatus, setAttachmentStatus] = useState<"idle" | "uploading" | "error">("idle");
   const [attachmentError, setAttachmentError] = useState("");
@@ -108,6 +122,18 @@ export default function CommunicationsPage() {
 
   async function send() {
     if (!locationId || !subject.trim() || !body.trim()) return;
+
+    const ccList = parseEmailList(cc);
+    const bccList = parseEmailList(bcc);
+    if (ccList.some((address) => !EMAIL_PATTERN.test(address))) {
+      setNotice(t("ccInvalid"));
+      return;
+    }
+    if (bccList.some((address) => !EMAIL_PATTERN.test(address))) {
+      setNotice(t("bccInvalid"));
+      return;
+    }
+
     setSending(true);
     setNotice("");
     setResult(null);
@@ -121,6 +147,8 @@ export default function CommunicationsPage() {
         attachmentObjectPath: attachment?.objectPath ?? null,
         attachmentFileName: attachment?.fileName ?? null,
         attachmentContentType: attachment?.contentType ?? null,
+        cc: ccList,
+        bcc: bccList,
       },
     });
     setSending(false);
@@ -133,6 +161,8 @@ export default function CommunicationsPage() {
     setResult(sendResult.data as SendResult);
     setSubject("");
     setBody("");
+    setCc("");
+    setBcc("");
     setAttachment(null);
   }
 
@@ -202,6 +232,16 @@ export default function CommunicationsPage() {
             rows={6}
             className="w-full rounded-lg bg-surface-soft px-3 py-2 text-sm text-text placeholder:text-placeholder focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-surface-soft-dark dark:text-text-dark dark:placeholder:text-placeholder-dark"
           />
+        </div>
+
+        <div>
+          <label htmlFor="comm-cc" className="mb-1 block text-sm font-medium text-text dark:text-text-dark">{t("ccLabel")}</label>
+          <Input id="comm-cc" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="director2@example.com, ..." />
+        </div>
+        <div>
+          <label htmlFor="comm-bcc" className="mb-1 block text-sm font-medium text-text dark:text-text-dark">{t("bccLabel")}</label>
+          <Input id="comm-bcc" value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="archive@example.com, ..." />
+          <p className="mt-1 text-xs text-text-soft dark:text-text-soft-dark">{t("ccBccHint")}</p>
         </div>
 
         <div>

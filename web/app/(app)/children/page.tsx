@@ -100,7 +100,7 @@ export default function ChildrenPage() {
                     )}
                   </span>
                 </td>
-                <td className="py-2 pr-4 tabular-nums text-text-soft dark:text-text-soft-dark">{child.dateOfBirth}</td>
+                <td className="py-2 pr-4 tabular-nums text-text-soft dark:text-text-soft-dark">{child.dateOfBirth ?? "—"}</td>
                 <td className="py-2 pr-4 text-text-soft dark:text-text-soft-dark">
                   {child.deactivatedAt ? t("statusDeactivated") : t("statusActive")}
                 </td>

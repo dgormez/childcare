@@ -77,7 +77,7 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
 
-        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken, new PublishClosureDayRequest(false)));
+        var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken, new PublishClosureDayRequest(false, false)));
         Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
         return closure;
     }
@@ -100,12 +100,12 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
 
         var updatedDays = new List<UpsertMonthlyMenuDayRequest>
         {
-            new(new DateOnly(2027, 6, 1), "Erwtensoep", "Vis met rijst", "Fruit", null),
+            new(new DateOnly(2027, 6, 1), "Vis met rijst", "Pasta met groenten", "Fruit", null),
             new(new DateOnly(2027, 6, 2), null, null, null, "Geen warme maaltijd"),
         };
         var second = await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 6, updatedDays);
         Assert.Equal(2, second.Days.Count);
-        Assert.Equal("Erwtensoep", second.Days[0].Soup);
+        Assert.Equal("Vis met rijst", second.Days[0].LunchMeal);
 
         // Still only one MonthlyMenu row for this location/year/month (FR-005) — verified via the
         // GET reflecting the second write's full replacement, not an accumulation of both writes.
@@ -118,7 +118,7 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
     {
         var (client, org, location) = await SetupAsync();
         await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 7,
-            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 7, 1), "Soep", "Hoofdgerecht", "Dessert", null)]);
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 7, 1), "Hoofdgerecht", "Alternatief hoofdgerecht", "Fruit", null)]);
 
         var beforePublish = await GetMenuAsync(client, org.AccessToken, location.Id, 2027, 7);
         Assert.False(beforePublish.IsPublished);
@@ -175,7 +175,7 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
         await CreateAndPublishClosureAsync(client, org.AccessToken, location.Id, new DateOnly(2027, 9, 21));
 
         await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 9,
-            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 9, 1), "Soep", "Hoofdgerecht", "Dessert", null)]);
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 9, 1), "Hoofdgerecht", "Alternatief hoofdgerecht", "Fruit", null)]);
         await PublishAsync(client, org.AccessToken, location.Id, 2027, 9);
 
         var entries = await GetParentMenuAsync(client, parentToken, 2027, 9);
@@ -224,7 +224,7 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
         var (unlinkedChild, _, _) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
         await CreateAndActivateContractAsync(client, org.AccessToken, unlinkedChild.Id, location.Id, DayOfWeek.Monday);
         await UpsertMenuAsync(client, org.AccessToken, location.Id, 2027, 12,
-            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 12, 1), "Soep", "Hoofdgerecht", "Dessert", null)]);
+            [new UpsertMonthlyMenuDayRequest(new DateOnly(2027, 12, 1), "Hoofdgerecht", "Alternatief hoofdgerecht", "Fruit", null)]);
         await PublishAsync(client, org.AccessToken, location.Id, 2027, 12);
 
         var (_, _, otherParentToken) = await InviteAndLoginParentAsync(client, factory, org.Organisation.Slug, org.AccessToken);
@@ -261,6 +261,6 @@ public class MonthlyMenuTests(OrganisationOnboardingWebAppFactory factory)
         var afterRepublish = await GetParentMenuAsync(client, parentToken, 2028, 1);
         var entry = Assert.Single(afterRepublish);
         Assert.True(entry.IsPublished);
-        Assert.Equal("Tomatensoep", Assert.Single(entry.Days).Soup);
+        Assert.Equal("Tomatensoep", Assert.Single(entry.Days).LunchMeal);
     }
 }

@@ -429,7 +429,9 @@ export interface ChildResponse {
   id: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
+  // Nullable: a child can be registered before birth, or before the exact date is known —
+  // onboarding only requires a name.
+  dateOfBirth: string | null;
   photoDownloadUrl: string | null;
   gender: string | null;
   nationality: string | null;
@@ -437,8 +439,6 @@ export interface ChildResponse {
   allergySeverity: string | null;
   medicalConditions: string | null;
   dietaryRestrictions: string | null;
-  gpName: string | null;
-  gpPhone: string | null;
   pediatricianName: string | null;
   pediatricianPhone: string | null;
   healthInsuranceNumber: string | null;
@@ -739,11 +739,11 @@ export interface MealPreferenceResponse {
 
 // Feature 013e — contracts/monthly-menu-api.md.
 export interface MonthlyMenuDayEntry {
-  date:       string;
-  soup:       string | null;
-  mainCourse: string | null;
-  dessert:    string | null;
-  notes:      string | null;
+  date:                 string;
+  lunchMeal:            string | null;
+  alternativeLunchMeal: string | null;
+  snack:                string | null;
+  notes:                string | null;
 }
 
 export interface MonthlyMenuResponse {

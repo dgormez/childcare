@@ -27,7 +27,7 @@ function draftMenu(): MonthlyMenuResponse {
     isPublished: false,
     publishedAt: null,
     variant: null,
-    days: [{ date: "2027-06-01", soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: null }],
+    days: [{ date: "2027-06-01", lunchMeal: "Tomatensoep", alternativeLunchMeal: "Kip met puree", snack: "Yoghurt", notes: null }],
   };
 }
 
@@ -36,7 +36,7 @@ describe("MonthlyMenuDayGrid", () => {
     renderGrid(draftMenu());
 
     // June 2027 has 30 days.
-    expect(screen.getAllByLabelText(messages.menu.columnSoup)).toHaveLength(30);
+    expect(screen.getAllByLabelText(messages.menu.columnLunchMeal)).toHaveLength(30);
     expect(screen.getByDisplayValue("Tomatensoep")).toBeTruthy();
     expect(screen.getByDisplayValue("Kip met puree")).toBeTruthy();
   });
@@ -45,17 +45,17 @@ describe("MonthlyMenuDayGrid", () => {
     const { onSave } = renderGrid(draftMenu());
     const user = userEvent.setup();
 
-    const dessertInputs = screen.getAllByLabelText(messages.menu.columnDessert);
-    await user.clear(dessertInputs[0]);
-    await user.type(dessertInputs[0], "Fruit");
+    const snackInputs = screen.getAllByLabelText(messages.menu.columnSnack);
+    await user.clear(snackInputs[0]);
+    await user.type(snackInputs[0], "Fruit");
 
     await user.click(screen.getByText(messages.menu.saveDraft));
 
     expect(onSave).toHaveBeenCalledTimes(1);
     const days = onSave.mock.calls[0][0];
     expect(days).toHaveLength(30);
-    expect(days[0]).toEqual({ date: "2027-06-01", soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Fruit", notes: null });
-    expect(days[1]).toEqual({ date: "2027-06-02", soup: null, mainCourse: null, dessert: null, notes: null });
+    expect(days[0]).toEqual({ date: "2027-06-01", lunchMeal: "Tomatensoep", alternativeLunchMeal: "Kip met puree", snack: "Fruit", notes: null });
+    expect(days[1]).toEqual({ date: "2027-06-02", lunchMeal: null, alternativeLunchMeal: null, snack: null, notes: null });
   });
 
   it("shows Publish for a draft menu and calls onPublish", async () => {

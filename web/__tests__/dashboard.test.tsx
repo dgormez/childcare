@@ -6,7 +6,6 @@ import messages from "../i18n/locales/en.json";
 import DashboardPage from "../app/(app)/dashboard/page";
 import { apiClient } from "../lib/apiClient";
 import type {
-  VaccinationsDueSoonResponse,
   OccupancySummaryResponse,
   BkrRatioOverviewResponse,
   BkrBreachHistoryResponse,
@@ -52,7 +51,6 @@ function mockAllEndpoints(overrides: Partial<Record<string, unknown>> = {}) {
     const key = String(path);
     if (key in overrides) return Promise.resolve(okResponse(overrides[key])) as never;
     if (key === "/api/locations") return Promise.resolve(okResponse([])) as never;
-    if (key === "/api/vaccine-records/due-soon") return Promise.resolve(okResponse([])) as never;
     if (key === "/api/staff/contracts-expiring") return Promise.resolve(okResponse([])) as never;
     if (key === "/api/reports/occupancy") return Promise.resolve(okResponse(emptyOccupancy)) as never;
     if (key === "/api/reports/bkr") return Promise.resolve(okResponse(emptyBkr)) as never;
@@ -67,29 +65,6 @@ function mockAllEndpoints(overrides: Partial<Record<string, unknown>> = {}) {
 beforeEach(() => {
   vi.mocked(apiClient.GET).mockReset();
   push.mockReset();
-});
-
-describe("DashboardPage — due-soon block", () => {
-  it("renders overdue and due-soon rows sorted as returned by the backend", async () => {
-    const items: VaccinationsDueSoonResponse[] = [
-      { childId: "child-1", childName: "Emma Peeters", locationId: "loc-1", vaccineName: "Hep B", nextDueDate: "2026-07-05", isOverdue: true },
-      { childId: "child-2", childName: "Louis Janssens", locationId: "loc-1", vaccineName: "MMR", nextDueDate: "2026-07-20", isOverdue: false },
-    ];
-    mockAllEndpoints({ "/api/vaccine-records/due-soon": items });
-
-    renderComponent(<DashboardPage />);
-
-    expect(await screen.findByText("Emma Peeters — Hep B")).toBeInTheDocument();
-    expect(screen.getByText("Louis Janssens — MMR")).toBeInTheDocument();
-    expect(screen.getByText("Overdue")).toBeInTheDocument();
-    expect(screen.getByText("Due soon")).toBeInTheDocument();
-  });
-
-  it("shows a calm empty state when nothing is due", async () => {
-    mockAllEndpoints();
-    renderComponent(<DashboardPage />);
-    expect(await screen.findByText("No vaccinations due or overdue.")).toBeInTheDocument();
-  });
 });
 
 describe("DashboardPage — occupancy section", () => {

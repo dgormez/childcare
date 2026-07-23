@@ -28,7 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-background dark:bg-background-dark print:block print:h-auto">
+    <div className="flex h-screen overflow-hidden bg-background dark:bg-background-dark print:block print:h-auto print:overflow-visible">
       {/* print:hidden — feature 013d's Maaltijdenlijst page is this app's first print-oriented
           screen; navigation chrome has no place on a printed kitchen sheet (contracts/
           meal-list-api.md's "no PDF" decision relies on the browser's own print output). */}

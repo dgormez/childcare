@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Without this, the browser defaults every native form control — most visibly a date input's
+ * calendar popup — to its light UI regardless of prefers-color-scheme, since color-scheme is an
+ * opt-in the page never otherwise makes. This is what made the closures date picker (and any
+ * other <input type="date">) look white even when the rest of the app was in dark mode. */
+:root {
+  color-scheme: light dark;
+}
+
 /*
  * Chrome/Safari force their own background on autofilled or browser-remembered inputs,
  * overriding our dark surface-soft fill with a pale yellow/blue — the long-transition trick

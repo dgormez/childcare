@@ -1,13 +1,15 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Plus } from "lucide-react";
 import { apiClient } from "../../../lib/apiClient";
 import { StaffTable, toLocationsById } from "../../../components/StaffTable";
+import { CreateStaffDialog, type CreateStaffValues } from "../../../components/CreateStaffDialog";
 import { PinResetDialog } from "../../../components/PinResetDialog";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
+import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import type { StaffResponse, LocationResponse } from "../../../lib/types";
 
@@ -22,6 +24,9 @@ export default function StaffPage() {
   const [pinTarget, setPinTarget] = useState<StaffResponse | null>(null);
   const [toggleTarget, setToggleTarget] = useState<StaffResponse | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createSaving, setCreateSaving] = useState(false);
+  const [createSaveError, setCreateSaveError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -65,6 +70,36 @@ export default function StaffPage() {
     return { ok: false, errorKey };
   };
 
+  async function submitNewStaff(values: CreateStaffValues) {
+    setCreateSaving(true);
+    setCreateSaveError(null);
+    const result = await apiClient.POST("/api/staff", {
+      body: {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phone: values.phone,
+        qualificationLevel: values.qualificationLevel,
+        role: values.role,
+        existingTenantUserId: null,
+      },
+    });
+    if (!result.response.ok) {
+      setCreateSaving(false);
+      setCreateSaveError(t("create.saveError"));
+      return;
+    }
+    const created = result.data as unknown as StaffResponse;
+    for (const locationId of values.locationIds) {
+      await apiClient.PUT("/api/staff/{id}/locations/{locationId}", {
+        params: { path: { id: created.id, locationId } },
+      });
+    }
+    setCreateSaving(false);
+    setCreateDialogOpen(false);
+    await load();
+  }
+
   const handleToggleActive = async () => {
     if (!toggleTarget) return;
     setToggling(true);
@@ -80,15 +115,21 @@ export default function StaffPage() {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-text dark:text-text-dark">{t("title")}</h1>
-        <div className="relative w-64">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-soft dark:text-text-soft-dark" strokeWidth={2} />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("searchPlaceholder")}
-            className="pl-8"
-            aria-label={t("searchPlaceholder")}
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative w-64">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-soft dark:text-text-soft-dark" strokeWidth={2} />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="pl-8"
+              aria-label={t("searchPlaceholder")}
+            />
+          </div>
+          <Button onClick={() => { setCreateSaveError(null); setCreateDialogOpen(true); }}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            {t("create.addButton")}
+          </Button>
         </div>
       </div>
 
@@ -112,6 +153,15 @@ export default function StaffPage() {
           onToggleActive={setToggleTarget}
         />
       )}
+
+      <CreateStaffDialog
+        open={createDialogOpen}
+        locations={locations}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={submitNewStaff}
+        saving={createSaving}
+        error={createSaveError}
+      />
 
       {pinTarget && (
         <PinResetDialog

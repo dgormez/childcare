@@ -64,7 +64,7 @@ public static class ChildrenEndpoints
                 ParseEnum<Gender>(req.Gender), req.Nationality,
                 req.AllergiesDescription, ParseEnum<AllergySeverity>(req.AllergySeverity),
                 req.MedicalConditions, req.DietaryRestrictions,
-                req.GpName, req.GpPhone, req.PediatricianName, req.PediatricianPhone,
+                req.PediatricianName, req.PediatricianPhone,
                 req.HealthInsuranceNumber, req.Kindcode));
             return MapResult(result, onSuccess: r => Results.Created($"/api/children/{r.Id}", r));
         });
@@ -76,7 +76,7 @@ public static class ChildrenEndpoints
                 ParseEnum<Gender>(req.Gender), req.Nationality,
                 req.AllergiesDescription, ParseEnum<AllergySeverity>(req.AllergySeverity),
                 req.MedicalConditions, req.DietaryRestrictions,
-                req.GpName, req.GpPhone, req.PediatricianName, req.PediatricianPhone,
+                req.PediatricianName, req.PediatricianPhone,
                 req.HealthInsuranceNumber, req.Kindcode));
             return MapResult(result, onSuccess: Results.Ok);
         });
@@ -181,6 +181,10 @@ public static class ChildrenEndpoints
 
             ChildFailure.HasActiveDependents => Results.Json(
                 new { errorKey = "errors.child.has_active_dependents" },
+                statusCode: StatusCodes.Status409Conflict),
+
+            ChildFailure.NrnAlreadyInUse => Results.Json(
+                new { errorKey = "errors.child.nrn_already_in_use" },
                 statusCode: StatusCodes.Status409Conflict),
 
             _ => throw new InvalidOperationException($"Unhandled {nameof(ChildFailure)}: {result.Failure}"),

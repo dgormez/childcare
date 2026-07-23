@@ -18,8 +18,6 @@ const baseChild: ChildResponse = {
   allergySeverity: null,
   medicalConditions: null,
   dietaryRestrictions: null,
-  gpName: null,
-  gpPhone: null,
   pediatricianName: null,
   pediatricianPhone: null,
   healthInsuranceNumber: null,
@@ -98,8 +96,8 @@ describe("ChildIdentityVerificationSection", () => {
   });
 
   it("shows only the masked NRN after a successful save, never the raw value", async () => {
-    const onSetNrn = vi.fn().mockResolvedValue(true);
-    const withNrn = { ...baseChild, nrnLast4: "3371" };
+    const onSetNrn = vi.fn().mockResolvedValue(null);
+    const withNrn = { ...baseChild, nrnLast4: "3328" };
     const { rerender } = render(
       <NextIntlClientProvider locale="en" messages={messages}>
         <ChildIdentityVerificationSection child={baseChild} onVerify={vi.fn()} onSetNrn={onSetNrn} />
@@ -107,10 +105,10 @@ describe("ChildIdentityVerificationSection", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Add" }));
-    await userEvent.type(screen.getByPlaceholderText("85.07.30-033.71"), "85073003371");
+    await userEvent.type(screen.getByPlaceholderText("85.07.30-033.28"), "85073003328");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(onSetNrn).toHaveBeenCalledWith("85073003371"));
+    await waitFor(() => expect(onSetNrn).toHaveBeenCalledWith("85073003328"));
 
     rerender(
       <NextIntlClientProvider locale="en" messages={messages}>
@@ -118,8 +116,8 @@ describe("ChildIdentityVerificationSection", () => {
       </NextIntlClientProvider>,
     );
 
-    expect(screen.getByText("•••••••3371")).toBeInTheDocument();
-    expect(screen.queryByText("85073003371")).not.toBeInTheDocument();
+    expect(screen.getByText("•••••••3328")).toBeInTheDocument();
+    expect(screen.queryByText("85073003328")).not.toBeInTheDocument();
   });
 
   it("rejects a non-11-digit NRN client-side, without calling onSetNrn", async () => {
@@ -127,10 +125,22 @@ describe("ChildIdentityVerificationSection", () => {
     renderSection(baseChild, vi.fn(), onSetNrn);
 
     await userEvent.click(screen.getByRole("button", { name: "Add" }));
-    await userEvent.type(screen.getByPlaceholderText("85.07.30-033.71"), "12345");
+    await userEvent.type(screen.getByPlaceholderText("85.07.30-033.28"), "12345");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(await screen.findByText("Enter a valid National Register Number (11 digits).")).toBeInTheDocument();
+    expect(onSetNrn).not.toHaveBeenCalled();
+  });
+
+  it("rejects an 11-digit NRN with an invalid checksum client-side, without calling onSetNrn", async () => {
+    const onSetNrn = vi.fn();
+    renderSection(baseChild, vi.fn(), onSetNrn);
+
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+    await userEvent.type(screen.getByPlaceholderText("85.07.30-033.28"), "85073003371");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("That National Register Number isn't valid — double-check the digits.")).toBeInTheDocument();
     expect(onSetNrn).not.toHaveBeenCalled();
   });
 });

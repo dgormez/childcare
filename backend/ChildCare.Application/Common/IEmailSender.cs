@@ -40,6 +40,7 @@ public interface IEmailSender
     Task SendBulkEmailAsync(
         string toEmail, string locale, string subject, string body,
         (byte[] Bytes, string FileName, string ContentType)? attachment,
+        IReadOnlyList<string>? cc = null, IReadOnlyList<string>? bcc = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

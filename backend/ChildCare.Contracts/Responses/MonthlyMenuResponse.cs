@@ -5,9 +5,9 @@ namespace ChildCare.Contracts.Responses;
 
 public record MonthlyMenuDayEntry(
     DateOnly Date,
-    string? Soup,
-    string? MainCourse,
-    string? Dessert,
+    string? LunchMeal,
+    string? AlternativeLunchMeal,
+    string? Snack,
     string? Notes);
 
 // Director authoring read — returns exists:false shell when no menu row exists yet so the web

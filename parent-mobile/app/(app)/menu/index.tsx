@@ -217,7 +217,7 @@ function MenuDayRow({ date, day, isClosure }: { date: string; day: MonthlyMenuDa
       </View>
       <View style={{ flex: 1 }}>
         <Text className="text-text dark:text-text-dark text-sm">
-          {[day?.soup, day?.mainCourse, day?.dessert].filter(Boolean).join(" · ") || "—"}
+          {[day?.lunchMeal, day?.alternativeLunchMeal, day?.snack].filter(Boolean).join(" · ") || "—"}
         </Text>
         {day?.notes && <Text className="text-text-soft dark:text-text-soft-dark text-xs mt-1">{day.notes}</Text>}
       </View>

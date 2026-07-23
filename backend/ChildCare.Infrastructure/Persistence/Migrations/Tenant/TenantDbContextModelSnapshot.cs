@@ -253,7 +253,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("DateOfBirth")
+                    b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
                     b.Property<DateTime?>("DeactivatedAt")
@@ -284,14 +284,6 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<string>("Gender")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<string>("GpName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("GpPhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
 
                     b.Property<string>("HealthInsuranceNumber")
                         .HasMaxLength(50)
@@ -332,6 +324,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("NrnHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("NrnLast4")
                         .HasMaxLength(4)
                         .HasColumnType("character varying(4)");
@@ -354,6 +350,10 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.HasIndex("DeactivatedAt");
+
+                    b.HasIndex("NrnHash")
+                        .IsUnique()
+                        .HasFilter("\"NrnHash\" IS NOT NULL");
 
                     b.ToTable("children", "tenant_template");
                 });
@@ -1819,11 +1819,11 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Dessert")
+                    b.Property<string>("AlternativeLunchMeal")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("MainCourse")
+                    b.Property<string>("LunchMeal")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -1837,7 +1837,7 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Soup")
+                    b.Property<string>("Snack")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 

@@ -43,5 +43,5 @@ public static class MonthlyMenuMapper
         Days: []);
 
     public static MonthlyMenuDayEntry ToDayEntry(MonthlyMenuDay day) =>
-        new(day.MenuDate, day.Soup, day.MainCourse, day.Dessert, day.Notes);
+        new(day.MenuDate, day.LunchMeal, day.AlternativeLunchMeal, day.Snack, day.Notes);
 }

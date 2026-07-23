@@ -82,7 +82,7 @@ public class VerifyContactIdentityTests(OrganisationOnboardingWebAppFactory fact
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken, string firstName = "Emma") =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     private static async Task<ContactResponse> CreateContactAsync(HttpClient client, string accessToken, string firstName = "Anna") =>

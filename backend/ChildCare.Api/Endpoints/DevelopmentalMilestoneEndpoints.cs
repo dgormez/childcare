@@ -56,9 +56,11 @@ public static class DevelopmentalMilestoneEndpoints
         portfolioReadGroup.MapGet("/", async (Guid childId, IMediator mediator) =>
         {
             var result = await mediator.Send(new GetChildMilestonePortfolioQuery(childId));
-            return result.ChildFound
-                ? Results.Ok(result.Response)
-                : Results.Json(new { errorKey = "errors.children.not_found" }, statusCode: StatusCodes.Status404NotFound);
+            if (!result.ChildFound)
+                return Results.Json(new { errorKey = "errors.children.not_found" }, statusCode: StatusCodes.Status404NotFound);
+            if (result.DateOfBirthMissing)
+                return Results.Json(new { errorKey = "errors.children.date_of_birth_required" }, statusCode: StatusCodes.Status422UnprocessableEntity);
+            return Results.Ok(result.Response);
         });
 
         // PDF export stays director-only (FR-008 pairs it with the parent variant below, not
@@ -84,9 +86,11 @@ public static class DevelopmentalMilestoneEndpoints
         {
             var tenantUserId = TenantUserIdOf(ctx);
             var result = await mediator.Send(new GetParentMilestonePortfolioQuery(tenantUserId, childId));
-            return result.Authorized
-                ? Results.Ok(result.Response)
-                : Results.Json(new { errorKey = "errors.milestones.forbidden" }, statusCode: StatusCodes.Status403Forbidden);
+            if (!result.Authorized)
+                return Results.Json(new { errorKey = "errors.milestones.forbidden" }, statusCode: StatusCodes.Status403Forbidden);
+            if (result.DateOfBirthMissing)
+                return Results.Json(new { errorKey = "errors.children.date_of_birth_required" }, statusCode: StatusCodes.Status422UnprocessableEntity);
+            return Results.Ok(result.Response);
         });
 
         parent.MapGet("/pdf", async (Guid childId, string? locale, HttpContext ctx, IMediator mediator) =>

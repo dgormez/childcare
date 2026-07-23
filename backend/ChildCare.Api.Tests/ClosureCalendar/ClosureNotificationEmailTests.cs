@@ -18,8 +18,8 @@ public class ClosureNotificationEmailTests(OrganisationOnboardingWebAppFactory f
 {
     private static readonly DateOnly Monday = new(2027, 6, 7);
 
-    private static Task<HttpResponseMessage> PublishClosureAsync(HttpClient client, string accessToken, Guid closureId, bool confirm = false) =>
-        client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closureId}/publish", accessToken, new PublishClosureDayRequest(confirm)));
+    private static Task<HttpResponseMessage> PublishClosureAsync(HttpClient client, string accessToken, Guid closureId, bool confirm = false, bool notifyParents = true) =>
+        client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closureId}/publish", accessToken, new PublishClosureDayRequest(confirm, notifyParents)));
 
     /// <summary>A contact with an email on file, linked as Mother/Father/Guardian to a child
     /// with an active Monday contract — resolvable by ClosureParentRecipientResolver. Never

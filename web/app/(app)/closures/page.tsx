@@ -27,6 +27,21 @@ function todayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Inclusive list of ISO dates from `start` to `end` — lets a director create a whole block of
+ * closure days (e.g. a summer closure) in one dialog submission instead of one day at a time. */
+function enumerateDates(start: string, end: string): string[] {
+  // UTC throughout (parse and re-format) — mixing a local-time constructor with a UTC-based
+  // toISOString() would silently shift every date by a day in any timezone behind UTC.
+  const dates: string[] = [];
+  const cursor = new Date(`${start}T00:00:00Z`);
+  const last = new Date(`${end}T00:00:00Z`);
+  while (cursor <= last) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return dates;
+}
+
 export default function ClosuresPage() {
   const t = useTranslations("closures");
   const [locations, setLocations] = useState<LocationResponse[]>([]);
@@ -40,6 +55,7 @@ export default function ClosuresPage() {
   const [publishTarget, setPublishTarget] = useState<ClosureDayResponse | null>(null);
   const [cancelTarget, setCancelTarget] = useState<ClosureDayResponse | null>(null);
   const [confirmExistingAttendance, setConfirmExistingAttendance] = useState(false);
+  const [notifyOnPublish, setNotifyOnPublish] = useState(true);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -71,43 +87,64 @@ export default function ClosuresPage() {
     [closures],
   );
 
-  async function saveClosure(values: { date: string; label: string; closureType: ClosureType; notifyParents: boolean }) {
+  async function saveClosure(values: { date: string; endDate: string | null; label: string; closureType: ClosureType }) {
     if (!locationId) return;
     setSaving(true);
-    const result = editing
-      ? await (apiClient.PATCH as any)("/api/closures/{id}", {
-          params: { path: { id: editing.id } },
-          body: { label: values.label, closureType: values.closureType, notifyParents: values.notifyParents },
-        })
-      : await (apiClient.POST as any)("/api/closures", {
-          body: {
-            locationId,
-            date: values.date,
-            label: values.label,
-            closureType: values.closureType,
-            notifyParents: values.notifyParents,
-          },
-        });
-    setSaving(false);
-    if (!result.response.ok) {
-      const errorKey = ((result.error ?? {}) as ApiErrorBody).errorKey ?? "";
-      setNotice(errorKey === "errors.closures.duplicate_date"
-        ? t("duplicateDate")
-        : errorKey === "errors.closures.past_date"
-          ? t("pastDate")
-          : t("genericError"));
+
+    if (editing) {
+      const result = await (apiClient.PATCH as any)("/api/closures/{id}", {
+        params: { path: { id: editing.id } },
+        body: { label: values.label, closureType: values.closureType, notifyParents: editing.notifyParents },
+      });
+      setSaving(false);
+      if (!result.response.ok) {
+        const errorKey = ((result.error ?? {}) as ApiErrorBody).errorKey ?? "";
+        setNotice(errorKey === "errors.closures.past_date" ? t("pastDate") : t("genericError"));
+        return;
+      }
+      setDialogOpen(false);
+      setEditing(null);
+      setNotice("");
+      await load();
       return;
     }
+
+    const dates = values.endDate ? enumerateDates(values.date, values.endDate) : [values.date];
+    let created = 0;
+    let duplicateCount = 0;
+    let otherFailureCount = 0;
+    for (const date of dates) {
+      // Sequential, not Promise.all: each POST checks for a duplicate date against what's
+      // already been created in this same loop, not just what existed before it started.
+      const result = await (apiClient.POST as any)("/api/closures", {
+        body: { locationId, date, label: values.label, closureType: values.closureType, notifyParents: false },
+      });
+      if (result.response.ok) {
+        created += 1;
+      } else if (((result.error ?? {}) as ApiErrorBody).errorKey === "errors.closures.duplicate_date") {
+        duplicateCount += 1;
+      } else {
+        otherFailureCount += 1;
+      }
+    }
+    setSaving(false);
+
+    if (created === 0 && dates.length === 1) {
+      setNotice(otherFailureCount > 0 ? t("genericError") : t("duplicateDate"));
+      return;
+    }
+    setNotice(dates.length === 1
+      ? ""
+      : t("rangeCreateSummary", { created, skipped: duplicateCount + otherFailureCount }));
     setDialogOpen(false);
     setEditing(null);
-    setNotice("");
     await load();
   }
 
-  async function publishClosure(target: ClosureDayResponse, confirm: boolean) {
+  async function publishClosure(target: ClosureDayResponse, confirm: boolean, notifyParents: boolean) {
     const result = await (apiClient.POST as any)("/api/closures/{id}/publish", {
       params: { path: { id: target.id } },
-      body: { confirmExistingAttendance: confirm },
+      body: { confirmExistingAttendance: confirm, notifyParents },
     });
     const errorKey = ((result.error ?? {}) as ApiErrorBody).errorKey ?? "";
     if (result.response.status === 409 && errorKey === "errors.closures.attendance_confirmation_required") {
@@ -195,7 +232,7 @@ export default function ClosuresPage() {
           <ClosureList
             closures={sortedClosures}
             onEdit={(closure) => { setEditing(closure); setDialogOpen(true); }}
-            onPublish={(closure) => { setPublishTarget(closure); setConfirmExistingAttendance(false); }}
+            onPublish={(closure) => { setPublishTarget(closure); setConfirmExistingAttendance(false); setNotifyOnPublish(true); }}
             onCancel={setCancelTarget}
           />
         </div>
@@ -217,8 +254,18 @@ export default function ClosuresPage() {
         description={confirmExistingAttendance ? t("publishAttendanceDescription") : t("publishDescription")}
         confirmLabel={confirmExistingAttendance ? t("publishConfirmAttendance") : t("publish")}
         cancelLabel={t("dismiss")}
-        onConfirm={() => publishTarget && publishClosure(publishTarget, confirmExistingAttendance)}
-      />
+        onConfirm={() => publishTarget && publishClosure(publishTarget, confirmExistingAttendance, notifyOnPublish)}
+      >
+        <label className="flex items-center gap-2 text-sm font-medium text-text dark:text-text-dark">
+          <input
+            type="checkbox"
+            checked={notifyOnPublish}
+            onChange={(e) => setNotifyOnPublish(e.target.checked)}
+            className="h-4 w-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-primary"
+          />
+          {t("notifyParents")}
+        </label>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={cancelTarget !== null}

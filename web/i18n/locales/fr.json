@@ -157,6 +157,26 @@
           "other": "Autre"
         }
       }
+    },
+    "create": {
+      "addButton": "Ajouter un membre du personnel",
+      "title": "Nouveau membre du personnel",
+      "firstNameLabel": "Prénom",
+      "lastNameLabel": "Nom",
+      "emailLabel": "E-mail",
+      "phoneLabel": "Téléphone",
+      "roleLabel": "Rôle",
+      "qualificationLabel": "Qualification",
+      "qualificationNone": "Non défini",
+      "qualification": {
+        "QualifiedCaregiver": "Puéricultrice qualifiée",
+        "Auxiliary": "Auxiliaire",
+        "StudentVolunteer": "Stagiaire/bénévole"
+      },
+      "locationsLabel": "Lieux",
+      "cancel": "Annuler",
+      "createButton": "Créer",
+      "saveError": "Impossible de créer ce membre du personnel. Veuillez réessayer."
     }
   },
   "devices": {
@@ -218,7 +238,10 @@
     "addTitle": "Ajouter une fermeture",
     "editTitle": "Modifier la fermeture",
     "dialogDescription": "Les jours de fermeture sont propres à chaque site et peuvent être préparés avant publication.",
+    "dialogDescriptionRange": "Les jours de fermeture sont propres à chaque lieu et peuvent être enregistrés en brouillon avant publication. Définissez une date de fin pour créer toute une période en une seule fois.",
     "dateLabel": "Date",
+    "endDateLabel": "Date de fin (optionnel)",
+    "endDateInvalid": "La date de fin doit être postérieure ou égale à la date de début.",
     "labelLabel": "Libellé",
     "typeLabel": "Type",
     "notifyParents": "Notifier les parents lors de la publication",
@@ -240,6 +263,7 @@
     "loadError": "Impossible de charger les jours de fermeture. Veuillez réessayer.",
     "retry": "Réessayer",
     "genericError": "Impossible d'enregistrer cette fermeture. Veuillez réessayer.",
+    "rangeCreateSummary": "{created} jours de fermeture créés, {skipped} ignorés.",
     "duplicateDate": "Ce site a déjà une fermeture à cette date.",
     "pastDate": "Les fermetures ne peuvent être créées que pour aujourd'hui ou une date future.",
     "attendanceConfirmationRequired": "Des enfants sont déjà enregistrés présents à cette date.",
@@ -515,6 +539,7 @@
     "title": "Chronologie du groupe",
     "locationLabel": "Emplacement",
     "groupLabel": "Groupe",
+    "noGroupsOption": "Aucun groupe pour ce lieu pour l'instant",
     "dateLabel": "Date",
     "capacityLabel": "Capacité",
     "saveCapacity": "Enregistrer",
@@ -542,6 +567,11 @@
   },
   "locations": {
     "title": "Sites",
+    "addButton": "Ajouter un lieu",
+    "createTitle": "Nouveau lieu",
+    "createButton": "Créer",
+    "cancel": "Annuler",
+    "createError": "Impossible de créer ce lieu. Veuillez réessayer.",
     "columnName": "Nom",
     "columnAddress": "Adresse",
     "columnCapacity": "Capacité",
@@ -940,13 +970,11 @@
       "lastNameLabel": "Nom",
       "lastNameRequired": "Le nom est requis.",
       "dateOfBirthLabel": "Date de naissance",
-      "dateOfBirthRequired": "La date de naissance est requise.",
       "genderLabel": "Genre",
       "genderNone": "Non renseigné",
       "gender": {
         "male": "Masculin",
-        "female": "Féminin",
-        "other": "Autre"
+        "female": "Féminin"
       },
       "nationalityLabel": "Nationalité",
       "medicalSectionTitle": "Informations médicales",
@@ -961,8 +989,6 @@
       "medicalConditionsLabel": "Conditions médicales",
       "dietaryRestrictionsLabel": "Restrictions alimentaires",
       "contactsSectionTitle": "Contacts médicaux",
-      "gpNameLabel": "Nom du médecin traitant",
-      "gpPhoneLabel": "Téléphone du médecin traitant",
       "pediatricianNameLabel": "Nom du pédiatre",
       "pediatricianPhoneLabel": "Téléphone du pédiatre",
       "healthInsuranceNumberLabel": "Numéro d'assurance maladie",
@@ -1074,7 +1100,8 @@
         "achieved": "Atteint",
         "emerging": "En émergence",
         "not_yet": "Pas encore"
-      }
+      },
+      "dateOfBirthRequired": "Ajoutez une date de naissance au profil de cet enfant pour suivre les étapes de développement."
     },
     "contacts": {
       "emptyState": "Aucun contact lié pour le moment.",
@@ -1178,8 +1205,10 @@
       "nrnAddButton": "Ajouter",
       "nrnReplaceButton": "Remplacer",
       "nrnSaveButton": "Enregistrer",
-      "nrnPlaceholder": "85.07.30-033.71",
-      "nrnInvalidFormat": "Veuillez saisir un numéro de registre national valide (11 chiffres)."
+      "nrnPlaceholder": "85.07.30-033.28",
+      "nrnInvalidFormat": "Veuillez saisir un numéro de registre national valide (11 chiffres).",
+      "nrnInvalidChecksum": "Ce numéro de registre national n'est pas valide — vérifiez les chiffres.",
+      "nrnAlreadyInUse": "Ce numéro de registre national est déjà lié à un autre enfant."
     },
     "badgeUnverified": "Non vérifié"
   },
@@ -1335,9 +1364,9 @@
     "publish": "Publier",
     "unpublish": "Dépublier",
     "columnDate": "Date",
-    "columnSoup": "Soupe",
-    "columnMainCourse": "Plat principal",
-    "columnDessert": "Dessert",
+    "columnLunchMeal": "Repas de midi",
+    "columnAlternativeLunchMeal": "Repas de midi alternatif",
+    "columnSnack": "Collation",
     "columnNotes": "Notes",
     "csvImport": {
       "trigger": "Importer un CSV",
@@ -1432,6 +1461,11 @@
     "groupAllOption": "Tout le site",
     "subjectLabel": "Sujet",
     "bodyLabel": "Message",
+    "ccLabel": "Cc (optionnel)",
+    "bccLabel": "Cci (optionnel)",
+    "ccBccHint": "Adresses e-mail séparées par des virgules, appliquées à chaque destinataire.",
+    "ccInvalid": "Saisissez des adresses e-mail valides, séparées par des virgules.",
+    "bccInvalid": "Saisissez des adresses e-mail valides, séparées par des virgules.",
     "attachmentLabel": "Pièce jointe (facultatif)",
     "attachmentUpload": "Ajouter une pièce jointe",
     "attachmentUploading": "Téléversement…",

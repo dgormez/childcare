@@ -157,6 +157,26 @@
           "other": "Overig"
         }
       }
+    },
+    "create": {
+      "addButton": "Personeelslid toevoegen",
+      "title": "Nieuw personeelslid",
+      "firstNameLabel": "Voornaam",
+      "lastNameLabel": "Achternaam",
+      "emailLabel": "E-mail",
+      "phoneLabel": "Telefoon",
+      "roleLabel": "Rol",
+      "qualificationLabel": "Kwalificatie",
+      "qualificationNone": "Niet ingesteld",
+      "qualification": {
+        "QualifiedCaregiver": "Gekwalificeerde begeleider",
+        "Auxiliary": "Hulpbegeleider",
+        "StudentVolunteer": "Stagiair(e)/vrijwilliger"
+      },
+      "locationsLabel": "Locaties",
+      "cancel": "Annuleren",
+      "createButton": "Aanmaken",
+      "saveError": "Kon dit personeelslid niet aanmaken. Probeer opnieuw."
     }
   },
   "devices": {
@@ -218,7 +238,10 @@
     "addTitle": "Sluitingsdag toevoegen",
     "editTitle": "Sluitingsdag bewerken",
     "dialogDescription": "Sluitingsdagen zijn per locatie en kunnen als concept worden voorbereid voor publicatie.",
+    "dialogDescriptionRange": "Sluitingsdagen zijn locatiegebonden en kunnen als klad worden opgeslagen voor publicatie. Stel een einddatum in om een hele reeks dagen in één keer aan te maken.",
     "dateLabel": "Datum",
+    "endDateLabel": "Einddatum (optioneel)",
+    "endDateInvalid": "Einddatum moet op of na de startdatum liggen.",
     "labelLabel": "Label",
     "typeLabel": "Type",
     "notifyParents": "Ouders verwittigen bij publicatie",
@@ -240,6 +263,7 @@
     "loadError": "Sluitingsdagen konden niet worden geladen. Probeer het opnieuw.",
     "retry": "Opnieuw proberen",
     "genericError": "Deze sluitingsdag kon niet worden opgeslagen. Probeer het opnieuw.",
+    "rangeCreateSummary": "{created} sluitingsdagen aangemaakt, {skipped} overgeslagen.",
     "duplicateDate": "Deze locatie heeft al een sluitingsdag op die datum.",
     "pastDate": "Sluitingsdagen kunnen alleen voor vandaag of een toekomstige datum worden aangemaakt.",
     "attendanceConfirmationRequired": "Er zijn al kinderen ingecheckt voor deze datum.",
@@ -515,6 +539,7 @@
     "title": "Groepstijdlijn",
     "locationLabel": "Locatie",
     "groupLabel": "Groep",
+    "noGroupsOption": "Nog geen groepen voor deze locatie",
     "dateLabel": "Datum",
     "capacityLabel": "Capaciteit",
     "saveCapacity": "Opslaan",
@@ -542,6 +567,11 @@
   },
   "locations": {
     "title": "Locaties",
+    "addButton": "Locatie toevoegen",
+    "createTitle": "Nieuwe locatie",
+    "createButton": "Aanmaken",
+    "cancel": "Annuleren",
+    "createError": "Kon deze locatie niet aanmaken. Probeer opnieuw.",
     "columnName": "Naam",
     "columnAddress": "Adres",
     "columnCapacity": "Capaciteit",
@@ -940,13 +970,11 @@
       "lastNameLabel": "Achternaam",
       "lastNameRequired": "Achternaam is verplicht.",
       "dateOfBirthLabel": "Geboortedatum",
-      "dateOfBirthRequired": "Geboortedatum is verplicht.",
       "genderLabel": "Geslacht",
       "genderNone": "Niet ingevuld",
       "gender": {
         "male": "Jongen",
-        "female": "Meisje",
-        "other": "Anders"
+        "female": "Meisje"
       },
       "nationalityLabel": "Nationaliteit",
       "medicalSectionTitle": "Medische informatie",
@@ -961,8 +989,6 @@
       "medicalConditionsLabel": "Medische aandoeningen",
       "dietaryRestrictionsLabel": "Dieetbeperkingen",
       "contactsSectionTitle": "Medische contacten",
-      "gpNameLabel": "Naam huisarts",
-      "gpPhoneLabel": "Telefoon huisarts",
       "pediatricianNameLabel": "Naam kinderarts",
       "pediatricianPhoneLabel": "Telefoon kinderarts",
       "healthInsuranceNumberLabel": "Verzekeringsnummer",
@@ -1074,7 +1100,8 @@
         "achieved": "Bereikt",
         "emerging": "In opkomst",
         "not_yet": "Nog niet"
-      }
+      },
+      "dateOfBirthRequired": "Voeg een geboortedatum toe aan het profiel van dit kind om ontwikkelingsmijlpalen te kunnen volgen."
     },
     "contacts": {
       "emptyState": "Nog geen contacten gekoppeld.",
@@ -1178,8 +1205,10 @@
       "nrnAddButton": "Toevoegen",
       "nrnReplaceButton": "Vervangen",
       "nrnSaveButton": "Opslaan",
-      "nrnPlaceholder": "85.07.30-033.71",
-      "nrnInvalidFormat": "Voer een geldig rijksregisternummer in (11 cijfers)."
+      "nrnPlaceholder": "85.07.30-033.28",
+      "nrnInvalidFormat": "Voer een geldig rijksregisternummer in (11 cijfers).",
+      "nrnInvalidChecksum": "Dit rijksregisternummer is niet geldig — controleer de cijfers.",
+      "nrnAlreadyInUse": "Dit rijksregisternummer is al gekoppeld aan een ander kind."
     },
     "badgeUnverified": "Niet geverifieerd"
   },
@@ -1335,9 +1364,9 @@
     "publish": "Publiceren",
     "unpublish": "Depubliceren",
     "columnDate": "Datum",
-    "columnSoup": "Soep",
-    "columnMainCourse": "Hoofdgerecht",
-    "columnDessert": "Dessert",
+    "columnLunchMeal": "Middagmaal",
+    "columnAlternativeLunchMeal": "Alternatief middagmaal",
+    "columnSnack": "Tussendoortje",
     "columnNotes": "Opmerkingen",
     "csvImport": {
       "trigger": "CSV importeren",
@@ -1432,6 +1461,11 @@
     "groupAllOption": "Hele locatie",
     "subjectLabel": "Onderwerp",
     "bodyLabel": "Bericht",
+    "ccLabel": "Cc (optioneel)",
+    "bccLabel": "Bcc (optioneel)",
+    "ccBccHint": "E-mailadressen gescheiden door komma's, toegepast op elke ontvanger.",
+    "ccInvalid": "Voer geldige e-mailadressen in, gescheiden door komma's.",
+    "bccInvalid": "Voer geldige e-mailadressen in, gescheiden door komma's.",
     "attachmentLabel": "Bijlage (optioneel)",
     "attachmentUpload": "Bijlage toevoegen",
     "attachmentUploading": "Uploaden…",

@@ -10,17 +10,17 @@ import { MonthlyMenuCsvImportDialog } from "./MonthlyMenuCsvImportDialog";
 import type { MonthlyMenuResponse } from "../../lib/types";
 
 export interface DayFields {
-  soup: string;
-  mainCourse: string;
-  dessert: string;
+  lunchMeal: string;
+  alternativeLunchMeal: string;
+  snack: string;
   notes: string;
 }
 
 export interface MonthlyMenuDaySave {
   date: string;
-  soup: string | null;
-  mainCourse: string | null;
-  dessert: string | null;
+  lunchMeal: string | null;
+  alternativeLunchMeal: string | null;
+  snack: string | null;
   notes: string | null;
 }
 
@@ -51,9 +51,9 @@ function toFieldMap(menu: MonthlyMenuResponse, dates: string[]): Map<string, Day
       return [
         date,
         {
-          soup: entry?.soup ?? "",
-          mainCourse: entry?.mainCourse ?? "",
-          dessert: entry?.dessert ?? "",
+          lunchMeal: entry?.lunchMeal ?? "",
+          alternativeLunchMeal: entry?.alternativeLunchMeal ?? "",
+          snack: entry?.snack ?? "",
           notes: entry?.notes ?? "",
         },
       ];
@@ -79,7 +79,10 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
   const updateField = (date: string, key: keyof DayFields, value: string) => {
     setFields((current) => {
       const next = new Map(current);
-      next.set(date, { ...(next.get(date) ?? { soup: "", mainCourse: "", dessert: "", notes: "" }), [key]: value });
+      next.set(date, {
+        ...(next.get(date) ?? { lunchMeal: "", alternativeLunchMeal: "", snack: "", notes: "" }),
+        [key]: value,
+      });
       return next;
     });
   };
@@ -89,9 +92,9 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
       const f = fields.get(date)!;
       return {
         date,
-        soup: f.soup.trim() || null,
-        mainCourse: f.mainCourse.trim() || null,
-        dessert: f.dessert.trim() || null,
+        lunchMeal: f.lunchMeal.trim() || null,
+        alternativeLunchMeal: f.alternativeLunchMeal.trim() || null,
+        snack: f.snack.trim() || null,
         notes: f.notes.trim() || null,
       };
     });
@@ -141,9 +144,9 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
         <TableHeader>
           <TableRow>
             <TableHead>{t("columnDate")}</TableHead>
-            <TableHead>{t("columnSoup")}</TableHead>
-            <TableHead>{t("columnMainCourse")}</TableHead>
-            <TableHead>{t("columnDessert")}</TableHead>
+            <TableHead>{t("columnLunchMeal")}</TableHead>
+            <TableHead>{t("columnAlternativeLunchMeal")}</TableHead>
+            <TableHead>{t("columnSnack")}</TableHead>
             <TableHead>{t("columnNotes")}</TableHead>
           </TableRow>
         </TableHeader>
@@ -155,13 +158,13 @@ export function MonthlyMenuDayGrid({ year, month, menu, saving, onSave, onPublis
               <TableRow key={date}>
                 <TableCell className="whitespace-nowrap font-medium">{label}</TableCell>
                 <TableCell>
-                  <Input aria-label={t("columnSoup")} value={f.soup} onChange={(e) => updateField(date, "soup", e.target.value)} />
+                  <Input aria-label={t("columnLunchMeal")} value={f.lunchMeal} onChange={(e) => updateField(date, "lunchMeal", e.target.value)} />
                 </TableCell>
                 <TableCell>
-                  <Input aria-label={t("columnMainCourse")} value={f.mainCourse} onChange={(e) => updateField(date, "mainCourse", e.target.value)} />
+                  <Input aria-label={t("columnAlternativeLunchMeal")} value={f.alternativeLunchMeal} onChange={(e) => updateField(date, "alternativeLunchMeal", e.target.value)} />
                 </TableCell>
                 <TableCell>
-                  <Input aria-label={t("columnDessert")} value={f.dessert} onChange={(e) => updateField(date, "dessert", e.target.value)} />
+                  <Input aria-label={t("columnSnack")} value={f.snack} onChange={(e) => updateField(date, "snack", e.target.value)} />
                 </TableCell>
                 <TableCell>
                   <Input aria-label={t("columnNotes")} value={f.notes} onChange={(e) => updateField(date, "notes", e.target.value)} />

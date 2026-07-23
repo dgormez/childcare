@@ -23,8 +23,6 @@ internal static class ChildMapper
         c.AllergySeverity?.ToString(),
         c.MedicalConditions,
         c.DietaryRestrictions,
-        c.GpName,
-        c.GpPhone,
         c.PediatricianName,
         c.PediatricianPhone,
         c.HealthInsuranceNumber,

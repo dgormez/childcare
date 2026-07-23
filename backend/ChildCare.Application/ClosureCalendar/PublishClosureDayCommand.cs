@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildCare.Application.ClosureCalendar;
 
-public record PublishClosureDayCommand(Guid Id, bool ConfirmExistingAttendance, Guid PublishedBy) : IRequest<PublishClosureCalendarResult>;
+public record PublishClosureDayCommand(Guid Id, bool ConfirmExistingAttendance, bool NotifyParents, Guid PublishedBy) : IRequest<PublishClosureCalendarResult>;
 
 public class PublishClosureDayCommandHandler(
     ITenantDbContext db,
@@ -32,6 +32,10 @@ public class PublishClosureDayCommandHandler(
             closure.Status = ClosureStatus.Published;
             closure.PublishedAt = now;
             closure.PublishedBy = request.PublishedBy;
+            // The notify decision is made here, at publish time, not back when the closure was
+            // first drafted — a director can create every closure day for a season up front and
+            // only decide who to notify once they're ready to actually publish it.
+            closure.NotifyParents = request.NotifyParents;
             closure.UpdatedAt = now;
             await db.SaveChangesAsync(ct);
 

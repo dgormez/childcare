@@ -22,9 +22,12 @@ public class GenerateMilestonePortfolioPdfQueryHandler(ITenantDbContext db, IMed
             return new GenerateMilestonePortfolioPdfResult(false, []);
 
         var portfolio = await mediator.Send(new GetChildMilestonePortfolioQuery(request.ChildId), cancellationToken);
+        if (portfolio.Response is null)
+            return new GenerateMilestonePortfolioPdfResult(false, []);
+
         var locale = request.Locale is not null && SupportedLocales.Contains(request.Locale) ? request.Locale : "nl";
 
-        var model = new MilestonePortfolioPdfModel($"{child.FirstName} {child.LastName}", portfolio.Response!, locale);
+        var model = new MilestonePortfolioPdfModel($"{child.FirstName} {child.LastName}", portfolio.Response, locale);
         var bytes = await pdfGenerator.GenerateAsync(model, cancellationToken);
         return new GenerateMilestonePortfolioPdfResult(true, bytes);
     }

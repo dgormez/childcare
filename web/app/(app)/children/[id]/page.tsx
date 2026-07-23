@@ -118,14 +118,16 @@ export default function ChildDetailPage() {
     return true;
   }
 
-  async function setChildNrn(nrn: string): Promise<boolean> {
+  async function setChildNrn(nrn: string): Promise<string | null> {
     const result = await apiClient.PUT("/api/children/{id}/nrn", {
       params: { path: { id: params.id } },
       body: { nrn },
     });
-    if (!result.response.ok) return false;
+    if (!result.response.ok) {
+      return (result.error as { errorKey?: string } | undefined)?.errorKey ?? "errors.child.nrn_invalid_format";
+    }
     await load();
-    return true;
+    return null;
   }
 
   async function uploadChildPhoto(file: File): Promise<boolean> {
@@ -332,8 +334,11 @@ export default function ChildDetailPage() {
             onEdit={() => { setEditSaveError(null); setEditDialogOpen(true); }}
             onPhotoUpload={uploadChildPhoto}
           />
-          <ChildMealPreferenceForm childId={child.id} />
+          {/* Right after the profile block (which leads with date of birth), not at the very
+              bottom of the page — the National Register Number belongs near the other identity
+              fields, not after unrelated sections like meal preferences. */}
           <ChildIdentityVerificationSection child={child} onVerify={verifyChildIdentity} onSetNrn={setChildNrn} />
+          <ChildMealPreferenceForm childId={child.id} />
         </TabsContent>
 
         <TabsContent value="health">

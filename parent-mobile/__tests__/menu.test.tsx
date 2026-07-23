@@ -43,7 +43,7 @@ it("renders a published menu's day entries", async () => {
       childName: "Timmy",
       resolvedVariant: null,
       isPublished: true,
-      days: [{ date: todayIso(), soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: null }],
+      days: [{ date: todayIso(), lunchMeal: "Kip met puree", alternativeLunchMeal: "Pasta met groenten", snack: "Yoghurt", notes: null }],
       closureDates: [],
     },
   ];
@@ -52,7 +52,7 @@ it("renders a published menu's day entries", async () => {
   const { findByText } = await render(<MenuScreen />);
 
   expect(await findByText("KDV Zonnebloem")).toBeTruthy();
-  expect(await findByText("Tomatensoep · Kip met puree · Yoghurt")).toBeTruthy();
+  expect(await findByText("Kip met puree · Pasta met groenten · Yoghurt")).toBeTruthy();
 });
 
 it("shows the not-available placeholder for a location with no published menu", async () => {

@@ -182,4 +182,40 @@ describe("StaffPage", () => {
     expect(await screen.findByText("Couldn't load staff. Please try again.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
+
+  it("creates a staff member and assigns the checked locations", async () => {
+    vi.mocked(apiClient.GET).mockImplementation((path: string) => {
+      if (path === "/api/staff") return Promise.resolve(okResponse([])) as ReturnType<typeof apiClient.GET>;
+      return Promise.resolve(okResponse([location])) as ReturnType<typeof apiClient.GET>;
+    });
+    vi.mocked(apiClient.POST).mockResolvedValue(okResponse(makeStaff({ id: "staff-new" })) as never);
+    vi.mocked(apiClient.PUT).mockResolvedValue(okResponse(undefined) as never);
+
+    renderStaffPage();
+    await screen.findByText("No staff members yet.");
+
+    await userEvent.click(screen.getByRole("button", { name: "Add staff" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.type(within(dialog).getByLabelText("First name"), "Anna");
+    await userEvent.type(within(dialog).getByLabelText("Last name"), "Peeters");
+    await userEvent.type(within(dialog).getByLabelText("Email"), "anna@test.com");
+    await userEvent.type(within(dialog).getByLabelText("Phone"), "+32 9 222 22 22");
+    await userEvent.click(within(dialog).getByLabelText("Sunshine House"));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Create" }));
+
+    await waitFor(() => expect(apiClient.POST).toHaveBeenCalledWith("/api/staff", {
+      body: {
+        firstName: "Anna",
+        lastName: "Peeters",
+        email: "anna@test.com",
+        phone: "+32 9 222 22 22",
+        qualificationLevel: null,
+        role: "Staff",
+        existingTenantUserId: null,
+      },
+    }));
+    await waitFor(() => expect(apiClient.PUT).toHaveBeenCalledWith("/api/staff/{id}/locations/{locationId}", {
+      params: { path: { id: "staff-new", locationId: "loc-1" } },
+    }));
+  });
 });

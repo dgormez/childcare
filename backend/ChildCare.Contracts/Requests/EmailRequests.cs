@@ -9,6 +9,10 @@ public record SendBulkEmailRequest(
     string Body,
     string? AttachmentObjectPath,
     string? AttachmentFileName,
-    string? AttachmentContentType);
+    string? AttachmentContentType,
+    // Applied to every individual recipient email in the batch (director sends one email per
+    // household, not one email to many "To" addresses) — e.g. looping in a co-director.
+    IReadOnlyList<string>? Cc,
+    IReadOnlyList<string>? Bcc);
 
 public record UnsubscribeDigestRequest(string Token, string Org);

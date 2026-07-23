@@ -54,12 +54,54 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
         var fakeEmail = factory.Services.GetRequiredService<FakeEmailSender>();
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null, null, null)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
         Assert.Equal(1, result.SentCount);
         Assert.Single(fakeEmail.BulkEmailCalls, c => c.ToEmail == contact.Email);
+    }
+
+    // ── Cc/Bcc are applied to every individual recipient email in the batch ─────
+
+    [Fact]
+    public async Task SendBulkEmail_WithCcAndBcc_AppliesBothToEveryRecipientSend()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"BulkEmail Cc Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+        var child = await CreateChildAsync(client, org.AccessToken, "Emma");
+        var contact = await CreateContactWithEmailAsync(client, org.AccessToken);
+        await LinkContactAsync(client, org.AccessToken, child.Id, contact.Id);
+        var group = await CreateGroupAsync(client, org.AccessToken, "Group A", location.Id);
+        await AssignChildToGroupAsync(client, org.AccessToken, child.Id, group.Id);
+
+        var fakeEmail = factory.Services.GetRequiredService<FakeEmailSender>();
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null,
+                Cc: ["co-director@test.com"], Bcc: ["archive@test.com"])));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var call = Assert.Single(fakeEmail.BulkEmailCalls, c => c.ToEmail == contact.Email);
+        Assert.Equal(["co-director@test.com"], call.Cc);
+        Assert.Equal(["archive@test.com"], call.Bcc);
+    }
+
+    [Fact]
+    public async Task SendBulkEmail_WithInvalidCcAddress_Returns422()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"BulkEmail Cc Invalid Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var location = await CreateLocationAsync(client, org.AccessToken, "Location A");
+
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null,
+                Cc: ["not-an-email"], Bcc: null)));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Contains("errors.email.cc_invalid", await response.Content.ReadAsStringAsync());
     }
 
     // ── FR-012: a contact with no email is skipped, logged, doesn't block the batch ──
@@ -82,7 +124,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null, null, null)));
 
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
         Assert.Equal(1, result.SentCount);
@@ -102,7 +144,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null, null, null)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
@@ -133,7 +175,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, groupA.Id, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(location.Id, groupA.Id, "Subject", "Body", null, null, null, null, null)));
 
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
         Assert.Equal(1, result.SentCount);
@@ -168,7 +210,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", uploadResult.ObjectPath, "menu.pdf", "application/pdf")));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", uploadResult.ObjectPath, "menu.pdf", "application/pdf", null, null)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
@@ -205,7 +247,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", null, null, null, null, null)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = (await response.Content.ReadFromJsonAsync<JsonBulkSendResult>())!;
@@ -225,7 +267,7 @@ public class BulkEmailEndpointsTests(OrganisationOnboardingWebAppFactory factory
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", orgA.AccessToken,
-            new SendBulkEmailRequest(locationB.Id, null, "Subject", "Body", null, null, null)));
+            new SendBulkEmailRequest(locationB.Id, null, "Subject", "Body", null, null, null, null, null)));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }

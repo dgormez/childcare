@@ -37,7 +37,7 @@ public class LinkChildToWaitingListEntryCommandHandler(ITenantDbContext db, IMed
             var createResult = await mediator.Send(
                 new CreateChildCommand(entry.ChildFirstName, entry.ChildLastName, entry.DateOfBirth,
                     Gender: null, Nationality: null, AllergiesDescription: null, AllergySeverity: null,
-                    MedicalConditions: null, DietaryRestrictions: null, GpName: null, GpPhone: null,
+                    MedicalConditions: null, DietaryRestrictions: null,
                     PediatricianName: null, PediatricianPhone: null,
                     HealthInsuranceNumber: null, Kindcode: null),
                 cancellationToken);

@@ -173,6 +173,7 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
     public async Task SendBulkEmailAsync(
         string toEmail, string locale, string subject, string body,
         (byte[] Bytes, string FileName, string ContentType)? attachment,
+        IReadOnlyList<string>? cc = null, IReadOnlyList<string>? bcc = null,
         CancellationToken cancellationToken = default)
     {
         if (!TryBuildMessage(toEmail, subject, out var message))
@@ -180,6 +181,11 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger, I
             logger.LogWarning("Email:SmtpHost not configured. Bulk email for {Email} not sent.", toEmail);
             return;
         }
+
+        foreach (var address in cc ?? [])
+            message!.Cc.Add(MailboxAddress.Parse(address));
+        foreach (var address in bcc ?? [])
+            message!.Bcc.Add(MailboxAddress.Parse(address));
 
         var html = await templateRenderer.RenderAsync("bulk-email", locale, new
         {

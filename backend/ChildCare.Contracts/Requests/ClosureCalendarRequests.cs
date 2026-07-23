@@ -12,4 +12,4 @@ public record UpdateClosureDayRequest(
     string ClosureType,
     bool NotifyParents);
 
-public record PublishClosureDayRequest(bool ConfirmExistingAttendance);
+public record PublishClosureDayRequest(bool ConfirmExistingAttendance, bool NotifyParents);

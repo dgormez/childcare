@@ -211,11 +211,11 @@ export interface ReservationAvailabilityResponse {
 
 // ── Monthly menu (feature 013e) ──────────────────────────────────────────────────
 export interface MonthlyMenuDayEntry {
-  date:       string;
-  soup:       string | null;
-  mainCourse: string | null;
-  dessert:    string | null;
-  notes:      string | null;
+  date:                 string;
+  lunchMeal:            string | null;
+  alternativeLunchMeal:  string | null;
+  snack:                string | null;
+  notes:                string | null;
 }
 
 export interface ParentMonthlyMenuEntry {

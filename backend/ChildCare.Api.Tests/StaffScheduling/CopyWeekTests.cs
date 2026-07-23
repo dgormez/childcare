@@ -50,7 +50,7 @@ public class CopyWeekTests(OrganisationOnboardingWebAppFactory factory) : IClass
         var closure = (await createResponse.Content.ReadFromJsonAsync<ClosureDayResponse>())!;
 
         var publishResponse = await client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closure.Id}/publish", accessToken,
-            new PublishClosureDayRequest(true)));
+            new PublishClosureDayRequest(true, false)));
         Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
     }
 

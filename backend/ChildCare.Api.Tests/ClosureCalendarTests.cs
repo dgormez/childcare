@@ -50,9 +50,9 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     }
 
     private static Task<HttpResponseMessage> PublishClosureAsync(
-        HttpClient client, string accessToken, Guid closureId, bool confirm = false) =>
+        HttpClient client, string accessToken, Guid closureId, bool confirm = false, bool notifyParents = true) =>
         client.SendAsync(AuthedRequest(
-            HttpMethod.Post, $"/api/closures/{closureId}/publish", accessToken, new PublishClosureDayRequest(confirm)));
+            HttpMethod.Post, $"/api/closures/{closureId}/publish", accessToken, new PublishClosureDayRequest(confirm, notifyParents)));
 
     private static Task<HttpResponseMessage> CancelClosureAsync(HttpClient client, string accessToken, Guid closureId) =>
         client.SendAsync(AuthedRequest(HttpMethod.Post, $"/api/closures/{closureId}/cancel", accessToken));
@@ -212,9 +212,12 @@ public class ClosureCalendarTests(OrganisationOnboardingWebAppFactory factory)
     {
         var (client, org, location, _, schema) = await SetupAsync();
         await CreateEnrolledChildWithParentAsync(client, org.AccessToken, schema, location.Id);
-        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday, notify: false);
+        // Whether to notify is decided at publish time, not carried over from creation (a
+        // director can draft every closure day for a season before deciding who to notify) —
+        // so this test's "disabled" case is expressed on the publish call, not the create call.
+        var closure = await CreateClosureAsync(client, org.AccessToken, location.Id, Monday);
 
-        var response = await PublishClosureAsync(client, org.AccessToken, closure.Id);
+        var response = await PublishClosureAsync(client, org.AccessToken, closure.Id, notifyParents: false);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = (await response.Content.ReadFromJsonAsync<PublishClosureDayResponse>())!;
         Assert.Equal(0, body.NotificationSummary.Recipients);

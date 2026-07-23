@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { apiClient } from "../../../lib/apiClient";
-import { DueSoonBlock } from "../../../components/health/DueSoonBlock";
 import { ContractExpiryBlock } from "../../../components/staff/ContractExpiryBlock";
 import { LocationFilter } from "../../../components/reporting/LocationFilter";
 import { OccupancySection } from "../../../components/reporting/OccupancySection";
@@ -36,13 +35,12 @@ export default function DashboardPage() {
       )}
 
       <div className="space-y-8">
-        <DueSoonBlock />
-        <ContractExpiryBlock />
         <OccupancySection locationId={locationId} />
         <BkrComplianceSection locationId={locationId} />
-        <AttendanceSummarySection locationId={locationId} />
         <InvoiceStatusSection locationId={locationId} />
         <DataCompletenessSection locationId={locationId} />
+        <ContractExpiryBlock />
+        <AttendanceSummarySection locationId={locationId} />
       </div>
     </div>
   );

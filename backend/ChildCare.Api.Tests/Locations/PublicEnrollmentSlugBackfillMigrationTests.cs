@@ -49,7 +49,10 @@ namespace ChildCare.Api.Tests.Locations;
 /// explicit DROP COLUMN. Found the exact failure this comment already predicted — this file's
 /// own migration-history DELETE list still ended at AddStaffAppPersonalRotaAndLeave, so
 /// MigrateAsync() silently no-op'd after AddStaffHrDossierAndTimeRegistration shipped, exactly
-/// as described above.
+/// as described above. "MakeDateOfBirthOptionalDropGpAddNrnHash" and "RenameMonthlyMenuFields"
+/// are next: children's DateOfBirth needs SET NOT NULL, NrnHash (+ its unique index) needs
+/// dropping, and GpName/GpPhone need re-adding; monthly_menu_days' LunchMeal needs renaming back
+/// to MainCourse, AlternativeLunchMeal/Snack dropped, and Soup/Dessert re-added.
 /// </summary>
 public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -60,6 +63,22 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
         var publicDb = scope.ServiceProvider.GetRequiredService<PublicDbContext>();
 
         await publicDb.Database.ExecuteSqlRawAsync($"""
+            ALTER TABLE "{schemaName}"."monthly_menu_days"
+                RENAME COLUMN "LunchMeal" TO "MainCourse";
+            ALTER TABLE "{schemaName}"."monthly_menu_days"
+                DROP COLUMN "AlternativeLunchMeal",
+                DROP COLUMN "Snack";
+            ALTER TABLE "{schemaName}"."monthly_menu_days"
+                ADD COLUMN "Soup" character varying(500),
+                ADD COLUMN "Dessert" character varying(500);
+            DROP INDEX "{schemaName}"."IX_children_NrnHash";
+            ALTER TABLE "{schemaName}"."children"
+                DROP COLUMN "NrnHash";
+            ALTER TABLE "{schemaName}"."children"
+                ALTER COLUMN "DateOfBirth" SET NOT NULL;
+            ALTER TABLE "{schemaName}"."children"
+                ADD COLUMN "GpName" character varying(200),
+                ADD COLUMN "GpPhone" character varying(30);
             DROP TABLE "{schemaName}"."coda_transactions";
             DROP TABLE "{schemaName}"."coda_imports";
             ALTER TABLE "{schemaName}"."invoices"
@@ -114,7 +133,8 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
                 WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate'
                    OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit'
-                   OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration';
+                   OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration'
+                   OR "MigrationId" LIKE '%MakeDateOfBirthOptionalDropGpAddNrnHash' OR "MigrationId" LIKE '%RenameMonthlyMenuFields';
             """);
     }
 

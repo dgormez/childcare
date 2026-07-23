@@ -58,14 +58,14 @@ public class SetChildNrnTests(OrganisationOnboardingWebAppFactory factory)
     private static async Task<ChildResponse> CreateChildAsync(HttpClient client, string accessToken, string firstName = "Emma") =>
         (await (await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/children", accessToken,
-            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null, null, null))))
+            new CreateChildRequest(firstName, "Peeters", new DateOnly(2023, 5, 10), null, null, null, null, null, null, null, null, null, null))))
             .Content.ReadFromJsonAsync<ChildResponse>())!;
 
     // ── T059: SetChildNrnCommand happy path (both plain and dotted/dashed input) ─
 
     [Theory]
-    [InlineData("85073003371")]
-    [InlineData("85.07.30-033.71")]
+    [InlineData("85073003328")]
+    [InlineData("85.07.30-033.28")]
     public async Task SetChildNrn_ValidFormat_PersistsEncryptedAndLast4(string rawNrn)
     {
         var client = factory.CreateClient();
@@ -78,14 +78,14 @@ public class SetChildNrnTests(OrganisationOnboardingWebAppFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var updated = (await response.Content.ReadFromJsonAsync<ChildResponse>())!;
-        Assert.Equal("3371", updated.NrnLast4);
+        Assert.Equal("3328", updated.NrnLast4);
 
         var resolver = factory.Services.GetRequiredService<Application.Common.ITenantDbContextResolver>();
         var schema = await GetSchemaNameAsync(org.Organisation.Id);
         var db = resolver.ForSchema(schema);
         var stored = await db.Children.SingleAsync(c => c.Id == child.Id);
         Assert.NotNull(stored.EncryptedNrn);
-        Assert.DoesNotContain("85073003371", stored.EncryptedNrn);
+        Assert.DoesNotContain("85073003328", stored.EncryptedNrn);
     }
 
     // ── T060: invalid NRN format → 422, persists nothing ─────────────────────────
@@ -120,10 +120,10 @@ public class SetChildNrnTests(OrganisationOnboardingWebAppFactory factory)
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Put, $"/api/children/{child.Id}/nrn", org.AccessToken,
-            new SetChildNrnRequest("85073003371")));
+            new SetChildNrnRequest("85073003328")));
 
         var raw = await response.Content.ReadAsStringAsync();
-        Assert.DoesNotContain("85073003371", raw);
+        Assert.DoesNotContain("85073003328", raw);
     }
 
     // ── T061a: 404 for a non-existent child on the NRN endpoint ──────────────────
@@ -136,9 +136,58 @@ public class SetChildNrnTests(OrganisationOnboardingWebAppFactory factory)
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Put, $"/api/children/{Guid.NewGuid()}/nrn", org.AccessToken,
-            new SetChildNrnRequest("85073003371")));
+            new SetChildNrnRequest("85073003328")));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Contains("errors.child.not_found", await response.Content.ReadAsStringAsync());
+    }
+
+    // ── Structurally valid but wrong mod-97 checksum → 422 ───────────────────────
+
+    [Fact]
+    public async Task SetChildNrn_InvalidChecksum_Returns422AndPersistsNothing()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Set Nrn Checksum Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var child = await CreateChildAsync(client, org.AccessToken);
+
+        // Right shape (11 digits), wrong check digits — 71 instead of the correct 28.
+        var response = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/children/{child.Id}/nrn", org.AccessToken,
+            new SetChildNrnRequest("85073003371")));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Contains("errors.child.nrn_invalid_checksum", await response.Content.ReadAsStringAsync());
+
+        var getResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{child.Id}", org.AccessToken));
+        var reloaded = (await getResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
+        Assert.Null(reloaded.NrnLast4);
+    }
+
+    // ── One real NRN can only belong to one child ────────────────────────────────
+
+    [Fact]
+    public async Task SetChildNrn_AlreadyUsedByAnotherChild_Returns409AndPersistsNothing()
+    {
+        var client = factory.CreateClient();
+        var org = await RegisterOrgAsync(client, $"Set Nrn Duplicate Org {Guid.NewGuid():N}", $"director_{Guid.NewGuid():N}@test.com");
+        var childA = await CreateChildAsync(client, org.AccessToken, "Emma");
+        var childB = await CreateChildAsync(client, org.AccessToken, "Louis");
+
+        var firstResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/children/{childA.Id}/nrn", org.AccessToken,
+            new SetChildNrnRequest("85073003328")));
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+
+        var secondResponse = await client.SendAsync(AuthedRequest(
+            HttpMethod.Put, $"/api/children/{childB.Id}/nrn", org.AccessToken,
+            new SetChildNrnRequest("85.07.30-033.28")));
+
+        Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
+        Assert.Contains("errors.child.nrn_already_in_use", await secondResponse.Content.ReadAsStringAsync());
+
+        var getResponse = await client.SendAsync(AuthedRequest(HttpMethod.Get, $"/api/children/{childB.Id}", org.AccessToken));
+        var reloaded = (await getResponse.Content.ReadFromJsonAsync<ChildResponse>())!;
+        Assert.Null(reloaded.NrnLast4);
     }
 }

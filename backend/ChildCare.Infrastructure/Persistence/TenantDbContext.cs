@@ -452,7 +452,6 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.HasKey(x => x.Id);
             c.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
             c.Property(x => x.LastName).IsRequired().HasMaxLength(100);
-            c.Property(x => x.DateOfBirth).IsRequired();
             c.Property(x => x.ProfilePhotoObjectPath).HasMaxLength(500);
             c.Property(x => x.Gender)
              .HasConversion(
@@ -468,8 +467,6 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
              .HasMaxLength(20);
             c.Property(x => x.MedicalConditions).HasMaxLength(2000);
             c.Property(x => x.DietaryRestrictions).HasMaxLength(2000);
-            c.Property(x => x.GpName).HasMaxLength(200);
-            c.Property(x => x.GpPhone).HasMaxLength(30);
             c.Property(x => x.PediatricianName).HasMaxLength(200);
             c.Property(x => x.PediatricianPhone).HasMaxLength(30);
             c.Property(x => x.HealthInsuranceNumber).HasMaxLength(50);
@@ -483,6 +480,10 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             c.Property(x => x.IdDocumentNote).HasMaxLength(500);
             c.Property(x => x.FirstIdVerifiedByEmail).HasMaxLength(254);
             c.Property(x => x.NrnLast4).HasMaxLength(4);
+            c.Property(x => x.NrnHash).HasMaxLength(64);
+            // One real NRN maps to exactly one child — partial index so children without an NRN
+            // yet (the common case right after onboarding) don't collide on NULL.
+            c.HasIndex(x => x.NrnHash).IsUnique().HasFilter("\"NrnHash\" IS NOT NULL");
             c.HasIndex(x => x.DeactivatedAt);
         });
 
@@ -1090,9 +1091,9 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
         {
             md.ToTable("monthly_menu_days");
             md.HasKey(x => x.Id);
-            md.Property(x => x.Soup).HasMaxLength(500);
-            md.Property(x => x.MainCourse).HasMaxLength(500);
-            md.Property(x => x.Dessert).HasMaxLength(500);
+            md.Property(x => x.LunchMeal).HasMaxLength(500);
+            md.Property(x => x.AlternativeLunchMeal).HasMaxLength(500);
+            md.Property(x => x.Snack).HasMaxLength(500);
             md.Property(x => x.Notes).HasMaxLength(500);
             md.HasIndex(x => new { x.MenuId, x.MenuDate }).IsUnique();
         });

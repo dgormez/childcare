@@ -43,7 +43,8 @@ public static class EmailEndpoints
             var tenantUserId = TenantUserIdOf(ctx);
             var result = await mediator.Send(new SendBulkEmailCommand(
                 tenantUserId, req.LocationId, req.GroupId, req.Subject, req.Body,
-                req.AttachmentObjectPath, req.AttachmentFileName, req.AttachmentContentType));
+                req.AttachmentObjectPath, req.AttachmentFileName, req.AttachmentContentType,
+                req.Cc ?? [], req.Bcc ?? []));
 
             return result.Succeeded
                 ? Results.Ok(new

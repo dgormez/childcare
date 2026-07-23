@@ -60,7 +60,7 @@ public class BulkEmailAttachmentTests(OrganisationOnboardingWebAppFactory factor
 
         var response = await client.SendAsync(AuthedRequest(
             HttpMethod.Post, "/api/email/bulk-send", org.AccessToken,
-            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", uploadResult.ObjectPath, "big.pdf", "application/pdf")));
+            new SendBulkEmailRequest(location.Id, null, "Subject", "Body", uploadResult.ObjectPath, "big.pdf", "application/pdf", null, null)));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         var body = (await response.Content.ReadFromJsonAsync<JsonErrorBody>())!;

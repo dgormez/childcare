@@ -157,6 +157,26 @@
           "other": "Other"
         }
       }
+    },
+    "create": {
+      "addButton": "Add staff",
+      "title": "New staff member",
+      "firstNameLabel": "First name",
+      "lastNameLabel": "Last name",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "roleLabel": "Role",
+      "qualificationLabel": "Qualification",
+      "qualificationNone": "Not set",
+      "qualification": {
+        "QualifiedCaregiver": "Qualified caregiver",
+        "Auxiliary": "Auxiliary",
+        "StudentVolunteer": "Student volunteer"
+      },
+      "locationsLabel": "Locations",
+      "cancel": "Cancel",
+      "createButton": "Create",
+      "saveError": "Couldn't create this staff member. Please try again."
     }
   },
   "devices": {
@@ -218,7 +238,10 @@
     "addTitle": "Add closure",
     "editTitle": "Edit closure",
     "dialogDescription": "Closure days are location-specific and can be drafted before publishing.",
+    "dialogDescriptionRange": "Closure days are location-specific and can be drafted before publishing. Set an end date to create a whole range of days in one go.",
     "dateLabel": "Date",
+    "endDateLabel": "End date (optional)",
+    "endDateInvalid": "End date must be on or after the start date.",
     "labelLabel": "Label",
     "typeLabel": "Type",
     "notifyParents": "Notify parents when published",
@@ -240,6 +263,7 @@
     "loadError": "Couldn't load closure days. Please try again.",
     "retry": "Retry",
     "genericError": "Couldn't save this closure. Please try again.",
+    "rangeCreateSummary": "{created} closure {created, plural, one {day} other {days}} created, {skipped} skipped.",
     "duplicateDate": "This location already has a closure on that date.",
     "pastDate": "Closure days can only be created for today or a future date.",
     "attendanceConfirmationRequired": "Some children are already checked in for this date.",
@@ -515,6 +539,7 @@
     "title": "Group timeline",
     "locationLabel": "Location",
     "groupLabel": "Group",
+    "noGroupsOption": "No groups for this location yet",
     "dateLabel": "Date",
     "capacityLabel": "Capacity",
     "saveCapacity": "Save",
@@ -542,6 +567,11 @@
   },
   "locations": {
     "title": "Locations",
+    "addButton": "Add location",
+    "createTitle": "New location",
+    "createButton": "Create",
+    "cancel": "Cancel",
+    "createError": "Couldn't create this location. Please try again.",
     "columnName": "Name",
     "columnAddress": "Address",
     "columnCapacity": "Capacity",
@@ -940,13 +970,11 @@
       "lastNameLabel": "Last name",
       "lastNameRequired": "Last name is required.",
       "dateOfBirthLabel": "Date of birth",
-      "dateOfBirthRequired": "Date of birth is required.",
       "genderLabel": "Gender",
       "genderNone": "Not set",
       "gender": {
         "male": "Male",
-        "female": "Female",
-        "other": "Other"
+        "female": "Female"
       },
       "nationalityLabel": "Nationality",
       "medicalSectionTitle": "Medical information",
@@ -961,8 +989,6 @@
       "medicalConditionsLabel": "Medical conditions",
       "dietaryRestrictionsLabel": "Dietary restrictions",
       "contactsSectionTitle": "Medical contacts",
-      "gpNameLabel": "GP name",
-      "gpPhoneLabel": "GP phone",
       "pediatricianNameLabel": "Pediatrician name",
       "pediatricianPhoneLabel": "Pediatrician phone",
       "healthInsuranceNumberLabel": "Health insurance number",
@@ -1074,7 +1100,8 @@
         "achieved": "Achieved",
         "emerging": "Emerging",
         "not_yet": "Not yet"
-      }
+      },
+      "dateOfBirthRequired": "Add a birth date to this child's profile to track developmental milestones."
     },
     "contacts": {
       "emptyState": "No contacts linked yet.",
@@ -1178,8 +1205,10 @@
       "nrnAddButton": "Add",
       "nrnReplaceButton": "Replace",
       "nrnSaveButton": "Save",
-      "nrnPlaceholder": "85.07.30-033.71",
-      "nrnInvalidFormat": "Enter a valid National Register Number (11 digits)."
+      "nrnPlaceholder": "85.07.30-033.28",
+      "nrnInvalidFormat": "Enter a valid National Register Number (11 digits).",
+      "nrnInvalidChecksum": "That National Register Number isn't valid — double-check the digits.",
+      "nrnAlreadyInUse": "This National Register Number is already linked to another child."
     },
     "badgeUnverified": "Not verified"
   },
@@ -1335,9 +1364,9 @@
     "publish": "Publish",
     "unpublish": "Un-publish",
     "columnDate": "Date",
-    "columnSoup": "Soup",
-    "columnMainCourse": "Main course",
-    "columnDessert": "Dessert",
+    "columnLunchMeal": "Lunch meal",
+    "columnAlternativeLunchMeal": "Alternative lunch meal",
+    "columnSnack": "3pm snack",
     "columnNotes": "Notes",
     "csvImport": {
       "trigger": "Import CSV",
@@ -1432,6 +1461,11 @@
     "groupAllOption": "Whole location",
     "subjectLabel": "Subject",
     "bodyLabel": "Message",
+    "ccLabel": "Cc (optional)",
+    "bccLabel": "Bcc (optional)",
+    "ccBccHint": "Comma-separated email addresses, applied to every recipient's email.",
+    "ccInvalid": "Enter valid email addresses, separated by commas.",
+    "bccInvalid": "Enter valid email addresses, separated by commas.",
     "attachmentLabel": "Attachment (optional)",
     "attachmentUpload": "Add attachment",
     "attachmentUploading": "Uploading…",

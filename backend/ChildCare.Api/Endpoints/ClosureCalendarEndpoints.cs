@@ -63,7 +63,7 @@ public static class ClosureCalendarEndpoints
         group.MapPost("/{id:guid}/publish", async (Guid id, PublishClosureDayRequest req, HttpContext ctx, IMediator mediator) =>
         {
             var directorId = DirectorIdOf(ctx);
-            var result = await mediator.Send(new PublishClosureDayCommand(id, req.ConfirmExistingAttendance, directorId));
+            var result = await mediator.Send(new PublishClosureDayCommand(id, req.ConfirmExistingAttendance, req.NotifyParents, directorId));
             return result.Succeeded
                 ? Results.Ok(result.Response)
                 : MapFailure(result.Failure!.Value, result.CheckedInCount);

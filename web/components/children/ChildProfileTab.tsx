@@ -56,8 +56,6 @@ export function ChildProfileTab({ child, onEdit, onPhotoUpload }: ChildProfileTa
     { label: t("allergySeverityLabel"), value: child.allergySeverity ? t(`allergySeverity.${child.allergySeverity.toLowerCase()}`) : null },
     { label: t("medicalConditionsLabel"), value: child.medicalConditions },
     { label: t("dietaryRestrictionsLabel"), value: child.dietaryRestrictions },
-    { label: t("gpNameLabel"), value: child.gpName },
-    { label: t("gpPhoneLabel"), value: child.gpPhone },
     { label: t("pediatricianNameLabel"), value: child.pediatricianName },
     { label: t("pediatricianPhoneLabel"), value: child.pediatricianPhone },
     { label: t("healthInsuranceNumberLabel"), value: child.healthInsuranceNumber },

@@ -33,9 +33,9 @@ public class UpsertMonthlyMenuCommandValidator : AbstractValidator<UpsertMonthly
 
         RuleForEach(x => x.Days).ChildRules(day =>
         {
-            day.RuleFor(d => d.Soup).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
-            day.RuleFor(d => d.MainCourse).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
-            day.RuleFor(d => d.Dessert).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
+            day.RuleFor(d => d.LunchMeal).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
+            day.RuleFor(d => d.AlternativeLunchMeal).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
+            day.RuleFor(d => d.Snack).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
             day.RuleFor(d => d.Notes).MaximumLength(500).WithMessage("errors.monthly_menu.field_too_long");
         });
 
@@ -105,9 +105,9 @@ public class UpsertMonthlyMenuCommandHandler(ITenantDbContext db) : IRequestHand
             {
                 MenuId = menu.Id,
                 MenuDate = day.Date,
-                Soup = NullIfBlank(day.Soup),
-                MainCourse = NullIfBlank(day.MainCourse),
-                Dessert = NullIfBlank(day.Dessert),
+                LunchMeal = NullIfBlank(day.LunchMeal),
+                AlternativeLunchMeal = NullIfBlank(day.AlternativeLunchMeal),
+                Snack = NullIfBlank(day.Snack),
                 Notes = NullIfBlank(day.Notes),
             };
             // Add on the DbSet alone: EF's relationship fixup adds it into menu.Days automatically

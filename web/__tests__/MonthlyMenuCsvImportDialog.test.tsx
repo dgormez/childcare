@@ -11,7 +11,7 @@ function csvFile(content: string): File {
 }
 
 function blankFields(): DayFields {
-  return { soup: "", mainCourse: "", dessert: "", notes: "" };
+  return { lunchMeal: "", alternativeLunchMeal: "", snack: "", notes: "" };
 }
 
 function renderDialog(overrides: Partial<{ year: number; month: number; currentDays: Map<string, DayFields>; open: boolean }> = {}) {
@@ -50,7 +50,7 @@ describe("MonthlyMenuCsvImportDialog", () => {
   it("uploading a full valid-month CSV shows an all-valid preview and confirming merges it (US1)", async () => {
     const { onImport, onOpenChange } = renderDialog();
     const user = await uploadFile(
-      ["date,soup,main_course,dessert,notes", "2027-06-01,Tomatensoep,Kip met puree,Yoghurt,"].join("\n"),
+      ["date,lunch_meal,alternative_lunch_meal,snack,notes", "2027-06-01,Tomatensoep,Kip met puree,Yoghurt,"].join("\n"),
     );
 
     expect(await screen.findByText(messages.menu.csvImport.willApply)).toBeTruthy();
@@ -60,14 +60,14 @@ describe("MonthlyMenuCsvImportDialog", () => {
 
     expect(onImport).toHaveBeenCalledTimes(1);
     const merged = onImport.mock.calls[0][0] as Map<string, DayFields>;
-    expect(merged.get("2027-06-01")).toEqual({ soup: "Tomatensoep", mainCourse: "Kip met puree", dessert: "Yoghurt", notes: "" });
+    expect(merged.get("2027-06-01")).toEqual({ lunchMeal: "Tomatensoep", alternativeLunchMeal: "Kip met puree", snack: "Yoghurt", notes: "" });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("shows per-row reasons and the summary count for a mixed valid/invalid CSV, and confirming applies only the valid rows", async () => {
     const { onImport } = renderDialog();
     const user = await uploadFile(
-      ["date,soup,main_course,dessert,notes", "2027-06-01,Soep,Vis,Pudding,", "not-a-date,X,Y,Z,"].join("\n"),
+      ["date,lunch_meal,alternative_lunch_meal,snack,notes", "2027-06-01,Soep,Vis,Pudding,", "not-a-date,X,Y,Z,"].join("\n"),
     );
 
     expect(await screen.findByText("1 row will apply, 1 skipped")).toBeTruthy();
@@ -81,16 +81,16 @@ describe("MonthlyMenuCsvImportDialog", () => {
   });
 
   it("shows the overwrite indicator on a preview row that would replace existing non-blank content (FR-024, SC-005)", async () => {
-    const currentDays = new Map<string, DayFields>([["2027-06-01", { soup: "Bestaande soep", mainCourse: "", dessert: "", notes: "" }]]);
+    const currentDays = new Map<string, DayFields>([["2027-06-01", { lunchMeal: "Bestaande soep", alternativeLunchMeal: "", snack: "", notes: "" }]]);
     renderDialog({ currentDays });
-    await uploadFile("date,soup,main_course,dessert,notes\n2027-06-01,Nieuwe soep,,,");
+    await uploadFile("date,lunch_meal,alternative_lunch_meal,snack,notes\n2027-06-01,Nieuwe soep,,,");
 
     expect(await screen.findByText(messages.menu.csvImport.willOverwrite)).toBeTruthy();
   });
 
   it("shows a rejection and disables Confirm for a CSV with zero valid rows, and leaves the grid untouched", async () => {
     const { onImport } = renderDialog();
-    await uploadFile("date,soup,main_course,dessert,notes\nnot-a-date,X,Y,Z,");
+    await uploadFile("date,lunch_meal,alternative_lunch_meal,snack,notes\nnot-a-date,X,Y,Z,");
 
     expect(await screen.findByText(messages.menu.csvImport.noValidRows)).toBeTruthy();
     expect(screen.getByText(messages.menu.csvImport.confirm).closest("button")).toBeDisabled();
@@ -120,7 +120,7 @@ describe("MonthlyMenuCsvImportDialog", () => {
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     const blob = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0] as Blob;
     const text = await blob.text();
-    expect(text.split(/\r\n|\n/)[0]).toBe("date,soup,main_course,dessert,notes");
+    expect(text.split(/\r\n|\n/)[0]).toBe("date,lunch_meal,alternative_lunch_meal,snack,notes");
     expect(text).toContain("2027-06-01");
 
     clickSpy.mockRestore();

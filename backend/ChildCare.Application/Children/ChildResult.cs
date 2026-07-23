@@ -22,4 +22,5 @@ public enum ChildFailure
 {
     NotFound,
     HasActiveDependents,
+    NrnAlreadyInUse,
 }
