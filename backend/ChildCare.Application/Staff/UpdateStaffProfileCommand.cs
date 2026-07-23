@@ -8,4 +8,6 @@ public record UpdateStaffProfileCommand(
     string FirstName,
     string LastName,
     string Phone,
-    QualificationLevel? QualificationLevel) : IRequest<StaffResult>;
+    QualificationLevel? QualificationLevel,
+    // Feature 027 (FR-002) — null leaves ContractedDays unchanged.
+    IReadOnlyList<DayOfWeek>? ContractedDays = null) : IRequest<StaffResult>;

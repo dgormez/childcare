@@ -43,7 +43,8 @@
     "invoices": "Facturen",
     "fiscalAttestations": "Fiscale attesten",
     "organisationSettings": "Organisatie",
-    "communications": "E-mail"
+    "communications": "E-mail",
+    "leaveRequests": "Verlofaanvragen"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -236,7 +237,23 @@
       "previous": "Vorige week",
       "next": "Volgende week"
     },
-    "notEligibleError": "Dit teamlid is niet toegewezen aan deze locatie. Wijs ze eerst toe via het personeelsscherm."
+    "notEligibleError": "Dit teamlid is niet toegewezen aan deze locatie. Wijs ze eerst toe via het personeelsscherm.",
+    "closureDay": "Gesloten",
+    "nonContractedDay": "Niet gecontracteerd",
+    "coveredBadge": "Vervangen",
+    "publish": "Week publiceren",
+    "unpublish": "Publicatie ongedaan maken",
+    "publishedBadge": "Gepubliceerd",
+    "sickCoverBanner": {
+      "title": "{count} dienst(en) hebben vandaag vervanging nodig",
+      "assignCover": "Vervanging toewijzen voor {name}"
+    },
+    "sickCoverDialog": {
+      "title": "Vervanging toewijzen",
+      "description": "Kies een gekwalificeerde, beschikbare medewerker om deze dienst over te nemen.",
+      "noCandidates": "Geen gekwalificeerde medewerkers beschikbaar.",
+      "assign": "Toewijzen"
+    }
   },
   "errorBoundary": {
     "title": "Er is iets misgegaan",
@@ -1447,5 +1464,43 @@
     "submitError": "Er ging iets mis bij het ondertekenen. Probeer opnieuw.",
     "confirmationTitle": "Contract ondertekend",
     "confirmationBody": "Bedankt — uw contract is ondertekend en uw betaalmandaat is actief. U ontving een kopie per e-mail."
+  },
+  "leaveRequests": {
+    "title": "Verlofaanvragen",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "pending": "In behandeling",
+      "all": "Alle",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen"
+    },
+    "emptyState": "Geen verlofaanvragen om te beoordelen.",
+    "loadError": "Kan verlofaanvragen niet laden. Probeer het opnieuw.",
+    "genericError": "Kan deze beslissing niet opslaan. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "columnStaff": "Medewerker",
+    "columnType": "Type",
+    "columnDateRange": "Data",
+    "columnNotes": "Notities",
+    "columnStatus": "Status",
+    "columnActions": "Acties",
+    "unknownStaff": "Onbekende medewerker",
+    "type": {
+      "sick": "Ziekte",
+      "annual": "Jaarlijks verlof",
+      "other": "Overig"
+    },
+    "status": {
+      "pending": "In behandeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen"
+    },
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "approveTitle": "Verlofaanvraag goedkeuren",
+    "approveDescription": "De betrokken roosterdagen worden als afwezig gemarkeerd en de medewerker wordt op de hoogte gebracht.",
+    "rejectTitle": "Verlofaanvraag afwijzen",
+    "rejectDescription": "Er worden geen roosterwijzigingen doorgevoerd. De medewerker wordt op de hoogte gebracht.",
+    "cancel": "Annuleren"
   }
 }

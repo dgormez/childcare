@@ -1,17 +1,20 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, TriangleAlert } from "lucide-react";
 import { apiClient } from "../../../lib/apiClient";
 import { SchedulingGrid } from "../../../components/SchedulingGrid";
 import { ScheduleEntryDialog } from "../../../components/ScheduleEntryDialog";
+import { SickCoverDialog } from "../../../components/SickCoverDialog";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { EmptyState } from "../../../components/EmptyState";
 import { ErrorState } from "../../../components/ErrorState";
 import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import type {
   AbsenceReason,
   ApiErrorBody,
+  ClosureDayResponse,
   CopyWeekResponse,
   GroupResponse,
   LocationResponse,
@@ -55,6 +58,7 @@ export default function SchedulingPage() {
   const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [groups, setGroups] = useState<GroupResponse[]>([]);
   const [entries, setEntries] = useState<StaffScheduleResponse[]>([]);
+  const [closures, setClosures] = useState<ClosureDayResponse[]>([]);
   const [projectedOnDutyByDate, setProjectedOnDutyByDate] = useState<Map<string, number>>(new Map());
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [state, setState] = useState<LoadState>("loading");
@@ -63,10 +67,28 @@ export default function SchedulingPage() {
   const [creatingFor, setCreatingFor] = useState<{ staffId: string; date: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [coveringEntry, setCoveringEntry] = useState<StaffScheduleResponse | null>(null);
   const [notice, setNotice] = useState("");
 
   const weekDates = useMemo(() => weekDatesFrom(weekStart), [weekStart]);
   const groupsById = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups]);
+  const closureDates = useMemo(
+    () => new Set(closures.filter((c) => c.status === "published" && weekDates.includes(c.date)).map((c) => c.date)),
+    [closures, weekDates],
+  );
+  // FR-001: the week is "published" when it has at least one entry and every entry is
+  // currently published — matches PublishScheduleWeekCommand's per-week bulk semantics
+  // (research.md R4) even though the underlying flag is per-row.
+  const weekIsPublished = entries.length > 0 && entries.every((e) => e.isPublished);
+  // FR-006: today's absent-and-uncovered entries within the currently loaded week need an
+  // urgent cover-needed banner — computed from what's already loaded rather than a dedicated
+  // endpoint, since the contract doesn't define one.
+  const today = useMemo(() => toDateString(new Date()), []);
+  const uncoveredToday = useMemo(
+    () => entries.filter((e) => e.date === today && e.status === "absent" && !e.coverStaffId),
+    [entries, today],
+  );
   // Convergence finding F1: only offer scheduling staff eligible for the selected location
   // (StaffResponse.eligibleLocationIds, feature 005) — the backend now enforces this too, but
   // the grid shouldn't offer an action that's guaranteed to fail. A staff member who already
@@ -95,10 +117,12 @@ export default function SchedulingPage() {
     if (!locationId) return;
     setState("loading");
     try {
-      const [staffResult, groupsResult, entriesResult] = await Promise.all([
+      const weekYear = Number(weekStart.slice(0, 4));
+      const [staffResult, groupsResult, entriesResult, closuresResult] = await Promise.all([
         apiClient.GET("/api/staff", { params: { query: { includeDeactivated: true } } }),
         apiClient.GET("/api/groups", { params: { query: { locationId } } }),
         apiClient.GET("/api/staff-schedules", { params: { query: { locationId, weekStart } } }),
+        apiClient.GET("/api/closures", { params: { query: { locationId, year: weekYear } } }),
       ]);
       if (!staffResult.response.ok || !groupsResult.response.ok || !entriesResult.response.ok) {
         setState("error");
@@ -108,6 +132,7 @@ export default function SchedulingPage() {
       setGroups(groupsResult.data as unknown as GroupResponse[]);
       const loadedEntries = entriesResult.data as unknown as StaffScheduleResponse[];
       setEntries(loadedEntries);
+      setClosures(closuresResult.response.ok ? (closuresResult.data as unknown as ClosureDayResponse[]) : []);
 
       const projectedResults = await Promise.all(
         weekDatesFrom(weekStart).map((date) =>
@@ -233,6 +258,22 @@ export default function SchedulingPage() {
     setWeekStart(mondayOf(next));
   }
 
+  // FR-001: publishes/unpublishes every entry for this location+week — behaviorally
+  // week-granular even though IsPublished is per-row (research.md R4).
+  async function togglePublish() {
+    setPublishing(true);
+    const result = await apiClient.POST("/api/staff-schedules/{locationId}/publish", {
+      params: { path: { locationId } },
+      body: { weekStart, unpublish: weekIsPublished },
+    });
+    setPublishing(false);
+    if (!result.response.ok) {
+      setNotice(t("genericError"));
+      return;
+    }
+    await load();
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -272,12 +313,39 @@ export default function SchedulingPage() {
           <Button variant="secondary" onClick={() => setCopyConfirmOpen(true)}>
             {t("copyWeek")}
           </Button>
+          <Button
+            variant={weekIsPublished ? "secondary" : "primary"}
+            onClick={togglePublish}
+            disabled={publishing || entries.length === 0}
+          >
+            {weekIsPublished ? t("unpublish") : t("publish")}
+          </Button>
+          {weekIsPublished && <Badge variant="success">{t("publishedBadge")}</Badge>}
         </div>
       </div>
 
       {notice && (
         <div className="mb-4 rounded-lg bg-surface-soft p-3 text-sm text-text dark:bg-surface-soft-dark dark:text-text-dark">
           {notice}
+        </div>
+      )}
+
+      {uncoveredToday.length > 0 && (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg bg-danger-bg p-4 dark:bg-danger-bg-dark">
+          <div className="flex items-center gap-2 text-sm font-medium text-danger dark:text-danger-dark">
+            <TriangleAlert className="h-4 w-4" strokeWidth={2} />
+            {t("sickCoverBanner.title", { count: uncoveredToday.length })}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {uncoveredToday.map((entry) => {
+              const member = staff.find((s) => s.id === entry.staffProfileId);
+              return (
+                <Button key={entry.id} variant="destructive" size="sm" onClick={() => setCoveringEntry(entry)}>
+                  {t("sickCoverBanner.assignCover", { name: member ? `${member.firstName} ${member.lastName}` : "" })}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -291,10 +359,23 @@ export default function SchedulingPage() {
           entries={entries}
           groupsById={groupsById}
           projectedOnDutyByDate={projectedOnDutyByDate}
+          closureDates={closureDates}
           onAddShift={openCreateDialog}
           onSelectShift={openEditDialog}
         />
       )}
+
+      <SickCoverDialog
+        open={coveringEntry !== null}
+        entry={coveringEntry}
+        onOpenChange={(open) => {
+          if (!open) setCoveringEntry(null);
+        }}
+        onAssigned={async () => {
+          setCoveringEntry(null);
+          await load();
+        }}
+      />
 
       <ScheduleEntryDialog
         open={dialogOpen}

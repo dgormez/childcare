@@ -56,8 +56,12 @@ public static class StaffEndpoints
             QualificationLevel? qualification = req.QualificationLevel is null
                 ? null
                 : Enum.Parse<QualificationLevel>(req.QualificationLevel, ignoreCase: true);
+            // Feature 027 (FR-002) — null leaves ContractedDays unchanged.
+            IReadOnlyList<DayOfWeek>? contractedDays = req.ContractedDays?
+                .Select(d => Enum.Parse<DayOfWeek>(d, ignoreCase: true))
+                .ToList();
 
-            var result = await mediator.Send(new UpdateStaffProfileCommand(id, req.FirstName, req.LastName, req.Phone, qualification));
+            var result = await mediator.Send(new UpdateStaffProfileCommand(id, req.FirstName, req.LastName, req.Phone, qualification, contractedDays));
             return MapResult(result, onSuccess: Results.Ok);
         });
 
@@ -134,6 +138,17 @@ public static class StaffEndpoints
             var result = await mediator.Send(new GetStaffMeQuery(tenantUserId));
             return result.Found
                 ? Results.Ok(result.Response)
+                : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
+        }).WithTags("Staff").RequireAuthorization("StaffOrDirector");
+
+        // Feature 027 deviation (see RegisterStaffPushTokenCommand.cs) — mirrors
+        // ParentEndpoints.cs's PUT /api/parent/push-token exactly.
+        app.MapPut("/api/staff/push-token", async (RegisterPushTokenRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var tenantUserId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var succeeded = await mediator.Send(new RegisterStaffPushTokenCommand(tenantUserId, req.PushToken));
+            return succeeded
+                ? Results.Ok()
                 : Results.Json(new { errorKey = "errors.staff.profile_not_found" }, statusCode: StatusCodes.Status404NotFound);
         }).WithTags("Staff").RequireAuthorization("StaffOrDirector");
     }

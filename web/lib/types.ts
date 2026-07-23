@@ -40,6 +40,8 @@ export interface StaffResponse {
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Feature 027 (FR-002) — e.g. ["Monday", "Tuesday"]. Empty = no restriction.
+  contractedDays: string[];
 }
 
 export type ReservationRequestMode = "disabled" | "informational" | "approval";
@@ -235,8 +237,9 @@ export interface GroupResponse {
   capacity: number | null;
 }
 
-// ── Staff scheduling (feature 012) ──────────────────────────────────────────────
+// ── Staff scheduling (feature 012, extended by feature 027) ─────────────────────
 export type AbsenceReason = "sick" | "leave" | "holiday";
+export type StaffScheduleStatus = "scheduled" | "confirmed" | "absent" | "covered";
 
 export interface StaffScheduleResponse {
   id: string;
@@ -246,8 +249,11 @@ export interface StaffScheduleResponse {
   date: string;
   startTime: string;
   endTime: string;
-  isAbsent: boolean;
+  status: StaffScheduleStatus;
   absenceReason: AbsenceReason | null;
+  coverStaffId: string | null;
+  notes: string | null;
+  isPublished: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -261,6 +267,38 @@ export interface CopyWeekSkippedEntryResponse {
 export interface CopyWeekResponse {
   copiedCount: number;
   skipped: CopyWeekSkippedEntryResponse[];
+}
+
+export interface PublishScheduleWeekResponse {
+  publishedCount: number;
+}
+
+export interface SickCoverCandidateResponse {
+  staffProfileId: string;
+  name: string;
+  qualificationLevel: string | null;
+}
+
+export interface AssignCoverResponse {
+  original: StaffScheduleResponse;
+  coverEntry: StaffScheduleResponse;
+}
+
+// ── Staff leave requests (feature 027) ───────────────────────────────────────────
+export type StaffLeaveRequestType = "sick" | "annual" | "other";
+export type StaffLeaveRequestStatus = "pending" | "approved" | "rejected";
+
+export interface StaffLeaveRequestResponse {
+  id: string;
+  staffProfileId: string;
+  type: StaffLeaveRequestType;
+  dateFrom: string;
+  dateTo: string;
+  notes: string | null;
+  status: StaffLeaveRequestStatus;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
 }
 
 export interface ProjectedOnDutyResponse {

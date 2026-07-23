@@ -43,7 +43,8 @@
     "invoices": "Invoices",
     "fiscalAttestations": "Fiscal Attestations",
     "organisationSettings": "Organisation",
-    "communications": "Email"
+    "communications": "Email",
+    "leaveRequests": "Leave Requests"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -236,7 +237,23 @@
       "previous": "Previous week",
       "next": "Next week"
     },
-    "notEligibleError": "This staff member isn't assigned to this location. Assign them from the Staff screen first."
+    "notEligibleError": "This staff member isn't assigned to this location. Assign them from the Staff screen first.",
+    "closureDay": "Closed",
+    "nonContractedDay": "Not contracted",
+    "coveredBadge": "Covered",
+    "publish": "Publish week",
+    "unpublish": "Unpublish week",
+    "publishedBadge": "Published",
+    "sickCoverBanner": {
+      "title": "{count} shift(s) need cover today",
+      "assignCover": "Assign cover for {name}"
+    },
+    "sickCoverDialog": {
+      "title": "Assign cover",
+      "description": "Pick an eligible, available staff member to cover this shift.",
+      "noCandidates": "No eligible staff available.",
+      "assign": "Assign"
+    }
   },
   "errorBoundary": {
     "title": "Something went wrong",
@@ -1447,5 +1464,43 @@
     "submitError": "Something went wrong while signing. Please try again.",
     "confirmationTitle": "Contract signed",
     "confirmationBody": "Thank you — your contract has been signed and your payment mandate is now active. A copy has been emailed to you."
+  },
+  "leaveRequests": {
+    "title": "Leave Requests",
+    "statusLabel": "Status",
+    "statusFilter": {
+      "pending": "Pending",
+      "all": "All",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "emptyState": "No leave requests to review.",
+    "loadError": "Couldn't load leave requests. Please try again.",
+    "genericError": "Couldn't save this decision. Please try again.",
+    "retry": "Retry",
+    "columnStaff": "Staff member",
+    "columnType": "Type",
+    "columnDateRange": "Dates",
+    "columnNotes": "Notes",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "unknownStaff": "Unknown staff member",
+    "type": {
+      "sick": "Sick",
+      "annual": "Annual leave",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveTitle": "Approve leave request",
+    "approveDescription": "The affected rota days will be marked absent and the staff member will be notified.",
+    "rejectTitle": "Reject leave request",
+    "rejectDescription": "No rota changes will be made. The staff member will be notified.",
+    "cancel": "Cancel"
   }
 }

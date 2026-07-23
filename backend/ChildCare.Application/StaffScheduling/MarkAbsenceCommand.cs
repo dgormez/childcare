@@ -1,4 +1,5 @@
 using ChildCare.Application.Common;
+using ChildCare.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -36,12 +37,15 @@ public class MarkAbsenceCommandHandler(ITenantDbContext db) : IRequestHandler<Ma
         if (request.IsAbsent)
         {
             StaffScheduleMapper.TryParseAbsenceReason(request.AbsenceReason, out var reason);
-            entry.IsAbsent = true;
+            entry.Status = StaffScheduleStatus.Absent;
             entry.AbsenceReason = reason;
         }
         else
         {
-            entry.IsAbsent = false;
+            // Reverts to Scheduled — an un-marked entry is never left Covered/Confirmed by this
+            // command (data-model.md: MarkAbsenceCommand only toggles the absent/not-absent
+            // boundary, matching feature 012's original semantics).
+            entry.Status = StaffScheduleStatus.Scheduled;
             entry.AbsenceReason = null;
         }
 

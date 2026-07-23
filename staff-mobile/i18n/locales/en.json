@@ -1,0 +1,82 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "login": {
+    "title": "Staff Login",
+    "organisationSlug": "Organisation",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log in",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "offlineFirstLogin": "Can't reach the server. Check your connection and try again."
+  },
+  "errors": {
+    "auth": {
+      "invalid_credentials": "Incorrect organisation, email, or password."
+    }
+  },
+  "schedule": {
+    "title": "Schedule",
+    "weekView": "Week",
+    "dayView": "Day",
+    "empty": "No shifts scheduled yet for this period.",
+    "networkError": "Can't reach the server. Pull down to try again once you're back online.",
+    "offlineCached": "Showing your last-loaded schedule — you're offline.",
+    "closed": "KDV closed",
+    "nonContractedDay": "Not a contracted day",
+    "noShifts": "No shifts",
+    "unknownLocation": "Location",
+    "weekOf": "Week of {{date}}",
+    "reportSickAction": "I'm sick",
+    "status": {
+      "absent": "Absent",
+      "covered": "Covered by a colleague"
+    }
+  },
+  "reportSick": {
+    "title": "Report sick",
+    "description": "This reports you sick for today (or tomorrow, if it's after opening time) and alerts the director immediately.",
+    "action": "I'm sick",
+    "confirmPrompt": "Are you sure you want to report yourself sick?",
+    "confirm": "Yes, report sick",
+    "success": "You've been marked sick. The director has been notified.",
+    "needsConnection": "You need an internet connection to report sick.",
+    "genericError": "Couldn't submit this. Please try again."
+  },
+  "leaveRequests": {
+    "title": "Leave Requests",
+    "newAction": "New request",
+    "newTitle": "New leave request",
+    "empty": "You haven't submitted any leave requests yet.",
+    "loadFailed": "Couldn't load your leave requests.",
+    "type": {
+      "sick": "Sick",
+      "annual": "Annual leave",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "typeLabel": "Type",
+    "dateFromLabel": "From",
+    "dateToLabel": "To",
+    "notesLabel": "Note (optional)",
+    "notesPlaceholder": "Add a note…",
+    "submit": "Submit request",
+    "submitFailed": "Couldn't submit this request. Please try again.",
+    "needsConnection": "You need an internet connection to submit a request.",
+    "todayLabel": "Today",
+    "tomorrowLabel": "Tomorrow",
+    "chooseDate": "YYYY-MM-DD"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "loadFailed": "Couldn't load notifications."
+  }
+}

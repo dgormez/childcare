@@ -43,7 +43,8 @@
     "invoices": "Factures",
     "fiscalAttestations": "Attestations fiscales",
     "organisationSettings": "Organisation",
-    "communications": "E-mail"
+    "communications": "E-mail",
+    "leaveRequests": "Demandes de congé"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -236,7 +237,23 @@
       "previous": "Semaine précédente",
       "next": "Semaine suivante"
     },
-    "notEligibleError": "Ce membre du personnel n'est pas affecté à ce site. Affectez-le d'abord depuis l'écran du personnel."
+    "notEligibleError": "Ce membre du personnel n'est pas affecté à ce site. Affectez-le d'abord depuis l'écran du personnel.",
+    "closureDay": "Fermé",
+    "nonContractedDay": "Non contracté",
+    "coveredBadge": "Remplacé",
+    "publish": "Publier la semaine",
+    "unpublish": "Annuler la publication",
+    "publishedBadge": "Publié",
+    "sickCoverBanner": {
+      "title": "{count} service(s) nécessitent un remplacement aujourd'hui",
+      "assignCover": "Assigner un remplacement pour {name}"
+    },
+    "sickCoverDialog": {
+      "title": "Assigner un remplacement",
+      "description": "Choisissez un(e) collègue qualifié(e) et disponible pour reprendre ce service.",
+      "noCandidates": "Aucun(e) collègue qualifié(e) disponible.",
+      "assign": "Assigner"
+    }
   },
   "errorBoundary": {
     "title": "Une erreur s'est produite",
@@ -1447,5 +1464,43 @@
     "submitError": "Une erreur s'est produite lors de la signature. Veuillez réessayer.",
     "confirmationTitle": "Contrat signé",
     "confirmationBody": "Merci — votre contrat est signé et votre mandat de paiement est actif. Une copie vous a été envoyée par e-mail."
+  },
+  "leaveRequests": {
+    "title": "Demandes de congé",
+    "statusLabel": "Statut",
+    "statusFilter": {
+      "pending": "En attente",
+      "all": "Toutes",
+      "approved": "Approuvées",
+      "rejected": "Refusées"
+    },
+    "emptyState": "Aucune demande de congé à examiner.",
+    "loadError": "Impossible de charger les demandes de congé. Veuillez réessayer.",
+    "genericError": "Impossible d'enregistrer cette décision. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "columnStaff": "Membre du personnel",
+    "columnType": "Type",
+    "columnDateRange": "Dates",
+    "columnNotes": "Notes",
+    "columnStatus": "Statut",
+    "columnActions": "Actions",
+    "unknownStaff": "Membre du personnel inconnu",
+    "type": {
+      "sick": "Maladie",
+      "annual": "Congé annuel",
+      "other": "Autre"
+    },
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Refusée"
+    },
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "approveTitle": "Approuver la demande de congé",
+    "approveDescription": "Les jours d'horaire concernés seront marqués absents et le membre du personnel sera averti.",
+    "rejectTitle": "Refuser la demande de congé",
+    "rejectDescription": "Aucune modification de l'horaire ne sera effectuée. Le membre du personnel sera averti.",
+    "cancel": "Annuler"
   }
 }

@@ -80,16 +80,37 @@ confirms it in the moment.
    does not feed — feature 010's live BKR ratio, which is sourced from actual `RoomShifts`
    check-in presence (008a) and already correctly excludes anyone who hasn't physically
    checked in, scheduled or not.
-5. A caregiver's own schedule is readable via a personal-account-scoped API, but has no
-   caregiver-facing UI yet — the shared kiosk tablet (008a) has no personal session to host a
-   personal view; that UI is feature 027's job (Staff App), not this workflow's tablet
-   surface.
+5. A caregiver's own schedule is readable via a personal-account-scoped API. Feature 027 (Staff
+   App) builds the personal-session-hosting surface that consumes it — see below.
+
+### Flow — personal staff app & leave requests (feature 027)
+
+Fulfills this workflow's own deferred pointer above: a personal schedule view needs a personal
+session, which the shared kiosk tablet structurally doesn't have, so it ships as a new,
+separate Expo app (`staff-mobile`) rather than on the tablet.
+
+1. The rota (feature 012's `StaffSchedule`) gains a **publish/draft** state: a director's
+   in-progress week is invisible to staff until explicitly published, at which point every
+   affected staff member is notified.
+2. A director's later change to an **already-published** week (most commonly, on-the-fly sick
+   cover) bypasses the draft gate and reaches the affected staff member immediately — publish
+   only gates forward-planning visibility, not corrections to a week staff can already see.
+3. Staff can also submit a **leave request** (sick / annual / other) for a date range from their
+   own app — a new, staff-initiated counterpart to the director-initiated absence-marking this
+   workflow already had. A director reviews a queue and approves or rejects; approval marks the
+   affected dates absent on the rota the same way director-initiated absence-marking already
+   does, so both entry points converge on one absence representation, not two.
+4. Same-day sick reporting is a distinct, higher-urgency one-tap action (not the leave-request
+   form) specifically because it needs to reach the director fast enough to arrange cover before
+   the shift starts.
 
 ### Applications — weekly staff rota
 
 Director Web:
 
-- Weekly rota builder (staff × day grid), rota copy, absence marking.
+- Weekly rota builder (staff × day grid), rota copy, absence marking, publish/unpublish
+  (feature 027), on-the-fly cover assignment (feature 027), leave-request approval queue
+  ("Verlofaanvragen", feature 027).
 
 Caregiver Tablet:
 
@@ -99,11 +120,20 @@ Parent Mobile:
 
 - Not involved.
 
+Staff Mobile (feature 027 — new, personal, distinct from the caregiver tablet):
+
+- Own published schedule (day/week view), one-tap sick report, leave-request submission and
+  status, a notifications list for publish/change/decision events.
+
 System:
 
 - The rota builder computes its own projected on-duty count from schedule + absence +
   qualification data, for director planning only. Feature 010's live BKR computation is
-  unaffected — it consumes real-time `RoomShifts` check-in data, not the rota.
+  unaffected — it consumes real-time `RoomShifts` check-in data, not the rota, and this remains
+  true of every field feature 027 adds to `StaffSchedule` (status, cover, publish state).
+- Push notifications (Expo, reusing the existing `IExpoPushSender`/`Notification` pattern from
+  feature 014a) on: week published, an already-published assignment changed, leave request
+  decided.
 
 ### Design Principles — weekly staff rota
 
@@ -113,4 +143,9 @@ System:
 - A personal schedule view requires a personal session — the shared kiosk tablet
   structurally doesn't have one (see the room shift register's own design principle above),
   so "own schedule" visibility belongs on whichever surface has a personal login, not the
-  tablet.
+  tablet — feature 027's `staff-mobile` is that surface.
+- One absence representation, not two — director-initiated absence-marking and staff-initiated
+  leave-request approval both resolve to the same `StaffSchedule` status field (feature 027),
+  rather than a second parallel "why is this person out" record.
+- Publish gates planning visibility, not operational reality — once a week is published, urgent
+  corrections (sick cover) reach staff immediately rather than waiting on a republish.

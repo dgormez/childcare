@@ -17,6 +17,8 @@ public class UpdateStaffProfileCommandHandler(ITenantDbContext db, IProfilePhoto
         profile.LastName = request.LastName;
         profile.Phone = request.Phone;
         profile.QualificationLevel = request.QualificationLevel;
+        if (request.ContractedDays is not null)
+            profile.ContractedDays = request.ContractedDays.Distinct().ToList();
         profile.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);

@@ -22,5 +22,6 @@ internal static class StaffMapper
         eligibleLocationIds,
         profile.DeactivatedAt,
         profile.CreatedAt,
-        profile.UpdatedAt);
+        profile.UpdatedAt,
+        profile.ContractedDays.Select(d => d.ToString()).ToList());
 }

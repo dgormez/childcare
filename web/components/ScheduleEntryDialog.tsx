@@ -72,9 +72,12 @@ export function ScheduleEntryDialog({ open, entry, groups, onOpenChange, onSubmi
             </label>
           </div>
 
+          {entry && entry.notes && (
+            <p className="text-sm text-text-soft dark:text-text-soft-dark">{entry.notes}</p>
+          )}
           {entry && (
             <div className="rounded-lg bg-surface-soft p-3 dark:bg-surface-soft-dark">
-              {entry.isAbsent ? (
+              {entry.status === "absent" ? (
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm text-text dark:text-text-dark">
                     {t("absentBadge")} — {t(`absenceReason.${entry.absenceReason}`)}

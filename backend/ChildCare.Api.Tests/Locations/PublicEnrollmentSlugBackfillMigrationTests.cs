@@ -36,7 +36,13 @@ namespace ChildCare.Api.Tests.Locations;
 /// present here) needs its own DROP TABLE ordered before `invoices` is altered (invoices is the
 /// table referencing it) — same FK-direction rule 013g's shipped-note first flagged. Found by
 /// this test actually failing after AddSepaDirectDebit shipped, exactly as this comment already
-/// predicted for "any future migration."
+/// predicted for "any future migration." Feature 027's "AddStaffAppPersonalRotaAndLeave" is
+/// the next one - its new staff_leave_requests table (FK to staff_profiles, untouched here)
+/// needs its own DROP TABLE; staff_schedules' six new columns (Status, CoverStaffId, Notes,
+/// CreatedBy, IsPublished, PublishedAt) need explicit DROP COLUMNs plus IsAbsent added back
+/// (same reasoning as LegacyVaccinationMigrationTests' equivalent note - the migration's own
+/// Up() backfill step needs it present when re-applied), and staff_profiles' two new columns
+/// (ContractedDays, PushToken) need their own explicit DROP COLUMNs too.
 /// </summary>
 public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -81,9 +87,23 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
                 DROP COLUMN "SignedByIp",
                 DROP COLUMN "SigningToken",
                 DROP COLUMN "SigningTokenExpiresAt";
+            DROP TABLE "{schemaName}"."staff_leave_requests";
+            ALTER TABLE "{schemaName}"."staff_schedules"
+                DROP COLUMN "Status",
+                DROP COLUMN "CoverStaffId",
+                DROP COLUMN "Notes",
+                DROP COLUMN "CreatedBy",
+                DROP COLUMN "IsPublished",
+                DROP COLUMN "PublishedAt";
+            ALTER TABLE "{schemaName}"."staff_schedules"
+                ADD COLUMN "IsAbsent" boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE "{schemaName}"."staff_profiles"
+                DROP COLUMN "ContractedDays",
+                DROP COLUMN "PushToken";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
                 WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate'
-                   OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit';
+                   OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit'
+                   OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave';
             """);
     }
 
