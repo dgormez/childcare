@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ChildCare.Api.Middleware;
 using ChildCare.Application.Staff;
+using ChildCare.Application.StaffDocuments;
 using ChildCare.Contracts.Requests;
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Enums;
@@ -103,6 +104,47 @@ public static class StaffEndpoints
             return succeeded
                 ? Results.Ok()
                 : Results.Json(new { errorKey = "errors.staff.no_function_configured" }, statusCode: StatusCodes.Status400BadRequest);
+        });
+
+        // Feature 028 — HR dossier (FR-011/FR-012/FR-012a/FR-013). Director-only, same as every
+        // other route in this group.
+        group.MapGet("/{id:guid}/documents", async (Guid id, IMediator mediator) =>
+        {
+            var documents = await mediator.Send(new ListStaffDocumentsQuery(id));
+            return Results.Ok(documents);
+        });
+
+        group.MapPost("/{id:guid}/documents/upload-url", async (Guid id, CreateStaffDocumentUploadUrlRequest req, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new CreateStaffDocumentUploadUrlCommand(id, req.ContentType));
+            return result.Succeeded
+                ? Results.Ok(new { objectPath = result.ObjectPath, uploadUrl = result.UploadUrl })
+                : Results.Json(new { errorKey = "errors.staff.not_found" }, statusCode: StatusCodes.Status404NotFound);
+        });
+
+        group.MapPost("/{id:guid}/documents", async (Guid id, CreateStaffDocumentRequest req, HttpContext ctx, IMediator mediator) =>
+        {
+            var directorId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await mediator.Send(new CreateStaffDocumentCommand(
+                id, directorId, req.DocumentType, req.Title, req.ObjectPath, req.ValidFrom, req.ValidUntil));
+            return result.Succeeded
+                ? Results.Created($"/api/staff/{id}/documents/{result.Response!.Id}", result.Response)
+                : Results.Json(new { errorKey = "errors.staff_documents.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+        });
+
+        group.MapDelete("/{id:guid}/documents/{documentId:guid}", async (Guid id, Guid documentId, HttpContext ctx, IMediator mediator) =>
+        {
+            var directorId = Guid.Parse(ctx.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var succeeded = await mediator.Send(new DeleteStaffDocumentCommand(documentId, directorId));
+            return succeeded
+                ? Results.Ok()
+                : Results.Json(new { errorKey = "errors.staff_documents.not_found" }, statusCode: StatusCodes.Status404NotFound);
+        });
+
+        group.MapGet("/contracts-expiring", async (IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetContractsExpiringQuery());
+            return Results.Ok(result);
         });
 
         group.MapPost("/{id:guid}/photo/upload-url", async (Guid id, IMediator mediator) =>
