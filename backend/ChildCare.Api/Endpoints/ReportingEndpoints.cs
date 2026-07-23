@@ -58,5 +58,18 @@ public static class ReportingEndpoints
             var result = await mediator.Send(new GetDataCompletenessQuery(locationId));
             return Results.Ok(result);
         });
+
+        // Feature 028 — medewerkersbeleid subsidy report (FR-016/FR-017/FR-018/FR-019/FR-020).
+        group.MapGet("/staff-hours", async (Guid locationId, DateOnly from, DateOnly to, IMediator mediator) =>
+        {
+            var result = await mediator.Send(new GetStaffHoursReportQuery(locationId, from, to));
+            return Results.Ok(result);
+        });
+
+        group.MapGet("/staff-hours/export", async (Guid locationId, DateOnly from, DateOnly to, IMediator mediator) =>
+        {
+            var content = await mediator.Send(new ExportStaffHoursReportQuery(locationId, from, to));
+            return Results.File(content, "text/csv", $"staff-hours-{from:yyyy-MM-dd}-{to:yyyy-MM-dd}.csv");
+        });
     }
 }

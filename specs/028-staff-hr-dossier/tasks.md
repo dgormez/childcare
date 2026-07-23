@@ -283,33 +283,33 @@ the period is excluded.
 
 ### Tests for User Story 4
 
-- [ ] T052 [P] [US4] Integration test: `GetStaffHoursReportQuery` computes `totalChildHours` from
+- [X] T052 [P] [US4] Integration test: `GetStaffHoursReportQuery` computes `totalChildHours` from
       closed `AttendanceRecord`s and `totalStaffHours`/`ratio` per function from closed
       `StaffTimeEntry`s, excludes open entries and incomplete attendance records from the totals
       (FR-017/FR-018/FR-019, research.md R5), and returns `ratio: null` (not a divide-by-zero)
       when `totalStaffHours == 0` (FR-016 Acceptance Scenario 2) in
       `backend/ChildCare.Api.Tests/Reporting/StaffHoursReportTests.cs`
-- [ ] T053 [P] [US4] Integration test: `ExportStaffHoursReportQuery`'s CSV rows sum to the exact
+- [X] T053 [P] [US4] Integration test: `ExportStaffHoursReportQuery`'s CSV rows sum to the exact
       same `totalStaffHours` the on-screen query returns for the same location/period (R6 —
       shared aggregation, never disagree) in
       `backend/ChildCare.Api.Tests/Reporting/StaffHoursReportTests.cs`
-- [ ] T053a [P] [US4] Integration test: `GET /api/reports/staff-hours` and its `/export` route
+- [X] T053a [P] [US4] Integration test: `GET /api/reports/staff-hours` and its `/export` route
       both reject a staff-authenticated (not director) request with `403` (FR-016 — director-only,
       same class of check as T040a) in
       `backend/ChildCare.Api.Tests/Reporting/StaffHoursReportTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T054 [US4] Implement `GetStaffHoursReportQuery` in
+- [X] T054 [US4] Implement `GetStaffHoursReportQuery` in
       `backend/ChildCare.Application/Reporting/GetStaffHoursReportQuery.cs`
-- [ ] T055 [US4] Implement `IStaffHoursCsvWriter`/`StaffHoursCsvWriter` (mirrors
+- [X] T055 [US4] Implement `IStaffHoursCsvWriter`/`StaffHoursCsvWriter` (mirrors
       `IAttendanceSummaryCsvWriter`) and `ExportStaffHoursReportQuery` (reuses
       `GetStaffHoursReportQuery` via `IMediator.Send`, research.md R6) in
       `backend/ChildCare.Infrastructure/Reporting/StaffHoursCsvWriter.cs` and
       `backend/ChildCare.Application/Reporting/ExportStaffHoursReportQuery.cs` (depends on T054)
-- [ ] T056 [US4] Add the `StaffHoursReportResponses` contract in
+- [X] T056 [US4] Add the `StaffHoursReportResponses` contract in
       `backend/ChildCare.Contracts/Responses/StaffHoursReportResponses.cs`
-- [ ] T057 [US4] Add `GET /api/reports/staff-hours` and `/export` to the existing
+- [X] T057 [US4] Add `GET /api/reports/staff-hours` and `/export` to the existing
       `ReportingEndpoints.cs` group (`DirectorOnly`, alongside feature 018's report routes)
       (depends on T054, T055, T056)
 - [ ] T058 [US4] Build `StaffHoursReportTable.tsx` and the new flat top-level
