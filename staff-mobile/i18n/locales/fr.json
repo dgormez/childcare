@@ -78,5 +78,19 @@
     "title": "Notifications",
     "empty": "Aucune notification.",
     "loadFailed": "Impossible de charger les notifications."
+  },
+  "timeEntries": {
+    "needsConnection": "Une connexion internet est nécessaire pour pointer.",
+    "pickLocation": "Dans quelle crèche travaillez-vous ?",
+    "pickFunction": "Quelle fonction exercez-vous aujourd'hui ?",
+    "functions": {
+      "kinderbegeleider": "Puéricultrice/teur",
+      "logistiek": "Logistique",
+      "verantwoordelijke": "Responsable"
+    },
+    "clockInAction": "Begin dienst",
+    "clockOutAction": "Einde dienst",
+    "clockInError": "Le pointage n'a pas fonctionné. Réessayez.",
+    "clockOutError": "Le dépointage n'a pas fonctionné. Réessayez."
   }
 }

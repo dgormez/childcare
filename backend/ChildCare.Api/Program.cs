@@ -235,6 +235,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
 builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>();
 
+// ── Staff HR dossier & time registration (feature 028) ──────────────────────
+builder.Services.AddScoped<IStaffDocumentStorage, GcsStaffDocumentStorage>();
+builder.Services.AddScoped<ChildCare.Application.Common.IStaffHoursCsvWriter, ChildCare.Infrastructure.Reporting.StaffHoursCsvWriter>();
+
 // ── Group activities (feature 009b) ─────────────────────────────────────────
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();
@@ -858,6 +862,7 @@ app.MapGroupActivityEndpoints();
 app.MapAttendanceEndpoints();
 app.MapClosureCalendarEndpoints();
 app.MapStaffScheduleEndpoints();
+app.MapStaffTimeEntryEndpoints();
 app.MapStaffLeaveRequestEndpoints();
 app.MapWaitingListEndpoints();
 app.MapPublicEnrollmentEndpoints();

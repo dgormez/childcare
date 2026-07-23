@@ -44,7 +44,8 @@
     "fiscalAttestations": "Attestations fiscales",
     "organisationSettings": "Organisation",
     "communications": "E-mail",
-    "leaveRequests": "Demandes de congé"
+    "leaveRequests": "Demandes de congé",
+    "staffHoursReport": "Heures du personnel"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -80,7 +81,83 @@
     "pinDialogConfirm": "Enregistrer le code",
     "deactivateDialogTitle": "Désactiver le membre du personnel",
     "reactivateDialogTitle": "Réactiver le membre du personnel",
-    "toggleDialogDescription": "Confirmez-vous pour {name} ?"
+    "toggleDialogDescription": "Confirmez-vous pour {name} ?",
+    "timeEntries": {
+      "loadError": "Impossible de charger les pointages.",
+      "retry": "Réessayer",
+      "emptyState": "Aucun pointage pour le moment.",
+      "columns": {
+        "date": "Date",
+        "function": "Fonction",
+        "clockedIn": "Arrivée",
+        "clockedOut": "Départ",
+        "status": "Statut"
+      },
+      "edit": "Modifier",
+      "status": {
+        "open": "En cours",
+        "locked": "Verrouillé",
+        "editable": "Modifiable"
+      },
+      "functions": {
+        "kinderbegeleider": "Puéricultrice/teur",
+        "logistiek": "Logistique",
+        "verantwoordelijke": "Responsable"
+      },
+      "correctionTitle": "Corriger le pointage",
+      "saveError": "Impossible d'enregistrer cette correction.",
+      "overlapWarning": "Cette correction chevauche un autre pointage de ce membre du personnel — enregistrée quand même, merci de vérifier les heures.",
+      "lockedMessage": "Ce pointage a plus de 7 jours et est verrouillé. Déverrouillez-le pour le corriger.",
+      "unlock": "Déverrouiller",
+      "relock": "Reverrouiller",
+      "clockedOutLabel": "Heure de départ",
+      "functionLabel": "Fonction",
+      "notesLabel": "Notes",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "detail": {
+      "back": "Retour au personnel",
+      "tabDossier": "Dossier",
+      "tabTimeEntries": "Pointages",
+      "loadError": "Impossible de charger ce membre du personnel.",
+      "retry": "Réessayer"
+    },
+    "dossier": {
+      "documentsTitle": "Documents",
+      "addDocument": "Ajouter un document",
+      "deleteDocument": "Supprimer le document",
+      "emptyState": "Aucun document pour le moment.",
+      "loadError": "Impossible de charger les documents. Réessayez.",
+      "retry": "Réessayer",
+      "validUntilShort": "valide jusqu'au",
+      "timeEntryFunctionsTitle": "Fonctions de pointage",
+      "noFunctionSelected": "Sélectionnez au moins une fonction.",
+      "saveError": "Impossible d'enregistrer.",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "form": {
+        "title": "Ajouter un document",
+        "documentTypeLabel": "Type de document",
+        "titleLabel": "Titre",
+        "validFromLabel": "Valide à partir de",
+        "validUntilLabel": "Valide jusqu'au",
+        "fileLabel": "Fichier",
+        "fileRequired": "Choisissez un fichier à téléverser.",
+        "invalidType": "Seuls les fichiers PDF, JPEG ou PNG sont acceptés.",
+        "uploadError": "Impossible de téléverser ce fichier. Réessayez.",
+        "saveError": "Impossible d'enregistrer ce document.",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "documentTypes": {
+          "employment_contract": "Contrat de travail",
+          "amendment": "Avenant",
+          "qualification": "Qualification",
+          "training": "Formation",
+          "other": "Autre"
+        }
+      }
+    }
   },
   "devices": {
     "title": "Appareils",
@@ -1186,6 +1263,14 @@
         "missingPin": "Aucun code PIN configuré",
         "missingIdentityVerification": "Identité pas encore vérifiée"
       }
+    },
+    "contractsExpiring": {
+      "title": "Personnel — contrats expirants",
+      "emptyState": "Aucun contrat de travail expirant ou expiré.",
+      "loadError": "Impossible de charger cet aperçu. Réessayez.",
+      "retry": "Réessayer",
+      "expired": "Expiré",
+      "dueSoon": "Expire bientôt"
     }
   },
   "mealList": {
@@ -1502,5 +1587,27 @@
     "rejectTitle": "Refuser la demande de congé",
     "rejectDescription": "Aucune modification de l'horaire ne sera effectuée. Le membre du personnel sera averti.",
     "cancel": "Annuler"
+  },
+  "staffHoursReport": {
+    "title": "Heures du personnel",
+    "locationLabel": "Crèche",
+    "fromLabel": "Du",
+    "toLabel": "Au",
+    "generate": "Générer",
+    "exportCsv": "Exporter en CSV",
+    "exportError": "Impossible d'exporter ce rapport. Réessayez.",
+    "loadError": "Impossible de générer ce rapport. Réessayez.",
+    "retry": "Réessayer",
+    "totalChildHours": "Total heures-enfants",
+    "columns": {
+      "function": "Fonction",
+      "staffHours": "Heures prestées",
+      "ratio": "Ratio"
+    },
+    "functions": {
+      "kinderbegeleider": "Puéricultrice/teur",
+      "logistiek": "Logistique",
+      "verantwoordelijke": "Responsable"
+    }
   }
 }

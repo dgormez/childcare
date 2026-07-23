@@ -218,6 +218,43 @@ Includes:
 
 ---
 
+## Staff Management
+
+No detail file yet (feature 028 — first feature in this workflow).
+
+Change note (per governance rules): added because feature 028 (Staff HR Dossier & Time
+Registration) is the first feature covering staff employment records and worked-hours tracking —
+distinct from **Classroom Operations**, which covers room/ratio "Staffing" (008a's room-shift
+register) but not HR documents or time. No existing implementation needs review, since no earlier
+feature built anything here.
+
+Manages the employment relationship between the organisation and its staff — HR record-keeping
+and worked-hours tracking, as distinct from the day-to-day room/ratio assignment Classroom
+Operations already covers.
+
+Actors:
+
+- **Director** — manages each staff member's HR dossier, unlocks/corrects time entries, downloads
+  the medewerkersbeleid subsidy report.
+- **Staff** — clocks in/out via staff-mobile (feature 027).
+
+Includes:
+
+- Staff HR dossier: employment contracts, amendments, qualification and training documents,
+  each with optional validity dates (feature 028).
+- Time registration: clock in/out per function, per location/group, with a director-configurable
+  immutability lock period (feature 028).
+- Contract-expiry alerts: a director dashboard block surfacing staff whose employment contract
+  expires within 60 days (feature 028).
+- Medewerkersbeleid subsidy reporting: child-hours-to-staff-hours ratio by function, per location
+  and period, plus a raw hours CSV export for payroll handoff (feature 028).
+
+Explicitly excludes: room/group ratio assignment and shift scheduling (Classroom Operations,
+Billing & Payments' payroll calculation is out of scope entirely — this workflow only produces
+the hours data payroll systems consume).
+
+---
+
 ## Platform Administration
 
 No detail file yet (feature 013h — first feature in this workflow).

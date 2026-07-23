@@ -21,6 +21,7 @@ function makeStaff(overrides: Partial<StaffResponse> = {}): StaffResponse {
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     contractedDays: [],
+    timeEntryFunctions: [],
     ...overrides,
   };
 }

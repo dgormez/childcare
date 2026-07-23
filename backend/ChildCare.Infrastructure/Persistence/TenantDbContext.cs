@@ -34,6 +34,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
     public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
 
     public DbSet<StaffLocationEligibility> StaffLocationEligibility => Set<StaffLocationEligibility>();
+    public DbSet<StaffTimeEntry> StaffTimeEntries => Set<StaffTimeEntry>();
+    public DbSet<StaffDocument> StaffDocuments => Set<StaffDocument>();
 
     public DbSet<Child> Children => Set<Child>();
 
@@ -242,6 +244,8 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
 
     private static DayOfWeek ParseDayOfWeek(string value) => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), value, ignoreCase: true);
 
+    private static StaffTimeEntryFunction ParseStaffTimeEntryFunction(string value) => (StaffTimeEntryFunction)Enum.Parse(typeof(StaffTimeEntryFunction), value, ignoreCase: true);
+
     private static MilestoneObservationStatus ParseMilestoneObservationStatus(string value) =>
         MilestoneObservationStatusExtensions.TryParseWireString(value, out var parsed)
             ? parsed
@@ -376,6 +380,17 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             // Feature 027 deviation (see StaffProfile.cs field comment) — mirrors
             // Contact.PushToken's shape/max length.
             s.Property(x => x.PushToken).HasMaxLength(200);
+            // Feature 028 — same text[] + ValueComparer pattern as ContractedDays above.
+            s.Property(x => x.TimeEntryFunctions)
+              .HasConversion(
+                  v => v.Select(f => f.ToString()).ToArray(),
+                  v => v.Select(ParseStaffTimeEntryFunction).ToList(),
+                  new ValueComparer<List<StaffTimeEntryFunction>>(
+                      (a, b) => a!.SequenceEqual(b!),
+                      v => v.Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
+                      v => v.ToList()))
+              .HasColumnType("text[]")
+              .HasDefaultValueSql("'{}'");
             s.HasIndex(x => x.DeactivatedAt);
             s.HasOne<TenantUser>().WithOne().HasForeignKey<StaffProfile>(x => x.TenantUserId);
         });
@@ -395,6 +410,40 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options, string s
             e.HasKey(x => new { x.StaffProfileId, x.LocationId });
             e.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
             e.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+        });
+
+        modelBuilder.Entity<StaffTimeEntry>(t =>
+        {
+            t.ToTable("staff_time_entries");
+            t.HasKey(x => x.Id);
+            t.Property(x => x.Function)
+             .HasConversion(v => v.ToString(), v => (StaffTimeEntryFunction)Enum.Parse(typeof(StaffTimeEntryFunction), v, ignoreCase: true))
+             .HasMaxLength(30)
+             .IsRequired();
+            t.Ignore(x => x.IsOpen);
+            t.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            t.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId);
+            t.HasOne<Group>().WithMany().HasForeignKey(x => x.GroupId);
+            // Supports the subsidy report's period/location aggregation (data-model.md).
+            t.HasIndex(x => new { x.LocationId, x.ClockedInAt });
+            // Supports "find my currently open entry" on every clock-in/out request.
+            t.HasIndex(x => new { x.StaffProfileId, x.ClockedOutAt });
+        });
+
+        modelBuilder.Entity<StaffDocument>(d =>
+        {
+            d.ToTable("staff_documents");
+            d.HasKey(x => x.Id);
+            d.Property(x => x.DocumentType)
+             .HasConversion(v => v.ToString(), v => (StaffDocumentType)Enum.Parse(typeof(StaffDocumentType), v, ignoreCase: true))
+             .HasMaxLength(30)
+             .IsRequired();
+            d.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            d.Property(x => x.ObjectPath).IsRequired().HasMaxLength(500);
+            d.HasOne<StaffProfile>().WithMany().HasForeignKey(x => x.StaffProfileId);
+            // Supports the contract-expiry query's WHERE DocumentType = EmploymentContract AND
+            // ValidUntil <= today + 60d filter without a full scan (data-model.md).
+            d.HasIndex(x => new { x.DocumentType, x.ValidUntil });
         });
 
         modelBuilder.Entity<Child>(c =>

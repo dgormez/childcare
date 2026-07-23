@@ -1,5 +1,6 @@
 using ChildCare.Application.Common;
 using ChildCare.Contracts.Responses;
+using ChildCare.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,7 @@ public class GetStaffMeQueryHandler(ITenantDbContext db) : IRequestHandler<GetSt
             .ToListAsync(cancellationToken);
 
         return new GetStaffMeResult(true, new StaffMeResponse(
-            profile.Id, profile.FirstName, profile.LastName, user.Role.ToString().ToLowerInvariant(), eligibleLocationIds));
+            profile.Id, profile.FirstName, profile.LastName, user.Role.ToString().ToLowerInvariant(), eligibleLocationIds,
+            profile.TimeEntryFunctions.Select(f => f.ToWireString()).ToList()));
     }
 }

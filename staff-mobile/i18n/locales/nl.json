@@ -78,5 +78,19 @@
     "title": "Meldingen",
     "empty": "Nog geen meldingen.",
     "loadFailed": "Kon meldingen niet laden."
+  },
+  "timeEntries": {
+    "needsConnection": "Je hebt een internetverbinding nodig om in of uit te klokken.",
+    "pickLocation": "In welke locatie werk je?",
+    "pickFunction": "In welke functie werk je vandaag?",
+    "functions": {
+      "kinderbegeleider": "Kinderbegeleider",
+      "logistiek": "Logistiek",
+      "verantwoordelijke": "Verantwoordelijke"
+    },
+    "clockInAction": "Begin dienst",
+    "clockOutAction": "Einde dienst",
+    "clockInError": "Inklokken is niet gelukt. Probeer opnieuw.",
+    "clockOutError": "Uitklokken is niet gelukt. Probeer opnieuw."
   }
 }

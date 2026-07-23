@@ -2056,6 +2056,57 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.ToTable("sepa_batches", "tenant_template");
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.StaffDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("ObjectPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("StaffProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("ValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ValidUntil")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffProfileId");
+
+                    b.HasIndex("DocumentType", "ValidUntil");
+
+                    b.ToTable("staff_documents", "tenant_template");
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.StaffInvitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2217,6 +2268,12 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<Guid>("TenantUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string[]>("TimeEntryFunctions")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2299,6 +2356,58 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .IsUnique();
 
                     b.ToTable("staff_schedules", "tenant_template");
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.StaffTimeEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ClockedInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ClockedOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Function")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("StaffProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UnlockedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("LocationId", "ClockedInAt");
+
+                    b.HasIndex("StaffProfileId", "ClockedOutAt");
+
+                    b.ToTable("staff_time_entries", "tenant_template");
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.TenantCustomVaccineEntry", b =>
@@ -3202,6 +3311,15 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ChildCare.Domain.Entities.StaffDocument", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.StaffProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StaffProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ChildCare.Domain.Entities.StaffInvitation", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.StaffProfile", null)
@@ -3245,6 +3363,25 @@ namespace ChildCare.Infrastructure.Persistence.Migrations.Tenant
                 });
 
             modelBuilder.Entity("ChildCare.Domain.Entities.StaffSchedule", b =>
+                {
+                    b.HasOne("ChildCare.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId");
+
+                    b.HasOne("ChildCare.Domain.Entities.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChildCare.Domain.Entities.StaffProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StaffProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ChildCare.Domain.Entities.StaffTimeEntry", b =>
                 {
                     b.HasOne("ChildCare.Domain.Entities.Group", null)
                         .WithMany()

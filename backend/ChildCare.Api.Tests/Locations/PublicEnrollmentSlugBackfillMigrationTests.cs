@@ -42,7 +42,14 @@ namespace ChildCare.Api.Tests.Locations;
 /// CreatedBy, IsPublished, PublishedAt) need explicit DROP COLUMNs plus IsAbsent added back
 /// (same reasoning as LegacyVaccinationMigrationTests' equivalent note - the migration's own
 /// Up() backfill step needs it present when re-applied), and staff_profiles' two new columns
-/// (ContractedDays, PushToken) need their own explicit DROP COLUMNs too.
+/// (ContractedDays, PushToken) need their own explicit DROP COLUMNs too. Feature 028's
+/// "AddStaffHrDossierAndTimeRegistration" is the next one — its two new tables
+/// (staff_time_entries, staff_documents; both FK to staff_profiles, untouched here) each need
+/// their own DROP TABLE, and staff_profiles' one new column (TimeEntryFunctions) needs its own
+/// explicit DROP COLUMN. Found the exact failure this comment already predicted — this file's
+/// own migration-history DELETE list still ended at AddStaffAppPersonalRotaAndLeave, so
+/// MigrateAsync() silently no-op'd after AddStaffHrDossierAndTimeRegistration shipped, exactly
+/// as described above.
 /// </summary>
 public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWebAppFactory factory)
     : IClassFixture<OrganisationOnboardingWebAppFactory>
@@ -100,10 +107,14 @@ public class PublicEnrollmentSlugBackfillMigrationTests(OrganisationOnboardingWe
             ALTER TABLE "{schemaName}"."staff_profiles"
                 DROP COLUMN "ContractedDays",
                 DROP COLUMN "PushToken";
+            DROP TABLE "{schemaName}"."staff_time_entries";
+            DROP TABLE "{schemaName}"."staff_documents";
+            ALTER TABLE "{schemaName}"."staff_profiles"
+                DROP COLUMN "TimeEntryFunctions";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
                 WHERE "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate'
                    OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit'
-                   OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave';
+                   OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration';
             """);
     }
 

@@ -1,5 +1,6 @@
 using ChildCare.Contracts.Responses;
 using ChildCare.Domain.Entities;
+using ChildCare.Domain.Enums;
 
 namespace ChildCare.Application.Staff;
 
@@ -23,5 +24,6 @@ internal static class StaffMapper
         profile.DeactivatedAt,
         profile.CreatedAt,
         profile.UpdatedAt,
-        profile.ContractedDays.Select(d => d.ToString()).ToList());
+        profile.ContractedDays.Select(d => d.ToString()).ToList(),
+        profile.TimeEntryFunctions.Select(f => f.ToWireString()).ToList());
 }

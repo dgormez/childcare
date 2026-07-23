@@ -24,6 +24,8 @@ public interface ITenantDbContext
     DbSet<StaffProfile> StaffProfiles { get; }
     DbSet<StaffInvitation> StaffInvitations { get; }
     DbSet<StaffLocationEligibility> StaffLocationEligibility { get; }
+    DbSet<StaffTimeEntry> StaffTimeEntries { get; }
+    DbSet<StaffDocument> StaffDocuments { get; }
     DbSet<Child> Children { get; }
     DbSet<Contact> Contacts { get; }
     DbSet<ChildContact> ChildContacts { get; }

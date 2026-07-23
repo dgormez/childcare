@@ -44,7 +44,8 @@
     "fiscalAttestations": "Fiscal Attestations",
     "organisationSettings": "Organisation",
     "communications": "Email",
-    "leaveRequests": "Leave Requests"
+    "leaveRequests": "Leave Requests",
+    "staffHoursReport": "Staff hours"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -80,7 +81,83 @@
     "pinDialogConfirm": "Save PIN",
     "deactivateDialogTitle": "Deactivate staff member",
     "reactivateDialogTitle": "Reactivate staff member",
-    "toggleDialogDescription": "Are you sure about {name}?"
+    "toggleDialogDescription": "Are you sure about {name}?",
+    "timeEntries": {
+      "loadError": "Couldn't load time entries.",
+      "retry": "Retry",
+      "emptyState": "No time entries yet.",
+      "columns": {
+        "date": "Date",
+        "function": "Function",
+        "clockedIn": "Clocked in",
+        "clockedOut": "Clocked out",
+        "status": "Status"
+      },
+      "edit": "Edit",
+      "status": {
+        "open": "Open",
+        "locked": "Locked",
+        "editable": "Editable"
+      },
+      "functions": {
+        "kinderbegeleider": "Childcare worker",
+        "logistiek": "Logistics",
+        "verantwoordelijke": "Responsible person"
+      },
+      "correctionTitle": "Correct time entry",
+      "saveError": "Couldn't save this correction.",
+      "overlapWarning": "This correction overlaps another time entry for this staff member — saved anyway, please double-check the hours.",
+      "lockedMessage": "This entry is more than 7 days old and locked. Unlock it to make corrections.",
+      "unlock": "Unlock",
+      "relock": "Re-lock",
+      "clockedOutLabel": "Clocked out at",
+      "functionLabel": "Function",
+      "notesLabel": "Notes",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "detail": {
+      "back": "Back to staff",
+      "tabDossier": "Dossier",
+      "tabTimeEntries": "Time entries",
+      "loadError": "Could not load this staff member.",
+      "retry": "Retry"
+    },
+    "dossier": {
+      "documentsTitle": "Documents",
+      "addDocument": "Add document",
+      "deleteDocument": "Delete document",
+      "emptyState": "No documents yet.",
+      "loadError": "Could not load documents. Please try again.",
+      "retry": "Retry",
+      "validUntilShort": "valid until",
+      "timeEntryFunctionsTitle": "Clock-in functions",
+      "noFunctionSelected": "Select at least one function.",
+      "saveError": "Could not save.",
+      "save": "Save",
+      "saved": "Saved",
+      "form": {
+        "title": "Add document",
+        "documentTypeLabel": "Document type",
+        "titleLabel": "Title",
+        "validFromLabel": "Valid from",
+        "validUntilLabel": "Valid until",
+        "fileLabel": "File",
+        "fileRequired": "Choose a file to upload.",
+        "invalidType": "Only PDF, JPEG, or PNG files are supported.",
+        "uploadError": "Could not upload this file. Please try again.",
+        "saveError": "Could not save this document.",
+        "cancel": "Cancel",
+        "save": "Save",
+        "documentTypes": {
+          "employment_contract": "Employment contract",
+          "amendment": "Amendment",
+          "qualification": "Qualification",
+          "training": "Training",
+          "other": "Other"
+        }
+      }
+    }
   },
   "devices": {
     "title": "Devices",
@@ -1186,6 +1263,14 @@
         "missingPin": "No check-in PIN set",
         "missingIdentityVerification": "Identity not yet verified"
       }
+    },
+    "contractsExpiring": {
+      "title": "Personnel — expiring contracts",
+      "emptyState": "No expiring or lapsed employment contracts.",
+      "loadError": "Could not load this overview. Please try again.",
+      "retry": "Retry",
+      "expired": "Expired",
+      "dueSoon": "Expiring soon"
     }
   },
   "mealList": {
@@ -1502,5 +1587,27 @@
     "rejectTitle": "Reject leave request",
     "rejectDescription": "No rota changes will be made. The staff member will be notified.",
     "cancel": "Cancel"
+  },
+  "staffHoursReport": {
+    "title": "Staff hours",
+    "locationLabel": "Location",
+    "fromLabel": "From",
+    "toLabel": "To",
+    "generate": "Generate",
+    "exportCsv": "Export CSV",
+    "exportError": "Could not export this report. Please try again.",
+    "loadError": "Could not generate this report. Please try again.",
+    "retry": "Retry",
+    "totalChildHours": "Total child-hours",
+    "columns": {
+      "function": "Function",
+      "staffHours": "Staff-hours",
+      "ratio": "Ratio"
+    },
+    "functions": {
+      "kinderbegeleider": "Childcare worker",
+      "logistiek": "Logistics",
+      "verantwoordelijke": "Responsible person"
+    }
   }
 }
