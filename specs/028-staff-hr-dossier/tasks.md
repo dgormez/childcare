@@ -39,40 +39,40 @@ separate Setup phase; Phase 1 below is Foundational).
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 [P] Add `StaffTimeEntryFunction` enum (`Kinderbegeleider`/`Logistiek`/
+- [X] T001 [P] Add `StaffTimeEntryFunction` enum (`Kinderbegeleider`/`Logistiek`/
       `Verantwoordelijke`) with `TryParseWireString`/`ToWireString` extensions (mirrors
       `ChildEventTypeExtensions`, feature 009) in
       `backend/ChildCare.Domain/Enums/StaffTimeEntryFunction.cs`
-- [ ] T002 [P] Add `StaffDocumentType` enum (`EmploymentContract`/`Amendment`/`Qualification`/
+- [X] T002 [P] Add `StaffDocumentType` enum (`EmploymentContract`/`Amendment`/`Qualification`/
       `Training`/`Other`) with the same wire-string extension pattern in
       `backend/ChildCare.Domain/Enums/StaffDocumentType.cs`
-- [ ] T003 [P] Create `StaffTimeEntry` entity (data-model.md) in
+- [X] T003 [P] Create `StaffTimeEntry` entity (data-model.md) in
       `backend/ChildCare.Domain/Entities/StaffTimeEntry.cs` (depends on T001)
-- [ ] T004 [P] Create `StaffDocument` entity (data-model.md) in
+- [X] T004 [P] Create `StaffDocument` entity (data-model.md) in
       `backend/ChildCare.Domain/Entities/StaffDocument.cs` (depends on T002)
-- [ ] T005 [P] Add `TimeEntryFunctions: List<StaffTimeEntryFunction>` to `StaffProfile` in
+- [X] T005 [P] Add `TimeEntryFunctions: List<StaffTimeEntryFunction>` to `StaffProfile` in
       `backend/ChildCare.Domain/Entities/StaffProfile.cs` (depends on T001)
-- [ ] T006 [P] Add `IStaffDocumentStorage` port (research.md R3, mirrors
+- [X] T006 [P] Add `IStaffDocumentStorage` port (research.md R3, mirrors
       `IHealthAttachmentStorage`) in `backend/ChildCare.Application/Common/IStaffDocumentStorage.cs`
-- [ ] T007 Add `DbSet<StaffTimeEntry>` and `DbSet<StaffDocument>` to
+- [X] T007 Add `DbSet<StaffTimeEntry>` and `DbSet<StaffDocument>` to
       `backend/ChildCare.Application/Common/ITenantDbContext.cs` (depends on T003, T004)
-- [ ] T008 Configure EF Core mapping for `StaffTimeEntry`/`StaffDocument`, the
+- [X] T008 Configure EF Core mapping for `StaffTimeEntry`/`StaffDocument`, the
       `TimeEntryFunctions` `text[]` value converter + `ValueComparer` (mirrors
       `ContractedDays`'s existing conversion, feature 027), and the `(LocationId, ClockedInAt)`/
       `(DocumentType, ValidUntil)` indexes (data-model.md) in
       `backend/ChildCare.Infrastructure/Persistence/TenantDbContext.cs` (depends on T007, T005)
-- [ ] T009 Implement `GcsStaffDocumentStorage` (`IStaffDocumentStorage`) in
+- [X] T009 Implement `GcsStaffDocumentStorage` (`IStaffDocumentStorage`) in
       `backend/ChildCare.Infrastructure/Storage/GcsStaffDocumentStorage.cs` (depends on T006)
-- [ ] T010 [P] Register `IStaffDocumentStorage` → `GcsStaffDocumentStorage` in the main builder's
+- [X] T010 [P] Register `IStaffDocumentStorage` → `GcsStaffDocumentStorage` in the main builder's
       DI setup in `backend/ChildCare.Api/Program.cs` (depends on T009)
-- [ ] T011 Generate the EF Core migration: create `staff_time_entries`, `staff_documents`, add
+- [X] T011 Generate the EF Core migration: create `staff_time_entries`, `staff_documents`, add
       `StaffProfile.TimeEntryFunctions` (backfilled to `{}`) in
       `backend/ChildCare.Infrastructure/Persistence/Migrations/Tenant/` (depends on T008)
-- [ ] T012 Extend `TenantMigrationRolloutTests` and `LegacyVaccinationMigrationTests`'s
+- [X] T012 Extend `TenantMigrationRolloutTests` and `LegacyVaccinationMigrationTests`'s
       schema-revert helpers for the two new tables (research.md R7 — the recurring pattern every
       migration-adding feature since 012a has needed) in `backend/ChildCare.Api.Tests/`
       (depends on T011)
-- [ ] T013 Generate the production SQL script for this migration per constitution Principle VI
+- [X] T013 Generate the production SQL script for this migration per constitution Principle VI
       (EF Core migrations never auto-apply in production) (depends on T011)
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.

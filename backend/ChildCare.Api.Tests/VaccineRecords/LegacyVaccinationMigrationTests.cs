@@ -156,6 +156,11 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
     /// migration itself drops must be added back so the migration's own Up() backfill step has
     /// something to read when re-applied; staff_profiles' two new columns (ContractedDays,
     /// PushToken) need their own explicit DROP COLUMNs too, same reason as every other
+    /// column-only addition above. Feature 028's "AddStaffHrDossierAndTimeRegistration" is the
+    /// next one — its two new tables (staff_time_entries: FKs to staff_profiles/locations/groups,
+    /// none of which are dropped in this test, only referenced; staff_documents: FK to
+    /// staff_profiles) each need their own DROP TABLE, and staff_profiles' one new column
+    /// (TimeEntryFunctions) needs its own explicit DROP COLUMN, same reason as every other
     /// column-only addition above.
     /// </summary>
     private static async Task RevertToPreVaccineHealthRecordsAsync(IServiceProvider services, string schemaName)
@@ -271,8 +276,12 @@ public class LegacyVaccinationMigrationTests(OrganisationOnboardingWebAppFactory
             ALTER TABLE "{schemaName}"."staff_profiles"
                 DROP COLUMN "ContractedDays",
                 DROP COLUMN "PushToken";
+            DROP TABLE "{schemaName}"."staff_time_entries";
+            DROP TABLE "{schemaName}"."staff_documents";
+            ALTER TABLE "{schemaName}"."staff_profiles"
+                DROP COLUMN "TimeEntryFunctions";
             DELETE FROM "{schemaName}"."__EFMigrationsHistory"
-                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit' OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave';
+                WHERE "MigrationId" LIKE '%AddVaccineAndHealthRecords' OR "MigrationId" LIKE '%AddPediatricianContactToChild' OR "MigrationId" LIKE '%AddChildMealPreferences' OR "MigrationId" LIKE '%AddLocationRequiresCaregiverPin' OR "MigrationId" LIKE '%AddVaccineCatalogAndAttachments' OR "MigrationId" LIKE '%AddIsPlatformAdminToUsers' OR "MigrationId" LIKE '%AddMonthlyMenuAndMealPreferenceRequests' OR "MigrationId" LIKE '%AddMonthlyMenuVariants' OR "MigrationId" LIKE '%AddInvoices' OR "MigrationId" LIKE '%AddInvoiceRemindersAndLocationPaymentSettings' OR "MigrationId" LIKE '%AddFiscalAttestations' OR "MigrationId" LIKE '%AddChildMilestoneObservations' OR "MigrationId" LIKE '%AddGroupCapacity' OR "MigrationId" LIKE '%AddReportingIndexes' OR "MigrationId" LIKE '%AddEmailCommunications' OR "MigrationId" LIKE '%AddSiblingBillingSettingsAndFamilyGroupId' OR "MigrationId" LIKE '%AddLocationQrCheckInEnabled' OR "MigrationId" LIKE '%AddIdentityVerificationAndNrn' OR "MigrationId" LIKE '%AddDigitalEnrollment' OR "MigrationId" LIKE '%AddContractSigningAndSepaMandate' OR "MigrationId" LIKE '%AddCodaPaymentMatching' OR "MigrationId" LIKE '%AddSepaDirectDebit' OR "MigrationId" LIKE '%AddStaffAppPersonalRotaAndLeave' OR "MigrationId" LIKE '%AddStaffHrDossierAndTimeRegistration';
             """);
     }
 

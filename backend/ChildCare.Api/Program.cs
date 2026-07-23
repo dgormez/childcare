@@ -235,6 +235,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProfilePhotoStorage, GcsProfilePhotoStorage>();
 builder.Services.AddScoped<IHealthAttachmentStorage, GcsHealthAttachmentStorage>();
 
+// ── Staff HR dossier & time registration (feature 028) ──────────────────────
+builder.Services.AddScoped<IStaffDocumentStorage, GcsStaffDocumentStorage>();
+
 // ── Group activities (feature 009b) ─────────────────────────────────────────
 builder.Services.AddScoped<IGroupActivityPhotoStorage, GcsGroupActivityPhotoStorage>();
 builder.Services.AddScoped<ChildCare.Application.GroupActivities.GroupActivityMapper>();

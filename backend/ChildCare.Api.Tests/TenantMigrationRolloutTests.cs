@@ -196,7 +196,12 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
     /// new columns on the already-dropped staff_schedules table (Status, CoverStaffId, Notes,
     /// CreatedBy, IsPublished, PublishedAt — no separate DROP COLUMN step needed) plus two new
     /// columns on the already-dropped staff_profiles table (ContractedDays, PushToken) — same
-    /// recurring pattern every migration-adding feature since 012a has needed.
+    /// recurring pattern every migration-adding feature since 012a has needed. Feature 028's
+    /// "AddStaffHrDossierAndTimeRegistration" migration adds two new tables — staff_time_entries
+    /// (FKs to locations, groups, and staff_profiles, so it must drop before all three) and
+    /// staff_documents (FK to staff_profiles only) — plus one new column on the already-dropped
+    /// staff_profiles table (TimeEntryFunctions, no separate DROP COLUMN step needed) — same
+    /// recurring pattern.
     /// </summary>
     private static async Task RevertToPreExtensionSchemaAsync(IServiceProvider services, string schemaName)
     {
@@ -241,6 +246,8 @@ public class TenantMigrationRolloutTests(OrganisationOnboardingWebAppFactory fac
             DROP TABLE "{schemaName}"."incident_reports";
             DROP TABLE "{schemaName}"."child_meal_preferences";
             DROP TABLE "{schemaName}"."meal_preference_change_requests";
+            DROP TABLE "{schemaName}"."staff_time_entries";
+            DROP TABLE "{schemaName}"."staff_documents";
             DROP TABLE "{schemaName}"."groups";
             DROP TABLE "{schemaName}"."children";
             DROP TABLE "{schemaName}"."contacts";

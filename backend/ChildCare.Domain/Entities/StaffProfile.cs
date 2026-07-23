@@ -45,6 +45,11 @@ public class StaffProfile
     // staff account, overwritten on each registration.
     public string? PushToken { get; set; }
 
+    // Feature 028: which medewerkersbeleid function(s) this staff member may clock in under
+    // (spec.md FR-010). Empty by default — a new staff member cannot clock in until a director
+    // configures at least one (spec.md Key Entities).
+    public List<StaffTimeEntryFunction> TimeEntryFunctions { get; set; } = [];
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
