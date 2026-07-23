@@ -112,7 +112,7 @@ possible, then clock out.
       `Group.LocationId` doesn't match the supplied `locationId` with `400
       errors.staff_time_entries.group_location_mismatch` (FR-004a) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
-- [ ] T017 [P] [US1] Component test: `ClockInOutCard` shows "Begin dienst"/"Einde dienst"
+- [X] T017 [P] [US1] Component test: `ClockInOutCard` shows "Begin dienst"/"Einde dienst"
       correctly based on open-entry state and is disabled with a connectivity message while
       offline (mirrors `report-sick.tsx`'s existing pattern) in
       `staff-mobile/__tests__/ClockInOutCard.test.tsx`
@@ -135,13 +135,13 @@ possible, then clock out.
       needed so staff-mobile can render "Einde dienst" vs "Begin dienst" correctly on app
       reopen, not only right after a clock action, FR-001 Acceptance Scenario 3) in
       `backend/ChildCare.Api/Endpoints/StaffTimeEntryEndpoints.cs` (depends on T018, T019, T020)
-- [ ] T022 [US1] Implement `timeEntries.ts` (clock-in/clock-out API calls, mirrors `schedule.ts`'s
+- [X] T022 [US1] Implement `timeEntries.ts` (clock-in/clock-out API calls, mirrors `schedule.ts`'s
       shape) in `staff-mobile/services/timeEntries.ts` (depends on T021's contract types)
-- [ ] T023 [US1] Build `ClockInOutCard.tsx` (one-tap; function picker only when ambiguous per
+- [X] T023 [US1] Build `ClockInOutCard.tsx` (one-tap; function picker only when ambiguous per
       FR-005; offline-disabled per `useIsOffline`) in `staff-mobile/components/ClockInOutCard.tsx`
-- [ ] T024 [US1] Mount `ClockInOutCard` at the top of the schedule (app home) screen in
+- [X] T024 [US1] Mount `ClockInOutCard` at the top of the schedule (app home) screen in
       `staff-mobile/app/(app)/schedule/index.tsx` (research.md R10; depends on T023)
-- [ ] T025 [US1] Add NL/FR/EN i18n keys for clock in/out in
+- [X] T025 [US1] Add NL/FR/EN i18n keys for clock in/out in
       `staff-mobile/i18n/locales/{en,fr,nl}.json`
 
 **Checkpoint**: User Story 1 is fully functional and independently testable.

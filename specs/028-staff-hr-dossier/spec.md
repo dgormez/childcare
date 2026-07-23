@@ -385,6 +385,15 @@ calculation.
   surface; staff do not view their own documents from staff-mobile in this feature (not requested,
   and dossiers may contain sensitive employment data best gated by the existing director-only
   screens).
+- **Clock-in location selection mirrors FR-005's function-picker pattern** (found underspecified
+  during implementation — the "one tap" flow needs a location, which nothing in the original UX
+  Requirements addressed): when the staff member has exactly one `StaffLocationEligibility` grant
+  (`GET /api/staff/me`'s existing `eligibleLocationIds`), it's used automatically with no picker;
+  when they have more than one, a location picker appears before the action, same ambiguity rule
+  FR-005 already establishes for function selection. No `group_id` is captured from this one-tap
+  flow — `StaffTimeEntry.GroupId` stays null for staff-mobile-originated entries in this feature,
+  consistent with the flow's "quick action" intent; a director can still set it during a
+  correction (FR-008) if needed for a specific report.
 - **The three medewerkersbeleid function categories are taken as given by the backlog input, not
   independently verified against an official Opgroeien document** — unlike features 015/019/
   033–041 (which the pipeline's standing process explicitly requires citing

@@ -78,5 +78,19 @@
     "title": "Notifications",
     "empty": "No notifications yet.",
     "loadFailed": "Couldn't load notifications."
+  },
+  "timeEntries": {
+    "needsConnection": "You need an internet connection to clock in or out.",
+    "pickLocation": "Which location are you working at?",
+    "pickFunction": "Which role are you working today?",
+    "functions": {
+      "kinderbegeleider": "Childcare worker",
+      "logistiek": "Logistics",
+      "verantwoordelijke": "Responsible person"
+    },
+    "clockInAction": "Begin dienst",
+    "clockOutAction": "Einde dienst",
+    "clockInError": "Couldn't clock in. Please try again.",
+    "clockOutError": "Couldn't clock out. Please try again."
   }
 }

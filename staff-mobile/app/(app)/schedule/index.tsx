@@ -9,6 +9,7 @@ import { getMySchedule } from "../../../services/schedule";
 import { ScreenContainer } from "../../../components/ScreenContainer";
 import { ScheduleWeekList } from "../../../components/ScheduleWeekList";
 import { ScheduleDayCard } from "../../../components/ScheduleDayCard";
+import { ClockInOutCard } from "../../../components/ClockInOutCard";
 import { useColors } from "../../../hooks/useColors";
 import type { StaffScheduleResponse } from "../../../types";
 
@@ -62,6 +63,8 @@ export default function ScheduleScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [entries, setEntries] = useState<StaffScheduleResponse[]>([]);
   const [contractedDays, setContractedDays] = useState<string[]>([]);
+  const [eligibleLocationIds, setEligibleLocationIds] = useState<string[]>([]);
+  const [timeEntryFunctions, setTimeEntryFunctions] = useState<string[]>([]);
   const [locationNamesById, setLocationNamesById] = useState<Map<string, string>>(new Map());
   const [groupNamesById, setGroupNamesById] = useState<Map<string, string>>(new Map());
   const [closedLocationIdsByDate, setClosedLocationIdsByDate] = useState<Map<string, Set<string>>>(new Map());
@@ -92,7 +95,14 @@ export default function ScheduleScreen() {
     ]);
 
     if (meResult.response.ok && meResult.data) {
-      setContractedDays((meResult.data as unknown as { contractedDays: string[] }).contractedDays ?? []);
+      const me = meResult.data as unknown as {
+        contractedDays: string[];
+        eligibleLocationIds: string[];
+        timeEntryFunctions: string[];
+      };
+      setContractedDays(me.contractedDays ?? []);
+      setEligibleLocationIds(me.eligibleLocationIds ?? []);
+      setTimeEntryFunctions(me.timeEntryFunctions ?? []);
     }
     if (locationsResult.response.ok && locationsResult.data) {
       const locations = locationsResult.data as unknown as { id: string; name: string }[];
@@ -171,6 +181,12 @@ export default function ScheduleScreen() {
             <Text className="text-text-soft dark:text-text-soft-dark text-xs">{t("schedule.offlineCached")}</Text>
           </View>
         )}
+
+        <ClockInOutCard
+          eligibleLocationIds={eligibleLocationIds}
+          timeEntryFunctions={timeEntryFunctions}
+          locationNamesById={locationNamesById}
+        />
 
         <TouchableOpacity
           onPress={() => router.push("/(app)/report-sick")}
