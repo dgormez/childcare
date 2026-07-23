@@ -9,6 +9,8 @@ Existing fields (`Id`, `Email`, `TokenHash`, `ExpiresAt`, `CreatedAt`) are uncha
 |---|---|---|---|
 | `OrganisationNameNote` | `string` | Yes | Informational only (spec.md FR-001) — never validated against or used to pre-fill the registration form's own `OrganisationName` input. Max length 200 (matches `Tenant.Name`'s own `HasMaxLength(200)`, since it's describing the same kind of value). |
 | `Locale` | `string` | No, defaults `"nl"` | One of `"nl"`, `"fr"`, `"en"` (FluentValidation-enforced, mirrors this codebase's existing locale-string validation pattern e.g. `SendBulkEmailAsync`'s `locale` param). Drives which language the invitation email (R9) and, if re-sent, the resend email use. |
+| `CreatedByUserId` | `Guid?` | Yes | No DB-level FK, same cross-schema reasoning as `RevokedByUserId` below. Nullable rather than required so a `NOT NULL` migration doesn't need a backfill value for feature 001's pre-existing invitation rows (created before this field existed) — those rows simply show no creator (spec.md FR-008's attribution requirement applies going forward, not retroactively). |
+| `CreatedByEmail` | `string?` | Yes | Denormalized, same reasoning as `RevokedByEmail` — the platform-admin who sent the invitation, captured at that moment. |
 | `RevokedByUserId` | `Guid?` | Yes | No DB-level FK (research.md R4) — the acting `TenantUser` lives in an arbitrary tenant schema, a cross-schema-boundary reference Postgres cannot FK-enforce, identical precedent to `VaccineType.DeactivatedByUserId`. |
 | `RevokedByEmail` | `string?` | Yes | Denormalized at the moment of the action (create/resend supersede, or explicit revoke) so the audit trail stays human-readable if the acting account later changes. |
 | `RevokedAt` | `DateTime?` | Yes | Set by both an explicit "Revoke" action and an automatic supersede (research.md R3) — the data model makes no distinction between the two triggers, per spec.md's Clarifications. |
@@ -52,6 +54,7 @@ read, joined to `Invitation` for the registering email (research.md R5).
 | `status` | `string` | Derived (`pending`/`accepted`/`expired`/`revoked`) |
 | `expiresAt` | `DateTime` | `Invitation.ExpiresAt` |
 | `createdAt` | `DateTime` | `Invitation.CreatedAt` |
+| `createdByEmail` | `string?` | `Invitation.CreatedByEmail` (research.md R12 — null only for pre-feature rows that predate this column) |
 | `revokedByEmail` | `string?` | `Invitation.RevokedByEmail` (only when status is `revoked`) |
 | `revokedAt` | `DateTime?` | `Invitation.RevokedAt` |
 

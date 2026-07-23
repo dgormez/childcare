@@ -46,17 +46,20 @@ the registration link builder — every user story depends on all of these exist
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 Add `OrganisationNameNote (string?)`, `Locale (string, default "nl")`, `RevokedByUserId (Guid?)`, `RevokedByEmail (string?)`, `RevokedAt (DateTime?)` to `Invitation` per data-model.md, in `backend/ChildCare.Domain/Entities/Invitation.cs`
-- [ ] T002 Add EF model configuration for the five new `Invitation` columns to `PublicDbContext` — `OrganisationNameNote` max 200, `Locale` max 2 with a check constraint (`'nl'|'fr'|'en'`), no DB-level FK on `RevokedByUserId` (research.md R4) (depends on T001), in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
+- [ ] T001 Add `OrganisationNameNote (string?)`, `Locale (string, default "nl")`, `CreatedByUserId (Guid?)`, `CreatedByEmail (string?)`, `RevokedByUserId (Guid?)`, `RevokedByEmail (string?)`, `RevokedAt (DateTime?)` to `Invitation` per data-model.md (research.md R12), in `backend/ChildCare.Domain/Entities/Invitation.cs`
+- [ ] T002 Add EF model configuration for the seven new `Invitation` columns to `PublicDbContext` — `OrganisationNameNote` max 200, `Locale` max 2 with a check constraint (`'nl'|'fr'|'en'`), no DB-level FK on `CreatedByUserId`/`RevokedByUserId` (research.md R4/R12) (depends on T001), in `backend/ChildCare.Infrastructure/Persistence/PublicDbContext.cs`
 - [ ] T003 Generate the Public-schema EF Core migration `AddPlatformAdminInvitationFields` (depends on T002), in `backend/ChildCare.Infrastructure/Persistence/Migrations/Public/`
 - [ ] T004 [P] Add `SendOrganisationInvitationAsync(string toEmail, string locale, string? organisationNameNote, string registerUrl)` to `IEmailSender` per research.md R9, in `backend/ChildCare.Application/Common/IEmailSender.cs`
 - [ ] T005 Implement `SendOrganisationInvitationAsync` (locale-aware template, 3 locales) in `backend/ChildCare.Api/Services/EmailService.cs`, and add the matching method to `backend/ChildCare.Api.Tests/FakeEmailSender.cs` (depends on T004)
 - [ ] T006 [P] Create `OrganisationInvitationLinkBuilder.BuildRegisterUrl(config, token)` → `{App:OrganisationRegisterBaseUrl}?token={token}` per research.md R8, in `backend/ChildCare.Application/Invitations/OrganisationInvitationLinkBuilder.cs`
 - [ ] T007 Add `App:OrganisationRegisterBaseUrl` config key (default `http://localhost:3000/register`) to `backend/ChildCare.Api/appsettings.json` and `appsettings.Development.example.json` (depends on T006)
 - [ ] T008 [P] Integration test: the new `Invitation` columns persist and round-trip correctly (defaults, nullability) through `PublicDbContext`, in `backend/ChildCare.Api.Tests/PlatformAdmin/InvitationSchemaTests.cs` (depends on T003)
+- [ ] T008a [P] Add an `RateLimiterPolicies.OrganisationRegister` options class and register a `"organisation-register"` sliding-window policy in `Program.cs`'s `AddRateLimiter` block, mirroring `RateLimiterPolicies.PublicEnrollment`'s existing shape (research.md R13), in `backend/ChildCare.Api/RateLimiting/RateLimiterPolicies.cs` and `backend/ChildCare.Api/Program.cs`
+- [ ] T008b Apply `.RequireRateLimiting("organisation-register")` to `POST /api/organisations/register` (depends on T008a), in `backend/ChildCare.Api/Endpoints/OrganisationEndpoints.cs`
+- [ ] T008c [P] Unit test exercising the real `SlidingWindowRateLimiter` against `RateLimiterPolicies.OrganisationRegister`'s options directly (mirrors feature 023's equivalent test, since `AddRateLimiter` is disabled codebase-wide in the Testing environment), in `backend/ChildCare.Api.Tests/PlatformAdmin/OrganisationRegisterRateLimitTests.cs` (depends on T008a)
 
-**Checkpoint**: Schema, email capability, and link builder exist; solution builds. User story
-implementation can now begin.
+**Checkpoint**: Schema, email capability, link builder, and rate limiting exist; solution builds.
+User story implementation can now begin.
 
 ---
 
@@ -71,13 +74,13 @@ without the flag gets `403` on the same endpoint.
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Integration test: `POST /api/platform-admin/invitations` creates a Pending invitation, defaults `locale` to `"nl"` when omitted, sends the invitation email via `IEmailSender` (asserted through `FakeEmailSender`); rejects an invalid email with `422`; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/CreatePlatformAdminInvitationTests.cs`
+- [ ] T009 [P] [US1] Integration test: `POST /api/platform-admin/invitations` creates a Pending invitation with `createdByEmail` set from the caller's own claims (never the request body, research.md R12), defaults `locale` to `"nl"` when omitted, sends the invitation email via `IEmailSender` (asserted through `FakeEmailSender`); rejects an invalid email with `422`; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/CreatePlatformAdminInvitationTests.cs`
 - [ ] T010 [P] [US1] Integration test: creating a second invitation for an email with an existing Pending/Expired invitation marks the prior one Revoked (attributed to the acting platform-admin, per research.md R3) and only the new one is usable, in `backend/ChildCare.Api.Tests/PlatformAdmin/InvitationSupersedeTests.cs`
 
 ### Implementation for User Story 1
 
 - [ ] T011 [US1] `CreatePlatformAdminInvitationRequest`/`PlatformAdminInvitationResponse` contracts per contracts/platform-admin-portal-api.md, in `backend/ChildCare.Contracts/Requests/PlatformAdminInvitationRequests.cs` and `backend/ChildCare.Contracts/Responses/PlatformAdminInvitationResponse.cs`
-- [ ] T012 [US1] `CreatePlatformAdminInvitationCommand` + handler (extends `CreateInvitationCommandHandler`'s existing supersede loop to also populate `RevokedByUserId`/`Email`/`At` on the superseded row, per research.md R3; sends the email via `OrganisationInvitationLinkBuilder` + `IEmailSender.SendOrganisationInvitationAsync`) + FluentValidation validator, in `backend/ChildCare.Application/Invitations/CreatePlatformAdminInvitationCommand.cs` (depends on T001, T004, T006, T011)
+- [ ] T012 [US1] `CreatePlatformAdminInvitationCommand` + handler (extends `CreateInvitationCommandHandler`'s existing supersede loop to also populate `RevokedByUserId`/`Email`/`At` on the superseded row, per research.md R3; sets `CreatedByUserId`/`CreatedByEmail` on the new row from the acting user passed in by the endpoint, per research.md R12; sends the email via `OrganisationInvitationLinkBuilder` + `IEmailSender.SendOrganisationInvitationAsync`) + FluentValidation validator, in `backend/ChildCare.Application/Invitations/CreatePlatformAdminInvitationCommand.cs` (depends on T001, T004, T006, T011)
 - [ ] T013 [US1] `PlatformAdminInvitationEndpoints.cs`: map `POST /api/platform-admin/invitations`, `.RequireAuthorization("PlatformAdminOnly")`, acting-user resolved via the same `ActingUserOf(HttpContext)` pattern as `PlatformAdminVaccineTypeEndpoints.cs`, in `backend/ChildCare.Api/Endpoints/PlatformAdminInvitationEndpoints.cs` (depends on T012)
 - [ ] T014 [US1] Register `PlatformAdminInvitationEndpoints` in the endpoint-mapping startup code, in `backend/ChildCare.Api/Program.cs` (depends on T013)
 - [ ] T015 [US1] Regenerate `web/lib/generated/api-types.ts` (depends on T014) — do this once after US1+US3's endpoints both exist, to avoid regenerating twice

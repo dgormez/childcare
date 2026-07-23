@@ -207,6 +207,7 @@ route-group layouts elsewhere (`(app)/layout.tsx`).
 ## R11 — Endpoint/response naming conventions
 
 **Decision**:
+
 - `GET|POST /api/platform-admin/invitations`, `POST /api/platform-admin/invitations/{id}/resend`,
   `POST /api/platform-admin/invitations/{id}/revoke` — mirrors
   `PlatformAdminVaccineTypeEndpoints.cs`'s existing `/api/platform-admin/vaccine-types` shape
@@ -217,3 +218,41 @@ route-group layouts elsewhere (`(app)/layout.tsx`).
 
 **Rationale**: Consistency with the one existing precedent in this exact namespace avoids two
 different conventions for "a platform-admin-only resource" three months apart.
+
+## R12 — Invitation creation gets its own attribution fields, distinct from revoke
+
+**Decision**: Add `CreatedByUserId (Guid?)` / `CreatedByEmail (string?)` to `Invitation`, populated
+at creation time from the acting platform-admin's claims — the same `ActingUserOf(HttpContext)`
+pattern used for revoke, applied a second time for create.
+
+**Rationale**: Found during `/speckit-checklist`'s security/audit-integrity pass (CHK001):
+spec.md's FR-008 explicitly promises attribution for create, not just resend/revoke, but the
+first draft of data-model.md only had revoke-side fields — a real, fixable gap, not deferred.
+Nullable (not required) specifically so the migration needs no backfill for feature 001's
+pre-existing invitation rows created before this column existed.
+
+**Alternatives considered**: Making the fields `NOT NULL` and backfilling existing rows with a
+placeholder ("system"/"unknown") — rejected as a fabricated audit record is worse than an
+honestly-absent one; a null creator on a pre-feature row is accurate, not a data quality defect.
+
+## R13 — Registration endpoint needs rate limiting for the first time
+
+**Decision**: Add a `RequireRateLimiting("organisation-register")` policy to
+`POST /api/organisations/register`, mirroring `PublicEnrollmentEndpoints.cs`'s existing
+`RequireRateLimiting("public-enrollment")` policy and `RateLimiterPolicies`'s established
+options-extraction pattern (a standalone options class so a unit test can exercise the real
+`SlidingWindowRateLimiter` directly, per feature 023's own precedent for testing rate limiting
+without touching the codebase-wide `AddRateLimiter` Testing-environment disablement).
+
+**Rationale**: Found during `/speckit-checklist`'s security pass (CHK002): this endpoint has
+existed since feature 001 with zero rate limiting, because it was never actually reachable by
+real traffic — no page anywhere called it. This feature is what changes that. Leaving it
+unprotected the moment it becomes genuinely public would be a real regression in security
+posture introduced by this feature, not a pre-existing, unrelated gap — the same reasoning
+`PublicEnrollmentEndpoints.cs` already applied to an equivalent newly-public write path.
+
+**Alternatives considered**: Relying solely on the token's cryptographic strength (64 random
+bytes, research.md/data-model.md's entropy note) as sufficient defense — rejected; rate limiting
+defends against a different threat (generic volumetric abuse/spam submissions, not just token
+guessing), and the codebase already has an established, cheap-to-apply pattern for exactly this
+class of endpoint.

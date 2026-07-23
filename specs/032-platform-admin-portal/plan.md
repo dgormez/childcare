@@ -58,7 +58,7 @@ a shared shell/nav retrofit.
 | III. CQRS via MediatR & Thin Endpoints | **PASS** | New writes (`CreateInvitationCommand` extension, `ResendInvitationCommand`, `RevokeInvitationCommand`) and reads (`ListInvitationsForPlatformAdminQuery`, `ListOrganisationsForPlatformAdminQuery`) all go through MediatR; new endpoint files map HTTP↔MediatR only, mirroring `PlatformAdminVaccineTypeEndpoints.cs`'s existing shape. |
 | IV. Internationalization First (NON-NEGOTIABLE) | **PASS** | The Invitations/Organisations director-web screens use standard `next-intl` locale keys like every other director-web screen. The public registration page follows the existing public-enrollment page's pattern (feature 023): its own nested per-locale message loading + in-page language toggle, defaulting to Dutch, since the visitor has no stored locale yet. The invitation email itself is sent in a platform-admin-selected locale (nl/fr/en, default nl) — a genuinely new send path, so it does NOT reuse feature 020's documented "accepted English-only gap" (that gap was explicitly scoped to pre-020 flows, not new ones). |
 | V. Test with Real Infrastructure (NON-NEGOTIABLE) | **PASS** | All new backend tests run against TestContainers Postgres via this codebase's existing test fixtures — no InMemory provider. |
-| VI. Secure Configuration & Storage | **PASS** | No secrets introduced. The new `Invitation` migration is Public-schema (applies once, reviewed/deployed like any other migration — not the tenant-schema auto-apply carve-out, which doesn't apply here). No file storage in this feature. Acting-user resolved server-side only (never client-supplied), matching 013h's `ActingUserOf` pattern. |
+| VI. Secure Configuration & Storage | **PASS** | No secrets introduced. The new `Invitation` migration is Public-schema (applies once, reviewed/deployed like any other migration — not the tenant-schema auto-apply carve-out, which doesn't apply here). No file storage in this feature. Acting-user resolved server-side only (never client-supplied), matching 013h's `ActingUserOf` pattern — applied to both creation and revoke attribution (research.md R12, a gap `/speckit-checklist` caught and this plan now includes). `POST /api/organisations/register` gains rate limiting (research.md R13) since this feature is what first makes it genuinely publicly reachable — also a checklist-driven fix, not part of the original draft. |
 | VII. Monolith-First Simplicity | **PASS** | No new backend project, no new web app, no new service. Everything lives in the existing five backend projects and the existing `web/` app. |
 
 No violations — Complexity Tracking section is empty (omitted).
@@ -102,9 +102,11 @@ backend/
 ├── ChildCare.Contracts/
 │   ├── Requests/ (Create/Resend/Revoke invitation requests)
 │   └── Responses/ (PlatformAdminInvitationResponse, PlatformAdminOrganisationResponse)
-└── ChildCare.Api/Endpoints/
-    └── PlatformAdminInvitationEndpoints.cs           # new — mirrors PlatformAdminVaccineTypeEndpoints.cs
-    (PlatformAdminOrganisationEndpoints.cs — new, read-only GET)
+├── ChildCare.Api/Endpoints/
+│   ├── PlatformAdminInvitationEndpoints.cs           # new — mirrors PlatformAdminVaccineTypeEndpoints.cs
+│   ├── PlatformAdminOrganisationEndpoints.cs         # new, read-only GET
+│   └── OrganisationEndpoints.cs                      # extend: rate limiting on /register (research.md R13)
+└── ChildCare.Api/RateLimiting/RateLimiterPolicies.cs # extend: OrganisationRegister policy
 
 web/
 ├── app/

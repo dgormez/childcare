@@ -112,7 +112,8 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 
 - What happens when a platform-admin tries to revoke an invitation that was already accepted? The action is unavailable (no Revoke control shown) since the invitation is no longer pending — Accepted and Revoked are mutually exclusive end states.
 - What happens when a platform-admin tries to resend an invitation that already expired? Resend is still offered for Expired (not just Pending) invitations, since the whole point of resend is to give a prospective director a fresh, working link after their old one went stale.
-- What happens if two platform-admins act on the same invitation at nearly the same time (e.g. one resends while another revokes)? The second write wins per normal last-write-semantics; no distributed-lock/optimistic-concurrency mechanism is introduced, consistent with how every other admin action in this codebase already works.
+- What happens if two platform-admins act on the same invitation at nearly the same time (e.g. one resends while another revokes, or two both try to revoke it, or one creates a second invitation for the same email while another resends the first)? For every such pairing, the second write wins per normal last-write-semantics; no distributed-lock/optimistic-concurrency mechanism is introduced, consistent with how every other admin action in this codebase already works.
+- What happens if the invitation email fails to send (e.g. a transient SMTP error) after the invitation record was already created? The invitation still exists and is visible as Pending — the platform-admin can use Resend to retry delivery. The record is never rolled back just because the email failed, matching this codebase's existing pattern for a near-identical case (`ResendStaffInvitationCommandHandler` persists its new invitation before calling `IEmailSender`, with no compensating rollback if the send throws).
 - What happens when the organisation-name note is left blank at invitation time? It's optional — the invitation is still created and sent, just without a note shown in the list (the authoritative organisation name is still whatever the director enters at registration).
 - What happens when an email is sent to an address that was already used to complete registration previously (a different, older, now-Accepted invitation)? The system does not block sending a new invitation to a previously-registered email — an intentional, pre-existing gap in feature 001's flow, out of scope to change here.
 - What happens if a prospective director's chosen organisation name collides with an existing one? Unchanged from feature 001's existing behavior on the registration endpoint — this feature's new page surfaces whatever validation/error feature 001 already returns, it does not introduce new collision logic.
@@ -132,13 +133,14 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 - **FR-005**: The system MUST allow a platform-admin to resend a Pending or Expired invitation, which creates a fresh invitation (new token, new expiry) for the same email/note and marks the prior one Revoked (attributed to the platform-admin who triggered the resend, at that moment) so only the newest is usable. Creating a new invitation for an email with an existing Pending or Expired invitation follows the same supersede behavior.
 - **FR-006**: The system MUST allow a platform-admin to revoke a Pending invitation, immediately and permanently preventing that invitation from completing registration. The system MUST NOT distinguish, in the data model or the list view, between this explicit action and a supersede-triggered Revoked state (FR-005) — both are the same Revoked status.
 - **FR-007**: The system MUST NOT allow resend or revoke on an invitation that has already reached the Accepted state.
-- **FR-008**: The system MUST record who performed a create/resend/revoke action and when, resolved from the authenticated platform-admin's session — never accepted as a client-supplied value.
+- **FR-008**: The system MUST record who performed a create/resend/revoke action and when, resolved from the authenticated platform-admin's session — never accepted as a client-supplied value. This applies to invitation creation itself, not only resend/revoke — the platform-admin who sent an invitation MUST be attributable, the same way a resend/revoke is.
 
 #### Registration
 
-- **FR-009**: The system MUST provide a public, unauthenticated web page where a prospective director can complete registration using a valid invitation link — the invited email pre-filled and not editable, plus organisation name, director name, and password as input.
+- **FR-009**: The system MUST provide a public, unauthenticated web page where a prospective director can complete registration using a valid invitation link — the invited email pre-filled and not editable, plus organisation name, director name, and password as input. Organisation-name and password validation rules are unchanged from feature 001's existing `RegisterOrganisationCommand` validator — this feature does not duplicate or redefine them.
 - **FR-010**: The system MUST leave the existing invitation-acceptance/registration behavior unchanged (a valid, unexpired, unrevoked, unused invitation completes registration exactly as feature 001 already built it — immediate activation, no approval step, no waiting period).
 - **FR-011**: The system MUST show a clear, non-specific "this invitation link is no longer valid" message for an expired, revoked, already-used, or never-existent invitation token — never revealing which of those reasons applies (preserves the existing generic not-found handling).
+- **FR-011a**: The system MUST apply request-rate limiting to the registration endpoint, matching the existing precedent already established for the platform's other public, unauthenticated write endpoint (feature 023's public enrollment form) — this feature is what first makes the registration endpoint genuinely reachable by real public traffic (no page ever linked to it before), so it needs the same defense that endpoint already has.
 
 #### Organisation directory
 
@@ -154,7 +156,7 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 
 ### Key Entities *(include if feature involves data)*
 
-- **Invitation**: Represents an offer for a prospective director to register a new organisation. Attributes: invited email, an opaque single-use token (persisted only as a hash), expiry timestamp, an optional organisation-name note (informational, not authoritative), and revoke attribution (who revoked/superseded it and when, when applicable — the same fields serve both an explicit manual revoke and a resend/duplicate-create-triggered supersede). Status is a derived, computed view over these facts plus whether a resulting organisation exists. Lives in the platform's shared (cross-tenant) data.
+- **Invitation**: Represents an offer for a prospective director to register a new organisation. Attributes: invited email, an opaque single-use token (persisted only as a hash), expiry timestamp, an optional organisation-name note (informational, not authoritative), creation attribution (which platform-admin sent it and when — FR-008), and revoke attribution (who revoked/superseded it and when, when applicable — the same fields serve both an explicit manual revoke and a resend/duplicate-create-triggered supersede). Status is a derived, computed view over these facts plus whether a resulting organisation exists. Lives in the platform's shared (cross-tenant) data.
 - **Organisation** (existing entity, read-only in this feature): The record created when a prospective director's registration completes. This feature adds no new attributes to it — the directory (FR-012) surfaces fields that already exist (name, plan, provisioning status, KBO number, creation date) plus the registering email, traced back through the Invitation that produced it.
 
 ## Success Criteria *(mandatory)*
@@ -182,6 +184,9 @@ A platform-admin needs one consistent place in the app to find every cross-tenan
 - "Provisioning status" shown in the directory reflects whether an organisation's technical setup completed successfully — it is not, and this feature does not turn it into, an admin-controlled active/suspended toggle. Tenant suspension remains fully out of scope (feature 002's existing deferral).
 - Billing/subscription-plan management remains out of scope, per feature 001's existing deferral — unaffected by this feature.
 - The vaccine-catalog management screen itself (013h) is not rebuilt or functionally changed by this feature — only its entry point is moved into the new shared navigation section.
+- Invitation records (accepted, expired, or revoked) are retained indefinitely, with no automated deletion — consistent with how this codebase treats other operational/audit records (e.g. `Tenant` rows are never purged either) and with feature 038's data-retention work not naming `Invitation` among the record types it governs. If a future retention feature changes this, it will need to explicitly add `Invitation` to its scope; this feature does not pre-emptively add a policy for it.
+- The existing invitation token's 64 bytes of cryptographic randomness (`InvitationTokenCodec`, feature 001) already makes brute-force guessing of a valid token computationally infeasible — the new rate limiting (FR-011a) is a defense-in-depth/abuse-resistance measure consistent with this platform's other public endpoints, not a compensating control for a weak token.
+- A platform-admin's `IsPlatformAdmin` flag being revoked mid-session is out of scope for this feature to address — 013h never built an in-app way to revoke that flag at all (only `grant-platform-admin`), so there is no revocation event for this feature to react to; a still-valid JWT continues to carry whatever claims it was issued with until natural expiry, the same as every other role change in this codebase today.
 
 ## Product Context
 
@@ -244,15 +249,18 @@ operation and no ops-assisted registration step.
 
 - **API impact**: new `PlatformAdminOnly`-gated endpoints for invitation create/list/resend/
   revoke and the organisation directory read, under the `/api/platform-admin/*` prefix
-  convention 013h's vaccine-type endpoints already established. No new backend endpoint for
-  registration itself — feature 001's `POST /api/organisations/register` is reused as-is.
+  convention 013h's vaccine-type endpoints already established. The only change to an existing
+  endpoint is adding rate limiting to `POST /api/organisations/register` (FR-011a) — its
+  request/response contract is otherwise reused as-is.
 - **Data-model impact**: a Public-schema migration extending `Invitation` with an
-  organisation-name note and revoke attribution (acting-user id/email, timestamp). No changes
-  to the `Tenant` entity — the directory reads existing fields.
+  organisation-name note, creation attribution, and revoke attribution (acting-user id/email,
+  timestamp, for both — FR-008). No changes to the `Tenant` entity — the directory reads
+  existing fields.
 - **Security considerations**: acting-user resolved server-side from JWT claims only, never
-  client-supplied; the registration page is necessarily unauthenticated (mirrors feature 001's
-  existing `RequireTenantExempt` pattern) and must not leak invitation validity/state beyond
-  the existing generic not-found handling.
+  client-supplied, for both creation and revoke attribution; the registration page is
+  necessarily unauthenticated (mirrors feature 001's existing `RequireTenantExempt` pattern),
+  rate-limited (FR-011a) now that it's genuinely reachable by public traffic, and must not leak
+  invitation validity/state beyond the existing generic not-found handling.
 - **Performance considerations**: not a concern at this scale — an internal operations tool
   plus a low-volume public form, not a high-traffic path.
 - **Testing requirements**: a policy-boundary test (platform-admin claim without director role

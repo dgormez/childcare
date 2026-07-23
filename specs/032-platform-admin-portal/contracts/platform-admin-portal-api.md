@@ -23,9 +23,10 @@ Request:
 
 Behavior: if a Pending or Expired invitation already exists for this email, it is marked Revoked
 (attributed to the acting platform-admin) before the new one is created — the existing
-`CreateInvitationCommandHandler` supersede behavior, extended per research.md R3. Sends the
-invitation email in the requested locale (research.md R9). Returns `201 Created` with
-`PlatformAdminInvitationResponse`.
+`CreateInvitationCommandHandler` supersede behavior, extended per research.md R3. The new
+invitation's `CreatedByUserId`/`CreatedByEmail` are set from the acting platform-admin's claims
+(research.md R12). Sends the invitation email in the requested locale (research.md R9). Returns
+`201 Created` with `PlatformAdminInvitationResponse`.
 
 ### `POST /api/platform-admin/invitations/{id}/resend`
 
@@ -67,3 +68,9 @@ Request: `{ invitationToken, organisationName, directorName, email, password }`.
 Response: `201 Created` with `RegisterOrganisationResponse` on success; `404`
 (`errors.invitation.not_found` — covers not-found/expired/revoked/already-used, deliberately
 indistinguishable) or `422` (`errors.registration.email_mismatch`) on failure.
+
+**New in this feature**: `.RequireRateLimiting("organisation-register")` is added to this route
+(research.md R13) — this feature is what first makes it genuinely reachable by public traffic,
+mirroring `PublicEnrollmentEndpoints.cs`'s existing policy on an equivalent newly-public write
+path. This is the one actual contract change this feature makes to the endpoint; everything
+else about it (request/response shape, status codes) is unchanged.
