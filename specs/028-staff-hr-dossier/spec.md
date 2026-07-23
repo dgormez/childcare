@@ -68,8 +68,10 @@ instead of a paper register.
 - **Main flow**: staff opens staff-mobile → taps "Begin dienst" → (function picker only if
   ambiguous) → later taps "Einde dienst". Director opens Staff → [staff member] → a new "Dossier"
   tab → uploads/views documents. Director dashboard shows a "Personeel — verlopende contracten"
-  block. Director opens Rapporten → Personeel, selects period/location, downloads the
-  medewerkersbeleid report.
+  block. Director opens the new "Personeelsuren" report page (a top-level sidebar entry — this
+  codebase has no "Rapporten" parent nav; feature 018's reports live inline on the dashboard,
+  and every other report-like screen is its own flat sidebar item), selects period/location, and
+  downloads the medewerkersbeleid report.
 - **Loading/empty/error states**: empty HR dossier ("Nog geen documenten"); empty subsidy-report
   period (no time entries in range — shown as zero hours, not an error); clock-in disabled while
   offline, mirroring feature 027's `report-sick` precedent (see Assumptions).

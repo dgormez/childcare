@@ -70,8 +70,8 @@ with `StaffLocationEligibility` for that location.
 3. Open the director dashboard; confirm the new "Personeel — verlopende contracten" block shows
    the staff member seeded with a near-expiry contract, and that clicking it navigates to their
    detail page.
-4. Open Rapporten → Personeel; select the seeded location/period; confirm the ratio table renders
-   and the CSV download link works.
+4. Open "Personeelsuren" from the sidebar; select the seeded location/period; confirm the ratio
+   table renders and the CSV download link works.
 
 ## Staff-mobile smoke check
 

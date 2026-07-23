@@ -161,7 +161,14 @@ web/
 │   │   ├── page.tsx                                     # extended: row click navigates to detail (was inert)
 │   │   └── [id]/page.tsx                                 # new — Dossier + Tijdsregistraties tabs
 │   ├── dashboard/page.tsx                                # extended: +ContractExpiryBlock
-│   └── reports/staff-hours/page.tsx                       # new — location/period selector, ratio table, CSV download
+│   └── staff-hours-report/page.tsx                        # new — flat top-level route (this
+│                                                            #   codebase has no "Rapporten" parent
+│                                                            #   nav; every report-like screen is
+│                                                            #   its own flat Sidebar entry, and
+│                                                            #   018's reports live inline on
+│                                                            #   /dashboard, not a nested route) —
+│                                                            #   location/period selector, ratio
+│                                                            #   table, CSV download
 ├── components/
 │   ├── staff/
 │   │   ├── StaffDossierTab.tsx                            # new
@@ -172,8 +179,9 @@ web/
 │   │   └── ContractExpiryBlock.tsx                          # new, mirrors DueSoonBlock.tsx (research.md R8)
 │   └── reporting/
 │       └── StaffHoursReportTable.tsx                        # new
+├── components/Sidebar.tsx                                    # +staffHoursReport nav entry (flat, mirrors every other top-level item)
 ├── lib/generated/api-types.ts                                # regenerated (openapi-typescript)
-└── i18n/locales/{en,fr,nl}.json                               # +staff.dossier.*/staff.timeEntries.*/reports.staffHours.* keys
+└── i18n/locales/{en,fr,nl}.json                               # +staff.dossier.*/staff.timeEntries.*/staffHoursReport.* keys
 
 staff-mobile/
 ├── app/(app)/schedule/index.tsx                           # extended: +ClockInOutCard at top (research.md R10)
@@ -191,8 +199,10 @@ staff-mobile/
 (`StaffTimeEntries/`, `StaffDocuments/`) alongside the existing `StaffScheduling/`
 convention, and extend feature 018's existing `Reporting/`/`ReportingEndpoints.cs` module for the
 subsidy report rather than inventing a new reporting surface — per Constitution VII, no new
-backend project. `staff-mobile` is extended in place (no new client project); director-web adds
-its first staff detail screen and first `reports/` sub-route.
+backend project. `staff-mobile` is extended in place (no new client project); director-web adds its first staff
+detail screen and a new flat top-level route (`staff-hours-report`), matching every existing
+Sidebar entry's convention rather than introducing a nested `reports/` section that has no
+precedent in this codebase.
 
 ## Complexity Tracking
 
