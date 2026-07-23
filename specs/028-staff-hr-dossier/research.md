@@ -116,7 +116,10 @@ page — `web/app/(app)/staff/page.tsx` is list-only, with edits handled via inl
 tabs: **Dossier** (document upload/list, contract dates, the `TimeEntryFunctions` multi-select)
 and **Tijdsregistraties** (time-entry list, clock-out correction, lock/unlock). Mirrors
 `web/app/(app)/children/[id]/page.tsx`'s `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` structure
-(006a "Profiel" / 013c "Gezondheid").
+(006a "Profiel" / 013c "Gezondheid"). **Dossier is the default (first) tab** — it's the more
+frequently needed of the two for this feature's headline use case (finding a staff member's HR
+documents, spec.md SC-002), and the contract-expiry dashboard block (research.md R8) links
+directly to it.
 
 **Rationale**: Same lesson feature 013c's shipped-note already drew ("a feature whose spec only
 lightly implies a screen can still require building the whole screen category from scratch if

@@ -108,6 +108,10 @@ possible, then clock out.
       (FR-005a) — both checked even when a different, eligible/configured value was never
       offered by the client UI, in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
+- [ ] T016b [P] [US1] Integration test: `ClockInCommand` rejects a `groupId` whose
+      `Group.LocationId` doesn't match the supplied `locationId` with `400
+      errors.staff_time_entries.group_location_mismatch` (FR-004a) in
+      `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
 - [ ] T017 [P] [US1] Component test: `ClockInOutCard` shows "Begin dienst"/"Einde dienst"
       correctly based on open-entry state and is disabled with a connectivity message while
       offline (mirrors `report-sick.tsx`'s existing pattern) in
@@ -117,7 +121,7 @@ possible, then clock out.
 
 - [ ] T018 [US1] Implement `ClockInCommand` (identity resolved from the JWT `NameIdentifier`
       claim, research.md R2; function-selection logic FR-005; `StaffLocationEligibility` check
-      FR-001a; configured-function check FR-005a) in
+      FR-001a; configured-function check FR-005a; `Group.LocationId` match check FR-004a) in
       `backend/ChildCare.Application/StaffTimeEntries/ClockInCommand.cs` (depends on T003, T005)
 - [ ] T019 [US1] Implement `ClockOutCommand` in
       `backend/ChildCare.Application/StaffTimeEntries/ClockOutCommand.cs`
@@ -221,6 +225,11 @@ surfaces on the dashboard block.
 - [ ] T040 [P] [US3] Component test: `ContractExpiryBlock` renders loading/empty/error/loaded
       states and navigates to the staff detail page on click (mirrors `DueSoonBlock`'s existing
       test) in `web/__tests__/ContractExpiryBlock.test.tsx`
+- [ ] T040a [P] [US3] Integration test: every dossier endpoint (list/upload-url/confirm/delete
+      documents, `time-entry-functions`, `contracts-expiring`) rejects a staff-authenticated (not
+      director) request with `403` (FR-013 — dossier access is director-only, mirrors 027's
+      `CrossStaffIsolationTests` precedent for this class of check) in
+      `backend/ChildCare.Api.Tests/StaffDocuments/StaffDossierTests.cs`
 
 ### Implementation for User Story 3
 
@@ -243,8 +252,9 @@ surfaces on the dashboard block.
 - [ ] T046 [US3] Extend `StaffEndpoints.cs` with document CRUD, `time-entry-functions`, and
       `contracts-expiring` routes (`DirectorOnly`) (depends on T041–T045)
 - [ ] T047 [US3] Build the new staff detail screen shell with **Dossier**/**Tijdsregistraties**
-      tabs (mirrors `children/[id]/page.tsx`'s tab pattern, research.md R9) in
-      `web/app/(app)/staff/[id]/page.tsx` (depends on T034 for the Tijdsregistraties tab content)
+      tabs, Dossier as the default/first tab (research.md R9, spec.md SC-002), mirroring
+      `children/[id]/page.tsx`'s tab pattern in `web/app/(app)/staff/[id]/page.tsx` (depends on
+      T034 for the Tijdsregistraties tab content)
 - [ ] T048 [US3] Build `StaffDossierTab.tsx`, `StaffDocumentForm.tsx`, and
       `TimeEntryFunctionsForm.tsx` in `web/components/staff/`
 - [ ] T049 [US3] Make `staff/page.tsx` rows navigate to the new detail page (was inert) in
@@ -279,6 +289,10 @@ the period is excluded.
 - [ ] T053 [P] [US4] Integration test: `ExportStaffHoursReportQuery`'s CSV rows sum to the exact
       same `totalStaffHours` the on-screen query returns for the same location/period (R6 —
       shared aggregation, never disagree) in
+      `backend/ChildCare.Api.Tests/Reporting/StaffHoursReportTests.cs`
+- [ ] T053a [P] [US4] Integration test: `GET /api/reports/staff-hours` and its `/export` route
+      both reject a staff-authenticated (not director) request with `403` (FR-016 — director-only,
+      same class of check as T040a) in
       `backend/ChildCare.Api.Tests/Reporting/StaffHoursReportTests.cs`
 
 ### Implementation for User Story 4

@@ -64,7 +64,7 @@ instead of a paper register.
   produce a subsidy-ready hours report; staff need a fast, unambiguous way to start/end a shift.
 - **Success criteria**: a director can find any staff member's HR documents and generate the
   subsidy report in a couple of clicks; staff clock in/out in one tap, with a function picker
-  appearing only when it's actually ambiguous (see FR-010).
+  appearing only when it's actually ambiguous (see FR-005).
 - **Main flow**: staff opens staff-mobile → taps "Begin dienst" → (function picker only if
   ambiguous) → later taps "Einde dienst". Director opens Staff → [staff member] → a new "Dossier"
   tab → uploads/views documents. Director dashboard shows a "Personeel — verlopende contracten"
@@ -267,6 +267,10 @@ calculation.
   clocked out) time entry at a time.
 - **FR-004**: Each time entry MUST record a `function` value (one of `kinderbegeleider`,
   `logistiek`, `verantwoordelijke`), a `location_id`, and an optional `group_id`.
+- **FR-004a**: When a `group_id` is supplied, the system MUST reject it if that group does not
+  belong to the supplied `location_id` — an unvalidated mismatch would misattribute hours to the
+  wrong location/group in the subsidy report (FR-017/FR-018), the same integrity concern FR-001a/
+  FR-005a address for location/function.
 - **FR-005**: When a staff member has more than one configured function, the system MUST prompt
   them to select the function for that clock-in; when they have exactly one, the system MUST skip
   the prompt and use it automatically.
@@ -322,9 +326,9 @@ calculation.
   that location within the period, summing `clocked_out_at - clocked_in_at`, grouped by `function`.
 - **FR-019**: A time entry with no `clocked_out_at` (still open) MUST be excluded from the report's
   hour totals rather than estimated.
-- **FR-020**: Directors MUST be able to export the same period's hours as a CSV, one row per staff
-  member per time entry (or a per-staff-member total — see plan.md for the exact shape), suitable
-  for handoff to a payroll system.
+- **FR-020**: Directors MUST be able to export the same period's hours as a CSV, one row per
+  closed time entry (staff member, date, function, duration), suitable for handoff to a payroll
+  system to apply its own pay-rate logic.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -347,8 +351,9 @@ calculation.
 
 - **SC-001**: A staff member can clock in or clock out in a single tap, with no typing required,
   in the common case (one configured function).
-- **SC-002**: A director can locate any staff member's HR documents in two navigation steps from
-  the staff list.
+- **SC-002**: A director can locate any staff member's HR documents in one navigation step from
+  the staff list (clicking their row) — the detail screen opens directly on the Dossier tab,
+  since documents are the more frequently needed of the two tabs (research.md R9).
 - **SC-003**: A director can generate the medewerkersbeleid subsidy report for a chosen
   location/period in under 30 seconds of interaction (select location, select period, generate).
 - **SC-004**: 100% of time entries older than the lock period are immutable without an explicit

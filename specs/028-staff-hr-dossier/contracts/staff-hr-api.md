@@ -33,7 +33,9 @@ Errors: `409 errors.staff_time_entries.already_clocked_in` (an open entry alread
 `400 errors.staff_time_entries.no_function_configured` (empty `TimeEntryFunctions` — FR-010);
 `400 errors.staff_time_entries.function_not_configured` (`function` supplied but not one of the
 caller's own `TimeEntryFunctions` — FR-005a); `403 errors.staff_time_entries.location_not_eligible`
-(no `StaffLocationEligibility` grant for `locationId` — FR-001a).
+(no `StaffLocationEligibility` grant for `locationId` — FR-001a); `400
+errors.staff_time_entries.group_location_mismatch` (`groupId` supplied but its `LocationId` does
+not match `locationId` — FR-004a).
 
 ### POST `/api/staff-time-entries/clock-out`
 

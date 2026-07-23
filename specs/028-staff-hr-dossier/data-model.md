@@ -38,6 +38,9 @@ Clarifications, no per-tenant setting).
   invariants are enforced elsewhere in this codebase, e.g. attendance check-in).
 - `LocationId` MUST be one the acting staff member has a `StaffLocationEligibility` grant for
   (FR-001a) — enforced in `ClockInCommandHandler`, mirrors feature 012's schedule-write check.
+- When `GroupId` is supplied, it MUST belong to `LocationId` (`Group.LocationId ==
+  StaffTimeEntry.LocationId`, FR-004a) — enforced in `ClockInCommandHandler`, since an
+  unvalidated mismatch would misattribute hours in the subsidy report.
 - `Function` (on clock-in and on any later correction) MUST be one of the acting staff member's
   own `StaffProfile.TimeEntryFunctions` (FR-005a/FR-008) — enforced in `ClockInCommandHandler`
   and `UpdateStaffTimeEntryCommandHandler`, never trusted from the request alone.
