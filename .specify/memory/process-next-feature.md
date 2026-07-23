@@ -868,3 +868,34 @@ use the static code review instead.
   already checked off without the test it names actually being written) — all fixed, not deferred,
   same standing rule as every prior feature; the checked-off-but-unwritten task is itself worth
   remembering as a new variant of "a claim to verify, not trust."
+- 027 (`027-staff-app`): ✅ Done, merged 2026-07-23 (PR #47, squash-merged after green CI —
+  1072/1072 backend + 257/257 web + 20/20 staff-mobile tests). Resumed mid-flight: a prior session
+  had already fully implemented all four user stories (all 66 tasks checked off, including the
+  Phase 7 design-compliance/quickstart/lockfile polish pass) with zero commits since the last
+  checkpoint beyond the branch itself and no open PR — this invocation verified the work rather
+  than trusting the checked boxes: read spec.md/plan.md/tasks.md in full and cross-checked the
+  actual code for every FR/SC/constitution obligation (JWT-resolved identity on every staff read
+  and write per FR-015/015a, FR-011a's Covered-row protection on leave-approval, FR-016's extended
+  BKR-decoupling test, FR-008a's no-PII-leakage push content, the Monday-anchored publish gate,
+  the `staff_leave_requests` revert-helper fix in both `TenantMigrationRolloutTests` and
+  `LegacyVaccinationMigrationTests`, the production SQL script, and the workflow-doc extension)
+  before running `/speckit-converge`, which then genuinely found nothing to append — a clean
+  `converged` outcome, unlike most resumed-mid-flight features in this log. New `staff-mobile` Expo
+  app (personal phone, distinct from both `mobile`'s kiosk tablet and `parent-mobile`): published
+  schedule view (day/week, contracted-day de-emphasis, closure-day "KDV gesloten" via a new
+  StaffOrDirector-scoped `/api/closures/dates` route added to `ClosureCalendarEndpoints.cs` rather
+  than `StaffScheduleEndpoints.cs`, since a more permissive policy can't live inside the existing
+  `DirectorOnly` route group — the same "separate MapGroup, same path" pattern this codebase's
+  `LocationEndpoints.cs` had already established), one-tap "Ik ben ziek" sick reporting (idempotent
+  per FR-005a), and planned leave requests. `StaffSchedule.IsAbsent`/`AbsenceReason` were reconciled
+  into a single `Status` enum as plan.md's research.md R3 specified, with a migration backfill —
+  confirmed the old boolean column was actually dropped, not left dangling alongside the new field.
+  A `web/tsc --noEmit` run reproduced the exact same pre-existing, unrelated DOM-`Location`-vs-
+  test-mock typing failure feature 023's shipped-note already documented on an untouched file — re-
+  confirmed it still isn't part of CI's actual web gate (`web-test.yml` only runs `npm test`) before
+  correctly leaving it alone rather than scope-creeping in a fix. `gh pr checks --watch` was again
+  auto-backgrounded by the tool harness after its own timeout mid-run (the same non-deliberate
+  auto-backgrounding 024/031 already logged, not the standing rule's warned-against failure mode of
+  deliberately walking away) — per that precedent, started a `Monitor` polling `gh pr checks --json`
+  to watch it to completion in the same turn, and independently confirmed the merge via `gh pr view
+  --json state,mergedAt` before updating BACKLOG.md, rather than trusting either signal alone.
