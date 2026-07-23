@@ -257,7 +257,8 @@ the hours data payroll systems consume).
 
 ## Platform Administration
 
-No detail file yet (feature 013h — first feature in this workflow).
+Detail: `Workflows/platform-administration.md` (feature 013h — first feature in this workflow;
+feature 032 added invitations, self-service registration, and the organisation directory).
 
 Manages platform-wide, cross-tenant capabilities that sit above any single KDV — distinct from
 every other workflow above, which is scoped to one tenant's operations. A **Platform Admin** is
@@ -270,20 +271,31 @@ Actors:
 - **Platform Admin** — an existing director account flagged for this extra authority. Granted
   out-of-band (direct data change), not through any in-app flow, mirroring how the reference data
   itself is maintained.
+- **Prospective director** (feature 032) — no account yet; interacts only with an emailed
+  invitation link and the public registration page, becoming a regular tenant-scoped director
+  account the moment registration completes.
 
 Includes:
 
 - Managing the shared vaccine catalog (feature 013g's `vaccine_types` reference table — create,
   rename, reorder, deactivate entries; feature 013h).
+- Director/organisation invitations: create/list/resend/revoke, with a derived (never stored)
+  status and per-action attribution (feature 032).
+- The self-service registration page a prospective director completes an invitation with — the
+  first web page to ever consume feature 001's registration endpoint (feature 032).
+- A read-only directory of every organisation on the platform (feature 032) — explicitly not a
+  suspend/deactivate/edit control surface; see Explicitly excludes below.
 - Any future platform-wide reference data or cross-tenant administrative capability — this
   workflow is the intended home for it, reusing the same `IsPlatformAdmin` flag/authorization
   policy rather than each feature inventing its own cross-tenant admin mechanism.
 
 Explicitly excludes: anything scoped to a single tenant's own data (that's every other workflow
-above, gated by the existing `DirectorOnly`/`StaffOrDirector`/tenant-scoping model) and
-platform-operator actions performed outside the app entirely (e.g. granting the
-`IsPlatformAdmin` flag itself, or infrastructure/deployment operations) — those remain direct
-data changes or ops tooling, not a UI workflow.
+above, gated by the existing `DirectorOnly`/`StaffOrDirector`/tenant-scoping model); platform-
+operator actions performed outside the app entirely (e.g. granting the `IsPlatformAdmin` flag
+itself, or infrastructure/deployment operations) — those remain direct data changes or ops
+tooling, not a UI workflow; and tenant suspension/deletion or organisation-editing tooling
+(feature 002's deferral, re-confirmed by feature 032's read-only directory) — the organisation
+directory shows every organisation but acts on none of them.
 
 ---
 

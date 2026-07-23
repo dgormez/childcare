@@ -943,3 +943,51 @@ use the static code review instead.
   024/027/031 already logged) — watched it to completion via `Monitor` in the same turn and
   independently confirmed the merge via `gh pr view --json state,mergedAt` before updating
   BACKLOG.md, same precedent as every prior recurrence.
+- 032 (`032-platform-admin-portal`): ✅ Done, merged 2026-07-23 (PR #49, squash-merged after
+  green CI — 1122/1122 backend + 277/277 web tests). Invoked interactively (user referenced this
+  file directly), not by the cron trigger. Scope expanded significantly mid-pipeline, during
+  `/speckit-plan`'s own research: BACKLOG's original draft (invitation CRUD + reused-as-is
+  vaccine-catalog shell) assumed feature 001's registration flow was already complete end-to-end,
+  but no web page anywhere ever called `POST /api/organisations/register` — the only "acceptance"
+  that existed was the backend endpoint itself, unreachable by any real prospective director. This
+  is a genuinely new, no-precedent scope question per the standing rule, so it was paused and
+  resolved directly with the product owner via `AskUserQuestion` rather than guessed: build the
+  missing registration page now (not deferred), add a full organisation directory (not just the
+  vaccine catalog), "approval states" means status *visibility* only (no new manual-approval
+  gate — registration still activates immediately, exactly as feature 001 built it), and land all
+  of it as one feature rather than split further. BACKLOG.md's own 032 entry was rewritten to
+  match before continuing (done features are immutable, but 032 wasn't done yet). Reused feature
+  013h's entire platform-admin auth mechanism as-is (`IsPlatformAdmin`/`PlatformAdminOnly`/
+  `grant-platform-admin`) — no new auth path — and extracted 013h's previously-standalone
+  vaccine-types screen into a new shared `platform-admin/layout.tsx` shell alongside two new
+  screens (Invitations, Organisations). A second novel discovery came *during implementation*,
+  not planning: building the registration page's own component surfaced that feature 001's
+  `RegisterOrganisationCommand` only validates its token at final submission, with no way to
+  pre-fill/lock the email or detect an invalid link on page load (both explicit acceptance
+  criteria already written into this feature's own spec) — added a small, narrowly-scoped
+  `GET /api/organisations/register/{token}` lookup to close that gap, documented as research.md
+  R17 rather than silently expanding scope without a paper trail. `/speckit-checklist`'s
+  security-focused pass found two real gaps fixed before implementation began: FR-008's
+  attribution requirement covered creation, not just resend/revoke, in the data model's first
+  draft (added `CreatedByUserId`/`CreatedByEmail`, nullable so feature 001's pre-existing rows
+  need no backfill); and `POST /api/organisations/register` had zero rate limiting since feature
+  001 shipped it, because nothing had ever linked to it publicly before — this feature is what
+  changes that, so it now shares `PublicEnrollmentEndpoints.cs`'s exact rate-limiting shape
+  (`RateLimiterPolicies.OrganisationRegister`). `/speckit-analyze` caught a plan.md/tasks.md
+  inconsistency: an earlier plan draft said to *extend* the existing `CreateInvitationCommand`,
+  but that command backs the out-of-scope SuperAdmin ops-key endpoint (`AdminEndpoints.cs`) —
+  tasks.md had already (correctly) built a separate `CreatePlatformAdminInvitationCommand`
+  instead; the plan was stale, not the tasks. `/speckit-converge` then found the most consequential
+  gap of the run: `RegisterOrganisationCommandHandler` never checked the new `RevokedAt` field at
+  all — only the new `GET` pre-check endpoint enforced revocation, which a direct `POST` call
+  bypassed entirely, meaning FR-006's "revoke immediately and permanently prevents registration"
+  wasn't actually true against the write path itself. Fixed with a regression test that calls
+  `POST` directly (skipping the pre-check) to prove the fix holds regardless of client behavior.
+  CI then caught one more thing neither local run reproduced: the exact recurring
+  in-memory-vs-PostgreSQL-round-tripped `DateTime` precision flake 010/013b/013h's
+  `DeactivateVaccineTypeTests` already established a tolerant-comparison fix for — this time in a
+  brand-new idempotent-revoke test, fixed the identical way. `gh pr checks --watch` was
+  auto-backgrounded twice in this run by the tool harness after its own timeout (same
+  non-deliberate pattern 024/027/028/031 already logged) — both times watched to completion via
+  `Monitor` in the same turn, with the merge independently confirmed via `gh pr view --json
+  state,mergedAt` before updating BACKLOG.md.
