@@ -44,6 +44,23 @@ export interface StaffResponse {
   contractedDays: string[];
 }
 
+// Feature 028
+export type StaffTimeEntryFunction = "kinderbegeleider" | "logistiek" | "verantwoordelijke";
+
+export interface StaffTimeEntryResponse {
+  id: string;
+  staffProfileId: string;
+  locationId: string;
+  groupId: string | null;
+  clockedInAt: string;
+  clockedOutAt: string | null;
+  function: StaffTimeEntryFunction;
+  notes: string | null;
+  isOpen: boolean;
+  isLocked: boolean;
+  unlockedAt: string | null;
+}
+
 export type ReservationRequestMode = "disabled" | "informational" | "approval";
 
 export interface LocationResponse {

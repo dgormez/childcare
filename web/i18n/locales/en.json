@@ -80,7 +80,41 @@
     "pinDialogConfirm": "Save PIN",
     "deactivateDialogTitle": "Deactivate staff member",
     "reactivateDialogTitle": "Reactivate staff member",
-    "toggleDialogDescription": "Are you sure about {name}?"
+    "toggleDialogDescription": "Are you sure about {name}?",
+    "timeEntries": {
+      "loadError": "Couldn't load time entries.",
+      "retry": "Retry",
+      "emptyState": "No time entries yet.",
+      "columns": {
+        "date": "Date",
+        "function": "Function",
+        "clockedIn": "Clocked in",
+        "clockedOut": "Clocked out",
+        "status": "Status"
+      },
+      "edit": "Edit",
+      "status": {
+        "open": "Open",
+        "locked": "Locked",
+        "editable": "Editable"
+      },
+      "functions": {
+        "kinderbegeleider": "Childcare worker",
+        "logistiek": "Logistics",
+        "verantwoordelijke": "Responsible person"
+      },
+      "correctionTitle": "Correct time entry",
+      "saveError": "Couldn't save this correction.",
+      "overlapWarning": "This correction overlaps another time entry for this staff member — saved anyway, please double-check the hours.",
+      "lockedMessage": "This entry is more than 7 days old and locked. Unlock it to make corrections.",
+      "unlock": "Unlock",
+      "relock": "Re-lock",
+      "clockedOutLabel": "Clocked out at",
+      "functionLabel": "Function",
+      "notesLabel": "Notes",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
   },
   "devices": {
     "title": "Devices",

@@ -80,7 +80,41 @@
     "pinDialogConfirm": "Code opslaan",
     "deactivateDialogTitle": "Personeelslid deactiveren",
     "reactivateDialogTitle": "Personeelslid heractiveren",
-    "toggleDialogDescription": "Weet je het zeker voor {name}?"
+    "toggleDialogDescription": "Weet je het zeker voor {name}?",
+    "timeEntries": {
+      "loadError": "Kon de tijdsregistraties niet laden.",
+      "retry": "Opnieuw proberen",
+      "emptyState": "Nog geen tijdsregistraties.",
+      "columns": {
+        "date": "Datum",
+        "function": "Functie",
+        "clockedIn": "Ingeklokt",
+        "clockedOut": "Uitgeklokt",
+        "status": "Status"
+      },
+      "edit": "Bewerken",
+      "status": {
+        "open": "Actief",
+        "locked": "Vergrendeld",
+        "editable": "Bewerkbaar"
+      },
+      "functions": {
+        "kinderbegeleider": "Kinderbegeleider",
+        "logistiek": "Logistiek",
+        "verantwoordelijke": "Verantwoordelijke"
+      },
+      "correctionTitle": "Tijdsregistratie corrigeren",
+      "saveError": "Kon deze correctie niet opslaan.",
+      "overlapWarning": "Deze correctie overlapt met een andere tijdsregistratie van dit personeelslid — toch opgeslagen, controleer de uren.",
+      "lockedMessage": "Deze registratie is ouder dan 7 dagen en vergrendeld. Ontgrendel om te corrigeren.",
+      "unlock": "Ontgrendelen",
+      "relock": "Opnieuw vergrendelen",
+      "clockedOutLabel": "Uitgeklokt om",
+      "functionLabel": "Functie",
+      "notesLabel": "Notities",
+      "cancel": "Annuleren",
+      "save": "Opslaan"
+    }
   },
   "devices": {
     "title": "Toestellen",

@@ -173,7 +173,7 @@ correct it, then re-lock it.
       `function` that isn't one of the staff member's own `TimeEntryFunctions`, same constraint
       as clock-in (FR-008/FR-005a) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
-- [ ] T029 [P] [US2] Component test: `TimeEntryCorrectionDialog` surfaces the overlap warning and
+- [X] T029 [P] [US2] Component test: `TimeEntryCorrectionDialog` surfaces the overlap warning and
       a clear locked-state message in `web/__tests__/TimeEntryCorrectionDialog.test.tsx`
 
 ### Implementation for User Story 2
@@ -190,11 +190,11 @@ correct it, then re-lock it.
       `backend/ChildCare.Application/StaffTimeEntries/ListStaffTimeEntriesQuery.cs`
 - [X] T033 [US2] Add `GET`/`PATCH`/`unlock`/`relock` routes to `StaffTimeEntryEndpoints.cs`
       (`DirectorOnly`) (depends on T030, T031, T032)
-- [ ] T034 [US2] Build `StaffTimeEntriesTab.tsx` (list + correction trigger) in
+- [X] T034 [US2] Build `StaffTimeEntriesTab.tsx` (list + correction trigger) in
       `web/components/staff/StaffTimeEntriesTab.tsx`
-- [ ] T035 [US2] Build `TimeEntryCorrectionDialog.tsx` (clock-out fill-in, overlap warning,
+- [X] T035 [US2] Build `TimeEntryCorrectionDialog.tsx` (clock-out fill-in, overlap warning,
       unlock/relock controls) in `web/components/staff/TimeEntryCorrectionDialog.tsx`
-- [ ] T036 [US2] Add NL/FR/EN i18n keys for the time-entry correction UI in
+- [X] T036 [US2] Add NL/FR/EN i18n keys for the time-entry correction UI in
       `web/i18n/locales/{en,fr,nl}.json`
 
 **Checkpoint**: User Stories 1–2 both work independently.

@@ -80,7 +80,41 @@
     "pinDialogConfirm": "Enregistrer le code",
     "deactivateDialogTitle": "Désactiver le membre du personnel",
     "reactivateDialogTitle": "Réactiver le membre du personnel",
-    "toggleDialogDescription": "Confirmez-vous pour {name} ?"
+    "toggleDialogDescription": "Confirmez-vous pour {name} ?",
+    "timeEntries": {
+      "loadError": "Impossible de charger les pointages.",
+      "retry": "Réessayer",
+      "emptyState": "Aucun pointage pour le moment.",
+      "columns": {
+        "date": "Date",
+        "function": "Fonction",
+        "clockedIn": "Arrivée",
+        "clockedOut": "Départ",
+        "status": "Statut"
+      },
+      "edit": "Modifier",
+      "status": {
+        "open": "En cours",
+        "locked": "Verrouillé",
+        "editable": "Modifiable"
+      },
+      "functions": {
+        "kinderbegeleider": "Puéricultrice/teur",
+        "logistiek": "Logistique",
+        "verantwoordelijke": "Responsable"
+      },
+      "correctionTitle": "Corriger le pointage",
+      "saveError": "Impossible d'enregistrer cette correction.",
+      "overlapWarning": "Cette correction chevauche un autre pointage de ce membre du personnel — enregistrée quand même, merci de vérifier les heures.",
+      "lockedMessage": "Ce pointage a plus de 7 jours et est verrouillé. Déverrouillez-le pour le corriger.",
+      "unlock": "Déverrouiller",
+      "relock": "Reverrouiller",
+      "clockedOutLabel": "Heure de départ",
+      "functionLabel": "Fonction",
+      "notesLabel": "Notes",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    }
   },
   "devices": {
     "title": "Appareils",
