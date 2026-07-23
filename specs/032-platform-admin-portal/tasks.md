@@ -129,13 +129,13 @@ each; resend and revoke a Pending one and confirm status changes.
 ### Tests for User Story 3
 
 - [ ] T022 [P] [US3] Integration test: `GET /api/platform-admin/invitations` returns correct derived status (Pending/Accepted/Expired/Revoked) for each case per data-model.md's derivation rules; a director without the flag gets `403`, in `backend/ChildCare.Api.Tests/PlatformAdmin/ListPlatformAdminInvitationsTests.cs`
-- [ ] T023 [P] [US3] Integration test: `POST /api/platform-admin/invitations/{id}/resend` creates a fresh invitation, marks the prior Revoked, sends a new email; returns `409` if `{id}` is already Accepted; unknown id → `404`, in `backend/ChildCare.Api.Tests/PlatformAdmin/ResendPlatformAdminInvitationTests.cs`
+- [ ] T023 [P] [US3] Integration test: `POST /api/platform-admin/invitations/{id}/resend` creates a fresh invitation with `createdByEmail` set from the caller's claims, marks the prior Revoked with `revokedByEmail`/`revokedAt` also set from the caller's claims (FR-008 applies to resend, not only plain create/revoke), sends a new email; returns `409` if `{id}` is already Accepted; unknown id → `404`, in `backend/ChildCare.Api.Tests/PlatformAdmin/ResendPlatformAdminInvitationTests.cs`
 - [ ] T024 [P] [US3] Integration test: `POST /api/platform-admin/invitations/{id}/revoke` sets the revoke-attribution fields from the caller's claims (never the request body); is idempotent on an already-Revoked invitation; returns `409` if already Accepted; unknown id → `404`, in `backend/ChildCare.Api.Tests/PlatformAdmin/RevokePlatformAdminInvitationTests.cs`
 
 ### Implementation for User Story 3
 
 - [ ] T025 [US3] `ListPlatformAdminInvitationsQuery` + handler (status derivation per data-model.md, left-join against `Tenant.CreatedFromInvitationId`) + mapper, in `backend/ChildCare.Application/Invitations/ListPlatformAdminInvitationsQuery.cs` (depends on T001, T011)
-- [ ] T026 [US3] `ResendPlatformAdminInvitationCommand` + handler (mirrors `ResendStaffInvitationCommand`'s shape — new token/expiry, supersede-prior, send email), in `backend/ChildCare.Application/Invitations/ResendPlatformAdminInvitationCommand.cs` (depends on T001, T004, T006)
+- [ ] T026 [US3] `ResendPlatformAdminInvitationCommand` + handler (mirrors `ResendStaffInvitationCommand`'s shape — new token/expiry, supersede-prior, send email; sets `CreatedByUserId`/`CreatedByEmail` on the new row AND `RevokedByUserId`/`Email`/`At` on the superseded row, both from the acting user passed in by the endpoint — FR-008 applies here too, per research.md R12/`/speckit-analyze` finding F2), in `backend/ChildCare.Application/Invitations/ResendPlatformAdminInvitationCommand.cs` (depends on T001, T004, T006)
 - [ ] T027 [US3] `RevokePlatformAdminInvitationCommand` + handler (sets `RevokedByUserId`/`Email`/`At` from the acting user passed in by the endpoint, idempotent no-op if already set, `409` result if Accepted), in `backend/ChildCare.Application/Invitations/RevokePlatformAdminInvitationCommand.cs` (depends on T001)
 - [ ] T028 [US3] Map `GET /api/platform-admin/invitations`, `POST .../{id}/resend`, `POST .../{id}/revoke` in `PlatformAdminInvitationEndpoints.cs`, all `.RequireAuthorization("PlatformAdminOnly")` (depends on T013, T025, T026, T027)
 - [ ] T029 [US3] Regenerate `web/lib/generated/api-types.ts` (depends on T028) — the single regeneration pass mentioned at T015
@@ -191,7 +191,7 @@ is entirely absent.
 reuses unchanged.)
 
 - [ ] T042 [US5] `web/app/(app)/platform-admin/layout.tsx` — shared section layout rendering a small in-section nav (Invitations / Organisations / Vaccine Types) around `{children}` per research.md R10 (depends on T031, T040)
-- [ ] T043 [US5] Change `PLATFORM_ADMIN_NAV` in `web/components/Sidebar.tsx` from a single object to an array of three entries (Invitations, Organisations, Vaccine Types), rendered via the existing `.map(...)` pattern already used for `REAL_NAV`, still gated by `session.user.isPlatformAdmin` (depends on T042)
+- [ ] T043 [US5] Change `PLATFORM_ADMIN_NAV` in `web/components/Sidebar.tsx` from a single object to an array of three entries (Invitations, Organisations, Vaccine Types), rendered via the existing `.map(...)` pattern already used for `REAL_NAV`, still gated by `session.user.isPlatformAdmin`; update 013h's existing Sidebar test asserting the platform-admin section is hidden for `isPlatformAdmin: false` so it passes against the new array shape rather than the old single-object one (`/speckit-analyze` finding F3 — the refactor changes the exact code that test exercises) (depends on T042)
 - [ ] T044 [US5] Confirm `web/app/(app)/platform-admin/vaccine-types/page.tsx` renders correctly nested inside the new shared layout — no content change to that file itself (depends on T042)
 - [ ] T045 [P] [US5] NL/FR/EN locale keys for the new nav entries ("invitations", "organisations" — "vaccineTypes" already exists), in `web/i18n/locales/*.json`
 

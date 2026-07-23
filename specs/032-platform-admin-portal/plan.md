@@ -55,7 +55,7 @@ a shared shell/nav retrofit.
 |---|---|---|
 | I. Multi-Tenant Isolation (NON-NEGOTIABLE) | **PASS** | Every new endpoint (invitations, directory) reads/writes `PublicDbContext` only — no tenant-schema access, so no `ICurrentTenantService`/tenant-scoping concern arises. The authenticated request still carries a normal `tenant_id` JWT claim (the platform-admin is a real director of some tenant) and `TenantMiddleware` still runs normally; these handlers simply don't consume tenant domain data, mirroring 013h's already-passing `PlatformAdminVaccineTypeEndpoints` precedent exactly. The registration page's backend endpoint (`POST /api/organisations/register`) already exists, already `RequireTenantExempt()`, and is unchanged by this feature — feature 001 already passed this gate for it. |
 | II. Regulatory Compliance by Design (NON-NEGOTIABLE) | **N/A** | No BKR ratios, contracts, or other regulated childcare data touched by this feature. |
-| III. CQRS via MediatR & Thin Endpoints | **PASS** | New writes (`CreateInvitationCommand` extension, `ResendInvitationCommand`, `RevokeInvitationCommand`) and reads (`ListInvitationsForPlatformAdminQuery`, `ListOrganisationsForPlatformAdminQuery`) all go through MediatR; new endpoint files map HTTP↔MediatR only, mirroring `PlatformAdminVaccineTypeEndpoints.cs`'s existing shape. |
+| III. CQRS via MediatR & Thin Endpoints | **PASS** | New writes (`CreatePlatformAdminInvitationCommand`, `ResendPlatformAdminInvitationCommand`, `RevokePlatformAdminInvitationCommand` — all distinct from the existing, unchanged `CreateInvitationCommand` the out-of-scope `SuperAdmin` ops-key path uses) and reads (`ListPlatformAdminInvitationsQuery`, `ListPlatformAdminOrganisationsQuery`) all go through MediatR; new endpoint files map HTTP↔MediatR only, mirroring `PlatformAdminVaccineTypeEndpoints.cs`'s existing shape. |
 | IV. Internationalization First (NON-NEGOTIABLE) | **PASS** | The Invitations/Organisations director-web screens use standard `next-intl` locale keys like every other director-web screen. The public registration page follows the existing public-enrollment page's pattern (feature 023): its own nested per-locale message loading + in-page language toggle, defaulting to Dutch, since the visitor has no stored locale yet. The invitation email itself is sent in a platform-admin-selected locale (nl/fr/en, default nl) — a genuinely new send path, so it does NOT reuse feature 020's documented "accepted English-only gap" (that gap was explicitly scoped to pre-020 flows, not new ones). |
 | V. Test with Real Infrastructure (NON-NEGOTIABLE) | **PASS** | All new backend tests run against TestContainers Postgres via this codebase's existing test fixtures — no InMemory provider. |
 | VI. Secure Configuration & Storage | **PASS** | No secrets introduced. The new `Invitation` migration is Public-schema (applies once, reviewed/deployed like any other migration — not the tenant-schema auto-apply carve-out, which doesn't apply here). No file storage in this feature. Acting-user resolved server-side only (never client-supplied), matching 013h's `ActingUserOf` pattern — applied to both creation and revoke attribution (research.md R12, a gap `/speckit-checklist` caught and this plan now includes). `POST /api/organisations/register` gains rate limiting (research.md R13) since this feature is what first makes it genuinely publicly reachable — also a checklist-driven fix, not part of the original draft. |
@@ -90,14 +90,18 @@ backend/
 │   └── Migrations/Public/                          # new migration
 ├── ChildCare.Application/
 │   ├── Invitations/
-│   │   ├── CreateInvitationCommand.cs              # extend: note, locale; keep response shape
-│   │   ├── CreateInvitationCommandHandler.cs        # extend: locale-aware email send
-│   │   ├── ListInvitationsForPlatformAdminQuery.cs  # new — derives Pending/Accepted/Expired/Revoked
-│   │   ├── ResendInvitationCommand.cs               # new — mirrors ResendStaffInvitationCommand
-│   │   ├── RevokeInvitationCommand.cs               # new
-│   │   └── OrganisationInvitationLinkBuilder.cs     # new — mirrors EnrollmentLinkBuilder
+│   │   ├── CreatePlatformAdminInvitationCommand.cs   # new, distinct from the existing
+│   │   │                                              # CreateInvitationCommand (unchanged) —
+│   │   │                                              # that one still backs the out-of-scope
+│   │   │                                              # SuperAdmin ops-key endpoint; extending it
+│   │   │                                              # would leak PlatformAdminOnly-specific
+│   │   │                                              # fields into that unrelated path
+│   │   ├── ListPlatformAdminInvitationsQuery.cs      # new — derives Pending/Accepted/Expired/Revoked
+│   │   ├── ResendPlatformAdminInvitationCommand.cs   # new — mirrors ResendStaffInvitationCommand
+│   │   ├── RevokePlatformAdminInvitationCommand.cs   # new
+│   │   └── OrganisationInvitationLinkBuilder.cs      # new — mirrors EnrollmentLinkBuilder
 │   ├── Organisations/
-│   │   └── ListOrganisationsForPlatformAdminQuery.cs # new — Tenant + Invitation join, read-only
+│   │   └── ListPlatformAdminOrganisationsQuery.cs    # new — Tenant + Invitation join, read-only
 │   └── Common/IEmailSender.cs                       # extend: SendOrganisationInvitationAsync(locale)
 ├── ChildCare.Contracts/
 │   ├── Requests/ (Create/Resend/Revoke invitation requests)

@@ -8,9 +8,14 @@ convention (012a, 013g, 025, 026, etc.).
 
 ## R1 — Reuse the existing `Invitation` entity and token model, extend rather than replace
 
-**Decision**: Extend `backend/ChildCare.Domain/Entities/Invitation.cs` with four new columns
-(`OrganisationNameNote`, `Locale`, `RevokedByUserId`, `RevokedByEmail`, `RevokedAt`) rather than
-introducing a second invitation concept for platform-admin use.
+**Decision**: Extend `backend/ChildCare.Domain/Entities/Invitation.cs` itself with new columns
+(`OrganisationNameNote`, `Locale`, `CreatedByUserId`/`CreatedByEmail`, `RevokedByUserId`/
+`RevokedByEmail`/`RevokedAt`) rather than introducing a second invitation **entity** for
+platform-admin use. This is an entity-level decision only — the MediatR **commands** that
+operate on it are a different question, resolved separately in R16 below (a new
+`CreatePlatformAdminInvitationCommand`/`ResendPlatformAdminInvitationCommand`/
+`RevokePlatformAdminInvitationCommand`, not a reuse/extension of the existing
+`CreateInvitationCommand`).
 
 **Rationale**: The entity, `InvitationTokenCodec` (opaque token, SHA-256 hash-only persistence),
 and the supersede-on-recreate behavior in `CreateInvitationCommandHandler` already do exactly
@@ -24,7 +29,7 @@ correctly, for no benefit.
 
 ## R2 — Status derivation, not a stored field
 
-**Decision**: `ListInvitationsForPlatformAdminQuery` computes status per row rather than reading
+**Decision**: `ListPlatformAdminInvitationsQuery` computes status per row rather than reading
 a stored enum:
 
 ```text
@@ -77,7 +82,7 @@ new one.
 
 ## R5 — Organisation directory reads Public schema only, no per-tenant fan-out
 
-**Decision**: `ListOrganisationsForPlatformAdminQuery` is a single query over
+**Decision**: `ListPlatformAdminOrganisationsQuery` is a single query over
 `PublicDbContext.Tenants` left-joined to `PublicDbContext.Invitations` on
 `Tenant.CreatedFromInvitationId == Invitation.Id`, projecting `Tenant.Name`, `Tenant.Plan`,
 `Tenant.ProvisioningStatus`, `Tenant.KboNumber`, `Tenant.CreatedAt`, and `Invitation.Email` (the
@@ -256,3 +261,25 @@ bytes, research.md/data-model.md's entropy note) as sufficient defense — rejec
 defends against a different threat (generic volumetric abuse/spam submissions, not just token
 guessing), and the codebase already has an established, cheap-to-apply pattern for exactly this
 class of endpoint.
+
+## R16 — New MediatR commands for the platform-admin invitation path, not an extension of `CreateInvitationCommand`
+
+**Decision**: `CreatePlatformAdminInvitationCommand`/`ResendPlatformAdminInvitationCommand`/
+`RevokePlatformAdminInvitationCommand` are new command classes in
+`backend/ChildCare.Application/Invitations/`, distinct from the existing `CreateInvitationCommand`
+(unchanged).
+
+**Rationale**: Found during `/speckit-analyze`'s cross-artifact pass — an earlier plan.md draft
+said to "extend" the existing `CreateInvitationCommand`, which would have been wrong: that
+command is the one `POST /api/admin/invitations` (`AdminEndpoints.cs`) uses, gated by the
+separate `SuperAdmin` static-API-key scheme — an explicitly out-of-scope mechanism this feature
+must not touch (BACKLOG.md's 032 block: "Changing... the SuperAdmin ops-key scheme used
+elsewhere in AdminEndpoints.cs" is Out of Scope). Adding `OrganisationNameNote`/`Locale`/
+platform-admin-specific attribution handling into that shared command would have leaked new
+behavior into an unrelated, unchanged endpoint. The `Invitation` **entity** is still shared
+(R1) — only the entity, not the command, is reused.
+
+**Alternatives considered**: Extending `CreateInvitationCommand`/`CreateInvitationCommandHandler`
+directly, gating the new fields behind an optional parameter — rejected: the ops-key endpoint
+has no reason to ever set `Locale`/`OrganisationNameNote`/attribution, and giving it the
+capability anyway (even unused) blurs a boundary BACKLOG.md deliberately drew.
