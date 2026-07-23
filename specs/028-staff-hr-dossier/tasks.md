@@ -312,14 +312,14 @@ the period is excluded.
 - [X] T057 [US4] Add `GET /api/reports/staff-hours` and `/export` to the existing
       `ReportingEndpoints.cs` group (`DirectorOnly`, alongside feature 018's report routes)
       (depends on T054, T055, T056)
-- [ ] T058 [US4] Build `StaffHoursReportTable.tsx` and the new flat top-level
+- [X] T058 [US4] Build `StaffHoursReportTable.tsx` and the new flat top-level
       `staff-hours-report` page (location/period selector, ratio table, CSV download link —
       this codebase has no "Rapporten" parent nav) in
       `web/components/reporting/StaffHoursReportTable.tsx` and
       `web/app/(app)/staff-hours-report/page.tsx`
-- [ ] T059 [US4] Add a `staffHoursReport` nav entry to `web/components/Sidebar.tsx` (flat,
+- [X] T059 [US4] Add a `staffHoursReport` nav entry to `web/components/Sidebar.tsx` (flat,
       mirrors every other top-level item)
-- [ ] T060 [US4] Add NL/FR/EN i18n keys for the report page in
+- [X] T060 [US4] Add NL/FR/EN i18n keys for the report page in
       `web/i18n/locales/{en,fr,nl}.json`
 
 **Checkpoint**: All four user stories are independently functional.

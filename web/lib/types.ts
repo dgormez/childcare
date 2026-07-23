@@ -84,6 +84,20 @@ export interface StaffTimeEntryResponse {
   unlockedAt: string | null;
 }
 
+export interface StaffHoursByFunctionResponse {
+  function: StaffTimeEntryFunction;
+  totalStaffHours: number;
+  ratio: number | null;
+}
+
+export interface StaffHoursReportResponse {
+  locationId: string;
+  from: string;
+  to: string;
+  totalChildHours: number;
+  byFunction: StaffHoursByFunctionResponse[];
+}
+
 export type ReservationRequestMode = "disabled" | "informational" | "approval";
 
 export interface LocationResponse {

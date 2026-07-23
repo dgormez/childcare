@@ -44,7 +44,8 @@
     "fiscalAttestations": "Fiscal Attestations",
     "organisationSettings": "Organisation",
     "communications": "Email",
-    "leaveRequests": "Leave Requests"
+    "leaveRequests": "Leave Requests",
+    "staffHoursReport": "Staff hours"
   },
   "session": {
     "expired": "Your session has expired. Please sign in again."
@@ -1586,5 +1587,27 @@
     "rejectTitle": "Reject leave request",
     "rejectDescription": "No rota changes will be made. The staff member will be notified.",
     "cancel": "Cancel"
+  },
+  "staffHoursReport": {
+    "title": "Staff hours",
+    "locationLabel": "Location",
+    "fromLabel": "From",
+    "toLabel": "To",
+    "generate": "Generate",
+    "exportCsv": "Export CSV",
+    "exportError": "Could not export this report. Please try again.",
+    "loadError": "Could not generate this report. Please try again.",
+    "retry": "Retry",
+    "totalChildHours": "Total child-hours",
+    "columns": {
+      "function": "Function",
+      "staffHours": "Staff-hours",
+      "ratio": "Ratio"
+    },
+    "functions": {
+      "kinderbegeleider": "Childcare worker",
+      "logistiek": "Logistics",
+      "verantwoordelijke": "Responsible person"
+    }
   }
 }

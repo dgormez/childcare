@@ -44,7 +44,8 @@
     "fiscalAttestations": "Fiscale attesten",
     "organisationSettings": "Organisatie",
     "communications": "E-mail",
-    "leaveRequests": "Verlofaanvragen"
+    "leaveRequests": "Verlofaanvragen",
+    "staffHoursReport": "Personeelsuren"
   },
   "session": {
     "expired": "Je sessie is verlopen. Meld je opnieuw aan."
@@ -1586,5 +1587,27 @@
     "rejectTitle": "Verlofaanvraag afwijzen",
     "rejectDescription": "Er worden geen roosterwijzigingen doorgevoerd. De medewerker wordt op de hoogte gebracht.",
     "cancel": "Annuleren"
+  },
+  "staffHoursReport": {
+    "title": "Personeelsuren",
+    "locationLabel": "Locatie",
+    "fromLabel": "Van",
+    "toLabel": "Tot",
+    "generate": "Genereren",
+    "exportCsv": "Exporteren als CSV",
+    "exportError": "Kon dit rapport niet exporteren. Probeer opnieuw.",
+    "loadError": "Kon dit rapport niet genereren. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "totalChildHours": "Totaal kinderuren",
+    "columns": {
+      "function": "Functie",
+      "staffHours": "Personeelsuren",
+      "ratio": "Ratio"
+    },
+    "functions": {
+      "kinderbegeleider": "Kinderbegeleider",
+      "logistiek": "Logistiek",
+      "verantwoordelijke": "Verantwoordelijke"
+    }
   }
 }

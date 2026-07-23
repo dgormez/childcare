@@ -44,7 +44,8 @@
     "fiscalAttestations": "Attestations fiscales",
     "organisationSettings": "Organisation",
     "communications": "E-mail",
-    "leaveRequests": "Demandes de congé"
+    "leaveRequests": "Demandes de congé",
+    "staffHoursReport": "Heures du personnel"
   },
   "session": {
     "expired": "Votre session a expiré. Veuillez vous reconnecter."
@@ -1586,5 +1587,27 @@
     "rejectTitle": "Refuser la demande de congé",
     "rejectDescription": "Aucune modification de l'horaire ne sera effectuée. Le membre du personnel sera averti.",
     "cancel": "Annuler"
+  },
+  "staffHoursReport": {
+    "title": "Heures du personnel",
+    "locationLabel": "Crèche",
+    "fromLabel": "Du",
+    "toLabel": "Au",
+    "generate": "Générer",
+    "exportCsv": "Exporter en CSV",
+    "exportError": "Impossible d'exporter ce rapport. Réessayez.",
+    "loadError": "Impossible de générer ce rapport. Réessayez.",
+    "retry": "Réessayer",
+    "totalChildHours": "Total heures-enfants",
+    "columns": {
+      "function": "Fonction",
+      "staffHours": "Heures prestées",
+      "ratio": "Ratio"
+    },
+    "functions": {
+      "kinderbegeleider": "Puéricultrice/teur",
+      "logistiek": "Logistique",
+      "verantwoordelijke": "Responsable"
+    }
   }
 }
