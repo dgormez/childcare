@@ -24,6 +24,7 @@ multi-word-safe enum wire mapping in this codebase (e.g. `ChildEventTypeExtensio
 | `Function` | `StaffTimeEntryFunction` | required — the function this entry was worked under (FR-004) |
 | `Notes` | `string?` | free text, director-only edit surface |
 | `UnlockedAt` | `DateTime?` | non-null = an active director unlock override (R4); doubles as an audit timestamp |
+| `UnlockedBy` | `Guid?` | director's `TenantUserId` — set together with `UnlockedAt` (FR-007a); cleared together on re-lock |
 | `CreatedAt` | `DateTime` | UTC |
 | `UpdatedAt` | `DateTime` | UTC |
 
@@ -35,6 +36,11 @@ Clarifications, no per-tenant setting).
 - At most one open (`ClockedOutAt is null`) entry per `StaffProfileId` at any time (FR-003) —
   enforced in `ClockInCommandHandler`, not a DB constraint (mirrors how single-open-record
   invariants are enforced elsewhere in this codebase, e.g. attendance check-in).
+- `LocationId` MUST be one the acting staff member has a `StaffLocationEligibility` grant for
+  (FR-001a) — enforced in `ClockInCommandHandler`, mirrors feature 012's schedule-write check.
+- `Function` (on clock-in and on any later correction) MUST be one of the acting staff member's
+  own `StaffProfile.TimeEntryFunctions` (FR-005a/FR-008) — enforced in `ClockInCommandHandler`
+  and `UpdateStaffTimeEntryCommandHandler`, never trusted from the request alone.
 - A locked entry (`IsLocked == true`) rejects any field mutation except through
   `UnlockTimeEntryCommand` (FR-006/FR-007).
 - A correction that would overlap another entry for the same `StaffProfileId` triggers a warning,
@@ -55,10 +61,14 @@ every clock-in/out request.
 | `ObjectPath` | `string` | GCS object path only, never a URL (R3 — same idiom as every other document/photo port) |
 | `ValidFrom` | `DateOnly?` | nullable |
 | `ValidUntil` | `DateOnly?` | nullable — set for contracts with an end date (FR-011); drives contract-expiry alerts (FR-014) when `DocumentType == EmploymentContract` |
+| `CreatedBy` | `Guid` | director's `TenantUserId` who uploaded it (FR-012a) |
 | `CreatedAt` | `DateTime` | UTC |
+| `DeletedAt` | `DateTime?` | soft-delete (FR-012a audit trail) — mirrors this codebase's dominant `DeactivatedAt`-style soft-delete idiom (`StaffProfile`, `Location`) rather than a hard delete, so "who deleted what, when" survives the action; the underlying GCS object is still hard-deleted via `IStaffDocumentStorage.DeleteAsync` |
+| `DeletedBy` | `Guid?` | director's `TenantUserId` who deleted it |
 
 **Indexes**: `(DocumentType, ValidUntil)` — supports the contract-expiry query's `WHERE
-DocumentType = EmploymentContract AND ValidUntil <= today + 60d` filter without a full scan.
+DocumentType = EmploymentContract AND ValidUntil <= today + 60d` filter without a full scan (both
+filtered to `DeletedAt IS NULL`).
 
 ## StaffProfile (extended)
 

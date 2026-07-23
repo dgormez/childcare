@@ -256,6 +256,11 @@ calculation.
 - **FR-001**: Staff MUST be able to clock in from staff-mobile, creating a time entry with
   `clocked_in_at` set to the current time and identity resolved server-side from their
   authenticated session (never a client-supplied staff ID).
+- **FR-001a**: The system MUST reject a clock-in for a location the staff member has no
+  `StaffLocationEligibility` grant for, the same eligibility check every other staff-write path
+  in this codebase already enforces (e.g. feature 009's device-location match, feature 012's
+  schedule-write check) — a subsidy-hours record at an unauthorized location is exactly the kind
+  of integrity gap this feature exists to prevent, not create.
 - **FR-002**: Staff MUST be able to clock out from staff-mobile, setting `clocked_out_at` on their
   currently open time entry.
 - **FR-003**: The system MUST prevent a staff member from having more than one open (not yet
@@ -265,12 +270,21 @@ calculation.
 - **FR-005**: When a staff member has more than one configured function, the system MUST prompt
   them to select the function for that clock-in; when they have exactly one, the system MUST skip
   the prompt and use it automatically.
+- **FR-005a**: The system MUST reject a clock-in `function` that is not one of the staff member's
+  own configured functions (FR-010), regardless of what a client sends — the picker in FR-005 is
+  a UX convenience, not the actual integrity boundary; the server enforces it independently, since
+  a mis-attributed function directly skews the subsidy report's per-function hour totals (FR-018).
 - **FR-006**: Time entries MUST become immutable (uneditable, including their `clocked_out_at`)
   once older than a fixed, system-wide lock period of 7 days (not a director-facing setting — see
   Clarifications).
 - **FR-007**: A director MUST be able to unlock an individual locked time entry to correct it.
+- **FR-007a**: Every unlock and re-lock action MUST be attributable to the director who performed
+  it, with a timestamp — unlocking is the one path that bypasses the immutability control the
+  subsidy report's data integrity otherwise relies on, so it must itself be traceable.
 - **FR-008**: A director MUST be able to fill in or correct `clocked_out_at` (and other editable
-  fields) on any unlocked time entry, including one with a null `clocked_out_at`.
+  fields) on any unlocked time entry, including one with a null `clocked_out_at`. A corrected
+  `function` value is subject to the same constraint as FR-005a (must be one of the staff
+  member's configured functions).
 - **FR-009**: The system MUST warn (not silently allow) a director-made correction that would
   create two overlapping time entries for the same staff member.
 - **FR-010**: Directors MUST be able to configure, per staff member, which function(s) they may
@@ -283,8 +297,11 @@ calculation.
   `other`), and optional `valid_from`/`valid_until` dates.
 - **FR-012**: Directors MUST be able to view and download every document in a staff member's
   dossier via a signed URL.
-- **FR-013**: Only directors MUST be able to view, upload, or manage staff documents — staff MUST
-  NOT have dossier access from staff-mobile.
+- **FR-012a**: Every document upload and deletion MUST be attributable to the director who
+  performed it, with a timestamp — the same traceability requirement as FR-007a, for the same
+  reason (sensitive employment records, not just operational data).
+- **FR-013**: Access to the HR dossier and all its management actions (upload, view, delete) is
+  director-only — staff MUST NOT have dossier access from staff-mobile.
 - **FR-014**: The director dashboard MUST show a "Personeel — verlopende contracten" block listing
   every staff member with a document of type `employment_contract` whose `valid_until` is within
   60 days of today (inclusive of already-past dates).
@@ -292,7 +309,9 @@ calculation.
 
 **Medewerkersbeleid subsidy report**
 
-- **FR-016**: Directors MUST be able to generate a report, scoped to a selected location and date
+- **FR-016**: Access to the medewerkersbeleid report (on-screen and CSV export) is director-only,
+  consistent with FR-013's dossier access scope — staff MUST NOT be able to generate or download
+  it. Directors MUST be able to generate the report, scoped to a selected location and date
   range, showing total child-hours, total staff-hours per function, and the resulting
   child-hours-to-staff-hours ratio per function. The report displays computed ratios only — it
   does not evaluate them against Opgroeien's BKR pass/fail thresholds (see Clarifications; that
@@ -361,3 +380,19 @@ calculation.
   surface; staff do not view their own documents from staff-mobile in this feature (not requested,
   and dossiers may contain sensitive employment data best gated by the existing director-only
   screens).
+- **The three medewerkersbeleid function categories are taken as given by the backlog input, not
+  independently verified against an official Opgroeien document** — unlike features 015/019/
+  033–041 (which the pipeline's standing process explicitly requires citing
+  `docs/integrations/opgroeien/` for), 028 is not on that verified-regulatory-contract list. If
+  the exact category set or naming turns out to be wrong, correcting it is a data/enum change,
+  not a re-architecture — flagged here rather than silently treated as verified fact.
+- **Time entries and HR documents are retained indefinitely after a staff member is
+  deactivated/offboarded** — this feature does not implement any deletion or archival policy for
+  either. Belgian employment law requires retaining staff records for a period after employment
+  ends (`workflows.md`'s Government Reporting workflow already notes "5y staff data, clock starts
+  at end of employment" as a fact for feature 038's future retention lifecycle to implement); this
+  feature deliberately does not build that lifecycle itself, consistent with feature 031's
+  precedent of separating "data is stored" (this feature, and 005/009b/013b before it) from "data
+  is governed/retained/purged" (a dedicated feature — 038, not yet built). A staff member's open
+  time entry at deactivation is still surfaced for director correction per the Edge Cases section
+  below; deactivation itself neither deletes nor locks it early.

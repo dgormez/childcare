@@ -101,6 +101,13 @@ possible, then clock out.
 - [ ] T016 [P] [US1] Integration test: `ClockOutCommand` closes the caller's own open entry;
       returns `404 errors.staff_time_entries.no_open_entry` when none is open (FR-002) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
+- [ ] T016a [P] [US1] Integration test: `ClockInCommand` rejects a `locationId` the caller has no
+      `StaffLocationEligibility` grant for with `403 errors.staff_time_entries
+      .location_not_eligible` (FR-001a), and rejects a `function` not in the caller's own
+      `TimeEntryFunctions` with `400 errors.staff_time_entries.function_not_configured`
+      (FR-005a) — both checked even when a different, eligible/configured value was never
+      offered by the client UI, in
+      `backend/ChildCare.Api.Tests/StaffTimeEntries/ClockInOutTests.cs`
 - [ ] T017 [P] [US1] Component test: `ClockInOutCard` shows "Begin dienst"/"Einde dienst"
       correctly based on open-entry state and is disabled with a connectivity message while
       offline (mirrors `report-sick.tsx`'s existing pattern) in
@@ -109,7 +116,8 @@ possible, then clock out.
 ### Implementation for User Story 1
 
 - [ ] T018 [US1] Implement `ClockInCommand` (identity resolved from the JWT `NameIdentifier`
-      claim, research.md R2; function-selection logic FR-005) in
+      claim, research.md R2; function-selection logic FR-005; `StaffLocationEligibility` check
+      FR-001a; configured-function check FR-005a) in
       `backend/ChildCare.Application/StaffTimeEntries/ClockInCommand.cs` (depends on T003, T005)
 - [ ] T019 [US1] Implement `ClockOutCommand` in
       `backend/ChildCare.Application/StaffTimeEntries/ClockOutCommand.cs`
@@ -147,21 +155,28 @@ correct it, then re-lock it.
 - [ ] T026 [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` succeeds within the 7-day
       window and returns `423 errors.staff_time_entries.locked` once past it (FR-006/FR-008) in
       `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
-- [ ] T027 [P] [US2] Integration test: `UnlockStaffTimeEntryCommand` sets `UnlockedAt`, the entry
-      stays editable afterward with no auto re-lock, and `RelockStaffTimeEntryCommand` clears it
-      back to locked (FR-007, research.md R4) in
-      `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
+- [ ] T027 [P] [US2] Integration test: `UnlockStaffTimeEntryCommand` sets `UnlockedAt` and
+      `UnlockedBy` to the acting director (FR-007a), the entry stays editable afterward with no
+      auto re-lock, and `RelockStaffTimeEntryCommand` clears both fields back to locked (FR-007,
+      research.md R4) in `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
 - [ ] T028 [P] [US2] Integration test: a correction that overlaps another entry for the same
       staff member returns `overlapWarning: true` and still saves, rather than being blocked
       (FR-009) in `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryOverlapWarningTests.cs`
+- [ ] T028a [P] [US2] Integration test: `UpdateStaffTimeEntryCommand` rejects a corrected
+      `function` that isn't one of the staff member's own `TimeEntryFunctions`, same constraint
+      as clock-in (FR-008/FR-005a) in
+      `backend/ChildCare.Api.Tests/StaffTimeEntries/TimeEntryLockTests.cs`
 - [ ] T029 [P] [US2] Component test: `TimeEntryCorrectionDialog` surfaces the overlap warning and
       a clear locked-state message in `web/__tests__/TimeEntryCorrectionDialog.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Implement `UpdateStaffTimeEntryCommand` (lock check, overlap detection) in
+- [ ] T030 [US2] Implement `UpdateStaffTimeEntryCommand` (lock check, overlap detection,
+      configured-function check FR-005a) in
       `backend/ChildCare.Application/StaffTimeEntries/UpdateStaffTimeEntryCommand.cs`
-- [ ] T031 [US2] [P] Implement `UnlockStaffTimeEntryCommand` and `RelockStaffTimeEntryCommand` in
+- [ ] T031 [US2] [P] Implement `UnlockStaffTimeEntryCommand` (sets `UnlockedBy` from the acting
+      director's JWT, FR-007a) and `RelockStaffTimeEntryCommand` (clears both `UnlockedAt`/
+      `UnlockedBy`) in
       `backend/ChildCare.Application/StaffTimeEntries/UnlockStaffTimeEntryCommand.cs` and
       `RelockStaffTimeEntryCommand.cs`
 - [ ] T032 [US2] [P] Implement `ListStaffTimeEntriesQuery` in
@@ -191,10 +206,12 @@ surfaces on the dashboard block.
 ### Tests for User Story 3
 
 - [ ] T037 [P] [US3] Integration test: the upload-URL + confirm flow creates a `StaffDocument`
-      row with a working signed download URL (FR-011/FR-012) in
+      row with a working signed download URL and `CreatedBy` set to the acting director from the
+      JWT, never a client-supplied value (FR-011/FR-012/FR-012a) in
       `backend/ChildCare.Api.Tests/StaffDocuments/StaffDossierTests.cs`
-- [ ] T038 [P] [US3] Integration test: deleting a document removes the DB row and best-effort
-      deletes the GCS object in
+- [ ] T038 [P] [US3] Integration test: deleting a document soft-deletes the row
+      (`DeletedAt`/`DeletedBy` set, FR-012a), excludes it from the list and contracts-expiring
+      queries, and best-effort deletes the underlying GCS object in
       `backend/ChildCare.Api.Tests/StaffDocuments/StaffDossierTests.cs`
 - [ ] T039 [P] [US3] Integration test: `GetContractsExpiringQuery` returns only
       `EmploymentContract`-type documents with `ValidUntil <= today + 60d` (inclusive of
@@ -208,9 +225,12 @@ surfaces on the dashboard block.
 ### Implementation for User Story 3
 
 - [ ] T041 [US3] Implement `CreateStaffDocumentUploadUrlCommand` and `CreateStaffDocumentCommand`
-      in `backend/ChildCare.Application/StaffDocuments/CreateStaffDocumentUploadUrlCommand.cs`
+      (`CreatedBy` resolved server-side from the JWT, FR-012a) in
+      `backend/ChildCare.Application/StaffDocuments/CreateStaffDocumentUploadUrlCommand.cs`
       and `CreateStaffDocumentCommand.cs`
-- [ ] T042 [US3] [P] Implement `DeleteStaffDocumentCommand` and `ListStaffDocumentsQuery` in
+- [ ] T042 [US3] [P] Implement `DeleteStaffDocumentCommand` (soft-delete: sets `DeletedAt`/
+      `DeletedBy`, then calls `IStaffDocumentStorage.DeleteAsync`, FR-012a) and
+      `ListStaffDocumentsQuery` (filters `DeletedAt IS NULL`) in
       `backend/ChildCare.Application/StaffDocuments/DeleteStaffDocumentCommand.cs` and
       `ListStaffDocumentsQuery.cs`
 - [ ] T043 [US3] Implement `GetContractsExpiringQuery` in

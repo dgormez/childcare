@@ -30,7 +30,10 @@ Response `200`:
 
 Errors: `409 errors.staff_time_entries.already_clocked_in` (an open entry already exists — FR-003);
 `400 errors.staff_time_entries.function_required` (multiple functions configured, none supplied);
-`400 errors.staff_time_entries.no_function_configured` (empty `TimeEntryFunctions` — FR-010).
+`400 errors.staff_time_entries.no_function_configured` (empty `TimeEntryFunctions` — FR-010);
+`400 errors.staff_time_entries.function_not_configured` (`function` supplied but not one of the
+caller's own `TimeEntryFunctions` — FR-005a); `403 errors.staff_time_entries.location_not_eligible`
+(no `StaffLocationEligibility` grant for `locationId` — FR-001a).
 
 ### POST `/api/staff-time-entries/clock-out`
 
@@ -52,7 +55,8 @@ entry for the same staff member (FR-009) — a warning, not a block.
 
 ### POST `/api/staff-time-entries/{id}/unlock`
 
-`DirectorOnly`. Sets `UnlockedAt = now` (FR-007). Response `200`.
+`DirectorOnly`. Sets `UnlockedAt = now`, `UnlockedBy = <acting director's TenantUserId>` (FR-007,
+FR-007a). Response `200`.
 
 ### POST `/api/staff-time-entries/{id}/relock`
 
@@ -75,12 +79,15 @@ two-step idiom as every existing document/photo feature).
 
 `DirectorOnly`. Confirms the upload and creates the `StaffDocument` row: `{ "documentType":
 "employment_contract", "title": "...", "objectPath": "...", "validFrom": "date|null",
-"validUntil": "date|null" }`. Response `201`.
+"validUntil": "date|null" }`. `CreatedBy` is resolved server-side from the acting director's JWT
+(FR-012a), never client-supplied. Response `201`.
 
 ### DELETE `/api/staff/{staffProfileId}/documents/{documentId}`
 
-`DirectorOnly`. Deletes the DB row and the GCS object (best-effort, per `IStaffDocumentStorage
-.DeleteAsync`'s idempotent semantics).
+`DirectorOnly`. Soft-deletes the `StaffDocument` row (`DeletedAt`/`DeletedBy` set — FR-012a audit
+trail, mirrors this codebase's `DeactivatedAt` idiom) and hard-deletes the underlying GCS object
+(best-effort, per `IStaffDocumentStorage.DeleteAsync`'s idempotent semantics). Excluded from
+`GET .../documents` and the contract-expiry query once soft-deleted.
 
 ### PATCH `/api/staff/{staffProfileId}/time-entry-functions`
 
