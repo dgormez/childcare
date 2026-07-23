@@ -165,9 +165,9 @@ correction UI to set `clocked_out_at`, and confirming the entry reflects the cor
    entry is updated and the staff member's mobile view no longer shows them as clocked in.
 2. **Given** a time entry older than the 7-day lock period, **When** the director attempts to
    edit it, **Then** the edit is rejected until the director explicitly unlocks that entry.
-3. **Given** a locked time entry, **When** the director unlocks it, corrects it, and does not
-   re-lock it, **Then** the entry remains editable until the next scheduled lock sweep or an
-   explicit re-lock.
+3. **Given** a locked time entry, **When** the director unlocks it and corrects it, **Then** the
+   entry remains editable afterward until the director explicitly re-locks it (unlocking does not
+   silently re-lock itself).
 
 ---
 
