@@ -68,7 +68,7 @@ export function StaffDossierTab({
         {state === "loaded" && documents.length > 0 && (
           <ul className="divide-y divide-border rounded-xl border border-border dark:divide-border-dark dark:border-border-dark">
             {documents.map((document) => (
-              <li key={document.id} className="flex h-12 items-center justify-between px-4">
+              <li key={document.id} className="flex h-10 items-center justify-between px-4">
                 <div>
                   <a
                     href={document.downloadUrl ?? undefined}

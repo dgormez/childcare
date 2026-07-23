@@ -142,7 +142,7 @@ export function ClockInOutCard({ eligibleLocationIds, timeEntryFunctions, locati
           style={{ minHeight: 64, opacity: disabled ? 0.5 : 1 }}
           testID="clock-in-out-cta"
         >
-          <Clock color="white" size={20} strokeWidth={2} />
+          <Clock color="#fff" size={20} strokeWidth={2} />
           <Text className="text-white text-base font-bold">
             {openEntry ? t("timeEntries.clockOutAction") : t("timeEntries.clockInAction")}
           </Text>
